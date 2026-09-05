@@ -1,0 +1,38 @@
+# Secrets and local state
+.env
+client_secret*.json
+credentials*.json
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+backend/.venv/
+
+# Node
+node_modules/
+frontend/dist/
+frontend/.vite/
+*.tsbuildinfo
+frontend/vite.config.js
+frontend/vite.config.d.ts
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime logs and QA temp files
+*.log
+coverage/
+htmlcov/
+.coverage
+design-work/qa/screenshots/*.tmp.png

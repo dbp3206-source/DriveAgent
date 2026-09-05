@@ -1,0 +1,22 @@
+2026-09-04  Git/Node/npm/Python preflight và kiểm tra Docker/GitHub CLI.
+2026-09-04  git clone https://github.com/dbp3206-source/DriveAgent.git
+2026-09-04  Đọc đầy đủ design-taste-frontend/SKILL.md và tạo design brief/outline.
+2026-09-04  Đọc PDF/notebook/source repo người dùng cung cấp, không sao chép tài sản.
+2026-09-04  backend/.venv/Scripts/python.exe -m pip install -e "backend[dev]"
+2026-09-04  npm.cmd install (frontend)
+2026-09-04  backend/.venv/Scripts/python.exe -m ruff check backend -> PASS
+2026-09-04  backend/.venv/Scripts/python.exe -m pytest backend/tests -q -> PASS 18/18
+2026-09-04  npm.cmd run lint -> PASS
+2026-09-04  npm.cmd run build -> PASS, production chunks generated
+2026-09-04  powershell.exe -ExecutionPolicy Bypass -File scripts/verify.ps1 -> PASS
+2026-09-04  uvicorn app.main:app --host 127.0.0.1 --port 8000 -> health HTTP 200
+2026-09-04  Chrome DevTools: console -> EMPTY; network -> 10/10 HTTP 200
+2026-09-04  Chrome DevTools: desktop Lighthouse first pass 98 accessibility.
+2026-09-04  Sửa heading order h1 -> h2 và chạy lại Lighthouse.
+2026-09-04  Chrome DevTools: desktop Lighthouse -> 100/100/100/100, 0 fail
+2026-09-04  Chrome DevTools: mobile Lighthouse -> 100/100/100/100, 0 fail
+2026-09-04  CUA: ảnh desktop 1280x720, mobile 390x844, light/dark, final build.
+2026-09-04  Qdrant embedded integration -> PASS, filter memory theo user/kind.
+2026-09-04  pip/npm package metadata license inspection -> permissive dependencies.
+2026-09-04  npm.cmd audit --omit=dev -> found 0 vulnerabilities.
+2026-09-04  Relative-path smoke test -> SQLite/Qdrant created under repository root.
