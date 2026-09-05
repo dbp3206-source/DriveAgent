@@ -19,7 +19,8 @@ try {
     $env:OAUTHLIB_INSECURE_TRANSPORT = "1"
     try {
         Write-Host "Open http://localhost:8000 . Stop with Ctrl+C."
-        & $backendPython -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000
+        # Access log mặc định ghi toàn bộ query, gồm code OAuth tại callback.
+        & $backendPython -m uvicorn app.main:app --app-dir backend --host 127.0.0.1 --port 8000 --no-access-log
         if ($LASTEXITCODE -ne 0) { throw "Local server stopped with an error." }
     } finally {
         $env:OAUTHLIB_INSECURE_TRANSPORT = $previousTransport

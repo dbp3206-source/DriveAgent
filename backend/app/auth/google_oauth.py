@@ -28,7 +28,15 @@ def build_flow(settings: Settings, *, state: str | None = None) -> Flow:
         )
     return Flow.from_client_secrets_file(
         str(settings.resolved_google_oauth_client_file),
-        scopes=settings.google_drive_scopes,
+        # Google trả scope dạng URL đầy đủ; dùng cùng dạng để OAuthlib không
+        # hiểu email/profile và userinfo.email/userinfo.profile là đổi quyền.
+        scopes=[
+            {
+                "email": "https://www.googleapis.com/auth/userinfo.email",
+                "profile": "https://www.googleapis.com/auth/userinfo.profile",
+            }.get(scope, scope)
+            for scope in settings.google_drive_scopes
+        ],
         state=state,
         redirect_uri=settings.google_redirect_uri,
     )

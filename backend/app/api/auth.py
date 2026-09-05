@@ -5,8 +5,11 @@ import json
 import logging
 import secrets
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import RedirectResponse
+from requests.exceptions import ConnectionError as GoogleConnectionError
+from requests.exceptions import Timeout as GoogleTimeout
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -17,7 +20,7 @@ from app.auth.google_oauth import (
     fetch_google_profile,
 )
 from app.core.config import Settings, get_settings
-from app.core.security import encrypt_json
+from app.core.security import decrypt_json, encrypt_json
 from app.db.models import User, UserRole
 from app.db.session import get_db
 
@@ -92,6 +95,9 @@ async def google_login(request: Request, settings: Settings = Depends(get_settin
         state=nonce,
     )
     request.session["oauth_state"] = state
+    # Flow được tạo lại ở callback. Giữ verifier của đúng lần đăng nhập này;
+    # mã hóa trước khi lưu vì session cookie được ký nhưng không tự mã hóa.
+    request.session["oauth_pkce"] = encrypt_json({"verifier": flow.code_verifier}, settings)
     return RedirectResponse(authorization_url)
 
 
@@ -102,20 +108,37 @@ async def google_callback(
     settings: Settings = Depends(get_settings),
 ):
     expected_state = request.session.pop("oauth_state", None)
+    encrypted_pkce = request.session.pop("oauth_pkce", None)
     returned_state = request.query_params.get("state")
     if not expected_state or not secrets.compare_digest(expected_state, returned_state or ""):
         raise HTTPException(status_code=400, detail="OAuth state không hợp lệ.")
     flow = build_flow(settings, state=expected_state)
     try:
+        flow.code_verifier = decrypt_json(encrypted_pkce, settings)["verifier"]
+        if not flow.code_verifier:
+            raise ValueError("Missing verifier")
+    except (ValueError, TypeError, KeyError):
+        raise HTTPException(
+            status_code=400, detail="Phiên đăng nhập đã cũ. Về trang chủ và kết nối Google lại."
+        ) from None
+    try:
         # google-auth-oauthlib dùng HTTP đồng bộ. Chạy ở worker thread để một callback
         # OAuth chậm không chặn các request của người dùng khác trên event loop.
-        await asyncio.to_thread(flow.fetch_token, authorization_response=str(request.url))
+        await asyncio.to_thread(
+            flow.fetch_token, authorization_response=str(request.url), timeout=20
+        )
         credentials = flow.credentials
         profile = await fetch_google_profile(credentials.token)
+    except (GoogleConnectionError, GoogleTimeout, httpx.TransportError) as exc:
+        logger.warning("Google OAuth network failure: %s", type(exc).__name__)
+        raise HTTPException(
+            status_code=503,
+            detail="Server chưa kết nối được Google. Kiểm tra mạng server rồi kết nối Google lại.",
+        ) from None
     except Exception as exc:
         # Provider error có thể chứa chi tiết request nhạy cảm. Chỉ ghi server log,
         # không phản chiếu nguyên văn về trình duyệt.
-        logger.exception("Google OAuth callback thất bại")
+        logger.error("Google OAuth callback failure: %s", type(exc).__name__)
         raise HTTPException(
             status_code=400,
             detail="Google OAuth thất bại. Kiểm tra cấu hình và log server.",
@@ -136,8 +159,6 @@ async def google_callback(
         db.add(user)
     previous_refresh_token = None
     if user.encrypted_google_credentials:
-        from app.core.security import decrypt_json
-
         previous_refresh_token = decrypt_json(user.encrypted_google_credentials, settings).get(
             "refresh_token"
         )
