@@ -17,6 +17,11 @@ DriveAgent là trợ lý Google Drive chạy local, dùng Gemini để lập k�
 
 ## Chạy nhanh trên Windows
 
+Để dùng thật local với UI đã build và một cổng duy nhất, làm theo
+[hướng dẫn từng bước](docs/START_LOCAL.md), rồi chạy `scripts/run-local.ps1`.
+Các lệnh run-dev bên dưới dành cho phát triển giao diện; dùng origin 5173 trong `.env`
+nếu chọn chế độ dev thay cho runner local.
+
 Yêu cầu: Python 3.11 hoặc 3.12 bản chính thức từ python.org, Node.js 20 trở lên.
 
 ```powershell

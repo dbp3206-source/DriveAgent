@@ -26,7 +26,11 @@ Không thêm dấu nháy. Không commit `.env`.
 4. Khi app còn ở Testing, thêm email Google của bạn vào **Test users**.
 5. Trong **Data Access**, thêm `openid`, `email`, `profile` và `https://www.googleapis.com/auth/drive.readonly`.
 
-`drive.readonly` là scope nhạy cảm. Ứng dụng local dùng test user không cần publish công khai.
+`drive.readonly` là restricted scope theo phân loại Google (không chỉ là sensitive).
+Giai đoạn local dùng Testing và danh sách Test users; chưa cần publish công khai.
+Refresh token của External/Testing với quyền Drive hết hạn sau 7 ngày, nên cần kết nối lại.
+Nguồn: https://developers.google.com/workspace/drive/api/guides/api-specific-auth
+và https://developers.google.com/identity/protocols/oauth2.
 
 ## 4. Tạo OAuth client
 

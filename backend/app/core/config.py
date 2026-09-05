@@ -6,9 +6,10 @@ dễ kiểm tra và giúp test có thể thay giá trị mà không sửa code n
 
 from functools import lru_cache
 from pathlib import Path
+from typing import Annotated
 
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
@@ -25,8 +26,8 @@ class Settings(BaseSettings):
 
     model_config = SettingsConfigDict(
         env_prefix="DRIVE_AGENT_",
-        env_file=(".env", "../.env"),
-        env_file_encoding="utf-8",
+        env_file=PROJECT_ROOT / ".env",
+        env_file_encoding="utf-8-sig",
         extra="ignore",
     )
 
@@ -44,7 +45,7 @@ class Settings(BaseSettings):
 
     google_oauth_client_file: Path = Path("./client_secret.json")
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
-    google_drive_scopes: list[str] = Field(
+    google_drive_scopes: Annotated[list[str], NoDecode] = Field(
         default_factory=lambda: [
             "openid",
             "email",
@@ -94,6 +95,12 @@ class Settings(BaseSettings):
     @property
     def resolved_qdrant_path(self) -> Path:
         return _from_project_root(self.qdrant_path)
+
+    @property
+    def frontend_dist(self) -> Path:
+        """UI đã build nằm cạnh backend, không nằm bên trong backend."""
+
+        return PROJECT_ROOT / "frontend" / "dist"
 
     @property
     def resolved_google_oauth_client_file(self) -> Path:

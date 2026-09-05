@@ -33,23 +33,23 @@ function Find-Python {
 $python = Find-Python
 if (-not (Test-Path ".\backend\.venv\Scripts\python.exe")) {
     & $python.Exe @($python.Args) -m venv ".\backend\.venv"
+    if ($LASTEXITCODE -ne 0) { throw "Python venv creation failed." }
 }
 & ".\backend\.venv\Scripts\python.exe" -m pip install --upgrade pip
+if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed." }
 & ".\backend\.venv\Scripts\python.exe" -m pip install -e "backend[dev]"
+if ($LASTEXITCODE -ne 0) { throw "Backend dependency installation failed." }
 
 Push-Location frontend
-npm.cmd install
-Pop-Location
-
-if (-not (Test-Path ".env")) {
-    Copy-Item ".env.example" ".env"
-    $bytes = New-Object byte[] 48
-    [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-    $secret = [Convert]::ToBase64String($bytes)
-    $content = Get-Content ".env" -Raw
-    $content = $content.Replace("DRIVE_AGENT_APP_SECRET=", "DRIVE_AGENT_APP_SECRET=$secret")
-    Set-Content ".env" -Value $content -Encoding utf8
+try {
+    npm.cmd ci
+    if ($LASTEXITCODE -ne 0) { throw "Frontend dependency installation failed." }
+} finally {
+    Pop-Location
 }
 
+& ".\backend\.venv\Scripts\python.exe" scripts/local_config.py --prepare
+if ($LASTEXITCODE -ne 0) { throw "Local configuration preparation failed." }
+
 Write-Host "Setup hoàn tất." -ForegroundColor Green
-Write-Host "Tiếp theo: điền Gemini key, đặt client_secret.json rồi chạy .\scripts\run-dev.ps1"
+Write-Host "Next: follow docs/START_LOCAL.md, then run scripts/run-local.ps1"

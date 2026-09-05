@@ -2,7 +2,6 @@
 
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 from uuid import uuid4
 
 from fastapi import FastAPI, Request
@@ -122,6 +121,6 @@ for api_router in (
 
 
 # Khi frontend đã build, FastAPI phục vụ cùng một origin. Trong lúc dev, Vite dùng proxy.
-frontend_dist = Path(__file__).resolve().parents[2] / "frontend" / "dist"
+frontend_dist = settings.frontend_dist
 if frontend_dist.exists():
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
