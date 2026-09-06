@@ -2,6 +2,9 @@
 
 DriveAgent là trợ lý Google Drive chạy local, dùng Gemini để lập kế hoạch và trả lời. Mọi thao tác với Drive, RAG và memory đều đi qua Tool Registry có validate, xác thực, phân quyền, rate limit, audit và cơ chế retry có chọn lọc.
 
+Bộ model mặc định: `gemini-3.8-flash` cho chat/planning, `gemini-3.5-flash-lite`
+làm fallback và `gemini-embedding-2` với vector 768 chiều cho RAG/Memory.
+
 ## Có gì trong project
 
 - Liệt kê và tìm kiếm Google Drive theo tên hoặc nội dung.
@@ -12,7 +15,7 @@ DriveAgent là trợ lý Google Drive chạy local, dùng Gemini để lập k�
 - Bộ nhớ dài hạn có loại, dedup, semantic search, archive và delete.
 - LangGraph orchestration: planning, state, conditional routing, tool execution, checkpoint và recovery.
 - RBAC tách biệt với Google OAuth scopes.
-- Audit log có request ID, latency, status và redaction secret.
+- Audit log có request ID, latency, status và redaction secret, kể cả lần gọi tool bị từ chối.
 - React + Fluent UI, responsive, light/dark, tiếng Việt.
 
 ## Chạy nhanh trên Windows

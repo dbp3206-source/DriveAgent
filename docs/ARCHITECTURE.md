@@ -7,11 +7,11 @@ React UI
   -> FastAPI session auth
   -> LangGraph planner / ReAct router
   -> Tool Registry
-       1. Validate input schema
-       2. Authentication
-       3. RBAC + OAuth scopes
-       4. Per-user rate limit
-       5. Audit STARTED
+       1. Resolve registered tool
+       2. Audit STARTED + redact arguments
+       3. Validate schema + authentication
+       4. RBAC + OAuth scopes
+       5. Per-user rate limit
        6. Execute + selective retry
   -> Google Drive / RAG / Memory
   -> Citation + execution trace
@@ -37,6 +37,8 @@ Chạy local không đồng nghĩa với thiết kế single-user. Các bảng d
 - Routing: conditional edge dựa vào tool calls.
 - Execution: ToolNode có thể chạy các tool calls độc lập song song; mỗi call dùng database session riêng.
 - Recovery: registry retry lỗi tạm thời; ToolNode trả lỗi về model để điều chỉnh; hard stop sau 6 vòng.
+- Model recovery: `gemini-3.8-flash` là primary; lỗi provider/model được chuyển sang
+  `gemini-3.5-flash-lite`. Vòng lặp tool lặp lại bị chặn trước hard stop.
 - Checkpoint: graph state được lưu theo `user_id:session_id`.
 
 ## Vì sao không có Code Sandbox

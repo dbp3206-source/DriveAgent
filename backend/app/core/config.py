@@ -40,8 +40,9 @@ class Settings(BaseSettings):
     qdrant_path: str = "./data/qdrant"
 
     gemini_api_key: str = ""
-    gemini_chat_model: str = "gemini-2.5-flash"
-    gemini_embedding_model: str = "gemini-embedding-001"
+    gemini_chat_model: str = "gemini-3.8-flash"
+    gemini_fallback_model: str = "gemini-3.5-flash-lite"
+    gemini_embedding_model: str = "gemini-embedding-2"
 
     google_oauth_client_file: Path = Path("./client_secret.json")
     google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"

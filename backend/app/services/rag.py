@@ -194,7 +194,9 @@ class RagService:
                     file_id=chunk.drive_file_id,
                     file_name=chunk.file_name,
                     chunk_index=chunk.chunk_index,
-                    snippet=chunk.content[:500],
+                    # Tool result cần đủ ngữ cảnh để model không bị cắt giữa danh sách/ý.
+                    # UI chỉ hiện link nguồn nên tăng excerpt không làm nặng phần hiển thị.
+                    snippet=chunk.content[:1_800],
                     web_view_link=chunk.web_view_link,
                     score=round(score, 6),
                 )

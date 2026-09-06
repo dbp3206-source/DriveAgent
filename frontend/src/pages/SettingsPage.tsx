@@ -21,7 +21,13 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
     <div className="status-board">
       <StatusLine label="SQLite" ready={Boolean(health?.database)} detail="Lưu user, session, audit và bản sao RAG trên máy." />
       <StatusLine label="Vector store" ready={Boolean(health?.vector_store)} detail={health?.vector_store ?? 'Chưa khởi tạo'} />
-      <StatusLine label="Gemini" ready={status.gemini_configured} detail="Chat model và embedding được đọc từ biến môi trường." />
+      <StatusLine
+        label="Gemini"
+        ready={status.gemini_configured}
+        detail={health
+          ? `${health.gemini_chat_model} · dự phòng ${health.gemini_fallback_model} · ${health.gemini_embedding_model} (${health.embedding_dimensions}D)`
+          : 'Đang đọc cấu hình model…'}
+      />
       <StatusLine label="Google OAuth" ready={status.oauth_configured} detail="Quyền Drive read-only, tách riêng cho từng user." />
     </div>
     <MessageBar intent="info"><MessageBarBody>DriveAgent không lưu API key trên trình duyệt. OAuth token được mã hóa bằng APP_SECRET trước khi ghi SQLite.</MessageBarBody></MessageBar>

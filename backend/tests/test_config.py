@@ -17,7 +17,11 @@ def test_scopes_from_dotenv_are_comma_separated(tmp_path) -> None:
 
 
 def test_built_ui_path_is_inside_frontend() -> None:
-    assert Settings(_env_file=None).frontend_dist == PROJECT_ROOT / "frontend/dist"
+    settings = Settings(_env_file=None)
+    assert settings.frontend_dist == PROJECT_ROOT / "frontend/dist"
+    assert settings.gemini_chat_model == "gemini-3.8-flash"
+    assert settings.gemini_fallback_model == "gemini-3.5-flash-lite"
+    assert settings.gemini_embedding_model == "gemini-embedding-2"
 
 
 def test_relative_local_paths_are_resolved_from_repository_root() -> None:

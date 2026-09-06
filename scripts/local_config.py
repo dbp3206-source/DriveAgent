@@ -33,6 +33,12 @@ def check() -> int:
     checks = {
         ".env exists": (PROJECT_ROOT / ".env").is_file(),
         "Gemini API key configured (not a live verification)": settings.gemini_is_configured,
+        "Gemini chat model is approved": settings.gemini_chat_model
+        in {"gemini-3.8-flash", "gemini-3.5-flash-lite"},
+        "Gemini fallback model is approved": settings.gemini_fallback_model
+        in {"gemini-3.8-flash", "gemini-3.5-flash-lite"},
+        "Gemini Embedding 2 selected": settings.gemini_embedding_model
+        == "gemini-embedding-2",
         "Random APP_SECRET configured": (
             len(settings.app_secret) >= 32
             and settings.app_secret != "local-development-change-me-before-sharing"

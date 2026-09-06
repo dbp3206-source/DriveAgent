@@ -70,7 +70,7 @@ async def test_registry_executes_and_writes_completed_audit(tmp_path: Path) -> N
 
 
 @pytest.mark.asyncio
-async def test_registry_denies_missing_role_permission_before_audit(tmp_path: Path) -> None:
+async def test_registry_audits_missing_role_permission(tmp_path: Path) -> None:
     engine, factory = await create_session(tmp_path)
     registry = ToolRegistry()
 
@@ -97,7 +97,54 @@ async def test_registry_denies_missing_role_permission_before_audit(tmp_path: Pa
                 {"text": "hello"},
                 ToolContext(request_id="request-2", user=user, db=db, settings=Settings()),
             )
-        assert list((await db.scalars(select(AuditEvent))).all()) == []
+        audit = await db.scalar(select(AuditEvent).where(AuditEvent.request_id == "request-2"))
+        assert audit is not None
+        assert audit.status == "denied"
+        assert audit.error_type == "access_denied"
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_registry_audits_invalid_arguments_without_calling_handler(tmp_path: Path) -> None:
+    engine, factory = await create_session(tmp_path)
+    registry = ToolRegistry()
+    called = False
+
+    async def handler(_payload: EchoInput, _context: ToolContext) -> EchoOutput:
+        nonlocal called
+        called = True
+        return EchoOutput(value="never")
+
+    registry.register(
+        ToolDefinition(
+            name="validated_tool",
+            description="Schema audit test",
+            input_model=EchoInput,
+            output_model=EchoOutput,
+            handler=handler,
+            required_permissions={MEMORY_READ},
+        )
+    )
+    async with factory() as db:
+        user = User(email="schema@example.com", display_name="Schema", role="editor")
+        db.add(user)
+        await db.commit()
+
+        with pytest.raises(ToolError) as invalid:
+            await registry.execute(
+                "validated_tool",
+                {"text": "x"},
+                ToolContext(request_id="request-invalid", user=user, db=db, settings=Settings()),
+            )
+
+        audit = await db.scalar(
+            select(AuditEvent).where(AuditEvent.request_id == "request-invalid")
+        )
+        assert invalid.value.code == "invalid_arguments"
+        assert called is False
+        assert audit is not None
+        assert audit.status == "error"
+        assert audit.error_type == "invalid_arguments"
     await engine.dispose()
 
 

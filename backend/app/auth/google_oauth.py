@@ -1,7 +1,7 @@
 """Google OAuth2 web-server flow và vòng đời credential của từng người dùng."""
 
 import json
-from datetime import UTC
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -43,21 +43,20 @@ def build_flow(settings: Settings, *, state: str | None = None) -> Flow:
 
 
 def credentials_to_dict(credentials: Credentials) -> dict[str, Any]:
-    return {
-        "token": credentials.token,
-        "refresh_token": credentials.refresh_token,
-        "token_uri": credentials.token_uri,
-        "client_id": credentials.client_id,
-        "client_secret": credentials.client_secret,
-        "scopes": list(credentials.scopes or []),
-        "expiry": credentials.expiry.astimezone(UTC).isoformat() if credentials.expiry else None,
-    }
+    # Serializer chính thức giữ expiry theo UTC với hậu tố Z mà SDK đọc được.
+    return json.loads(credentials.to_json())
 
 
 def credentials_from_user(user: User, settings: Settings) -> Credentials:
     if not user.encrypted_google_credentials:
         raise PermissionError("Tài khoản chưa kết nối Google Drive.")
     info = decrypt_json(user.encrypted_google_credentials, settings)
+    # Tương thích credential đã lưu trước bản sửa; không buộc user cấp quyền lại.
+    if info.get("expiry"):
+        expiry = datetime.fromisoformat(info["expiry"].replace("Z", "+00:00"))
+        if expiry.tzinfo is not None:
+            expiry = expiry.astimezone(UTC).replace(tzinfo=None)
+        info["expiry"] = expiry.isoformat() + "Z"
     return Credentials.from_authorized_user_info(info, scopes=json.loads(user.oauth_scopes_json))
 
 

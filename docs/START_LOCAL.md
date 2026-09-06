@@ -28,6 +28,8 @@ DRIVE_AGENT_GEMINI_API_KEY=dan_key_cua_ban_vao_day
 Đây là placeholder, phải thay bằng key thật. Không gửi key vào chat và không commit `.env`.
 Nếu đã có key thì dùng key hiện có còn hiệu lực. Quyền dùng model và quota phải được
 kiểm tra bằng lần gọi thật; key có mặt không chứng minh gọi API thành công.
+App mặc định dùng `gemini-3.8-flash`, fallback `gemini-3.5-flash-lite` và
+`gemini-embedding-2` (768 chiều); trang Cài đặt hiển thị đúng cấu hình đang chạy.
 Nếu cần paid tier, bạn tự bật billing và theo dõi Usage trong AI Studio.
 Nguồn: https://ai.google.dev/gemini-api/docs/api-key
 

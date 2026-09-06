@@ -54,15 +54,22 @@ export function DrivePage() {
   const [previewBusy, setPreviewBusy] = useState(false)
   const [indexing, setIndexing] = useState<string | null>(null)
   const [notice, setNotice] = useState('')
+  const [nextPage, setNextPage] = useState<string | null>(null)
+  const [activeQuery, setActiveQuery] = useState('')
 
-  const load = useCallback(async (search = '') => {
+  const load = useCallback(async (search = '', pageToken: string | null = null) => {
     setLoading(true)
     setError('')
     try {
       const params = new URLSearchParams({ page_size: '50' })
       if (search.trim()) params.set('query', search.trim())
+      if (pageToken) params.set('page_token', pageToken)
       const result = await api<FileList>(`/api/drive/files?${params}`)
-      setFiles(result.files)
+      setFiles((current) => pageToken
+        ? [...current, ...result.files.filter((file) => !current.some((old) => old.id === file.id))]
+        : result.files)
+      setNextPage(result.next_page_token)
+      setActiveQuery(search)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Không thể tải tệp Drive.')
     } finally {
@@ -78,6 +85,7 @@ export function DrivePage() {
   }
 
   async function read(file: DriveFile) {
+    setError('')
     setPreviewBusy(true)
     setPreview({ file, text: '', truncated: false })
     try {
@@ -91,6 +99,7 @@ export function DrivePage() {
   }
 
   async function index(file: DriveFile) {
+    setError('')
     setIndexing(file.id)
     setNotice('')
     try {
@@ -125,7 +134,7 @@ export function DrivePage() {
           placeholder="Tìm theo tên hoặc nội dung"
           aria-label="Tìm tệp Google Drive"
         />
-        <Button appearance="primary" type="submit">Tìm kiếm</Button>
+        <Button appearance="primary" type="submit" disabled={loading}>Tìm kiếm</Button>
       </form>
       {notice ? (
         <MessageBar intent="success"><MessageBarBody>{notice}</MessageBarBody></MessageBar>
@@ -177,7 +186,7 @@ export function DrivePage() {
                           appearance="subtle"
                           icon={indexing === file.id ? <Spinner size="tiny" /> : <DatabaseArrowDownRegular />}
                           aria-label={`Lập chỉ mục ${file.name}`}
-                          disabled={indexing === file.id}
+                          disabled={indexing !== null}
                           onClick={() => index(file)}
                         />
                       ) : null}
@@ -200,10 +209,12 @@ export function DrivePage() {
         </div>
       ) : null}
 
+      {nextPage ? <Button disabled={loading} onClick={() => load(activeQuery, nextPage)}>Tải thêm tệp</Button> : null}
+
       <Dialog open={Boolean(preview)} onOpenChange={(_, data) => !data.open && setPreview(null)}>
         <DialogSurface className="preview-dialog">
           <DialogBody>
-            <DialogTitle action={<Button appearance="subtle" icon={<Dismiss24Regular />} onClick={() => setPreview(null)} />}>
+            <DialogTitle action={<Button aria-label="Đóng xem trước" appearance="subtle" icon={<Dismiss24Regular />} onClick={() => setPreview(null)} />}>
               {preview?.file.name}
             </DialogTitle>
             <DialogContent>

@@ -33,7 +33,9 @@ class EmbeddingService:
     def __init__(self, settings: Settings):
         self.settings = settings
         self._client = (
-            genai.Client(api_key=settings.gemini_api_key) if settings.gemini_is_configured else None
+            genai.Client(api_key=settings.gemini_api_key,
+                         http_options=types.HttpOptions(timeout=30_000))
+            if settings.gemini_is_configured else None
         )
 
     @property
@@ -47,13 +49,21 @@ class EmbeddingService:
 
     def _embed_sync(self, text: str, task: EmbeddingTask) -> list[float]:
         assert self._client is not None
+        # Embedding 2 không nhận task_type; không gửi field này kể cả với giá trị null.
+        config = types.EmbedContentConfig(output_dimensionality=EMBEDDING_DIMENSION)
+        if self.settings.gemini_embedding_model.startswith("gemini-embedding-2"):
+            prefix = {
+                EmbeddingTask.DOCUMENT: "title: none | text: ",
+                EmbeddingTask.QUERY: "task: search result | query: ",
+                EmbeddingTask.SEMANTIC_SIMILARITY: "task: sentence similarity | query: ",
+            }[task]
+            text = prefix + text
+        else:
+            config.task_type = task.value
         response = self._client.models.embed_content(
             model=self.settings.gemini_embedding_model,
             contents=text,
-            config=types.EmbedContentConfig(
-                task_type=task.value,
-                output_dimensionality=EMBEDDING_DIMENSION,
-            ),
+            config=config,
         )
         if not response.embeddings or not response.embeddings[0].values:
             raise RuntimeError("Gemini không trả về embedding.")

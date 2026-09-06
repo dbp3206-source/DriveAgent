@@ -2,12 +2,15 @@
 
 Mọi đường vào tool, gồm REST API, agent và ingestion lồng nhau, đều gọi `ToolRegistry.execute`.
 
-1. **Validate schema**: Pydantic từ chối argument thiếu, sai kiểu hoặc vượt giới hạn.
-2. **Authentication**: context phải có user đang active.
-3. **Authorization**: RBAC permission và OAuth scopes được kiểm tra độc lập.
-4. **Rate limit**: sliding window theo `(user_id, tool_name)`.
-5. **Audit log**: ghi `STARTED` trước khi gọi dịch vụ; arguments đã redaction.
+1. **Resolve tool**: chỉ thực thi tool đã đăng ký với contract rõ ràng.
+2. **Audit log**: ghi `STARTED` và redact arguments trước các cổng còn lại.
+3. **Validate + Authentication**: Pydantic chặn payload sai; context phải có user active.
+4. **Authorization**: RBAC permission và OAuth scopes được kiểm tra độc lập.
+5. **Rate limit**: sliding window theo `(user_id, tool_name)`.
 6. **Execute**: timeout và retry có exponential backoff + jitter.
+
+Audit được hoàn tất với `success`, `error` hoặc `denied`, nên cả lần gọi có schema sai,
+thiếu quyền hoặc vượt rate limit cũng truy vết được mà không gọi dịch vụ bên ngoài.
 
 Chỉ retry timeout, network error và HTTP 408/429/500/502/503/504. Không retry 400/401/403/404 vì đây là permanent failure cần sửa request hoặc quyền.
 

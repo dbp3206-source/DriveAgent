@@ -1,8 +1,8 @@
 """Tool Registry thực thi đúng sáu cổng kiểm soát.
 
 Thứ tự cố ý rõ ràng để phục vụ học tập và audit:
-1) validate schema, 2) authentication, 3) permission + OAuth scope,
-4) rate limit, 5) tạo audit event, 6) execute có timeout/retry chọn lọc.
+1) nhận diện tool, 2) tạo audit event, 3) validate schema + authentication,
+4) permission + OAuth scope, 5) rate limit, 6) execute có timeout/retry chọn lọc.
 """
 
 import asyncio
@@ -74,44 +74,13 @@ class ToolRegistry:
     ) -> BaseModel:
         definition = self.get(name)
 
-        # Cổng 1: Pydantic loại bỏ payload sai trước khi chạm vào API bên ngoài.
-        try:
-            payload = definition.input_model.model_validate(arguments)
-        except ValidationError as exc:
-            raise ToolError(str(exc), code="invalid_arguments") from exc
-
-        # Cổng 2: context chỉ hợp lệ khi dependency đã nạp user đang hoạt động.
-        if not context.user or not context.user.is_active:
-            raise ToolAccessDeniedError("Người dùng chưa được xác thực hoặc đã bị vô hiệu hóa.")
-
-        # Cổng 3a: RBAC của DriveAgent.
-        granted_permissions = permissions_for_role(context.user.role)
-        missing_permissions = definition.required_permissions - granted_permissions
-        if missing_permissions:
-            raise ToolAccessDeniedError(
-                f"Thiếu quyền ứng dụng: {', '.join(sorted(missing_permissions))}"
-            )
-
-        # Cổng 3b: OAuth scope thực tế trong token Google.
-        user_scopes = set(json.loads(context.user.oauth_scopes_json or "[]"))
-        missing_scopes = definition.required_oauth_scopes - user_scopes
-        if missing_scopes:
-            raise ToolAccessDeniedError(
-                "Google chưa cấp scope cần thiết: " + ", ".join(sorted(missing_scopes))
-            )
-
-        # Cổng 4: chặn một user làm cạn quota tool của các user khác.
-        await self._limiter.check(
-            context.user.id, definition.name, definition.rate_limit_per_minute
-        )
-
-        # Cổng 5: audit STARTED được commit trước khi gọi tool. Nếu process chết giữa chừng,
-        # bản ghi dở dang vẫn giúp điều tra request nào chưa hoàn tất.
+        # Tạo audit trước các cổng để cả payload sai, thiếu quyền và rate limit đều có dấu vết.
+        # Arguments được redact đệ quy trước khi ghi xuống SQLite.
         audit = AuditEvent(
             request_id=context.request_id,
-            user_id=context.user.id,
-            user_email=context.user.email,
-            role=context.user.role,
+            user_id=getattr(context.user, "id", None),
+            user_email=getattr(context.user, "email", None),
+            role=getattr(context.user, "role", None),
             tool_name=definition.name,
             arguments_json=json.dumps(redact(arguments), ensure_ascii=False),
             status=AuditStatus.STARTED.value,
@@ -122,9 +91,38 @@ class ToolRegistry:
         started = time.perf_counter()
         timeout = definition.timeout_seconds or context.settings.tool_timeout_seconds
 
-        # Cổng 6: execute. Chỉ ToolError(retryable=True), timeout hoặc lỗi kết nối tạm thời
-        # mới retry. 400/401/403/404 phải được handler đánh dấu permanent.
         try:
+            # Schema sai bị chặn trước khi chạm API ngoài nhưng vẫn được audit.
+            try:
+                payload = definition.input_model.model_validate(arguments)
+            except ValidationError as exc:
+                raise ToolError(str(exc), code="invalid_arguments") from exc
+
+            if not context.user or not context.user.is_active:
+                raise ToolAccessDeniedError(
+                    "Người dùng chưa được xác thực hoặc đã bị vô hiệu hóa."
+                )
+
+            granted_permissions = permissions_for_role(context.user.role)
+            missing_permissions = definition.required_permissions - granted_permissions
+            if missing_permissions:
+                raise ToolAccessDeniedError(
+                    f"Thiếu quyền ứng dụng: {', '.join(sorted(missing_permissions))}"
+                )
+
+            user_scopes = set(json.loads(context.user.oauth_scopes_json or "[]"))
+            missing_scopes = definition.required_oauth_scopes - user_scopes
+            if missing_scopes:
+                raise ToolAccessDeniedError(
+                    "Google chưa cấp scope cần thiết: " + ", ".join(sorted(missing_scopes))
+                )
+
+            # Tách rate limit theo (user, tool), tránh một user làm cạn quota người khác.
+            await self._limiter.check(
+                context.user.id, definition.name, definition.rate_limit_per_minute
+            )
+
+            # Chỉ lỗi transient mới retry; lỗi 400/401/403/404 phải trả về ngay.
             result = await self._execute_with_retry(definition, payload, context, timeout)
             audit.status = AuditStatus.SUCCESS.value
             audit.result_json = json.dumps(

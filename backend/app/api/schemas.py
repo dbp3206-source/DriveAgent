@@ -157,3 +157,7 @@ class HealthResponse(BaseModel):
     gemini_configured: bool
     google_oauth_configured: bool
     vector_store: str
+    gemini_chat_model: str
+    gemini_fallback_model: str
+    gemini_embedding_model: str
+    embedding_dimensions: int

@@ -3,6 +3,7 @@ import {
   MessageBar,
   MessageBarBody,
   Spinner,
+  Select,
   Textarea,
 } from '@fluentui/react-components'
 import { DocumentLink24Regular, Send24Regular } from '@fluentui/react-icons'
@@ -43,9 +44,11 @@ export function ChatPage() {
       setMessages([])
       return
     }
+    let active = true
     api<ChatMessage[]>(`/api/chat/sessions/${sessionId}/messages`)
-      .then(setMessages)
-      .catch((caught: ApiError) => setError(caught.message))
+      .then((rows) => { if (active) setMessages(rows) })
+      .catch((caught: ApiError) => { if (active) setError(caught.message) })
+    return () => { active = false }
   }, [sessionId])
 
   useEffect(() => {
@@ -97,13 +100,14 @@ export function ChatPage() {
   return (
     <div className="chat-layout">
       <aside className="session-rail" aria-label="Lịch sử trò chuyện">
-        <Button appearance="primary" onClick={() => setSessionId(null)}>
+        <Button appearance="primary" disabled={busy} onClick={() => { setSessionId(null); setMessages([]); setError('') }}>
           Cuộc trò chuyện mới
         </Button>
         <div className="session-list">
           {sessions.map((session) => (
             <button
               type="button"
+              disabled={busy}
               key={session.id}
               className={`session-item ${sessionId === session.id ? 'session-item--active' : ''}`}
               onClick={() => setSessionId(session.id)}
@@ -115,6 +119,11 @@ export function ChatPage() {
         </div>
       </aside>
       <section className="chat-main" aria-label="Nội dung trò chuyện">
+        <Select className="session-picker" aria-label="Chọn cuộc trò chuyện" value={sessionId ?? ''} disabled={busy}
+          onChange={(_, data) => { setSessionId(data.value || null); setMessages([]); setError('') }}>
+          <option value="">Cuộc trò chuyện mới</option>
+          {sessions.map((session) => <option key={session.id} value={session.id}>{session.title}</option>)}
+        </Select>
         <div className="message-scroll" aria-live="polite">
           {messages.length === 0 ? (
             <EmptyState

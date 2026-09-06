@@ -23,6 +23,10 @@ export interface Health {
   gemini_configured: boolean
   google_oauth_configured: boolean
   vector_store: string
+  gemini_chat_model: string
+  gemini_fallback_model: string
+  gemini_embedding_model: string
+  embedding_dimensions: number
 }
 
 export interface DriveFile {

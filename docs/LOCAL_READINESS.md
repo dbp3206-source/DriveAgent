@@ -1,4 +1,4 @@
-# Local readiness — 2026-09-05
+# Local readiness — 2026-09-06
 
 Phạm vi người dùng chọn: dùng thật local cho bản thân/nhóm nhỏ trước.
 
@@ -12,17 +12,33 @@ Phạm vi người dùng chọn: dùng thật local cho bản thân/nhóm nhỏ 
 
 Kiểm chứng đã thực hiện:
 
-- `python -m pytest backend/tests -q`: 20 passed.
+- `python -m pytest backend/tests -q`: 29 passed (gồm chat/RAG/Memory multi-user,
+  Tool Registry, OAuth callback, encryption/redaction và loop guard của orchestrator).
 - `python -m ruff check backend scripts/local_config.py`: passed.
-- `npm.cmd run build --prefix frontend`: passed.
+- `npm run lint` và `npm run build`: passed.
+- `pip check`: không có dependency hỏng.
+- `pip-audit`: không có lỗ hổng đã biết sau khi nâng `cryptography` lên 50.0.1
+  và `pytest` lên 9.1.1. Package nội bộ `drive-agent-backend` không có trên PyPI nên
+  được auditor bỏ qua đúng dự kiến.
+- `npm audit --omit=dev`: 0 vulnerability.
 - PowerShell parser cho run-local.ps1: không có lỗi.
-- FastAPI TestClient với DB/Qdrant tạm: GET / trả HTML 200, auth/status 200.
-- Runner thực tế dừng trước startup với trạng thái MISSING khi thiếu credentials.
+- Local config: toàn bộ key cấu hình trả `OK` mà không in secret.
+- `/api/health`: SQLite, Qdrant embedded, Gemini và Google OAuth đều ready; endpoint
+  trả đúng primary `gemini-3.8-flash`, fallback `gemini-3.5-flash-lite`, embedding
+  `gemini-embedding-2` 768 chiều.
+- Gọi live trực tiếp cả primary và fallback: đều trả kết quả thành công.
+- Google Drive live: liệt kê 50 tệp có phân trang; tìm và đọc notebook thành công.
+- Notebook ingestion chỉ giữ Markdown/code source, bỏ output/base64; index 17 chunks,
+  re-index không đổi được skip đúng; RAG trả lời State/Nodes/Edges kèm citation Drive.
+- Memory live: save, semantic search, gọi qua Agent và persistence sau restart đều đạt.
+- Audit UI hiển thị tool, user, status, latency và request ID của các flow live.
+- Browser thật: dark/light, loading, mobile 390 px, intermediate 768 px, desktop,
+  không horizontal overflow; focus ring 2.4 px; console không có warning/error.
 - `git check-ignore .env client_secret.json`: cả hai được ignore.
 - `git diff --check`: passed.
 
-Chưa kiểm chứng: đăng nhập OAuth thật, gọi Gemini thật, đọc Drive thật và
-end-to-end RAG với dữ liệu Google. Chưa có API key và OAuth JSON trên máy tại thời điểm kiểm tra.
-Không có thay đổi visual; smoke HTTP không thay thế kiểm chứng browser hoặc live OAuth.
-
-Người dùng thực hiện docs/START_LOCAL.md bước 2–5, sau đó chạy bước 6–7.
+Tài khoản hiện tại đã đăng nhập OAuth thật và sử dụng được. Tệp hướng dẫn
+`DriveAgent smoke test` chưa tồn tại trên Drive, nên nghiệm thu dùng notebook thật
+`langgraph-react-agent.ipynb` thay thế. Cách ly user B được kiểm chứng bằng integration
+test server-side; muốn nghiệm thu thủ công với hai tài khoản Google vẫn cần người dùng
+đăng nhập profile thứ hai vì agent không được tự chấp thuận OAuth thay người dùng.

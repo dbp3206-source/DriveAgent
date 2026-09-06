@@ -6,13 +6,15 @@
 2. Chuyển Google Workspace file sang text/CSV/PDF; MarkItDown xử lý PDF và Office.
 3. Chuẩn hóa khoảng trắng rồi chia theo paragraph, câu và hard split cuối cùng.
 4. Dùng overlap để giữ ý qua biên chunk.
-5. Sinh Gemini embedding 768 chiều với task type `RETRIEVAL_DOCUMENT`.
+5. Sinh `gemini-embedding-2` 768 chiều. Model này không nhận `task_type`, nên nội dung
+   tài liệu được thêm prefix truy hồi theo hướng dẫn chính thức của Google.
 6. Lưu chunk + metadata vào SQLite và vector vào Qdrant embedded.
 7. Stable UUID giúp ingestion idempotent; content hash tránh index lại file không đổi.
 
 ## Retrieval
 
 - Dense score tìm đoạn gần nghĩa.
+- Query dùng prefix `task: search result | query:` tương thích với Embedding 2.
 - Lexical score giữ độ chính xác cho tên riêng, mã và từ khóa hiếm.
 - Reciprocal Rank Fusion gộp thứ hạng mà không trộn trực tiếp hai thang điểm.
 - Filter `user_id` là bắt buộc; `file_ids` là filter tùy chọn.

@@ -2,6 +2,7 @@
 
 import asyncio
 import io
+import json
 import tempfile
 from pathlib import Path
 from typing import Any
@@ -178,7 +179,29 @@ def _extension_for(mime_type: str) -> str:
     return mapping.get(mime_type, ".bin")
 
 
-def _convert_bytes(content: bytes, mime_type: str) -> str:
+def _extract_notebook(content: bytes) -> str:
+    """Lấy source hữu ích từ notebook, không index output/base64 và metadata nhiễu."""
+
+    try:
+        notebook = json.loads(content.decode("utf-8-sig"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise ToolError("Notebook không phải JSON hợp lệ.", code="conversion_failed") from exc
+    sections: list[str] = []
+    for cell in notebook.get("cells", []):
+        if cell.get("cell_type") not in {"markdown", "code"}:
+            continue
+        source = cell.get("source", "")
+        text = "".join(source) if isinstance(source, list) else str(source)
+        if text.strip():
+            sections.append(text.strip())
+    if not sections:
+        raise ToolError("Notebook không có Markdown hoặc code để đọc.", code="conversion_failed")
+    return "\n\n".join(sections)
+
+
+def _convert_bytes(content: bytes, mime_type: str, file_name: str = "") -> str:
+    if file_name.lower().endswith(".ipynb"):
+        return _extract_notebook(content)
     if mime_type.startswith("text/") or mime_type == "application/json":
         return content.decode("utf-8", errors="replace")
     suffix = _extension_for(mime_type)
@@ -231,7 +254,9 @@ async def read_drive_file(payload: ReadDriveFileInput, context: ToolContext) -> 
                     code="file_too_large",
                 )
         effective_mime = EXPORT_MIME_TYPES.get(metadata["mimeType"], metadata["mimeType"])
-        text = await asyncio.to_thread(_convert_bytes, buffer.getvalue(), effective_mime)
+        text = await asyncio.to_thread(
+            _convert_bytes, buffer.getvalue(), effective_mime, metadata.get("name", "")
+        )
     except HttpError as exc:
         raise _translate_http_error(exc) from exc
 

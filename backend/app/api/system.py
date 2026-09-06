@@ -6,6 +6,7 @@ from sqlalchemy import text
 from app.api.dependencies import CurrentUser, DbSession
 from app.api.schemas import HealthResponse
 from app.core.config import get_settings
+from app.services.embeddings import EMBEDDING_DIMENSION
 
 router = APIRouter(prefix="/api", tags=["system"])
 
@@ -24,6 +25,10 @@ async def health(request: Request, db: DbSession):
         gemini_configured=settings.gemini_is_configured,
         google_oauth_configured=settings.oauth_is_configured,
         vector_store=request.app.state.vector_store.backend_name,
+        gemini_chat_model=settings.gemini_chat_model,
+        gemini_fallback_model=settings.gemini_fallback_model,
+        gemini_embedding_model=settings.gemini_embedding_model,
+        embedding_dimensions=EMBEDDING_DIMENSION,
     )
 
 
