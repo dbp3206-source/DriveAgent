@@ -33,6 +33,7 @@ class ListDriveFilesInput(BaseModel):
     page_token: str | None = None
     folder_id: str | None = None
     mime_type: str | None = None
+    exclude_folders: bool = False
 
 
 class SearchDriveFilesInput(BaseModel):
@@ -75,6 +76,29 @@ async def _drive_service(context: ToolContext):  # type: ignore[no-untyped-def]
     )
 
 
+async def drive_file_metadata(
+    payload: ReadDriveFileInput, context: ToolContext
+) -> DriveFileResponse:
+    service = await _drive_service(context)
+    try:
+        item = await asyncio.to_thread(
+            service.files()
+            .get(
+                fileId=payload.file_id,
+                fields="id,name,mimeType,modifiedTime,webViewLink,trashed,capabilities(canDownload)",
+                supportsAllDrives=True,
+            )
+            .execute
+        )
+    except HttpError as exc:
+        raise _translate_http_error(exc) from exc
+    if item.get("trashed") or item.get("capabilities", {}).get("canDownload") is False:
+        raise ToolError(
+            "Tài liệu đã bị xóa hoặc không còn quyền đọc nội dung.", code="source_unavailable"
+        )
+    return _file_response(item)
+
+
 def _translate_http_error(exc: HttpError) -> ToolError:
     status = getattr(exc.resp, "status", 500)
     retryable = status in {408, 429, 500, 502, 503, 504}
@@ -90,6 +114,8 @@ async def list_drive_files(
 ) -> DriveFileListResponse:
     service = await _drive_service(context)
     clauses = ["trashed = false"]
+    if payload.exclude_folders:
+        clauses.append(f"mimeType != '{GOOGLE_FOLDER}'")
     if payload.folder_id:
         clauses.append(f"'{_escape_drive_query(payload.folder_id)}' in parents")
     if payload.mime_type:
@@ -276,6 +302,14 @@ def drive_tool_definitions() -> list[ToolDefinition]:
         "max_attempts": 3,
     }
     return [
+        ToolDefinition(
+            name="drive_file_metadata",
+            description="Kiểm tra quyền đọc và phiên bản tệp Drive, không tải nội dung.",
+            input_model=ReadDriveFileInput,
+            output_model=DriveFileResponse,
+            handler=drive_file_metadata,
+            **common,
+        ),
         ToolDefinition(
             name="drive_list_files",
             description="Liệt kê các tệp Google Drive mà người dùng hiện tại có thể truy cập.",

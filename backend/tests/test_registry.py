@@ -29,6 +29,47 @@ async def create_session(tmp_path: Path):
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("source", ["agent", "adk", "api"])
+async def test_explicit_action_gate_is_enforced_and_audited(tmp_path, source):
+    engine, factory = await create_session(tmp_path)
+    registry = ToolRegistry()
+    called = []
+
+    async def handler(payload, _context):
+        called.append(True)
+        return EchoOutput(value=payload.text)
+
+    registry.register(
+        ToolDefinition(
+            name="explicit_save",
+            description="Test",
+            input_model=EchoInput,
+            output_model=EchoOutput,
+            handler=handler,
+            required_permissions={MEMORY_WRITE},
+            requires_user_action=True,
+        )
+    )
+    async with factory() as db:
+        user = User(email="gate@test.invalid", display_name="Test", role="editor")
+        db.add(user)
+        await db.commit()
+        context = ToolContext(
+            request_id="gate", user=user, db=db, settings=Settings(), source=source
+        )
+        if source == "api":
+            await registry.execute("explicit_save", {"text": "hello"}, context)
+            assert called == [True]
+        else:
+            with pytest.raises(ToolAccessDeniedError):
+                await registry.execute("explicit_save", {"text": "hello"}, context)
+            assert not called
+        audit = await db.scalar(select(AuditEvent).where(AuditEvent.request_id == "gate"))
+        assert audit.status == ("success" if source == "api" else "denied")
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
 async def test_registry_executes_and_writes_completed_audit(tmp_path: Path) -> None:
     engine, factory = await create_session(tmp_path)
     registry = ToolRegistry()

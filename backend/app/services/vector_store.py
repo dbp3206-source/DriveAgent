@@ -59,9 +59,7 @@ class VectorStore:
             self.client = None
             self.backend_name = "sqlite-fallback"
 
-    async def delete_by_filter(
-        self, collection: str, filters: dict[str, str | list[str]]
-    ) -> None:
+    async def delete_by_filter(self, collection: str, filters: dict[str, str | list[str]]) -> None:
         if not self.client:
             return
         qfilter = self._filter(filters)

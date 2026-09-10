@@ -4,6 +4,16 @@ $backendPython = Join-Path $repoRoot "backend\.venv\Scripts\python.exe"
 if (-not (Test-Path -LiteralPath $backendPython)) {
     throw "Run scripts/setup.ps1 first."
 }
+# Detect an existing server before doing a full UI build. Never terminate an
+# unrelated process automatically just because it owns this port.
+$portProbe = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, 8000)
+try {
+    $portProbe.Start()
+} catch {
+    throw "Port 8000 is already in use. Open http://localhost:8000 if DriveAgent is running, or stop the old server with Ctrl+C before restarting."
+} finally {
+    $portProbe.Stop()
+}
 Push-Location $repoRoot
 try {
     & $backendPython scripts/local_config.py

@@ -39,6 +39,8 @@ class ToolDefinition:
     rate_limit_per_minute: int = 30
     timeout_seconds: float | None = None
     max_attempts: int = 3
+    # Server-owned policy: tool is available only after a deliberate UI/API action.
+    requires_user_action: bool = False
 
 
 class ToolError(RuntimeError):

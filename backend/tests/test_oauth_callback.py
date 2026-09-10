@@ -63,3 +63,17 @@ def test_flow_normalizes_google_scope_aliases(monkeypatch):
     assert "https://www.googleapis.com/auth/userinfo.email" in seen["scopes"]
     assert "https://www.googleapis.com/auth/userinfo.profile" in seen["scopes"]
     assert "https://www.googleapis.com/auth/drive.readonly" in seen["scopes"]
+    assert "https://www.googleapis.com/auth/drive.file" not in seen["scopes"]
+    build_flow(Settings(_env_file=None), workspace=True)
+    assert "https://www.googleapis.com/auth/drive.file" in seen["scopes"]
+    assert "https://www.googleapis.com/auth/drive" not in seen["scopes"]
+
+
+def test_workspace_oauth_requires_login_and_rejects_arbitrary_capability():
+    app = FastAPI()
+    app.add_middleware(SessionMiddleware, secret_key="test-secret")
+    app.include_router(auth.router)
+    app.dependency_overrides[get_settings] = lambda: Settings(_env_file=None)
+    with TestClient(app) as client:
+        assert client.get("/api/auth/google?capability=workspace").status_code == 401
+        assert client.get("/api/auth/google?capability=admin").status_code == 422

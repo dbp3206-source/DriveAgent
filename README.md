@@ -1,9 +1,9 @@
 # DriveAgent
 
-DriveAgent là trợ lý Google Drive chạy local, dùng Gemini để lập kế hoạch và trả lời. Mọi thao tác với Drive, RAG và memory đều đi qua Tool Registry có validate, xác thực, phân quyền, rate limit, audit và cơ chế retry có chọn lọc.
+DriveAgent là trợ lý học tập và công việc chạy local, dùng Gemini để biến tài liệu thành câu trả lời, Google Docs/Slides/Sheets, visual và quy trình dùng lại được. Mọi tool đều đi qua Tool Registry có schema, xác thực, phân quyền, giới hạn, audit và retry có chọn lọc.
 
-Bộ model mặc định: `gemini-3.8-flash` cho chat/planning, `gemini-3.5-flash-lite`
-làm fallback và `gemini-embedding-2` với vector 768 chiều cho RAG/Memory.
+Bộ model mặc định: `gemini-3.5-flash-lite` cho chat/planning và fallback;
+`gemini-embedding-2` với vector 768 chiều cho RAG/Memory.
 
 ## Có gì trong project
 
@@ -13,7 +13,13 @@ làm fallback và `gemini-embedding-2` với vector 768 chiều cho RAG/Memory.
 - Hybrid retrieval: Gemini dense embedding + lexical score + Reciprocal Rank Fusion.
 - Trả lời có citation dẫn tới tệp Drive gốc.
 - Bộ nhớ dài hạn có loại, dedup, semantic search, archive và delete.
-- LangGraph orchestration: planning, state, conditional routing, tool execution, checkpoint và recovery.
+- Google Docs/Slides/Sheets theo hai pha: chuẩn bị bản xem trước, người dùng duyệt rồi mới tạo hoặc sửa.
+- Visual Studio dựng infographic, flowchart, timeline, comparison và chart thành PNG/SVG local, không gọi API ảnh.
+- Reusable Skills lưu goal, procedure, constraint và output theo phiên bản; mỗi lần chạy dùng input/context mới.
+- Gmail đọc, tóm tắt, soạn trước và chỉ gửi sau khi người dùng duyệt đúng nội dung.
+- Google ADK coordinator với bốn Agent chuyên trách; LangGraph và compiler vẫn là backend so sánh.
+- MCP và A2A read-only dùng SDK thật, cùng ranh giới Tool Registry/RBAC/audit.
+- Harness dashboard thể hiện Context, RAG, Tool, Orchestration, Multi-Agent/MCP/A2A và Evaluation bằng số liệu thật.
 - RBAC tách biệt với Google OAuth scopes.
 - Audit log có request ID, latency, status và redaction secret, kể cả lần gọi tool bị từ chối.
 - React + Fluent UI, responsive, light/dark, tiếng Việt.
@@ -32,17 +38,19 @@ Set-ExecutionPolicy -Scope Process Bypass
 .\scripts\setup.ps1
 ```
 
-Sau đó:
+Sau đó chạy bản local một tiến trình:
 
 1. Điền `DRIVE_AGENT_GEMINI_API_KEY` trong `.env`.
 2. Tạo OAuth client và lưu file thành `client_secret.json`. Xem [docs/SETUP_GOOGLE.md](docs/SETUP_GOOGLE.md).
 3. Chạy:
 
 ```powershell
-.\scripts\run-dev.ps1
+powershell -ExecutionPolicy Bypass -File scripts\run-local.ps1
 ```
 
-Mở [http://localhost:5173](http://localhost:5173). API docs ở [http://localhost:8000/docs](http://localhost:8000/docs).
+Mở [http://localhost:8000](http://localhost:8000). API docs ở
+[http://localhost:8000/docs](http://localhost:8000/docs). Chỉ dùng `run-dev.ps1`
+khi đang phát triển frontend và đã đổi origin sang cổng 5173.
 
 ## Chạy bằng lệnh thủ công
 
@@ -65,16 +73,16 @@ npm run dev
 
 ```text
 backend/app/
-  agent/       LangGraph orchestration
+  agent/       ADK multi-agent, LangGraph và deterministic compiler
   api/         REST API và session auth
   auth/        Google OAuth2, RBAC
   core/        Settings, encryption, redaction
   db/          SQLite models và session
-  services/    RAG, embedding, memory, vector store
-  tools/       Tool Registry và Drive tools
+  services/    RAG, memory, Workspace creators, visual renderer và skill store
+  tools/       Tool Registry và toàn bộ governed capabilities
 frontend/src/
   components/  App shell và shared states
-  pages/       Chat, Drive, Memory, Audit, Access, Settings
+  pages/       Chat, Drive, Visual Studio, Skills, Memory, Harness, Audit
 design-work/   Design brief và bằng chứng QA
 docs/          Hướng dẫn cho người mới
 scripts/       Setup, run và verify trên Windows
@@ -82,7 +90,8 @@ scripts/       Setup, run và verify trên Windows
 
 ## Quyền và dữ liệu
 
-- Scope mặc định là `drive.readonly`. Project không tạo, sửa, xóa, di chuyển hoặc chia sẻ tệp.
+- `drive.readonly` dùng để tìm/đọc; `drive.file` chỉ cho file app tạo hoặc người dùng chọn. App không xóa, di chuyển hay đổi chia sẻ.
+- Gmail gửi và Docs/Slides/Sheets ghi đều có human-in-the-loop hai pha; Agent không tự bấm duyệt.
 - Người đăng nhập đầu tiên là `super_admin`; người tiếp theo là `editor`.
 - Dữ liệu riêng luôn có `user_id`. Query RAG, memory, chat và audit đều filter theo user.
 - OAuth credentials được mã hóa bằng `DRIVE_AGENT_APP_SECRET` trước khi ghi SQLite.
@@ -105,3 +114,5 @@ Kiểm thử live Google Drive cần API key và OAuth client của chính bạn
 - [Hướng dẫn đọc code](docs/CODE_TOUR.md)
 - [Bảo mật](docs/SECURITY.md)
 - [Dependency và giấy phép](docs/THIRD_PARTY_LICENSES.md)
+- [Evaluation Harness](backend/evals/README.md)
+- [QA report mới nhất](design-work/qa/qa-report.md)

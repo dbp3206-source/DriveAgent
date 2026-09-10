@@ -11,12 +11,12 @@
 
 Không thêm dấu nháy. Không commit `.env`.
 
-## 2. Bật Google Drive API
+## 2. Bật Google Workspace APIs
 
 1. Mở <https://console.cloud.google.com/>.
 2. Chọn hoặc tạo một Google Cloud project.
 3. Vào **APIs & Services > Library**.
-4. Tìm **Google Drive API** và chọn **Enable**.
+4. Bật **Google Drive API**, **Google Docs API**, **Google Slides API**, **Google Sheets API** và **Gmail API**.
 
 ## 3. Cấu hình OAuth consent screen
 
@@ -24,9 +24,10 @@ Không thêm dấu nháy. Không commit `.env`.
 2. Nhập app name, support email và developer email.
 3. Chọn audience phù hợp. Tài khoản Gmail cá nhân dùng **External**.
 4. Khi app còn ở Testing, thêm email Google của bạn vào **Test users**.
-5. Trong **Data Access**, thêm `openid`, `email`, `profile` và `https://www.googleapis.com/auth/drive.readonly`.
+5. Trong **Data Access**, thêm `openid`, `email`, `profile`, `drive.readonly`,
+   `drive.file`, `gmail.readonly` và `gmail.send` (dùng URL scope đầy đủ như `.env.example`).
 
-`drive.readonly` là restricted scope theo phân loại Google (không chỉ là sensitive).
+Các quyền này truy cập dữ liệu riêng; giữ app ở Testing và chỉ thêm đúng Test users.
 Giai đoạn local dùng Testing và danh sách Test users; chưa cần publish công khai.
 Refresh token của External/Testing với quyền Drive hết hạn sau 7 ngày, nên cần kết nối lại.
 Nguồn: https://developers.google.com/workspace/drive/api/guides/api-specific-auth
@@ -47,7 +48,8 @@ và https://developers.google.com/identity/protocols/oauth2.
 .\scripts\run-dev.ps1
 ```
 
-Mở <http://localhost:5173>, chọn **Kết nối Google Drive**, đăng nhập đúng test user và kiểm tra màn hình consent chỉ xin quyền đọc.
+Mở <http://localhost:8000>, chọn **Kết nối Google**, đăng nhập đúng test user và
+kiểm tra màn hình consent khớp đúng Drive/Gmail scopes ở trên.
 
 ## Lỗi thường gặp
 

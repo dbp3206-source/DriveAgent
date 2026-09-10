@@ -99,11 +99,13 @@ class ToolRegistry:
                 raise ToolError(str(exc), code="invalid_arguments") from exc
 
             if not context.user or not context.user.is_active:
-                raise ToolAccessDeniedError(
-                    "Người dùng chưa được xác thực hoặc đã bị vô hiệu hóa."
-                )
+                raise ToolAccessDeniedError("Người dùng chưa được xác thực hoặc đã bị vô hiệu hóa.")
 
             granted_permissions = permissions_for_role(context.user.role)
+            if definition.requires_user_action and context.source != "api":
+                raise ToolAccessDeniedError(
+                    "Thao tác này cần người dùng chủ động chọn trên giao diện."
+                )
             missing_permissions = definition.required_permissions - granted_permissions
             if missing_permissions:
                 raise ToolAccessDeniedError(
@@ -114,7 +116,8 @@ class ToolRegistry:
             missing_scopes = definition.required_oauth_scopes - user_scopes
             if missing_scopes:
                 raise ToolAccessDeniedError(
-                    "Google chưa cấp scope cần thiết: " + ", ".join(sorted(missing_scopes))
+                    f"Google chưa cấp scope cần thiết: {', '.join(sorted(missing_scopes))}. "
+                    f"Vui lòng kết nối lại tài khoản Google để cấp quyền: /api/auth/google"
                 )
 
             # Tách rate limit theo (user, tool), tránh một user làm cạn quota người khác.
@@ -139,7 +142,7 @@ class ToolRegistry:
                 else AuditStatus.ERROR.value
             )
             audit.error_type = getattr(exc, "code", type(exc).__name__)
-            audit.error_message = str(exc)[:2000]
+            audit.error_message = redact(str(exc))[:2000]
             raise
         finally:
             audit.latency_ms = round((time.perf_counter() - started) * 1000)

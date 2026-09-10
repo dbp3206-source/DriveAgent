@@ -1,72 +1,34 @@
-# Design Brief
+# Design Brief — DriveAgent Study & Work Command Center
 
 ## Audience and viewing context
-
-Người học và lập trình viên mới đang chạy DriveAgent trên máy cá nhân. Họ dùng màn hình desktop để kết nối Google Drive, hỏi đáp tài liệu, xem bộ nhớ và kiểm tra nhật ký; giao diện vẫn phải dùng tốt trên điện thoại để tra cứu nhanh.
+Sinh viên và người dùng non-tech làm việc local trên desktop, tablet hoặc mobile. Dữ liệu được tách theo người dùng; các thao tác ghi ra Google luôn cần người dùng xem trước và xác nhận.
 
 ## Core message
-
-DriveAgent biến kho tài liệu Google Drive của từng người dùng thành một trợ lý có thể tìm, đọc, trích dẫn, ghi nhớ và giải thích rõ mọi hành động.
+DriveAgent giúp người dùng tìm, hiểu, tạo và kiểm chứng tài liệu trong một không gian làm việc có kiểm soát.
 
 ## Desired reaction or action
-
-Người dùng phải hiểu ngay dữ liệu nào đã được cấp quyền, agent vừa làm gì, câu trả lời dựa trên tệp nào và có thể thu hồi quyền hoặc xóa bộ nhớ khi cần.
+Người dùng biết nên bắt đầu từ đâu, hiểu Agent đang dùng dữ liệu và công cụ nào, rồi tự tin duyệt hoặc từ chối một hành động bên ngoài.
 
 ## Source authority
-
-- Các yêu cầu trực tiếp trong cuộc trao đổi với người dùng.
-- `Assignment-1-TODO`, `demo-tool-registry` và `rag-demo` ở workspace cha là nguồn tham khảo chức năng.
-- `RAG.pdf`, `Memories.pdf`, hai notebook Qdrant và các slide người dùng cung cấp là nguồn kiến thức kiến trúc.
-- Tài liệu chính thức Google Drive API, Gemini API, LangGraph và Qdrant là nguồn xác nhận hành vi tích hợp.
+Source hiện tại trong `backend/app` và `frontend/src`, test suite trong `backend/tests`, dữ liệu thật chỉ dùng cho nghiệm thu có kiểm soát. Không dùng nội dung minh họa giả làm số liệu sản phẩm.
 
 ## Content hierarchy
-
-1. Trạng thái kết nối và quyền truy cập hiện tại.
-2. Trò chuyện có kế hoạch thực thi, nguồn trích dẫn và trạng thái tool.
-3. Duyệt, tìm kiếm, đọc và lập chỉ mục tệp Drive.
-4. Quản lý bộ nhớ dài hạn theo từng người dùng.
-5. Audit log và quản trị vai trò để hệ thống có thể giải thích được.
+1. Công việc người dùng muốn hoàn thành.
+2. Câu trả lời và bằng chứng.
+3. Hành động tiếp theo có kiểm soát.
+4. Giải thích Context, RAG, Tool, Orchestration, Multi-Agent/Protocols và Evaluation khi cần.
 
 ## Visual territory
-
-Calm technical workspace: sáng sủa, tin cậy, có nhịp điệu kiểu công cụ vận hành nhưng không khô cứng. Màu cobalt làm điểm nhấn duy nhất; xanh lá chỉ dùng cho trạng thái thành công mang ý nghĩa thật.
+Một “study desk” số yên tĩnh: bề mặt sâu nhưng không u tối, typography rõ ràng, điều hướng có nhãn, control bo tròn vừa đủ và khoảng trắng dùng để dẫn mắt. Trạng thái kỹ thuật được diễn giải bằng ngôn ngữ đời thường; sơ đồ harness chỉ xuất hiện khi người dùng muốn tìm hiểu sâu.
 
 ## Brand and system constraints
-
-- Thương hiệu trung tính: tên sản phẩm DriveAgent, không giả lập nhận diện của Google.
-- Fluent UI React v9 là hệ component duy nhất cho product UI.
-- CSS variables quản lý theme sáng/tối; mặc định theo hệ điều hành và có nút chuyển thủ công.
-- Font chữ: `IBM Plex Sans` nếu tải được, fallback `Segoe UI`, `Arial`, sans-serif. Số liệu và request ID dùng `IBM Plex Mono`, fallback monospace.
-- Một hệ bo góc 6/10/14 px; không đặt mọi nhóm nội dung trong card.
-- Thiết kế bàn phím trước, focus rõ, WCAG AA, trạng thái loading/empty/error/disabled đầy đủ.
+Giữ Be Vietnam Pro, Fluent icons và khả năng đổi theme. Component phải dùng token thống nhất, focus ring rõ, vùng bấm tối thiểu 40px và không dựa vào màu để truyền đạt trạng thái. Mobile là một luồng riêng, không phải desktop bị thu nhỏ.
 
 ## Anti-goals
-
-- Không dùng gradient tím-xanh, glow, glassmorphism hoặc nền lưới trang trí kiểu AI.
-- Không dùng hero marketing, ba card tính năng bằng nhau, status dot trang trí hoặc emoji làm icon.
-- Không bịa dữ liệu, khách hàng, chỉ số hoặc ảnh chụp sản phẩm.
-- Không che giấu trạng thái OAuth, lỗi tool, thiếu nguồn hoặc phạm vi quyền.
-- Không dùng em dash/en dash trong chuỗi hiển thị.
+Không dùng dashboard executive chung chung, glow xanh, glassmorphism, card cho mọi nhóm nội dung, emoji thay icon, KPI giả, quota hard-code hoặc component cộng đồng chỉ vì bắt mắt.
 
 ## Output contract
-
-- Ứng dụng React + TypeScript responsive, chạy cùng FastAPI trên local.
-- Màn hình desktop, mobile và dark mode đều được kiểm tra trong trình duyệt thật.
-- Source code là đầu ra chỉnh sửa được; ảnh QA nằm trong `design-work/qa/screenshots/`.
-- Không phụ thuộc Docker để chạy mặc định; Qdrant embedded và SQLite lưu bền vững trên local.
+Ứng dụng React/FastAPI thật, không phải mockup. Mỗi vòng phải build, chạy trong trình duyệt thật và lưu bằng chứng QA theo cấu trúc `design-work/qa`. Không đổi secret hoặc xóa dữ liệu người dùng.
 
 ## Reference interpretation
-
-- Mượn từ Fluent 2: khả năng tiếp cận, mật độ phù hợp dashboard, trạng thái rõ và component nhất quán.
-- Mượn từ TasteSkill: một visual direction, tiết chế card, typography có chủ đích, chống mẫu AI và pre-flight bắt buộc.
-- Không sao chép bố cục hay tài sản nhận diện của bất kỳ template hoặc sản phẩm nào.
-
-## Design Read
-
-Người dùng là developer/learner cần một control room cho tài liệu cá nhân, vì vậy giao diện ưu tiên bằng chứng và khả năng kiểm soát hơn hiệu ứng. Fluent UI chịu trách nhiệm cho các pattern dày dữ liệu; TasteSkill chỉ định nhịp vỏ ứng dụng và tiêu chuẩn chống giao diện đại trà.
-
-## Design dials
-
-- `DESIGN_VARIANCE = 4/10`: bố cục có khu vực chính/phụ lệch nhẹ nhưng giữ tính dự đoán của công cụ nghiệp vụ.
-- `MOTION_INTENSITY = 3/10`: chỉ transition phục vụ phản hồi trạng thái, không animation tự chạy.
-- `VISUAL_DENSITY = 6/10`: đủ chặt cho danh sách tệp và audit log, vẫn có khoảng thở cho người học.
+Nguồn chính cho component là https://ui.shopviet247.xyz/elements. Mượn sự rõ ràng của trạng thái tương tác, hình học mềm và control HTML/CSS đơn giản; không sao chép nguyên hệ màu, animation phô trương hay tên component ngẫu nhiên. Chỉ dùng source cụ thể sau khi kiểm tra trang tác giả và license. Component “Hard pig 16” của Boryana trên Uiverse được khảo sát như một ví dụ input có icon, MIT; DriveAgent sẽ diễn giải lại bằng token và icon Fluent hiện có thay vì chép nguyên SVG/CSS.

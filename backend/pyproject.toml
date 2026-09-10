@@ -15,7 +15,12 @@ dependencies = [
   "google-api-python-client>=2.180,<3",
   "google-auth>=2.40,<3",
   "google-auth-oauthlib>=1.2,<2",
-  "google-genai>=1.31,<2",
+  "google-genai>=2.19,<3",
+  "google-adk==2.8.0",
+  # ADK 2.8 caps OpenTelemetry at 1.42; api-core 2.36 requires 1.44.
+  "google-api-core<2.36",
+  "mcp==2.2.0",
+  "a2a-sdk[http-server]==1.1.2",
   "httpx>=0.28,<1",
   "itsdangerous>=2.2,<3",
   "jsonschema>=4.25,<5",

@@ -7,7 +7,7 @@ trường nội bộ khi mô hình dữ liệu thay đổi.
 from datetime import datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ApiModel(BaseModel):
@@ -94,6 +94,15 @@ class MemoryUpdateRequest(BaseModel):
     confidence: float | None = Field(default=None, ge=0, le=1)
     is_archived: bool | None = None
 
+    @field_validator("content", "tags", "confidence", "is_archived", mode="before")
+    @classmethod
+    def reject_explicit_null(cls, value: Any) -> Any:
+        # PATCH cho phép bỏ qua trường, không cho phép xóa giá trị bằng null.
+        # Validator không chạy với default omitted nên partial update vẫn hợp lệ.
+        if value is None:
+            raise ValueError("Không chấp nhận null; hãy bỏ qua trường không muốn cập nhật.")
+        return value
+
 
 class MemoryResponse(ApiModel):
     id: str
@@ -109,9 +118,11 @@ class MemoryResponse(ApiModel):
 class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=12000)
     session_id: str | None = None
+    model: str | None = None
 
 
 class ChatResponse(BaseModel):
+    proposals: list[dict[str, Any]] = Field(default_factory=list)
     session_id: str
     message_id: str
     answer: str
@@ -127,7 +138,12 @@ class SessionResponse(ApiModel):
     updated_at: datetime
 
 
+class SessionUpdateRequest(BaseModel):
+    title: str = Field(min_length=1, max_length=240)
+
+
 class MessageResponse(ApiModel):
+    proposals: list[dict[str, Any]] = Field(default_factory=list)
     id: str
     role: str
     content: str

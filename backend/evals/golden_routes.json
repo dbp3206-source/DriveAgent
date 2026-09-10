@@ -1,0 +1,18 @@
+{
+  "version": "2026-09-09.1",
+  "purpose": "Offline regression set for deterministic request routing. It does not measure answer correctness.",
+  "cases": [
+    {"id": "drive-list", "input": "Liệt kê các tệp trên Google Drive của tôi", "expected_tool": "drive_list_files", "expected_direct": true},
+    {"id": "drive-search", "input": "Tìm file DriveAgent smoke test", "expected_tool": "drive_search_files", "expected_direct": true},
+    {"id": "drive-read", "input": "Đọc file 1AbCdEfGhIjKlMnOpQrS", "expected_tool": "drive_read_file", "expected_direct": true},
+    {"id": "drive-compound", "input": "Đọc và tóm tắt file lecture-notes.pdf", "expected_tool": "drive_search_files", "expected_direct": false},
+    {"id": "rag", "input": "Dùng RAG tìm nguyên tắc quản lý nợ công", "expected_tool": "rag_search", "expected_direct": false},
+    {"id": "local-source", "input": "Đọc file local-study-smoke.md trên máy", "expected_tool": "local_source_search", "expected_direct": false},
+    {"id": "memory-save", "input": "Ghi nhớ rằng tôi thích câu trả lời có bảng", "expected_tool": "memory_save", "expected_direct": true},
+    {"id": "memory-search", "input": "Bạn nhớ sở thích trình bày của tôi không?", "expected_tool": "memory_search", "expected_direct": false},
+    {"id": "calculator", "input": "Tính 125.5 cộng 24.5", "expected_tool": "calculate", "expected_direct": true},
+    {"id": "general-question", "input": "Giải thích OAuth là gì cho sinh viên", "expected_tool": null, "expected_direct": false},
+    {"id": "unsafe-send", "input": "Gửi email này ngay cho lớp", "expected_tool": null, "expected_direct": false},
+    {"id": "unsafe-create", "input": "Tạo Google Sheet và chia sẻ công khai ngay", "expected_tool": null, "expected_direct": false}
+  ]
+}

@@ -5,7 +5,8 @@
 ```text
 React UI
   -> FastAPI session auth
-  -> LangGraph planner / ReAct router
+  -> Google ADK coordinator
+       -> Research / Communication / Study / Workspace specialist
   -> Tool Registry
        1. Resolve registered tool
        2. Audit STARTED + redact arguments
@@ -13,7 +14,7 @@ React UI
        4. RBAC + OAuth scopes
        5. Per-user rate limit
        6. Execute + selective retry
-  -> Google Drive / RAG / Memory
+  -> Google Drive / Docs / Slides / Sheets / Gmail / RAG / Memory / Visuals / Skills
   -> Citation + execution trace
   -> React UI
 ```
@@ -23,7 +24,8 @@ React UI
 - SQLite: users, encrypted credentials, chat sessions, messages, file index, chunks, memory, audit.
 - Qdrant embedded: vector index trong `data/qdrant`. Không cần Docker.
 - SQLite giữ bản sao embedding. Nếu Qdrant không khởi tạo được, cosine search vẫn chạy từ SQLite và health báo `sqlite-fallback`.
-- LangGraph SQLite checkpointer: `data/langgraph_checkpoints.db`.
+- ADK SQLite session service lưu trạng thái hội thoại. LangGraph SQLite checkpointer
+  vẫn tồn tại khi chọn backend `langgraph` để so sánh/khôi phục dữ liệu cũ.
 
 ## Multi-user
 
@@ -31,15 +33,21 @@ Chạy local không đồng nghĩa với thiết kế single-user. Các bảng d
 
 ## Orchestration Harness
 
-- Planning: model tạo kế hoạch 1-5 hành động trước vòng ReAct.
-- Workflow: StateGraph có node planner, agent, tools và limit.
-- State: messages, user/session/request ID, plan, số vòng tool, trace.
-- Routing: conditional edge dựa vào tool calls.
-- Execution: ToolNode có thể chạy các tool calls độc lập song song; mỗi call dùng database session riêng.
-- Recovery: registry retry lỗi tạm thời; ToolNode trả lỗi về model để điều chỉnh; hard stop sau 6 vòng.
-- Model recovery: `gemini-3.8-flash` là primary; lỗi provider/model được chuyển sang
-  `gemini-3.5-flash-lite`. Vòng lặp tool lặp lại bị chặn trước hard stop.
-- Checkpoint: graph state được lưu theo `user_id:session_id`.
+- Planning/routing: ADK coordinator hiểu ý định và chuyển cho đúng specialist.
+- State: message, user/session/request ID, tool trace và ADK session tách theo user.
+- Execution: mọi specialist chỉ nhìn thấy tool phù hợp; Tool Registry vẫn là cổng bắt buộc.
+- Recovery: registry chỉ retry lỗi tạm thời; model/tool loop có giới hạn; fallback dùng
+  cùng `gemini-3.5-flash-lite` để không tự chuyển sang model trả phí.
+- Checkpoint: định danh session luôn ghép với user; history cũ vẫn đọc được trong UI.
+- Protocols: MCP và A2A chỉ công bố tool read-only, dùng SDK thật và cùng RBAC/audit.
+
+## Creation & Execution Harness
+
+- Một structured compiler call có thể trả tối đa bốn proposal trong cùng bundle.
+- Docs, Slides và Sheets dùng ledger `prepare -> digest approval -> claim -> execute -> read-back`.
+- Slides và Sheets edit chỉ patch vùng/đoạn được chọn; bản cũ không khớp thì fail với conflict.
+- VisualSpec được render quyết định thành PNG và SVG trên máy, không gọi model lần hai.
+- Skills lưu procedure có placeholder; `skill_run` chỉ nạp procedure với context mới, không chạy code.
 
 ## Vì sao không có Code Sandbox
 

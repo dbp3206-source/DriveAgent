@@ -56,14 +56,18 @@ export function DrivePage() {
   const [notice, setNotice] = useState('')
   const [nextPage, setNextPage] = useState<string | null>(null)
   const [activeQuery, setActiveQuery] = useState('')
+  const [folderStack, setFolderStack] = useState<Array<{ id: string; name: string }>>([])
 
-  const load = useCallback(async (search = '', pageToken: string | null = null) => {
+  const load = useCallback(async (search = '', pageToken: string | null = null, folderId: string | null = null) => {
     setLoading(true)
     setError('')
     try {
       const params = new URLSearchParams({ page_size: '50' })
       if (search.trim()) params.set('query', search.trim())
       if (pageToken) params.set('page_token', pageToken)
+      const lastInStack = folderStack[folderStack.length - 1]
+      const targetFolderId = folderId !== undefined ? folderId : (lastInStack ? lastInStack.id : null)
+      if (targetFolderId && !search.trim()) params.set('folder_id', targetFolderId)
       const result = await api<FileList>(`/api/drive/files?${params}`)
       setFiles((current) => pageToken
         ? [...current, ...result.files.filter((file) => !current.some((old) => old.id === file.id))]
@@ -75,9 +79,30 @@ export function DrivePage() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [folderStack])
 
   useEffect(() => { void load() }, [load])
+
+  function openFolder(folder: DriveFile) {
+    const nextStack = [...folderStack, { id: folder.id, name: folder.name }]
+    setFolderStack(nextStack)
+    setQuery('')
+    void load('', null, folder.id)
+  }
+
+  function navigateBreadcrumb(index: number) {
+    if (index === -1) {
+      setFolderStack([])
+      setQuery('')
+      void load('', null, null)
+    } else {
+      const nextStack = folderStack.slice(0, index + 1)
+      setFolderStack(nextStack)
+      setQuery('')
+      const lastTarget = nextStack[nextStack.length - 1]
+      void load('', null, lastTarget ? lastTarget.id : null)
+    }
+  }
 
   async function search(event: FormEvent) {
     event.preventDefault()
@@ -144,6 +169,29 @@ export function DrivePage() {
       {!loading && !error && files.length === 0 ? (
         <EmptyState title="Không tìm thấy tệp" description="Hãy đổi từ khóa hoặc kiểm tra quyền Google Drive." />
       ) : null}
+      <div className="drive-navigation-bar">
+        <div className="drive-breadcrumbs">
+          <button
+            type="button"
+            className={`breadcrumb-btn ${folderStack.length === 0 ? 'breadcrumb-btn--active' : ''}`}
+            onClick={() => navigateBreadcrumb(-1)}
+          >
+            Drive của tôi
+          </button>
+          {folderStack.map((f, i) => (
+            <span key={f.id} className="breadcrumb-segment">
+              <span className="breadcrumb-sep">/</span>
+              <button
+                type="button"
+                className={`breadcrumb-btn ${i === folderStack.length - 1 ? 'breadcrumb-btn--active' : ''}`}
+                onClick={() => navigateBreadcrumb(i)}
+              >
+                {f.name}
+              </button>
+            </span>
+          ))}
+        </div>
+      </div>
       {!loading && files.length > 0 ? (
         <div className="table-scroll">
           <Table aria-label="Danh sách tệp Google Drive">
@@ -161,7 +209,18 @@ export function DrivePage() {
               {files.map((file) => (
                 <TableRow key={file.id}>
                   <TableCell>
-                    <TableCellLayout>{file.name}</TableCellLayout>
+                    {file.mime_type.includes('folder') ? (
+                      <button
+                        type="button"
+                        className="folder-link-btn"
+                        onClick={() => openFolder(file)}
+                        title="Mở thư mục này"
+                      >
+                        📁 <strong>{file.name}</strong>
+                      </button>
+                    ) : (
+                      <TableCellLayout>{file.name}</TableCellLayout>
+                    )}
                   </TableCell>
                   <TableCell>{readableType(file.mime_type)}</TableCell>
                   <TableCell>{formatDate(file.modified_time)}</TableCell>

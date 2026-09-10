@@ -1,10 +1,16 @@
 """Google OAuth2 web-server flow và vòng đời credential của từng người dùng."""
 
 import json
+import os
 from datetime import UTC, datetime
 from typing import Any
 
+# Cho phép OAuth trên localhost và bỏ qua cảnh báo thay đổi scope từ Google
+os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
+os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+
 import httpx
+from google.auth.exceptions import RefreshError, TransportError
 from google.auth.transport.requests import Request as GoogleAuthRequest
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import Flow
@@ -13,13 +19,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import Settings
 from app.core.security import decrypt_json, encrypt_json
 from app.db.models import User
+from app.tools.contracts import ToolAccessDeniedError, ToolError
 
 
 class OAuthNotConfiguredError(RuntimeError):
     pass
 
 
-def build_flow(settings: Settings, *, state: str | None = None) -> Flow:
+def build_flow(settings: Settings, *, state: str | None = None, workspace: bool = False) -> Flow:
     """Tạo Flow mới cho từng request để state không bị dùng chung giữa người dùng."""
 
     if not settings.oauth_is_configured:
@@ -35,7 +42,10 @@ def build_flow(settings: Settings, *, state: str | None = None) -> Flow:
                 "email": "https://www.googleapis.com/auth/userinfo.email",
                 "profile": "https://www.googleapis.com/auth/userinfo.profile",
             }.get(scope, scope)
-            for scope in settings.google_drive_scopes
+            for scope in dict.fromkeys(
+                settings.google_drive_scopes
+                + (["https://www.googleapis.com/auth/drive.file"] if workspace else [])
+            )
         ],
         state=state,
         redirect_uri=settings.google_redirect_uri,
@@ -69,7 +79,19 @@ async def refresh_and_store_if_needed(
 
     credentials = credentials_from_user(user, settings)
     if credentials.expired and credentials.refresh_token:
-        await asyncio.to_thread(credentials.refresh, GoogleAuthRequest())
+        try:
+            await asyncio.to_thread(credentials.refresh, GoogleAuthRequest())
+        except TransportError as exc:
+            # Không đưa exception SDK thô ra UI/log vì có thể chứa dữ liệu xác thực.
+            raise ToolError(
+                "Chưa kết nối được Google để làm mới phiên. Kiểm tra mạng rồi thử lại.",
+                code="google_connection_error",
+                retryable=True,
+            ) from exc
+        except RefreshError as exc:
+            raise ToolAccessDeniedError(
+                "Google không chấp nhận phiên hiện tại. Vui lòng kết nối lại Google Drive."
+            ) from exc
         user.encrypted_google_credentials = encrypt_json(credentials_to_dict(credentials), settings)
         await db.commit()
     if not credentials.valid:

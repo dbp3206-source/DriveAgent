@@ -6,7 +6,7 @@ dễ kiểm tra và giúp test có thể thay giá trị mà không sửa code n
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Literal
 
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
@@ -32,7 +32,10 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "DriveAgent"
+    orchestrator_backend: Literal["langgraph", "adk", "compiler"] = "adk"
+    no_paid_fallback: Literal[True] = True
     environment: str = "development"
+    local_timezone: str = "Asia/Bangkok"
     app_secret: str = "local-development-change-me-before-sharing"
     log_level: str = "INFO"
 
@@ -40,7 +43,7 @@ class Settings(BaseSettings):
     qdrant_path: str = "./data/qdrant"
 
     gemini_api_key: str = ""
-    gemini_chat_model: str = "gemini-3.8-flash"
+    gemini_chat_model: str = "gemini-3.5-flash-lite"
     gemini_fallback_model: str = "gemini-3.5-flash-lite"
     gemini_embedding_model: str = "gemini-embedding-2"
 
@@ -52,6 +55,9 @@ class Settings(BaseSettings):
             "email",
             "profile",
             "https://www.googleapis.com/auth/drive.readonly",
+            "https://www.googleapis.com/auth/drive.file",
+            "https://www.googleapis.com/auth/gmail.readonly",
+            "https://www.googleapis.com/auth/gmail.send",
         ]
     )
 

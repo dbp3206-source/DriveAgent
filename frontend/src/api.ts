@@ -14,14 +14,19 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   if (init.body && !(init.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json')
   }
-  const response = await fetch(path, {
-    ...init,
-    headers,
-    credentials: 'include',
-  })
+  let response: Response
+  try {
+    response = await fetch(path, { ...init, headers, credentials: 'include' })
+  } catch (caught) {
+    if (caught instanceof DOMException && caught.name === 'AbortError') throw caught
+    throw new ApiError('Mất kết nối với ứng dụng. Kiểm tra server local còn chạy rồi thử lại.', 0, 'network_error')
+  }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))
-    throw new ApiError(body.detail ?? `HTTP ${response.status}`, response.status, body.code)
+    const detail = typeof body.detail === 'string' ? body.detail
+      : response.status === 422 ? 'Dữ liệu chưa hợp lệ. Hãy kiểm tra các trường rồi thử lại.'
+        : `Yêu cầu không thành công (HTTP ${response.status}).`
+    throw new ApiError(detail, response.status, body.code)
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>

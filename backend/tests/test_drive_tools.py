@@ -29,13 +29,13 @@ def test_known_extensions_are_preserved_for_conversion() -> None:
 
 
 def test_notebook_conversion_keeps_sources_and_drops_outputs() -> None:
-    notebook = b'''{
+    notebook = b"""{
       "cells": [
         {"cell_type": "markdown", "source": ["# State, Nodes, Edges"]},
         {"cell_type": "code", "source": ["print('ok')"],
          "outputs": [{"data": {"image/png": "BASE64_SHOULD_NOT_BE_INDEXED"}}]}
       ]
-    }'''
+    }"""
 
     result = _convert_bytes(notebook, "application/octet-stream", "agent.ipynb")
 

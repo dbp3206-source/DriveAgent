@@ -50,6 +50,7 @@ export interface Citation {
 }
 
 export interface ChatMessage {
+  proposals?: import('./components/CreationProposal').Proposal[]
   id: string
   role: 'user' | 'assistant'
   content: string

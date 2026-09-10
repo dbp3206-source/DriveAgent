@@ -7,7 +7,7 @@ from collections import Counter
 from uuid import NAMESPACE_URL, uuid5
 
 from pydantic import BaseModel, Field
-from sqlalchemy import delete, select
+from sqlalchemy import delete, select, update
 
 from app.api.schemas import Citation, IndexFileResponse, RagSearchResponse
 from app.auth.permissions import RAG_READ, RAG_WRITE
@@ -15,7 +15,7 @@ from app.db.models import DocumentChunk, DriveFileIndex
 from app.services.chunking import chunk_document
 from app.services.embeddings import EmbeddingService, EmbeddingTask, cosine_similarity, tokenize
 from app.services.vector_store import DRIVE_COLLECTION, VectorStore
-from app.tools.contracts import ToolContext, ToolDefinition
+from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 from app.tools.drive import ReadDriveFileInput
 from app.tools.registry import ToolRegistry
 
@@ -62,6 +62,22 @@ class RagService:
             )
         )
         if existing and existing.content_hash == content_hash and not payload.force:
+            # Rename/metadata-only edits still advance Drive revision without re-embedding.
+            existing.modified_time = content_result.file.modified_time
+            existing.name = content_result.file.name
+            existing.web_view_link = content_result.file.web_view_link
+            await context.db.execute(
+                update(DocumentChunk)
+                .where(
+                    DocumentChunk.user_id == context.user.id,
+                    DocumentChunk.drive_file_id == payload.file_id,
+                )
+                .values(
+                    file_name=content_result.file.name,
+                    web_view_link=content_result.file.web_view_link,
+                )
+            )
+            await context.db.commit()
             return IndexFileResponse(
                 file_id=payload.file_id,
                 file_name=existing.name,
@@ -71,6 +87,10 @@ class RagService:
             )
 
         drafts = chunk_document(content_result.text, content_result.file.mime_type)
+        # Reserve/embed BEFORE replacing an existing index. Quota errors keep old data intact.
+        vectors = await self.embeddings.embed_many(
+            [draft.content for draft in drafts], EmbeddingTask.DOCUMENT
+        )
         await context.db.execute(
             delete(DocumentChunk).where(
                 DocumentChunk.user_id == context.user.id,
@@ -81,8 +101,7 @@ class RagService:
             DRIVE_COLLECTION,
             {"user_id": context.user.id, "drive_file_id": payload.file_id},
         )
-        for draft in drafts:
-            vector = await self.embeddings.embed(draft.content, EmbeddingTask.DOCUMENT)
+        for draft, vector in zip(drafts, vectors, strict=True):
             # Qdrant nhận UUID hoặc số nguyên làm point ID. UUID5 vừa hợp lệ vừa ổn định,
             # nên re-index cùng nội dung không tạo point trùng.
             chunk_id = str(
@@ -234,11 +253,33 @@ def rag_tool_definitions(service: RagService, registry: ToolRegistry) -> list[To
     async def search_handler(
         payload: SearchKnowledgeInput, context: ToolContext
     ) -> RagSearchResponse:
-        return await service.search(payload, context)
+        result = await service.search(payload, context)
+        # Cached snippets are not an entitlement: verify access and revision online
+        # before any text leaves this handler. Offline/revoked/stale => fail closed.
+        for file_id in dict.fromkeys(c.file_id for c in result.citations):
+            current = await registry.execute("drive_file_metadata", {"file_id": file_id}, context)
+            indexed = await context.db.scalar(
+                select(DriveFileIndex).where(
+                    DriveFileIndex.user_id == context.user.id,
+                    DriveFileIndex.drive_file_id == file_id,
+                )
+            )
+            if (
+                indexed is None
+                or not indexed.modified_time
+                or (indexed.modified_time != current.modified_time)
+            ):
+                raise ToolError(
+                    "Tài liệu đã thay đổi hoặc thiếu phiên bản. "
+                    "Hãy chuẩn bị lại tài liệu để hỏi đáp trước khi dùng RAG.",
+                    code="stale_index",
+                )
+        return result
 
     return [
         ToolDefinition(
             name="rag_index_drive_file",
+            requires_user_action=True,
             description="Đọc một tệp Drive và lập chỉ mục RAG bền vững cho người dùng hiện tại.",
             input_model=IndexDriveFileInput,
             output_model=IndexFileResponse,

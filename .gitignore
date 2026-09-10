@@ -3,6 +3,7 @@
 client_secret*.json
 credentials*.json
 data/
+.local-backups/
 *.db
 *.sqlite
 *.sqlite3
@@ -32,6 +33,7 @@ Thumbs.db
 
 # Runtime logs and QA temp files
 *.log
+tmp/
 coverage/
 htmlcov/
 .coverage

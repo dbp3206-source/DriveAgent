@@ -15,6 +15,11 @@ from app.services.embeddings import EmbeddingService, EmbeddingTask, cosine_simi
 from app.services.vector_store import MEMORY_COLLECTION, VectorStore
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 
+# Memory search is user-facing recall, so an unrelated top-k result is worse
+# than an honest empty result.  Dense-only matches need stronger evidence than
+# matches that also share concrete terms with the user's query.
+MIN_HYBRID_MEMORY_SCORE = 0.45
+
 
 class SaveMemoryInput(BaseModel):
     kind: MemoryKind
@@ -127,20 +132,21 @@ class MemoryService:
             max(payload.limit * 4, 24),
         )
         dense_scores = dict(qdrant_hits)
-        ranked = sorted(
-            rows,
-            key=lambda row: (
-                0.72
-                * dense_scores.get(
-                    row.id,
-                    cosine_similarity(query_vector, json.loads(row.embedding_json)),
-                )
-                + 0.28 * (len(query_terms & set(tokenize(row.content))) / max(len(query_terms), 1))
-            ),
-            reverse=True,
-        )
+        scored: list[tuple[LongTermMemory, float]] = []
+        for row in rows:
+            dense_score = dense_scores.get(
+                row.id,
+                cosine_similarity(query_vector, json.loads(row.embedding_json)),
+            )
+            lexical_score = len(query_terms & set(tokenize(row.content))) / max(len(query_terms), 1)
+            hybrid_score = 0.72 * dense_score + 0.28 * lexical_score
+            # Dense embeddings are excellent for ordering plausible memories but
+            # can assign a deceptively high score to unrelated short identifiers.
+            if hybrid_score >= MIN_HYBRID_MEMORY_SCORE and lexical_score > 0:
+                scored.append((row, hybrid_score))
+        scored.sort(key=lambda item: item[1], reverse=True)
         return MemoryListResponse(
-            memories=[memory_response(row) for row in ranked[: payload.limit]]
+            memories=[memory_response(row) for row, _score in scored[: payload.limit]]
         )
 
 

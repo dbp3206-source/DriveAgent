@@ -26,6 +26,36 @@ class Base(DeclarativeBase):
     pass
 
 
+class SavedArtifact(Base):
+    """Kết quả do người dùng chủ động lưu; revision chống ghi đè chỉnh sửa."""
+
+    __tablename__ = "saved_artifacts"
+    __table_args__ = (Index("ux_artifact_request", "user_id", "creation_key", unique=True),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    creation_key: Mapped[str] = mapped_column(String(36))
+    title: Mapped[str] = mapped_column(String(240))
+    kind: Mapped[str] = mapped_column(String(24), default="note")
+    content: Mapped[str] = mapped_column(Text)
+    revision: Mapped[int] = mapped_column(Integer, default=1)
+    is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class LocalSource(Base):
+    __tablename__ = "local_sources"
+    __table_args__ = (Index("ux_local_source_hash", "user_id", "content_hash", unique=True),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(240))
+    content: Mapped[str] = mapped_column(Text)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class UserRole(StrEnum):
     SUPER_ADMIN = "super_admin"
     OWNER = "owner"
@@ -103,6 +133,39 @@ class Message(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     session: Mapped[ChatSession] = relationship(back_populates="messages")
+
+
+class ResponseFeedback(Base):
+    """A user's explicit quality signal for one assistant response."""
+
+    __tablename__ = "response_feedback"
+    __table_args__ = (Index("ux_feedback_user_message", "user_id", "message_id", unique=True),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    message_id: Mapped[str] = mapped_column(
+        ForeignKey("messages.id", ondelete="CASCADE"), index=True
+    )
+    rating: Mapped[int] = mapped_column(Integer)
+    reasons_json: Mapped[str] = mapped_column(Text, default="[]")
+    comment: Mapped[str | None] = mapped_column(Text, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class CreationProposalRecord(Base):
+    """Separate table keeps existing message history intact without an ALTER migration."""
+
+    __tablename__ = "creation_proposals"
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    message_id: Mapped[str] = mapped_column(
+        ForeignKey("messages.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    ordinal: Mapped[int] = mapped_column(Integer)
+    spec_json: Mapped[str] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
 
 class DriveFileIndex(Base):

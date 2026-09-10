@@ -4,6 +4,7 @@ import asyncio
 import json
 import logging
 import secrets
+from typing import Literal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -82,9 +83,17 @@ async def demo_login(
 
 
 @router.get("/google")
-async def google_login(request: Request, settings: Settings = Depends(get_settings)):
+async def google_login(
+    request: Request,
+    settings: Settings = Depends(get_settings),
+    capability: Literal["workspace"] | None = None,
+):
+    if capability and not request.session.get("user_id"):
+        raise HTTPException(
+            status_code=401, detail="Đăng nhập trước khi kết nối quyền tạo tài liệu."
+        )
     try:
-        flow = build_flow(settings)
+        flow = build_flow(settings, workspace=True) if capability else build_flow(settings)
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     nonce = secrets.token_urlsafe(24)
@@ -95,6 +104,8 @@ async def google_login(request: Request, settings: Settings = Depends(get_settin
         state=nonce,
     )
     request.session["oauth_state"] = state
+    request.session["oauth_workspace"] = bool(capability)
+    request.session["oauth_upgrade_user"] = request.session.get("user_id") if capability else None
     # Flow được tạo lại ở callback. Giữ verifier của đúng lần đăng nhập này;
     # mã hóa trước khi lưu vì session cookie được ký nhưng không tự mã hóa.
     request.session["oauth_pkce"] = encrypt_json({"verifier": flow.code_verifier}, settings)
@@ -109,10 +120,16 @@ async def google_callback(
 ):
     expected_state = request.session.pop("oauth_state", None)
     encrypted_pkce = request.session.pop("oauth_pkce", None)
+    workspace = request.session.pop("oauth_workspace", False)
+    upgrade_user = request.session.pop("oauth_upgrade_user", None)
     returned_state = request.query_params.get("state")
     if not expected_state or not secrets.compare_digest(expected_state, returned_state or ""):
         raise HTTPException(status_code=400, detail="OAuth state không hợp lệ.")
-    flow = build_flow(settings, state=expected_state)
+    flow = (
+        build_flow(settings, state=expected_state, workspace=True)
+        if workspace
+        else build_flow(settings, state=expected_state)
+    )
     try:
         flow.code_verifier = decrypt_json(encrypted_pkce, settings)["verifier"]
         if not flow.code_verifier:
@@ -135,19 +152,41 @@ async def google_callback(
             status_code=503,
             detail="Server chưa kết nối được Google. Kiểm tra mạng server rồi kết nối Google lại.",
         ) from None
+    except Warning as warn:
+        # oauthlib raises Warning if Google returns scopes in different order or normalized.
+        # This is expected and safe when user authorizes scopes.
+        logger.info("OAuth scope notice (acceptable): %s", warn)
+        token_data = getattr(warn, "token", None) or {}
+        if isinstance(token_data, dict) and "access_token" in token_data:
+            from google.oauth2.credentials import Credentials
+
+            credentials = Credentials(
+                token=token_data["access_token"],
+                refresh_token=token_data.get("refresh_token"),
+                token_uri=flow.client_config["token_uri"],
+                client_id=flow.client_config["client_id"],
+                client_secret=flow.client_config["client_secret"],
+                scopes=token_data.get("scope", []),
+            )
+            flow.oauth2session.token = token_data
+        else:
+            credentials = flow.credentials
+        profile = await fetch_google_profile(credentials.token)
     except Exception as exc:
         # Provider error có thể chứa chi tiết request nhạy cảm. Chỉ ghi server log,
         # không phản chiếu nguyên văn về trình duyệt.
-        logger.error("Google OAuth callback failure: %s", type(exc).__name__)
+        logger.error("Google OAuth callback failure: %s: %s", type(exc).__name__, exc)
         raise HTTPException(
             status_code=400,
-            detail="Google OAuth thất bại. Kiểm tra cấu hình và log server.",
+            detail=f"Google OAuth thất bại: {exc}",
         ) from exc
 
     email = profile.get("email")
     if not email or not profile.get("email_verified", False):
         raise HTTPException(status_code=400, detail="Google chưa xác minh email của tài khoản.")
     user = await db.scalar(select(User).where(User.email == email))
+    if workspace and (not user or user.id != upgrade_user or not user.is_active):
+        raise HTTPException(status_code=403, detail="Hãy chọn đúng tài khoản đang đăng nhập.")
     if not user:
         total_users = await db.scalar(select(func.count()).select_from(User)) or 0
         user = User(
@@ -168,7 +207,11 @@ async def google_callback(
     )
     user.display_name = profile.get("name") or user.display_name
     user.avatar_url = profile.get("picture")
-    user.oauth_scopes_json = json.dumps(list(credentials.scopes or []))
+    # Granular consent may grant fewer scopes than requested. Never invent grants.
+    granted = credentials.granted_scopes
+    user.oauth_scopes_json = json.dumps(
+        list(granted if granted is not None else credentials.scopes or [])
+    )
     user.encrypted_google_credentials = encrypt_json(credential_payload, settings)
     await db.commit()
     request.session["user_id"] = user.id

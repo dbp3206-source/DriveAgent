@@ -11,6 +11,13 @@ from app.services.vector_store import VectorStore
 from app.tools.contracts import ToolContext, ToolError
 
 
+class SameVectorEmbeddings:
+    """Simulate a dense model that over-scores every candidate equally."""
+
+    async def embed(self, _text, _task):
+        return [1.0] + [0.0] * 767
+
+
 @pytest.mark.asyncio
 async def test_memory_deduplicates_and_isolates_users(tmp_path: Path) -> None:
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'memory.db'}")
@@ -40,6 +47,42 @@ async def test_memory_deduplicates_and_isolates_users(tmp_path: Path) -> None:
         second_context = ToolContext(request_id="m2", user=second, db=db, settings=settings)
         result = await service.search(SearchMemoryInput(query="câu trả lời ngắn"), second_context)
         assert result.memories == []
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_memory_search_returns_empty_instead_of_unrelated_top_k(tmp_path: Path) -> None:
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'no-match.db'}")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    settings = Settings(gemini_api_key="", qdrant_path=str(tmp_path / "qdrant-no-match"))
+    service = MemoryService(SameVectorEmbeddings(), VectorStore(settings))
+
+    async with factory() as db:
+        user = User(email="memory@example.com", display_name="Memory", role=UserRole.EDITOR.value)
+        db.add(user)
+        await db.commit()
+        context = ToolContext(request_id="m-no-match", user=user, db=db, settings=settings)
+        await service.save(
+            SaveMemoryInput(
+                kind="preference",
+                content="Tôi thích câu trả lời kỹ thuật ngắn gọn có nguồn trích dẫn",
+            ),
+            context,
+        )
+
+        matching = await service.search(
+            SearchMemoryInput(query="câu trả lời kỹ thuật ngắn gọn"), context
+        )
+        unrelated = await service.search(
+            SearchMemoryInput(query="DA-QA-NO-MATCH-20260909"), context
+        )
+
+        assert [item.content for item in matching.memories] == [
+            "Tôi thích câu trả lời kỹ thuật ngắn gọn có nguồn trích dẫn"
+        ]
+        assert unrelated.memories == []
     await engine.dispose()
 
 
@@ -107,7 +150,5 @@ async def test_qdrant_memory_search_is_filtered_by_user(tmp_path: Path) -> None:
     hits = await vectors.search(
         "agent_memories", first, {"user_id": "user-a", "kind": ["fact"]}, 10
     )
-    assert [point_id for point_id, _score in hits] == [
-        "7cc7bb17-ef96-4c72-b211-1276c6b88673"
-    ]
+    assert [point_id for point_id, _score in hits] == ["7cc7bb17-ef96-4c72-b211-1276c6b88673"]
     await vectors.close()

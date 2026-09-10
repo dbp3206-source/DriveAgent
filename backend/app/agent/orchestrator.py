@@ -18,18 +18,23 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel, Field
 
+from app.agent.presentation import PRESENTATION_POLICY
 from app.agent.state import AgentState
 from app.core.config import Settings
+from app.core.security import redact
 from app.db.models import User
 from app.db.session import SessionFactory
 from app.tools.contracts import ToolContext
 from app.tools.registry import ToolRegistry
 
-SYSTEM_PROMPT = """Bạn là DriveAgent, trợ lý tài liệu Google Drive có kiểm soát.
+SYSTEM_PROMPT = (
+    """Bạn là DriveAgent, trợ lý học tập và tài liệu có kiểm soát.
 
 Quy tắc bắt buộc:
-- Trả lời bằng tiếng Việt rõ ràng, súc tích.
+- Mặc định trả lời bằng tiếng Việt rõ ràng, đầy đủ theo nhu cầu người dùng.
 - Khi câu hỏi liên quan tệp chưa biết ID, hãy tìm tệp trước rồi mới đọc hoặc tra RAG.
+- Nếu người dùng chỉ định tài liệu local/import, dùng local_source_search/read,
+  không tự chuyển sang Drive. Tính số bằng calculate khi cần độ chính xác.
 - Chỉ khẳng định nội dung tài liệu khi tool đã trả về bằng chứng.
 - Nếu RAG không có ngữ cảnh đủ tốt, nói rõ là chưa tìm thấy thay vì suy đoán.
 - Không yêu cầu hoặc ghi nhớ API key, access token, refresh token hay mật khẩu.
@@ -38,6 +43,8 @@ Quy tắc bắt buộc:
 - Với yêu cầu mới nhất/gần đây, dùng drive_list_files (đã sắp theo thời gian sửa).
 - Khi có nguồn, dùng ký hiệu [1], [2] trong câu trả lời. Hệ thống sẽ gắn link nguồn.
 """
+    + PRESENTATION_POLICY
+)
 
 
 class AgentPlan(BaseModel):
@@ -45,6 +52,7 @@ class AgentPlan(BaseModel):
 
 
 class AgentRunResult(BaseModel):
+    proposals: list[dict[str, Any]] = Field(default_factory=list)
     answer: str
     plan: list[str]
     trace: list[dict[str, Any]]
@@ -78,6 +86,7 @@ class AgentOrchestrator:
         session_id: str,
         request_id: str,
         user_message: str,
+        model_name: str | None = None,
     ) -> AgentRunResult:
         if not self.settings.gemini_is_configured:
             raise AgentNotConfiguredError(
@@ -89,8 +98,17 @@ class AgentOrchestrator:
         execution_records: list[dict[str, Any]] = []
         record_lock = asyncio.Lock()
         tools = self._build_tools(user.id, request_id, execution_records, record_lock)
+
+        resolved_model = self.settings.gemini_chat_model
+        if model_name:
+            clean_name = model_name.strip()
+            if clean_name.startswith("gemini-"):
+                resolved_model = clean_name
+            elif "claude" in clean_name.lower() or "gpt" in clean_name.lower():
+                resolved_model = self.settings.gemini_fallback_model
+
         model = ChatGoogleGenerativeAI(
-            model=self.settings.gemini_chat_model,
+            model=resolved_model,
             google_api_key=self.settings.gemini_api_key,
             temperature=0.1,
             max_retries=1,
@@ -109,6 +127,7 @@ class AgentOrchestrator:
         answer_model = model.with_fallbacks([fallback])
 
         async def planner_node(state: AgentState) -> dict[str, Any]:
+            status = "success"
             planner = model.with_structured_output(AgentPlan).with_fallbacks(
                 [fallback.with_structured_output(AgentPlan)]
             )
@@ -127,11 +146,12 @@ class AgentOrchestrator:
                 )
                 steps = plan.steps
             except Exception:
+                status = "fallback"
                 # Planner lỗi không làm hỏng toàn bộ request; ReAct node vẫn có thể xử lý.
                 steps = ["Phân tích yêu cầu", "Dùng tool phù hợp", "Tổng hợp câu trả lời có nguồn"]
             return {
                 "plan": steps,
-                "trace": [{"stage": "planning", "status": "success", "steps": steps}],
+                "trace": [{"stage": "planning", "status": status, "steps": steps}],
             }
 
         async def agent_node(state: AgentState) -> dict[str, Any]:
@@ -166,7 +186,7 @@ class AgentOrchestrator:
             pending = last.tool_calls if isinstance(last, AIMessage) else []
             evidence = [
                 str(message.content)[:6_000]
-                for message in state["messages"]
+                for message in self._current_turn(state["messages"])
                 if isinstance(message, ToolMessage)
             ][-8:]
             if evidence:
@@ -194,8 +214,11 @@ class AgentOrchestrator:
             return {
                 "messages": [
                     *[
-                        ToolMessage(content="Không thực thi: hệ thống chuyển sang tổng hợp.",
-                                    tool_call_id=call["id"], name=call["name"])
+                        ToolMessage(
+                            content="Không thực thi: hệ thống chuyển sang tổng hợp.",
+                            tool_call_id=call["id"],
+                            name=call["name"],
+                        )
                         for call in pending
                     ],
                     AIMessage(content=final_answer),
@@ -257,6 +280,8 @@ class AgentOrchestrator:
     ) -> list[StructuredTool]:
         tools: list[StructuredTool] = []
         for definition in self.registry.definitions():
+            if definition.requires_user_action:
+                continue  # UI duyệt bản cụ thể; model không tự lưu thay người dùng.
 
             async def invoke_tool(
                 _definition=definition, **arguments: Any
@@ -287,7 +312,7 @@ class AgentOrchestrator:
                         started_record["status"] = "success"
                         return json.dumps(result.model_dump(mode="json"), ensure_ascii=False)
                     except Exception as exc:
-                        started_record.update(status="error", error=str(exc)[:500])
+                        started_record.update(status="error", error=redact(str(exc))[:500])
                         raise
 
             tools.append(
@@ -313,12 +338,26 @@ class AgentOrchestrator:
         return "\n".join(parts)
 
     @staticmethod
+    def _current_turn(messages: list[BaseMessage]) -> list[BaseMessage]:
+        """Checkpoint giữ hội thoại, nhưng guard và nguồn chỉ thuộc yêu cầu hiện tại.
+
+        Quét ngược đến HumanMessage để yêu cầu làm mới ở lượt sau không bị coi là
+        tool lặp. Lịch sử cũ vẫn được giữ nguyên cho ngữ cảnh hội thoại.
+        """
+        for index in range(len(messages) - 1, -1, -1):
+            if isinstance(messages[index], HumanMessage):
+                return messages[index:]
+        return messages
+
+    @staticmethod
     def _should_synthesize(state: AgentState) -> bool:
         """Chặn tool lặp nhưng vẫn cho phép chuỗi tìm → đọc/index → truy hồi."""
 
         if state.get("tool_rounds", 0) >= 6:
             return True
-        messages = state.get("messages", [])
+        messages = AgentOrchestrator._current_turn(state.get("messages", []))
+        if not messages:
+            return False
         last = messages[-1]
         if not isinstance(last, AIMessage) or not last.tool_calls:
             return False
@@ -335,7 +374,7 @@ class AgentOrchestrator:
                         serialized_args = json.dumps(
                             call["args"], sort_keys=True, ensure_ascii=False
                         )
-                        executed_signatures.add(f'{call["name"]}:{serialized_args}')
+                        executed_signatures.add(f"{call['name']}:{serialized_args}")
             elif isinstance(message, ToolMessage) and message.name == "rag_search":
                 try:
                     if json.loads(str(message.content)).get("citations"):
@@ -345,7 +384,7 @@ class AgentOrchestrator:
 
         for call in last.tool_calls:
             signature = (
-                f'{call["name"]}:{json.dumps(call["args"], sort_keys=True, ensure_ascii=False)}'
+                f"{call['name']}:{json.dumps(call['args'], sort_keys=True, ensure_ascii=False)}"
             )
             if signature in executed_signatures:
                 return True
@@ -358,20 +397,27 @@ class AgentOrchestrator:
     def _collect_citations(messages: list[BaseMessage]) -> list[dict[str, Any]]:
         seen: set[tuple[str, int]] = set()
         citations: list[dict[str, Any]] = []
-        for message in messages:
+        for message in AgentOrchestrator._current_turn(messages):
             if not isinstance(message, ToolMessage):
                 continue
             try:
                 payload = json.loads(str(message.content))
             except json.JSONDecodeError:
                 continue
+            if message.name == "local_source_read":
+                payload = payload.get("data", {})
             if message.name == "drive_read_file" and "file" in payload:
                 file = payload["file"]
-                payload["citations"] = [{
-                    "file_id": file["id"], "file_name": file["name"], "chunk_index": 0,
-                    "snippet": payload.get("text", "")[:500],
-                    "web_view_link": file.get("web_view_link"), "score": 1.0,
-                }]
+                payload["citations"] = [
+                    {
+                        "file_id": file["id"],
+                        "file_name": file["name"],
+                        "chunk_index": 0,
+                        "snippet": payload.get("text", "")[:500],
+                        "web_view_link": file.get("web_view_link"),
+                        "score": 1.0,
+                    }
+                ]
             for citation in payload.get("citations", []):
                 key = (citation["file_id"], citation["chunk_index"])
                 if key not in seen:

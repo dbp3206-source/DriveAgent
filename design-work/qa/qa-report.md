@@ -1,124 +1,146 @@
-# QA Report
+# QA Report — DriveAgent local release candidate
 
-## Tóm tắt
+Ngày kiểm tra: 2026-09-10 · Phạm vi: dùng thật trên máy local cho cá nhân/nhóm nhỏ.
 
-DriveAgent đã được triển khai thành ứng dụng local hoàn chỉnh với FastAPI, React/TypeScript,
-Google OAuth2, Tool Registry, RAG, Memory và LangGraph. Bản production build được mở trong
-trình duyệt thật, kiểm tra ở desktop 1280x720 và mobile 390x844, cả light/dark mode.
+## Kết luận
 
-## Input và nguồn sự thật
+Release candidate đã qua toàn bộ automated gate và một vòng nghiệm thu thật bằng
+tài khoản Google đã kết nối. Không có lỗi blocking được quan sát trong luồng chính.
+Không dùng câu “không thể còn bug” như một cam kết tuyệt đối; bằng chứng và các ranh
+giới chưa kiểm tra bằng thao tác ngoài được ghi rõ bên dưới.
 
-- Yêu cầu và slide Tool Harness, OAuth2, RBAC, audit, MCP, Orchestration Harness, LangGraph.
-- `RAG.pdf`, `Memories.pdf`, `ingestion-qdrant.ipynb`, `search-qdrant.ipynb` do người dùng cung cấp.
-- `Assignment-1-TODO`, `demo-tool-registry`, `rag-demo` trong workspace cha.
-- Notebook ReAct Gemini/LangGraph: `https://github.com/philschmid/gemini-samples/blob/main/guides/langgraph-react-agent.ipynb`.
+## Nguồn yêu cầu và route thiết kế
 
-Không sao chép tài sản nguồn vào repo. Chi tiết ánh xạ kiến thức nằm ở
-`design-work/source-notes/README.md`.
+- Các slide OAuth, Authorization/RBAC, Tool Harness, RAG, Memory, Orchestration,
+  LangGraph và Evaluation Harness do người dùng cung cấp.
+- `C:/Users/Bao Phuc/Downloads/Evaluation-Harness.pdf` là nguồn chính cho taxonomy eval.
+- UI hiện tại dùng design system nội bộ React/Fluent và tham khảo interaction từ
+  `https://ui.shopviet247.xyz/elements`; không sao chép component source.
+- Không dùng Hallmark trong vòng thiết kế này theo yêu cầu người dùng.
+- Source note/attribution: `design-work/source-notes/ui-shopviet247-elements.md`.
 
-## Route thiết kế
+## Automated quality gates
 
-- Skill: `design-taste-frontend` tại
-  `C:/Users/Bao Phuc/.agents/skills/design-taste-frontend/SKILL.md`.
-- Design system duy nhất: Fluent UI React v9, phù hợp dashboard dày dữ liệu.
-- Visual direction: calm technical workspace, cobalt accent, ít card, không gradient/glow
-  hoặc bố cục SaaS đại trà.
-- Design dials: variance 4/10, motion 3/10, density 6/10.
-- Không dùng ImageGen vì ứng dụng không cần ảnh trang trí để truyền đạt thông tin.
-
-## Kiểm tra cấu trúc và runtime
-
-| Kiểm tra | Kết quả |
+| Gate | Kết quả |
 |---|---|
-| Ruff | Pass, không có lỗi |
-| Pytest | Pass, 18/18 test |
-| Coverage đo tham khảo | 55% toàn app; core RAG 86%, Memory 95%, Registry 85%, Drive 75% |
-| ESLint | Pass, không có lỗi |
-| TypeScript + Vite production build | Pass, 2.140 module transformed |
-| FastAPI health | HTTP 200, SQLite true, Qdrant `qdrant-embedded` |
-| Drive list/search/read | Pass bằng Google API mock, gồm query escape và tải nội dung |
-| RAG | Pass ingestion idempotent, hybrid retrieval và user isolation |
-| Memory | Pass dedup, secret rejection, Qdrant user filter và SQLite fallback |
-| Tool Registry | Pass permission, audit, retry transient và rollback phần ghi dở |
+| Backend pytest | **182 passed**, 13 cảnh báo deprecation từ dependency |
+| `scripts/verify.ps1` | Pass toàn bộ Ruff + 182 tests + coverage + lint + build |
+| Statement coverage | 67% toàn backend; core RAG 91%, Memory 96%, Registry 89%, compiler 85% |
+| Targeted ADK/atomicity/eval/harness/security | **17 passed** |
+| Ruff | Pass |
+| Frontend ESLint | Pass |
+| TypeScript + Vite production build | Pass, 2,404 modules |
+| `pip check` | Không có dependency hỏng |
+| `pip-audit` | Không có vulnerability đã biết |
+| `npm audit --omit=dev` | 0 vulnerability trên production dependencies |
+| Local config | 10/10 mục `OK`, không in secret |
+| Routing golden set | **12/12** |
+| `git diff --check` | Pass |
 
-`scripts/verify.ps1` là entry point lặp lại Ruff, Pytest coverage, ESLint và build.
-CI GitHub Actions chạy cùng nhóm kiểm tra trên Python 3.12 và Node 22.
+Các warning còn lại là API deprecation trong Google ADK/A2A/Starlette dependency,
+không phải test failure. Chúng cần được theo dõi khi nâng phiên bản package.
 
-## QA trình duyệt thật
+## Nghiệm thu trình duyệt và dịch vụ thật
 
-Chrome DevTools MCP được dùng trên build do FastAPI phục vụ tại `http://127.0.0.1:8000`.
+Build production được phục vụ loopback và thao tác bằng browser automation:
 
-- Lighthouse desktop: Accessibility 100, Best Practices 100, SEO 100,
-  Agentic Browsing 100; 47 pass, 0 fail.
-- Lighthouse mobile: cùng bốn điểm 100; 47 pass, 0 fail.
-- Console sau navigation cuối: không có message.
-- Network sau navigation cuối: 10/10 request trả HTTP 200, gồm document, JS/CSS chunks,
-  `/api/auth/status`, `/api/health` và `/api/chat/sessions`.
-- Desktop không overflow ngang.
-- Mobile 390px: document và chat đều có `scrollWidth == clientWidth` sau sửa.
-- Keyboard: textarea nhận focus bằng Tab, `:focus-visible` true, outline đo được 2.4px.
-- Menu mobile mở được, điều hướng được và tự đóng sau khi chọn trang.
-- Loading, empty, missing-permission, disabled và success state đã quan sát trực tiếp.
+| Luồng | Bằng chứng |
+|---|---|
+| Auth/session | User thật hiển thị đúng role `super_admin`; Drive và Gmail connected |
+| Drive list | Tải danh sách thật thành công |
+| Drive search | `DriveAgent QA` trả đúng hai tệp QA |
+| Drive read | Sheet trả `Mục,Số tiền / Sách,120 / Xe buýt,30`; Doc trả mã QA và lịch ôn |
+| RAG ingest | `DriveAgent QA kế hoạch 2` index thành công 1 chunk |
+| RAG answer | Trả đúng `DA-CREATE-2026`, `thứ Sáu` và citation mở đúng Google Doc |
+| Slides create | Tạo thật `DriveAgent QA Slides 2026-09-10`, 2 slide; kiểm tra lại title, bullet và speaker notes |
+| Slides edit | Phát hiện false-negative khi text mới chứa text cũ, thêm regression test, tạo operation mới và sửa/hoàn nguyên thành công với revision lock + read-back |
+| Docs/Sheets edit | Sửa và hoàn nguyên dữ liệu QA thật qua preview → approve → read-back; Sheets đọc số bằng `UNFORMATTED_VALUE` |
+| ADK multi-agent | Live trace có coordinator → specialist handoff → governed tool → synthesis |
+| Calculator | Live tool trả 150.0 từ 125.5 + 24.5 |
+| Memory | Tải 2 mục, semantic search còn 1 mục, donut/line chart chuyển được |
+| Human feedback | Nút “Hữu ích” ghi backend thành công; Harness cập nhật 1 lượt, 100% helpful |
+| Harness | 7 mục Context/RAG/Tool/Orchestration/Creation/Multi-Agent+MCP+A2A/Evaluation dùng dữ liệu thật |
+| Audit | Tải 100 event, chart/trend, filter và thao tác export JSON hoạt động |
+| Local sources | Tải danh sách, hiển thị giới hạn/nhận diện tính năng đúng sự thật |
+| Artifacts | Tải workbench và bản lưu có version |
+| RBAC | Quyền app và 7 OAuth scopes hiển thị tách biệt |
+| Settings | Hiển thị model, embedding, OAuth và vector backend thực tế |
+| Responsive/a11y | 12/12 màn hình qua desktop/intermediate và mobile 390×844, không overflow/console error; light/dark và skip-link bàn phím đạt |
+| Security headers | CSP, XFO DENY, nosniff, referrer, COOP và Permissions-Policy có trên response |
+| Favicon/assets | `/favicon.svg` HTTP 200; không còn favicon 404 ở build mới |
 
-Lighthouse JSON/HTML nằm trong `design-work/qa/validation/`.
+Lần đầu mở Memory sau khi build lại ngay trong lúc server đang chạy trả lazy-chunk 404
+vì tab cũ giữ hash của bundle trước. Reload lấy manifest mới và trang hoạt động bình
+thường. Quy trình `run-local.ps1` build trước rồi mới serve, nên không tạo race này.
 
-## Findings đã sửa
+## Coverage theo Harness
 
-1. React effect từng trả về kết quả `scrollIntoView`, gây lỗi cleanup trong StrictMode.
-   Effect đã đổi sang block body hợp lệ.
-2. Trang Drive từng hiện đồng thời error và empty state; điều kiện render đã tách đúng.
-3. Demo user từng bị ghi nhãn Drive đã kết nối; header nay dựa trên OAuth scope thật.
-4. Chat mobile từng bị min-content grid làm cắt nội dung. Đã khóa cột
-   `minmax(0, 1fr)` và đo lại không overflow.
-5. Form field thiếu `id/name`; đã bổ sung và console issue về form field biến mất.
-6. Heading chat từng nhảy từ h1 sang h3; EmptyState đổi sang h2 và Lighthouse từ 98 lên 100.
-7. OAuth token exchange đồng bộ từng có thể chặn event loop; đã chuyển sang worker thread.
-8. Memory update/delete nay đồng bộ Qdrant và từ chối secret có dạng giá trị, nhưng không
-   chặn nhầm câu hướng dẫn an toàn.
-9. LangGraph nay chỉ đưa message mới vào checkpointer, tránh nhân đôi lịch sử ở lượt sau.
-10. OAuth JSON, SQLite và Qdrant path tương đối nay luôn tính từ root repo; smoke test xác
-    nhận data tạo ở `data/qa-final`, không lệch vào `backend/data`.
+- **Context Harness:** session server-side, user-scoped history, long-term memory,
+  ADK session state và atomic rollback khi model failure.
+- **Tool Harness:** 28 tool definitions; schema, auth, RBAC/OAuth, rate limit,
+  timeout, selective retry, audit/redaction và approval policy.
+- **RAG Harness:** Drive/local ingestion, revision freshness, hybrid dense + lexical
+  + RRF, Gemini Embedding 2 (768D), citation và user isolation.
+- **Orchestration Harness:** ADK coordinator + 4 specialist agents, handoff trace,
+  planning/routing/execution/synthesis/recovery; LangGraph/compiler giữ làm backend so sánh.
+- **MCP/A2A:** SDK thật, discovery/call read-only, cùng Tool Registry và user context;
+  test protocol xác nhận auth và không bypass policy.
+- **Evaluation Harness:** routing golden set, audit success/latency, human feedback,
+  RAG/citation tests và live task evidence. Dashboard không đánh đồng routing với accuracy.
 
-## Content fidelity và bảo mật
+## Bảo mật và dữ liệu
 
-- Tất cả tool đi qua sáu cổng: schema, auth, RBAC + scope, rate limit, audit, execute/retry.
-- Chỉ lỗi tạm thời được retry; 400/401/403/404 không retry.
-- Dữ liệu riêng có `user_id`; server không nhận user ID tùy ý từ frontend.
-- OAuth credential mã hóa bằng Fernet dẫn xuất từ APP_SECRET.
-- Audit redaction che secret theo key; Memory từ chối nội dung giống secret có giá trị.
-- Scope mặc định `drive.readonly`; không có tool ghi/xóa Drive.
-- Dependency chính dùng license MIT, Apache-2.0 hoặc BSD-3-Clause. Xem
-  `docs/THIRD_PARTY_LICENSES.md`. Repo chưa có project license và được ghi rõ.
+- Credential OAuth mã hóa bằng Fernet dẫn xuất từ `APP_SECRET`; cookie HttpOnly/SameSite.
+- Dữ liệu riêng đều gắn `user_id`; API không tin `user_id` từ frontend.
+- Docs/Slides/Sheets/Gmail dùng prepare → digest → explicit approve → execute → read-back.
+- Không log secret; Memory từ chối chuỗi giống token/key; audit redaction có test.
+- Runner chỉ bind `127.0.0.1`, demo login tắt, HTTP OAuth chỉ bật trong loopback process.
+- `.env`, OAuth JSON, SQLite/Qdrant và backup không được commit.
 
-## Ảnh QA
+## UX và accessibility
 
-- `screenshots/setup-desktop.png` (1280x720)
-- `screenshots/chat-desktop-dark.png` (1280x720)
-- `screenshots/chat-mobile-dark.png` (390x844)
-- `screenshots/memory-desktop-light.png` (1280x720)
-- `screenshots/drive-permission-state.png` (1280x720)
+- Hệ thống chữ Be Vietnam Pro, dark workspace, hierarchy theo tác vụ thay vì card SaaS.
+- Sidebar có nhãn rõ cho nontechnical user; controls/input/composer dùng bán kính lớn,
+  assistant answer phẳng như document thay vì từng bubble/card.
+- Loading/empty/error/disabled/approval states đều có copy giải thích.
+- Skip link, focus-visible, keyboard mobile menu và semantic headings đã có.
+- Toàn bộ 12 màn hình đã được browser-verified lại sau thay đổi cuối ở mobile 390×844
+  và viewport mặc định; không có horizontal overflow hoặc console error.
+- Light/dark, skip-link, focus bàn phím, preview diff và trạng thái pending/running/
+  uncertain/failed/succeeded đã được kiểm tra trực tiếp.
 
-## Quality gate
+## Quality score
 
 | Tiêu chí | Điểm |
 |---|---:|
-| Content fidelity và đúng sự thật | 19/20 |
-| Visual specificity | 18/20 |
-| Cấu trúc và information architecture | 14/15 |
-| Typography và readability | 14/15 |
-| Composition, spacing, hierarchy | 14/15 |
-| Technical finish và verification | 13/15 |
-| **Tổng** | **92/100** |
+| Content fidelity và tính đúng đắn | 19/20 |
+| Visual specificity cho sinh viên/nontech | 19/20 |
+| Kiến trúc và information hierarchy | 15/15 |
+| Typography, readability, accessibility | 15/15 |
+| Composition và interaction consistency | 14/15 |
+| Technical finish và verification | 14/15 |
+| **Tổng** | **96/100 (9.6/10)** |
 
-Không có automatic fail: build mở được trong target environment, ảnh cuối được render,
-không có lỗi console/network/overflow, source vẫn editable và không bịa dữ liệu.
+Điểm này là benchmark nội bộ có bằng chứng theo quality gate, không phải chứng nhận độc lập.
 
-## Giới hạn còn lại
+## Giới hạn còn lại không phải release blocker
 
-- Chưa thể xác minh end-to-end với Drive thật hoặc Gemini thật khi chưa có API key và
-  OAuth client của người dùng. Setup gate hiển thị đúng điều này; unit/integration tests
-  không giả vờ là live verification.
-- Export Google Sheets dạng CSV theo bản Google xuất mặc định; workbook nhiều sheet cần
-  mở rộng nếu sau này có yêu cầu đọc từng sheet.
-- Drive write operations và code sandbox không triển khai vì là phần tùy chọn/rủi ro cao,
-  đúng quyết định phạm vi của người dùng.
+1. Không tự động gửi Gmail trong QA vì người dùng đã hoãn phần sandbox/Gmail; unit/integration
+   test đã cover attachments và 2-phase send, còn live send phải được user duyệt ở thời điểm gửi.
+2. User B isolation được chứng minh bằng integration tests; vòng OAuth thủ công profile B
+   không được tự động hóa thay người dùng.
+3. Audit dashboard giữ trung thực lịch sử lỗi QA cũ nên tỷ lệ 100 lượt gần nhất hiện là 93%
+   và citation integrity lịch sử là 83%; operation hiện tại đã có regression test và live pass.
+4. Evaluation chưa tuyên bố semantic accuracy cho mọi tài liệu tương lai; chất lượng đó phải
+   được duy trì bằng golden cases theo dữ liệu/use case mới và human feedback liên tục.
+5. Đây là cấu hình production-like chạy loopback cho nhóm nhỏ, chưa phải public web service
+   có managed database, centralized secrets, SLO/alerting và quy trình triển khai nhiều máy.
+
+## Artifact và bằng chứng
+
+- Editable source: `frontend/src/`, `backend/app/`, `backend/evals/`.
+- Manifest: `design-work/qa/run-manifest.json`.
+- Curated command summary: `design-work/qa/command-log.txt`.
+- Historical rendered screenshots/Lighthouse: `design-work/qa/screenshots/` và
+  `design-work/qa/validation/`; browser capture mới nhất nằm trong phiên QA hiện tại.
+- Google Slides live artifact: `https://docs.google.com/presentation/d/1ff8ak-LoPVCAtbaGEWZRlucwVUZW2kRm58ueaW5sTfU/edit`.

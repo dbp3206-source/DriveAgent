@@ -24,7 +24,7 @@ Kiểm chứng đã thực hiện:
 - PowerShell parser cho run-local.ps1: không có lỗi.
 - Local config: toàn bộ key cấu hình trả `OK` mà không in secret.
 - `/api/health`: SQLite, Qdrant embedded, Gemini và Google OAuth đều ready; endpoint
-  trả đúng primary `gemini-3.8-flash`, fallback `gemini-3.5-flash-lite`, embedding
+  trả đúng primary `gemini-3.5-flash-lite`, fallback `gemini-3.5-flash-lite`, embedding
   `gemini-embedding-2` 768 chiều.
 - Gọi live trực tiếp cả primary và fallback: đều trả kết quả thành công.
 - Google Drive live: liệt kê 50 tệp có phân trang; tìm và đọc notebook thành công.

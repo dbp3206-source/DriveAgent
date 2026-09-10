@@ -1,46 +1,34 @@
 {
-  "target_output": "Ứng dụng web DriveAgent chạy local, multi-user-ready",
+  "target_output": "DriveAgent local production release candidate",
   "source_files": [
-    "C:/Users/Bao Phuc/Documents/DriveAgent/Assignment-1-TODO",
-    "C:/Users/Bao Phuc/Documents/DriveAgent/demo-tool-registry",
-    "C:/Users/Bao Phuc/Documents/DriveAgent/rag-demo",
-    "C:/Users/Bao Phuc/Downloads/RAG.pdf",
-    "C:/Users/Bao Phuc/Downloads/Memories.pdf",
-    "C:/Users/Bao Phuc/Downloads/ingestion-qdrant.ipynb",
-    "C:/Users/Bao Phuc/Downloads/search-qdrant.ipynb",
-    "https://github.com/philschmid/gemini-samples/blob/main/guides/langgraph-react-agent.ipynb"
+    "design-work/design-brief.md",
+    "design-work/content-outline.md",
+    "design-work/source-notes/ui-shopviet247-elements.md",
+    "C:/Users/Bao Phuc/Downloads/Evaluation-Harness.pdf"
   ],
-  "primary_skill": "design-taste-frontend",
-  "specialist_skills": [
-    "Fluent UI React v9 design system"
-  ],
-  "mcp_tools_used": [
-    "chrome-devtools: snapshot, console, network, evaluate, resize, Lighthouse",
-    "unified-computer-use: desktop/mobile interaction and final screenshots"
-  ],
+  "primary_skill": "none — user explicitly requested no UI design skill",
+  "specialist_skills": ["computer-use for real browser verification", "pdf for source inspection"],
+  "mcp_tools_used": ["cua_repl.js"],
   "commands_run": [
-    "python -m pip install -e backend[dev]",
-    "npm.cmd install",
-    "python -m ruff check backend",
-    "python -m pytest backend/tests --cov=app --cov-report=term-missing",
-    "npm.cmd run lint",
-    "npm.cmd run build",
-    "python -m uvicorn app.main:app --host 127.0.0.1 --port 8000",
-    "powershell.exe -ExecutionPolicy Bypass -File scripts/verify.ps1"
+    "python -m pytest backend/tests -q",
+    "python -m pytest targeted ADK/atomicity/evaluation/harness/security tests -q",
+    "python -m ruff check backend scripts",
+    "python -m pip check",
+    "python -m pip_audit --skip-editable",
+    "python scripts/local_config.py",
+    "python scripts/evaluate.py",
+    "npm run lint",
+    "npm run build",
+    "npm audit --omit=dev --json",
+    "git diff --check"
   ],
-  "repository_defined_outputs": [
-    "FastAPI backend in backend/app",
-    "React TypeScript frontend in frontend/src",
-    "Vietnamese setup and architecture docs in docs",
-    "QA evidence in design-work/qa"
-  ],
+  "repository_defined_outputs": ["frontend/dist", "backend/evals/golden_routes.json"],
   "delivered_outputs": [
-    "backend/app",
     "frontend/src",
+    "backend/app",
+    "backend/evals",
     "docs",
-    "scripts",
-    "design-work/qa/screenshots",
-    "design-work/qa/validation"
+    "design-work/qa/qa-report.md"
   ],
   "verification": {
     "structural": true,
@@ -49,10 +37,14 @@
     "content_fidelity": true,
     "target_environment": true
   },
-  "quality_score": 92,
+  "verification_scope": "Local single-machine release; 182 tests, 12-screen browser QA, live Drive/RAG/Docs/Sheets/Slides verification. External Gmail send and second-account OAuth remain user-controlled.",
+  "quality_score": 96,
   "known_limitations": [
-    "Không thể chạy Google Drive và Gemini live vì người dùng chưa cung cấp credential; ba tool Drive đã được kiểm thử bằng API giả lập.",
-    "Google Sheets được export dạng CSV nên bản đọc hiện tập trung vào sheet Google xuất mặc định.",
-    "Các thao tác ghi Drive và code sandbox được chủ động bỏ khỏi phạm vi vì là phần tùy chọn/rủi ro cao."
+    "Live Gmail send intentionally not performed without action-time confirmation",
+    "Second-user manual OAuth not automated; server-side isolation is tested",
+    "ADK/A2A dependencies emit deprecation warnings",
+    "Historical audit ratios retain failures discovered and fixed during QA",
+    "Semantic accuracy must be extended with use-case-specific golden datasets",
+    "Current release is loopback/local, not an Internet-facing multi-host deployment"
   ]
 }

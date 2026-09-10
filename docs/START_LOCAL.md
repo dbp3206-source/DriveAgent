@@ -28,16 +28,21 @@ DRIVE_AGENT_GEMINI_API_KEY=dan_key_cua_ban_vao_day
 Đây là placeholder, phải thay bằng key thật. Không gửi key vào chat và không commit `.env`.
 Nếu đã có key thì dùng key hiện có còn hiệu lực. Quyền dùng model và quota phải được
 kiểm tra bằng lần gọi thật; key có mặt không chứng minh gọi API thành công.
-App mặc định dùng `gemini-3.8-flash`, fallback `gemini-3.5-flash-lite` và
+App mặc định dùng `gemini-3.5-flash-lite` cho cả primary/fallback và
 `gemini-embedding-2` (768 chiều); trang Cài đặt hiển thị đúng cấu hình đang chạy.
 Nếu cần paid tier, bạn tự bật billing và theo dõi Usage trong AI Studio.
 Nguồn: https://ai.google.dev/gemini-api/docs/api-key
 
-## 3. Bật Drive API trong Google Cloud
+## 3. Bật các Google Workspace API trong Google Cloud
 
 1. Mở https://console.cloud.google.com/ và chọn project, nên dùng cùng project ở bước 2.
 2. Vào APIs & Services → Library.
-3. Tìm Google Drive API → Enable.
+3. Tìm và bật lần lượt: **Google Drive API**, **Google Docs API**,
+   **Google Slides API**, **Google Sheets API** và **Gmail API**.
+
+Chỉ cấp OAuth scope là chưa đủ: nếu API tương ứng vẫn ở trạng thái Disabled,
+Google sẽ trả 403 dù đăng nhập đã thành công. Mở trang chi tiết từng API và xác nhận
+trạng thái là **Enabled** trước khi thử tạo Docs, Slides hoặc Sheets.
 
 ## 4. Thiết lập Google Auth Platform
 
@@ -45,10 +50,13 @@ Nguồn: https://ai.google.dev/gemini-api/docs/api-key
 2. Branding: đặt tên DriveAgent Local, chọn support email và developer email của bạn.
 3. Audience: chọn External khi dùng Gmail cá nhân. Giữ trạng thái Testing.
 4. Test users: thêm email bạn sẽ dùng đăng nhập; thêm từng email thành viên nếu cần.
-5. Data Access → Add or remove scopes: thêm `openid`, `email`, `profile` và
-   `https://www.googleapis.com/auth/drive.readonly`.
+5. Data Access → Add or remove scopes: thêm `openid`, `email`, `profile`,
+   `https://www.googleapis.com/auth/drive.readonly`,
+   `https://www.googleapis.com/auth/drive.file`,
+   `https://www.googleapis.com/auth/gmail.readonly` và
+   `https://www.googleapis.com/auth/gmail.send`.
 
-Không bật Publish App ở giai đoạn này. `drive.readonly` thuộc nhóm restricted;
+Không bật Publish App ở giai đoạn này. Một số scope trên thuộc nhóm sensitive/restricted;
 Testing có refresh token hết hạn sau 7 ngày với quyền Drive, khi đó đăng nhập lại.
 Nếu người dùng chỉ thuộc một Google Workspace và bạn có quyền cấu hình Internal,
 có thể dùng Internal theo chính sách của tổ chức.
@@ -97,7 +105,9 @@ Nếu đã có dữ liệu QA thì không tự xóa database; kiểm tra vai tr�
 6. Lập chỉ mục file qua UI, hỏi lại bằng RAG, mở citation để xác nhận đúng file.
 7. Lưu một preference không nhạy cảm vào Memory, khởi động lại app và kiểm tra còn lưu.
 8. Dùng browser profile riêng cho user B: chat, memory, RAG của A không được xuất hiện.
-9. Kiểm tra Audit cho các thao tác vừa thực hiện.
+9. Tạo thử một Docs, Sheets và Slides qua luồng xem trước → xác nhận → đọc lại.
+   Với Slides, thêm speaker notes để kiểm tra cả vùng ghi chú người thuyết trình.
+10. Kiểm tra Audit cho các thao tác vừa thực hiện.
 
 Các bước này cần credential và người dùng chấp thuận OAuth thật, không thể được
 thay bằng unit tests. Khi Gemini báo quota/model unavailable, ghi lại mã lỗi và
@@ -118,10 +128,12 @@ truy cập chung qua LAN/web cần cấu hình triển khai riêng.
 
 - `redirect_uri_mismatch`: kiểm tra URI trong Cloud Console, `.env`, JSON và cổng 8000.
 - `access_denied`: thêm đúng email vào Test users, kiểm tra chính sách Workspace.
+- `api_disabled` hoặc Google 403 sau khi đã cấp scope: quay lại bước 3 và bật đúng
+  Docs/Slides/Sheets/Gmail API trong chính Google Cloud project của OAuth client.
 - `invalid_grant`: token bị thu hồi/hết hạn; kết nối Google lại.
 - Port 8000 đang dùng: dừng đúng phiên DriveAgent cũ trước, không tắt process bất kỳ.
 - Gemini 429: kiểm tra Usage/quota/billing; đợi và giảm tần suất gọi.
 - Thay APP_SECRET khiến không giải mã được: khôi phục secret cũ từ backup.
 
-Tài liệu này hướng dẫn dùng thật local. Chưa xác nhận Google Drive hoặc Gemini live
-cho đến khi hoàn thành bước 7 bằng tài khoản của bạn.
+Lần nghiệm thu gần nhất đã xác nhận Gemini, Drive list/search/read, RAG và citation
+trên tài khoản test. Khi đổi key, project hoặc Test user, hãy lặp lại bước 7.

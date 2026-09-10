@@ -45,6 +45,7 @@ async def list_files(
     page_size: int = Query(default=50, ge=1, le=100),
     page_token: str | None = None,
     mime_type: str | None = None,
+    folder_id: str | None = None,
 ):
     if query:
         result = await execute(
@@ -66,7 +67,10 @@ async def list_files(
             db,
             "drive_list_files",
             ListDriveFilesInput(
-                page_size=page_size, page_token=page_token, mime_type=mime_type
+                page_size=page_size,
+                page_token=page_token,
+                mime_type=mime_type,
+                folder_id=folder_id,
             ).model_dump(),
         )
     indexed_ids = set(

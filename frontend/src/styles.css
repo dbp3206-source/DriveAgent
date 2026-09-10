@@ -1,5 +1,5 @@
 :root {
-  font-family: "Aptos", "Segoe UI", Arial, sans-serif;
+  font-family: "Be Vietnam Pro", "Segoe UI", Arial, sans-serif;
   color: #182230;
   background: #f4f7fb;
   font-synthesis: none;
@@ -20,9 +20,9 @@
   --danger: #c12b3a;
   --focus: #175cd3;
   --shadow: 0 16px 42px rgb(31 52 78 / 9%);
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-sm: 12px;
+  --radius-md: 16px;
+  --radius-lg: 22px;
 }
 
 :root[data-theme="dark"] {

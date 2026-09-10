@@ -25,6 +25,19 @@ SENSITIVE_CONTENT = re.compile(
     re.IGNORECASE,
 )
 
+# Với log, ưu tiên bỏ cả chuỗi nghi chứa credential thay vì cố giữ phần còn lại:
+# giá trị có thể chứa khoảng trắng, dấu nháy hoặc xuống dòng.
+SECRET_TEXT = re.compile(
+    r"""(?ix)
+    (?:["']?\b(?:api[_\ -]?key|access[_\ -]?token|refresh[_\ -]?token|
+    client[_\ -]?secret|password|authorization|cookie|set-cookie)\b["']?
+    \s*(?:is\b|là\b|[:=])\s*\S+)
+    |(?:\bBearer\s+[A-Za-z0-9._~+/=-]+)
+    |(?:\bAIza[A-Za-z0-9_-]{30,})
+    |(?:-----BEGIN\s+(?:RSA\s+|EC\s+|OPENSSH\s+)?PRIVATE\ KEY-----)
+    """
+)
+
 
 def _fernet(settings: Settings) -> Fernet:
     """Dẫn xuất khóa Fernet ổn định từ app secret mà không lưu thêm khóa phụ."""
@@ -58,4 +71,6 @@ def redact(value: Any) -> Any:
         return [redact(item) for item in value]
     if isinstance(value, tuple):
         return [redact(item) for item in value]
+    if isinstance(value, str) and SECRET_TEXT.search(value):
+        return "[REDACTED]"
     return value

@@ -1,22 +1,77 @@
-2026-09-04  Git/Node/npm/Python preflight và kiểm tra Docker/GitHub CLI.
-2026-09-04  git clone https://github.com/dbp3206-source/DriveAgent.git
-2026-09-04  Đọc đầy đủ design-taste-frontend/SKILL.md và tạo design brief/outline.
-2026-09-04  Đọc PDF/notebook/source repo người dùng cung cấp, không sao chép tài sản.
-2026-09-04  backend/.venv/Scripts/python.exe -m pip install -e "backend[dev]"
-2026-09-04  npm.cmd install (frontend)
-2026-09-04  backend/.venv/Scripts/python.exe -m ruff check backend -> PASS
-2026-09-04  backend/.venv/Scripts/python.exe -m pytest backend/tests -q -> PASS 18/18
-2026-09-04  npm.cmd run lint -> PASS
-2026-09-04  npm.cmd run build -> PASS, production chunks generated
-2026-09-04  powershell.exe -ExecutionPolicy Bypass -File scripts/verify.ps1 -> PASS
-2026-09-04  uvicorn app.main:app --host 127.0.0.1 --port 8000 -> health HTTP 200
-2026-09-04  Chrome DevTools: console -> EMPTY; network -> 10/10 HTTP 200
-2026-09-04  Chrome DevTools: desktop Lighthouse first pass 98 accessibility.
-2026-09-04  Sửa heading order h1 -> h2 và chạy lại Lighthouse.
-2026-09-04  Chrome DevTools: desktop Lighthouse -> 100/100/100/100, 0 fail
-2026-09-04  Chrome DevTools: mobile Lighthouse -> 100/100/100/100, 0 fail
-2026-09-04  CUA: ảnh desktop 1280x720, mobile 390x844, light/dark, final build.
-2026-09-04  Qdrant embedded integration -> PASS, filter memory theo user/kind.
-2026-09-04  pip/npm package metadata license inspection -> permissive dependencies.
-2026-09-04  npm.cmd audit --omit=dev -> found 0 vulnerabilities.
-2026-09-04  Relative-path smoke test -> SQLite/Qdrant created under repository root.
+2026-09-06 — curated execution log (not raw stdout; detailed results in stitch-implementation-report.md)
+Working repository: C:/Users/Bao Phuc/Documents/DriveAgent/drive-agent
+
+npm install react-markdown remark-gfm @fontsource/be-vietnam-pro
+  Initial sandbox attempt stalled and was stopped. Approved network retry: added98 packages, audited357,0 vulnerabilities reported.
+backend/.venv/Scripts/python.exe -m pytest backend/tests -q
+  Earlier run45passed; final after Google refresh tests47passed,1warning,40.42s.
+backend/.venv/Scripts/python.exe -m ruff check backend
+  Initially2 E501 in new Google refresh test; after ruff format: all checks passed.
+npm run build (frontend)
+  Intermediate TypeScript failures: possible undefined focus targets/P95. Corrected.
+  Final ScreenBoundary build: Vite4.85s; TypeScript passed.
+npm run lint (frontend)
+  Final ESLint exit0.
+git diff --check
+  Exit0.
+backend/.venv/Scripts/python.exe -m uvicorn app.main:app --app-dir backend --host127.0.0.1 --port8000 --no-access-log
+  Actual flags used include spaces after --host and --port. First sandbox process stopped after Google network WinError10013. Approved network restart active, loopback only. OAUTHLIB_INSECURE_TRANSPORT enabled for this process only.
+Copy-Item font/Markdown package licenses to frontend/public/licenses and frontend/dist/licenses
+  Exit0. No secret files copied.
+
+Browser and Stitch action IDs, scope and outcomes: see report and run-manifest.json.
+
+2026-09-09 — final release-candidate verification
+backend/.venv/Scripts/python.exe -m pytest backend/tests -q
+  168 passed, 13 dependency deprecation warnings, 41.40s.
+backend/.venv/Scripts/python.exe -m pytest targeted ADK/atomicity/evaluation/harness/security tests -q
+  17 passed, 1 ADK deprecation warning, 23.88s.
+backend/.venv/Scripts/python.exe -m ruff check backend scripts
+  Exit 0; all checks passed (one inaccessible temporary directory warning).
+backend/.venv/Scripts/python.exe -m pip check
+  No broken requirements found.
+backend/.venv/Scripts/python.exe scripts/local_config.py
+  10 configuration checks OK; secret values were not printed.
+backend/.venv/Scripts/python.exe scripts/evaluate.py
+  Deterministic routing golden set 12/12 passed, version 2026-09-09.1.
+npm.cmd run lint
+  ESLint exit 0.
+npm.cmd run build
+  TypeScript/Vite production build passed; 2,402 modules, 4.95s.
+git diff --check
+  Exit 0.
+Browser QA through CUA on loopback production build
+  Drive list/search/read, index, RAG answer/citation, Memory, Harness, Audit,
+  Local Sources, Artifacts, RBAC and Settings passed. Live Gemini/ADK calculator
+  and specialist handoff passed. Security headers and favicon returned HTTP 200.
+scripts/verify.ps1
+  Final run passed: Ruff, 168 tests, 67% statement coverage, ESLint and Vite build.
+npm.cmd audit --omit=dev --json
+  0 known vulnerabilities in production dependencies.
+backend/.venv/Scripts/python.exe -m pip_audit --skip-editable
+  No known vulnerabilities found; local editable package skipped as expected.
+
+2026-09-10 — final Workspace and responsive acceptance
+scripts/verify.ps1
+  Ruff, 182/182 backend tests, 67% statement coverage, ESLint and Vite production
+  build all passed; 2,404 frontend modules transformed.
+backend/.venv/Scripts/python.exe scripts/evaluate.py
+  Deterministic routing golden set 12/12 passed, version 2026-09-09.1.
+backend/.venv/Scripts/python.exe -m pip check
+  No broken requirements found.
+backend/.venv/Scripts/pip-audit.exe
+  No known vulnerabilities found; local DriveAgent package is not published on PyPI.
+npm.cmd audit --omit=dev
+  0 known vulnerabilities in production dependencies.
+git diff --check
+  Exit 0.
+Browser QA through CUA on loopback production build
+  All 12 screens checked at mobile 390x844 and default/intermediate width: no
+  horizontal overflow and no console errors. Light/dark, keyboard skip-link,
+  Drive list/search/read, RAG citation, Memory persistence, Skills, Visuals,
+  Artifacts, Harness and Audit passed.
+Live Google Slides acceptance
+  Created DriveAgent QA Slides 2026-09-10 with two slides and speaker notes.
+  A false verification failure for an extending replacement was reproduced,
+  fixed with a regression test, then a new revision-bound edit and revert both
+  completed with read-back verification. The uncertain operation was not retried.

@@ -8,6 +8,8 @@ from app.db.models import UserRole
 
 DRIVE_READ = "drive:read"
 DRIVE_WRITE = "drive:write"
+GMAIL_READ = "gmail:read"
+GMAIL_SEND = "gmail:send"
 RAG_READ = "rag:read"
 RAG_WRITE = "rag:write"
 MEMORY_READ = "memory:read"
@@ -15,29 +17,46 @@ MEMORY_WRITE = "memory:write"
 AUDIT_READ_SELF = "audit:read:self"
 AUDIT_READ_ALL = "audit:read:all"
 USER_MANAGE = "users:manage"
+ARTIFACT_WRITE = "artifact:write"
+SKILL_MANAGE = "skills:manage"
 
 ROLE_PERMISSIONS: dict[str, set[str]] = {
-    UserRole.VIEWER.value: {DRIVE_READ, RAG_READ, MEMORY_READ, AUDIT_READ_SELF},
+    UserRole.VIEWER.value: {
+        DRIVE_READ,
+        GMAIL_READ,
+        RAG_READ,
+        MEMORY_READ,
+        AUDIT_READ_SELF,
+    },
     UserRole.EDITOR.value: {
         DRIVE_READ,
+        GMAIL_READ,
         RAG_READ,
         RAG_WRITE,
         MEMORY_READ,
         MEMORY_WRITE,
         AUDIT_READ_SELF,
+        ARTIFACT_WRITE,
+        SKILL_MANAGE,
     },
     UserRole.OWNER.value: {
         DRIVE_READ,
         DRIVE_WRITE,
+        GMAIL_READ,
+        GMAIL_SEND,
         RAG_READ,
         RAG_WRITE,
         MEMORY_READ,
         MEMORY_WRITE,
         AUDIT_READ_SELF,
+        ARTIFACT_WRITE,
+        SKILL_MANAGE,
     },
     UserRole.SUPER_ADMIN.value: {
         DRIVE_READ,
         DRIVE_WRITE,
+        GMAIL_READ,
+        GMAIL_SEND,
         RAG_READ,
         RAG_WRITE,
         MEMORY_READ,
@@ -45,6 +64,8 @@ ROLE_PERMISSIONS: dict[str, set[str]] = {
         AUDIT_READ_SELF,
         AUDIT_READ_ALL,
         USER_MANAGE,
+        ARTIFACT_WRITE,
+        SKILL_MANAGE,
     },
 }
 

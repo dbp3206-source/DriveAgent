@@ -134,6 +134,6 @@ async def delete_memory(
     )
     if not row:
         raise HTTPException(status_code=404, detail="Không tìm thấy bộ nhớ.")
+    await request.app.state.vector_store.delete_points(MEMORY_COLLECTION, [memory_id])
     await db.delete(row)
     await db.commit()
-    await request.app.state.vector_store.delete_points(MEMORY_COLLECTION, [memory_id])

@@ -49,10 +49,14 @@ async def test_rag_index_is_idempotent_and_search_is_user_scoped(tmp_path: Path)
         first_context = ToolContext(request_id="rag-1", user=first, db=db, settings=settings)
 
         indexed = await service.index_file(
-            IndexDriveFileInput(file_id="file-rag"), first_context, registry  # type: ignore[arg-type]
+            IndexDriveFileInput(file_id="file-rag"),
+            first_context,
+            registry,  # type: ignore[arg-type]
         )
         repeated = await service.index_file(
-            IndexDriveFileInput(file_id="file-rag"), first_context, registry  # type: ignore[arg-type]
+            IndexDriveFileInput(file_id="file-rag"),
+            first_context,
+            registry,  # type: ignore[arg-type]
         )
         found = await service.search(
             SearchKnowledgeInput(query="độ chính xác tìm kiếm", limit=3), first_context
