@@ -34,6 +34,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 from app.core.config import APPROVED_GEMINI_MODELS, Settings
 from app.services.evaluation import evaluate_text_answer
+from evals.source_paths import source_name, source_path
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "backend" / "evals" / "golden_gate2.json"
@@ -67,7 +68,7 @@ def _check_provisioned_sources(cases: list[dict[str, Any]]) -> None:
     remote = {item["name"]: item for item in receipt.get("sources", [])}
     for case in selected:
         for ref in case.get("source_refs", []):
-            name = Path(ref["path"]).name
+            name = source_name(ref["path"])
             item = remote.get(name)
             if (
                 not item
@@ -95,7 +96,7 @@ def _source_locked_question(case: dict[str, Any], source_ids: dict[str, str]) ->
     refs = case.get("source_refs") or []
     if case.get("category") not in {"pdf", "sheet"} or not refs:
         return question
-    name = Path(str(refs[0]["path"])).name
+    name = source_name(refs[0]["path"])
     file_id = source_ids.get(name)
     if not file_id:
         raise ValueError(f"Verified Gate 2 source ID missing: {name}")
@@ -226,10 +227,10 @@ def _case_fingerprint(case: dict[str, Any]) -> dict[str, Any]:
     source_fingerprints: list[dict[str, Any]] = []
     for ref in case.get("source_refs") or []:
         expected = str(ref.get("sha256") or "")
-        actual = _file_sha256(str(ref["path"]))
+        actual = _file_sha256(str(source_path(ref)))
         if not expected or actual != expected:
             raise ValueError(
-                f"Gate 2 source hash changed: {Path(str(ref['path'])).name}"
+                f"Gate 2 source hash changed: {source_name(ref['path'])}"
             )
         source_fingerprints.append(
             {

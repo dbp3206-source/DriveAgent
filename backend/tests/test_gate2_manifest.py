@@ -8,6 +8,20 @@ from copy import deepcopy
 import pytest
 
 from evals import build_gate2
+from evals.source_paths import source_name, source_path
+
+
+def test_manifest_source_names_and_checked_in_fixtures_are_portable():
+    assert source_name(r"Z:\old-machine\Evaluation-Harness.pdf") == "Evaluation-Harness.pdf"
+    path = source_path({"source_id": "qa-budget-xlsx", "path": r"Z:\old-machine\budget.xlsx"})
+    assert path == build_gate2.SHEET and path.is_file()
+
+
+def test_private_pdf_location_does_not_fabricate_source(monkeypatch):
+    monkeypatch.delenv(build_gate2.PDF_ENV, raising=False)
+    missing = source_path({"source_id": "evaluation-harness",
+                           "path": "missing-owner-pdf-fixture.pdf"})
+    assert not missing.is_file()
 from scripts import evaluate_gate2_live, validate_gate2
 from scripts.evaluate_gate2_live import _case_checks, _grade, _tool_names
 
@@ -180,7 +194,7 @@ def test_gate2_sheet_calculation_rejects_wrong_expected_total() -> None:
     spec = dict(case["answer_key"]["source_calculation"], expected=104)
     with pytest.raises(ValueError, match="Sheet calculation mismatch"):
         validate_gate2._check_sheet_calculation(
-            validate_gate2.Path(case["source_refs"][0]["path"]), spec
+            validate_gate2.source_path(case["source_refs"][0]), spec
         )
 
 

@@ -7,9 +7,13 @@ import hashlib
 import json
 import re
 import statistics
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / "backend"))
+from evals.source_paths import source_name, source_path
+
 MANIFEST = ROOT / "backend" / "evals" / "golden_gate2.json"
 
 
@@ -120,7 +124,7 @@ def validate(
     if strict_answer_keys:
         for case in citation_cases:
             filenames = {
-                Path(str(ref["path"])).name for ref in case.get("source_refs", [])
+                source_name(ref["path"]) for ref in case.get("source_refs", [])
             }
             for binding in case["answer_key"]["claim_source_bindings"]:
                 if binding.get("file_name") not in filenames or not binding.get(
@@ -139,7 +143,7 @@ def validate(
             key = (str(ref.get("source_id")), str(ref.get("path")))
             sources[key] = ref
     for ref in sources.values():
-        path = Path(str(ref["path"]))
+        path = source_path(ref)
         if not path.is_file():
             missing.append(str(path))
             continue
@@ -158,7 +162,7 @@ def validate(
                 continue
             ref = case["source_refs"][0]
             page_number = int(str(ref["location"]).removeprefix("page "))
-            key = (str(ref["path"]), page_number)
+            key = (str(source_path(ref)), page_number)
             if key not in pages:
                 with pdfplumber.open(key[0]) as pdf:
                     pages[key] = " ".join(
@@ -176,7 +180,7 @@ def validate(
             spec = case.get("answer_key", {}).get("source_calculation")
             if spec:
                 try:
-                    _check_sheet_calculation(Path(case["source_refs"][0]["path"]), spec)
+                    _check_sheet_calculation(source_path(case["source_refs"][0]), spec)
                 except (KeyError, ValueError, TypeError) as exc:
                     raise ValueError(
                         f"Invalid Sheet answer key: {case['id']}: {exc}"
