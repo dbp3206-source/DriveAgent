@@ -109,3 +109,7 @@
   .release-benchmark__table td:last-child { min-width: 0; }
   .measurement-result { white-space: normal; }
 }
+/* Small devices must not overflow when the browser reserves a scrollbar. */
+@media (max-width: 360px) {
+  body { min-width: 0; }
+}
