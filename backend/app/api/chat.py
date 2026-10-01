@@ -704,8 +704,9 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     except APIError as exc:
         await finish_failed_turn("failed", exc)
-        provider_status = exc.code
-        provider_msg = getattr(exc, "message", None) or str(exc)
+        # Provider errors can echo prompts, URLs or credentials. Diagnostics
+        # crossing the HTTP/log boundary must contain only fixed labels/codes.
+        provider_status = exc.code if type(exc.code) is int else None
         messages = {
             429: (
                 "Gemini đã hết hạn mức hoặc đang giới hạn tốc độ (429 Quota Exceeded). "
@@ -729,24 +730,18 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
             403: "Project Gemini chưa có quyền sử dụng model đã chọn (403 Forbidden).",
             404: "Model Gemini đã chọn không khả dụng với project hiện tại (404 Not Found).",
             400: (
-                "Gemini từ chối định dạng yêu cầu "
-                f"(400 Bad Request / Lỗi cấu hình): {provider_msg}. "
+                "Gemini từ chối định dạng yêu cầu (400 Bad Request / Lỗi cấu hình). "
                 "Cần kiểm tra cấu hình tích hợp."
-                if provider_msg
-                else (
-                    "Gemini từ chối định dạng yêu cầu (400 Bad Request / Lỗi cấu hình). "
-                    "Cần kiểm tra cấu hình tích hợp."
-                )
             ),
         }
         logger.warning(
-            "Gemini rejected request; status=%s message=%s request_id=%s",
+            "Gemini rejected request; status=%s request_id=%s",
             provider_status,
-            provider_msg,
             request.state.request_id,
         )
         base_message = messages.get(
-            provider_status, f"Gemini từ chối yêu cầu (mã {provider_status}): {provider_msg}."
+            provider_status,
+            f"Gemini từ chối yêu cầu (mã {provider_status}); yêu cầu chưa hoàn tất.",
         )
         raise HTTPException(
             status_code=503 if provider_status in {429, 503, 504} else 502,

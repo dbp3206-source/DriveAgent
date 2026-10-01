@@ -61,6 +61,42 @@ class CapturingOrchestrator:
         )
 
 
+@pytest.mark.parametrize("code", [400, 401, 429, 500, 503])
+async def test_provider_error_body_never_reaches_response_logs_or_audit(tmp_path, caplog, code):
+    canary = "private-provider-body-canary"
+
+    class EchoingProvider:
+        async def run(self, **_kwargs):
+            error_type = ServerError if code >= 500 else ClientError
+            raise error_type(code, {"error": {"message": canary}})
+
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'private-error.db'}")
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with factory() as db:
+            user = User(email="privacy@example.com", display_name="Privacy", role="editor")
+            db.add(user)
+            await db.commit()
+            request = SimpleNamespace(
+                state=SimpleNamespace(request_id="private-error-request"),
+                app=SimpleNamespace(state=SimpleNamespace(orchestrator=EchoingProvider())),
+            )
+            with pytest.raises(HTTPException) as error:
+                await chat(ChatRequest(message="synthetic failure test"), request, user, db)
+            assert "private-error-request" in error.value.detail
+            assert canary not in error.value.detail
+            assert canary not in caplog.text
+            audit = await db.scalar(select(AuditEvent))
+            assert canary not in audit.error_message
+            assert canary not in audit.result_json
+            assert json.loads(audit.result_json)["provider_code"] == code
+            assert (await db.scalar(select(Message))).status == "failed"
+    finally:
+        await engine.dispose()
+
+
 class IncompleteOrchestrator:
     async def run(self, **_kwargs):
         return AgentRunResult(
