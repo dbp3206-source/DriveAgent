@@ -2,8 +2,8 @@
 
 **Quyết định hiện tại: HOLD. Owner đã duyệt push staging; chưa phát hành.**
 
-Build fingerprint: `cfcfc0e770b681f95054d5dbb09a08534e8f5d795ad0b1be6e16da1b312f0b75`.
-Fingerprint bao gồm backend, frontend, workflow CI, dependency lock và Dockerfile.
+Candidate được định danh bằng commit SHA trên branch staging. Fingerprint của
+các lượt live trước sửa guard không được coi là bằng chứng cho candidate mới.
 Mã đang chạy local tại `http://localhost:8000`.
 
 ## Kết quả đã kiểm nghiệm
