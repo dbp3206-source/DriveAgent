@@ -16,11 +16,12 @@ import urllib.request
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from evaluate_gate2_live import _session_cookie, _tool_names
+from qa_google_read_smoke import _connected_owner_id
+
 from app.db.session import SessionFactory, settings
 from app.services.provider_credentials import active_gemini_key
 from app.services.quota import QuotaGuard
-from evaluate_gate2_live import _session_cookie, _tool_names
-from qa_google_read_smoke import _connected_owner_id
 
 BASE_URL = "http://127.0.0.1:8000"
 MODEL = settings.gemini_chat_model

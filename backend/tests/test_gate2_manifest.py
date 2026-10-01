@@ -6,10 +6,10 @@ from collections import Counter
 from copy import deepcopy
 
 import pytest
-from scripts import evaluate_gate2_live, validate_gate2
-from scripts.evaluate_gate2_live import _case_checks, _grade, _tool_names
 
 from evals import build_gate2
+from scripts import evaluate_gate2_live, validate_gate2
+from scripts.evaluate_gate2_live import _case_checks, _grade, _tool_names
 
 
 def test_requested_model_benchmark_rejects_fallback_even_with_quality_pass() -> None:

@@ -11,12 +11,13 @@ from datetime import datetime, timedelta
 from email.utils import parseaddr, parsedate_to_datetime
 from zoneinfo import ZoneInfo
 
+from qa_google_read_smoke import _connected_owner_id
+
 from app.db.models import User
 from app.db.session import SessionFactory, engine, settings
 from app.tools.contracts import ToolContext
 from app.tools.gmail import _html_to_text, gmail_tool_definitions
 from app.tools.registry import ToolRegistry
-from qa_google_read_smoke import _connected_owner_id
 
 
 async def main(*, today: bool = False) -> None:

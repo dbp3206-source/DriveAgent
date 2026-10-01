@@ -5,14 +5,14 @@ from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
+
+from app.core.config import Settings
 from scripts.scrub_audit_metadata import (
     SAFE_TOOL_FAILURE_MESSAGE,
     _is_legacy,
     backup_and_scrub,
     restore_to_new_path,
 )
-
-from app.core.config import Settings
 
 
 def test_sanitized_tool_failure_is_not_misclassified_as_legacy():

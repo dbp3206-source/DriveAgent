@@ -70,8 +70,7 @@ jobs:
         run: python -m ruff check backend
 
       - name: Lint scripts
-        working-directory: backend
-        run: python -m ruff check ../scripts
+        run: python -m ruff check --config backend/pyproject.toml scripts
 
       - name: Reject credentials and private runtime files
         run: python scripts/scan_release_secrets.py

@@ -9,9 +9,10 @@ from __future__ import annotations
 import argparse
 import json
 
+from qa_google_read_smoke import _connected_owner_id
+
 from app.db.session import settings
 from app.services.skills import SkillSpec, SkillStore
-from qa_google_read_smoke import _connected_owner_id
 
 OLD_STEPS = [
     (

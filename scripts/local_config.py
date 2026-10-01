@@ -4,9 +4,10 @@ import argparse
 import json
 import secrets
 
-from app.core.config import APPROVED_GEMINI_MODELS, PROJECT_ROOT, Settings
 from pydantic import ValidationError
 from pydantic_settings import SettingsError
+
+from app.core.config import APPROVED_GEMINI_MODELS, PROJECT_ROOT, Settings
 
 
 def prepare() -> None:

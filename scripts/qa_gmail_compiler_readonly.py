@@ -13,17 +13,18 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from google import genai
+from google.adk.models import Gemini
+from google.adk.models.llm_response import LlmResponse
+from google.genai import types
+from qa_google_read_smoke import _connected_owner_id
+
 from app.agent.compiler import CompilerOrchestrator
 from app.agent.routing import route_request
 from app.db.models import User
 from app.db.session import SessionFactory, engine, settings
 from app.tools.gmail import gmail_tool_definitions
 from app.tools.registry import ToolRegistry
-from google import genai
-from google.adk.models import Gemini
-from google.adk.models.llm_response import LlmResponse
-from google.genai import types
-from qa_google_read_smoke import _connected_owner_id
 
 
 async def main() -> None:

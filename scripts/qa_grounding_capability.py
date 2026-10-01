@@ -9,12 +9,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend"))
 
 
 async def run():
+    from google import genai
+    from sqlalchemy import select
+
     from app.core.config import get_settings
     from app.db.models import User
     from app.db.session import SessionFactory, engine
     from app.services.provider_credentials import active_gemini_key
-    from google import genai
-    from sqlalchemy import select
 
     client = None
     try:

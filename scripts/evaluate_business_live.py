@@ -14,7 +14,6 @@ import time
 import urllib.error
 from pathlib import Path
 
-from app.core.config import APPROVED_GEMINI_MODELS
 from evaluate_gate2_live import (
     _case_checks,
     _grade,
@@ -24,6 +23,8 @@ from evaluate_gate2_live import (
     _session_cookie,
     _tool_names,
 )
+
+from app.core.config import APPROVED_GEMINI_MODELS
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "backend" / "evals" / "business_live.json"

@@ -18,6 +18,8 @@ from sqlalchemy import select
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
+from qa_google_read_smoke import BASE, _cookie, _read
+
 from app.core.config import Settings
 from app.db.models import User
 from app.db.session import SessionFactory
@@ -26,7 +28,6 @@ from app.tools.calendar import (
     calendar_list_upcoming,
 )
 from app.tools.contracts import ToolContext
-from qa_google_read_smoke import BASE, _cookie, _read
 
 EVENT_MARKER = "QA-CALENDAR-20260928"
 EVENT_TITLE = "[Veridra QA] Meeting prep test — không có khách mời"

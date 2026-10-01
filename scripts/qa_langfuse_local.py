@@ -7,9 +7,10 @@ from pathlib import Path
 from urllib.request import Request
 from uuid import uuid4
 
-from app.services.local_otlp import LocalLangfuseExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
+
+from app.services.local_otlp import LocalLangfuseExporter
 
 ROOT = Path(__file__).resolve().parents[1]
 

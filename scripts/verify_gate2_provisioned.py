@@ -20,7 +20,6 @@ from app.db.models import User, UserRole
 from app.db.session import SessionFactory
 from app.tools.contracts import ToolContext
 from app.tools.drive import ReadDriveFileInput, read_drive_file
-
 from scripts.provision_gate2_sources import RECEIPT
 
 

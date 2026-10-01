@@ -13,12 +13,13 @@ import sys
 import urllib.error
 import urllib.request
 
+from evaluate_gate2_live import _session_cookie, _tool_names
+from qa_google_read_smoke import _connected_owner_id
+
 from app.core.config import APPROVED_GEMINI_MODELS
 from app.db.session import SessionFactory, settings
 from app.services.provider_credentials import active_gemini_key
 from app.services.quota import QuotaGuard
-from evaluate_gate2_live import _session_cookie, _tool_names
-from qa_google_read_smoke import _connected_owner_id
 
 
 def main(model: str = "gemini-3.5-flash-lite") -> int:

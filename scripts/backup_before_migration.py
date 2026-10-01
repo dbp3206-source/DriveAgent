@@ -18,8 +18,9 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 
 def run():
-    from app.core.config import get_settings
     from state_archive import _EncryptedWriter, backup_state
+
+    from app.core.config import get_settings
 
     settings = get_settings()
     if len(settings.app_secret) < 32 or settings.app_secret.startswith("local-development"):

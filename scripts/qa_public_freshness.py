@@ -12,6 +12,8 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 
 async def run() -> dict:
+    from sqlalchemy import select
+
     from app.core.config import get_settings
     from app.db.models import User
     from app.db.session import SessionFactory, engine
@@ -20,7 +22,6 @@ async def run() -> dict:
     from app.tools.contracts import ToolContext, ToolError
     from app.tools.registry import ToolRegistry
     from app.tools.web_research import web_research_tool_definitions
-    from sqlalchemy import select
 
     settings = get_settings()
     started = time.monotonic()

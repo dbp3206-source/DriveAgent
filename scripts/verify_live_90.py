@@ -13,6 +13,7 @@ import os
 import urllib.request
 
 import itsdangerous
+
 from app.core.config import Settings
 
 BASE_URL = "http://127.0.0.1:8000"

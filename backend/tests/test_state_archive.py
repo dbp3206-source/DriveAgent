@@ -3,6 +3,7 @@ import sqlite3
 from pathlib import Path
 
 import pytest
+
 from scripts.state_archive import _safe_relative, backup_state, restore_state
 
 
