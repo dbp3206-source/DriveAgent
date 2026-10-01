@@ -128,10 +128,10 @@ function getSessionTopicMeta(title: string, id: string): SessionTopicMeta {
       accentClass: 'amber',
     }
   }
-  if (/sheet|bảng tính|excel|csv|xlsx|xls|dữ liệu|thống kê|doanh thu|bảng biểu/i.test(lower)) {
+  if (/sheet|bảng tính|excel|csv|xlsx|xls|bảng biểu/i.test(lower)) {
     return {
       type: 'sheets',
-      label: 'Bảng tính Sheets',
+      label: 'Bảng tính',
       icon: Table16Regular,
       accentClass: 'emerald',
     }
@@ -139,7 +139,7 @@ function getSessionTopicMeta(title: string, id: string): SessionTopicMeta {
   if (/doc|tài liệu|drive|tệp|file|văn bản|pdf|hợp đồng/i.test(lower)) {
     return {
       type: 'docs',
-      label: 'Tài liệu Drive',
+      label: 'Tài liệu',
       icon: DocumentText16Regular,
       accentClass: 'cyan',
     }
