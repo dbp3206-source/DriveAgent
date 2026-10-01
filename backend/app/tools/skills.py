@@ -5,7 +5,8 @@ import asyncio
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.auth.permissions import SKILL_MANAGE
-from app.services.skills import SkillSpec, SkillStore
+from app.services.relational_skills import skill_store
+from app.services.skills import SkillSpec
 from app.tools.contracts import ToolContext, ToolDefinition
 
 
@@ -37,7 +38,7 @@ class SkillResult(BaseModel):
 
 async def save(payload: SkillSave, context: ToolContext):
     row = await asyncio.to_thread(
-        SkillStore(context.settings.data_dir).save,
+        skill_store(context.settings).save,
         context.user.id,
         payload.skill,
         payload.expected_revision,
@@ -47,21 +48,21 @@ async def save(payload: SkillSave, context: ToolContext):
 
 async def run(payload: SkillRun, context: ToolContext):
     row = await asyncio.to_thread(
-        SkillStore(context.settings.data_dir).run, context.user.id, payload.name, payload.inputs
+        skill_store(context.settings).run, context.user.id, payload.name, payload.inputs
     )
     return SkillResult(data=row)
 
 
 async def list_skills(payload: SkillList, context: ToolContext):
     rows = await asyncio.to_thread(
-        SkillStore(context.settings.data_dir).list, context.user.id, payload.include_archived
+        skill_store(context.settings).list, context.user.id, payload.include_archived
     )
     return SkillResult(data={"items": rows})
 
 
 async def archive(payload: SkillArchive, context: ToolContext):
     row = await asyncio.to_thread(
-        SkillStore(context.settings.data_dir).archive, context.user.id, payload.skill_id
+        skill_store(context.settings).archive, context.user.id, payload.skill_id
     )
     return SkillResult(data=row)
 

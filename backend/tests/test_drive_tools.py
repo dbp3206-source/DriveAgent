@@ -1,6 +1,8 @@
+from io import BytesIO
 from types import SimpleNamespace
 
 import pytest
+from openpyxl import Workbook
 
 from app.core.config import Settings
 from app.db.models import User
@@ -12,6 +14,8 @@ from app.tools.drive import (
     _convert_bytes,
     _escape_drive_query,
     _extension_for,
+    _google_sheet_markdown,
+    is_supported_drive_file,
     list_drive_files,
     read_drive_file,
     search_drive_files,
@@ -26,6 +30,131 @@ def test_known_extensions_are_preserved_for_conversion() -> None:
     assert _extension_for("application/pdf") == ".pdf"
     assert _extension_for("text/csv") == ".csv"
     assert _extension_for("application/octet-stream") == ".bin"
+
+
+def test_excel_conversion_closes_read_only_workbook_before_temp_cleanup() -> None:
+    workbook = Workbook()
+    workbook.active.append(["Cột 1", "Cột 2"])
+    workbook.active.append([1, 2])
+    buffer = BytesIO()
+    workbook.save(buffer)
+    workbook.close()
+
+    text = _convert_bytes(
+        buffer.getvalue(),
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "qa.xlsx",
+    )
+
+    assert "Cột 2" in text
+    assert "| 1 | 2 |" in text
+
+
+def test_google_sheet_reader_preserves_tabs_columns_and_cells() -> None:
+    class Request:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def execute(self):
+            return self.payload
+
+    class Spreadsheets:
+        def values(self):
+            return self
+
+        def get(self, **kwargs):  # type: ignore[no-redef]
+            if "range" not in kwargs:
+                return Request(
+                    {
+                        "properties": {"title": "Chi tiêu"},
+                        "sheets": [
+                            {"properties": {"title": "Tháng 9"}},
+                            {"properties": {"title": "Ghi chú"}},
+                        ],
+                    }
+                )
+            rows = (
+                [["Mục", "Số tiền"], ["Sách", 120], ["Xe buýt", 30]]
+                if "Tháng 9" in kwargs["range"]
+                else [["Nội dung"], ["Giữ nguyên | ký tự"]]
+            )
+            return Request({"values": rows})
+
+    class Service:
+        def spreadsheets(self):
+            return Spreadsheets()
+
+    result = _google_sheet_markdown(Service(), "sheet-id")
+
+    assert "# Chi tiêu" in result
+    assert "## Tháng 9" in result
+    assert "| Mục | Số tiền |" in result
+    assert "| Sách | 120 |" in result
+    assert "Giữ nguyên \\| ký tự" in result
+
+
+def test_native_sheet_keeps_moderate_width_values_needed_for_totals() -> None:
+    class Request:
+        def __init__(self, payload):
+            self.payload = payload
+
+        def execute(self):
+            return self.payload
+
+    class Spreadsheets:
+        def values(self):
+            return self
+
+        def get(self, **kwargs):
+            if "range" not in kwargs:
+                return Request(
+                    {
+                        "properties": {"title": "QA"},
+                        "sheets": [{"properties": {"title": "Chi phí"}}],
+                    }
+                )
+            return Request(
+                {"values": [[f"Cột {i}" for i in range(1, 15)], list(range(1, 15))]}
+            )
+
+    class Service:
+        def spreadsheets(self):
+            return Spreadsheets()
+
+    result = _google_sheet_markdown(Service(), "qa-sheet")
+
+    assert "Cột 14" in result
+    assert "| 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10 | 11 | 12 | 13 | 14 |" in result
+    assert "rút gọn" not in result
+
+
+@pytest.mark.parametrize(
+    "mime_type,file_name",
+    [
+        ("application/vnd.google-apps.document", "Kế hoạch"),
+        ("application/pdf", "report.pdf"),
+        ("text/markdown", "notes.md"),
+        ("application/octet-stream", "agent.ipynb"),
+    ],
+)
+def test_supported_drive_file_contract_accepts_extractable_formats(
+    mime_type: str, file_name: str
+) -> None:
+    assert is_supported_drive_file(mime_type, file_name) is True
+
+
+@pytest.mark.parametrize(
+    "mime_type,file_name",
+    [
+        ("video/mp4", "lecture.mp4"),
+        ("application/zip", "archive.zip"),
+        ("application/octet-stream", "unknown.bin"),
+    ],
+)
+def test_supported_drive_file_contract_rejects_non_document_formats(
+    mime_type: str, file_name: str
+) -> None:
+    assert is_supported_drive_file(mime_type, file_name) is False
 
 
 def test_notebook_conversion_keeps_sources_and_drops_outputs() -> None:

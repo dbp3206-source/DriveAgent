@@ -26,10 +26,27 @@ async def test_chat_proposals_persist_and_prepare_only_owned_immutable_spec(tmp_
         "kind": "document",
         "document": {"title": "Kế hoạch", "blocks": [{"text": "Ôn tập"}]},
     }
+    spreadsheet_proposal = {
+        "kind": "spreadsheet",
+        "spreadsheet": {
+            "title": "Ngân sách",
+            "tabs": [
+                {
+                    "title": "Chi phi",
+                    "headers": ["Hạng mục", "Chêh lệch"],
+                    "rows": [["sách", 50000]],
+                }
+            ],
+        },
+    }
 
     async def run(**kwargs):
         return AgentRunResult(
-            answer="Chờ xác nhận", plan=[], trace=[], citations=[], proposals=[proposal]
+            answer="Chờ xác nhận",
+            plan=[],
+            trace=[],
+            citations=[],
+            proposals=[proposal, spreadsheet_proposal],
         )
 
     app.state.orchestrator = SimpleNamespace(run=run)
@@ -62,10 +79,21 @@ async def test_chat_proposals_persist_and_prepare_only_owned_immutable_spec(tmp_
         app.dependency_overrides[get_current_user] = user
         app.dependency_overrides[get_db] = session
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
-            response = await client.post("/api/chat", json={"message": "Tạo tài liệu"})
+            response = await client.post(
+                "/api/chat",
+                json={
+                    "message": (
+                        "Tạo tài liệu và bảng Ngân sách với cột Hạng mục, Chênh lệch; "
+                        "hàng Sách 50000."
+                    )
+                },
+            )
             assert response.status_code == 200
             result = response.json()
             assert not prepared  # Generation/persistence does not prepare or execute writes.
+            sheet = result["proposals"][1]["spreadsheet"]["tabs"][0]
+            assert sheet["headers"] == ["Hạng mục", "Chênh lệch"]
+            assert sheet["rows"][0][0] == "Sách"
             messages_url = f"/api/chat/sessions/{result['session_id']}/messages"
             saved = (await client.get(messages_url)).json()
             assert saved[-1]["proposals"] == result["proposals"]

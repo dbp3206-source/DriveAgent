@@ -23,6 +23,13 @@ class VectorStore:
         self.backend_name = "sqlite-fallback"
 
     async def initialize(self) -> None:
+        if self.settings.resolved_database_url.startswith("postgresql+psycopg"):
+            # DocumentChunk and LongTermMemory already persist normalized 768-d
+            # embeddings.  For a four-user free beta, scoring the owner-scoped
+            # SQL snapshot avoids a memory-heavy Qdrant sidecar and remains
+            # correct across ephemeral Render restarts.
+            self.backend_name = "postgres-hybrid"
+            return
         try:
             path = self.settings.resolved_qdrant_path
             path.mkdir(parents=True, exist_ok=True)

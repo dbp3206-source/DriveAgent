@@ -73,4 +73,58 @@ def test_sheet_edit_intent_is_bound_to_current_values():
         )
     )
     assert patch.patches[0].expected_values == [["Current", 4]]
+    assert patch.patches[0].expected_formulas == [[None, None]]
     assert patch.patches[0].new_values == [["Updated", 5]]
+
+
+def test_sheet_patch_rejects_unreviewed_formula_even_when_rendered_value_matches():
+    def get(**kwargs):
+        return response(
+            {"values": [["=2*2"]] if kwargs.get("valueRenderOption") == "FORMULA" else [[4]]}
+        )
+
+    api = SimpleNamespace(
+        get=get,
+    )
+    root = SimpleNamespace(spreadsheets=lambda: SimpleNamespace(values=lambda: api))
+    spec = SpreadsheetPatchSpec(
+        spreadsheet_id="sheet123",
+        patches=[
+            {
+                "sheet_title": "Data",
+                "range_a1": "A1:A1",
+                "expected_values": [[4]],
+                "new_values": [[5]],
+            }
+        ],
+    )
+    with pytest.raises(ToolError, match="công thức") as error:
+        SpreadsheetCreator(root).apply_patch(spec)
+    assert error.value.code == "revision_conflict"
+
+
+def test_sheet_patch_rechecks_after_preview_to_reject_intervening_edit():
+    state = {"value": "Old"}
+
+    def get(**kwargs):
+        snapshot = {"values": [[state["value"]]]}
+        if kwargs.get("valueRenderOption") == "UNFORMATTED_VALUE":
+            state["value"] = "Other user update"
+        return response(snapshot)
+
+    api = SimpleNamespace(get=get)
+    root = SimpleNamespace(spreadsheets=lambda: SimpleNamespace(values=lambda: api))
+    spec = SpreadsheetPatchSpec(
+        spreadsheet_id="sheet123",
+        patches=[
+            {
+                "sheet_title": "Data",
+                "range_a1": "A1:A1",
+                "expected_values": [["Old"]],
+                "new_values": [["New"]],
+            }
+        ],
+    )
+    with pytest.raises(ToolError, match="thay đổi") as error:
+        SpreadsheetCreator(root).apply_patch(spec)
+    assert error.value.code == "revision_conflict" and state["value"] != "New"

@@ -31,3 +31,21 @@ def test_zero_division_and_operand_count():
     for values in (["1", "0"], ["1"]):
         with pytest.raises(ToolError):
             calculate(CalculateInput(operation="divide", values=values))
+
+
+@pytest.mark.parametrize(
+    ("expression", "expected"),
+    [
+        ("(125.5 + 24.5) / 3", "50.0"),
+        ("2 + 3 * 4", "14"),
+        ("-(2 + 3) * 4", "-20"),
+    ],
+)
+def test_safe_arithmetic_expression(expression, expected):
+    assert calculate(CalculateInput(operation="expression", values=[expression])).result == expected
+
+
+@pytest.mark.parametrize("expression", ["1/0", "__import__('os')", "(1+2", "1 2", ""])
+def test_rejects_unsafe_or_invalid_expression(expression):
+    with pytest.raises(ToolError):
+        calculate(CalculateInput(operation="expression", values=[expression]))

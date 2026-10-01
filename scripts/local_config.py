@@ -4,7 +4,7 @@ import argparse
 import json
 import secrets
 
-from app.core.config import PROJECT_ROOT, Settings
+from app.core.config import APPROVED_GEMINI_MODELS, PROJECT_ROOT, Settings
 from pydantic import ValidationError
 from pydantic_settings import SettingsError
 
@@ -34,9 +34,9 @@ def check() -> int:
         ".env exists": (PROJECT_ROOT / ".env").is_file(),
         "Gemini API key configured (not a live verification)": settings.gemini_is_configured,
         "Gemini chat model is approved": settings.gemini_chat_model
-        in {"gemini-3.8-flash", "gemini-3.5-flash-lite"},
+        in APPROVED_GEMINI_MODELS,
         "Gemini fallback model is approved": settings.gemini_fallback_model
-        in {"gemini-3.8-flash", "gemini-3.5-flash-lite"},
+        in APPROVED_GEMINI_MODELS,
         "Gemini Embedding 2 selected": settings.gemini_embedding_model
         == "gemini-embedding-2",
         "Random APP_SECRET configured": (
@@ -51,7 +51,9 @@ def check() -> int:
         == "http://localhost:8000",
     }
     try:
-        data = json.loads(settings.resolved_google_oauth_client_file.read_text(encoding="utf-8-sig"))
+        data = json.loads(
+            settings.resolved_google_oauth_client_file.read_text(encoding="utf-8-sig")
+        )
         web = data.get("web", {})
         valid = bool(web.get("client_id") and web.get("client_secret"))
         valid = valid and settings.google_redirect_uri in web.get("redirect_uris", [])

@@ -1,13 +1,16 @@
-"""API kết quả đã lưu. Export không chạy Markdown/HTML và luôn tải xuống."""
+"""API kết quả đã lưu. Export an toàn sang Markdown, DOCX hoặc PDF."""
+
+from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import Response
 from sqlalchemy import select
 
 from app.api.dependencies import CurrentUser, DbSession, require_permission
-from app.auth.permissions import MEMORY_READ
+from app.auth.permissions import REPORT_EXPORT
 from app.db.models import SavedArtifact
 from app.services.artifacts import ArtifactWrite
+from app.services.report_exports import export_report
 from app.tools.contracts import ToolContext
 
 router = APIRouter(prefix="/api/artifacts", tags=["artifacts"])
@@ -37,8 +40,13 @@ async def save(payload: ArtifactWrite, request: Request, user: CurrentUser, db: 
     )
 
 
-@router.get("/{artifact_id}/export", dependencies=[Depends(require_permission(MEMORY_READ))])
-async def export(artifact_id: str, user: CurrentUser, db: DbSession):
+@router.get("/{artifact_id}/export", dependencies=[Depends(require_permission(REPORT_EXPORT))])
+async def export(
+    artifact_id: str,
+    user: CurrentUser,
+    db: DbSession,
+    format: Literal["md", "docx", "pdf"] = "md",
+):
     row = await db.scalar(
         select(SavedArtifact).where(
             SavedArtifact.id == artifact_id, SavedArtifact.user_id == user.id
@@ -46,11 +54,12 @@ async def export(artifact_id: str, user: CurrentUser, db: DbSession):
     )
     if row is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy bản lưu.")
+    body, media_type = export_report(row.title, row.content, format)
     return Response(
-        f"# {row.title}\n\n{row.content}\n",
-        media_type="text/markdown; charset=utf-8",
+        body,
+        media_type=media_type,
         headers={
-            "Content-Disposition": f'attachment; filename="note-{row.id}.md"',
+            "Content-Disposition": f'attachment; filename="report-{row.id}.{format}"',
             "X-Content-Type-Options": "nosniff",
             "Cache-Control": "no-store",
         },

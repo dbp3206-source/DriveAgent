@@ -1,169 +1,640 @@
-import { Button, Spinner } from '@fluentui/react-components'
-import { ArrowClockwise20Regular, CheckmarkCircle20Regular, Warning20Regular } from '@fluentui/react-icons'
-import { useEffect, useState } from 'react'
-import { api } from '../api'
-import { ErrorState } from '../components/AsyncState'
+import { Button } from '@fluentui/react-components'
+import {
+  BuildingBank20Regular,
+  CheckmarkCircle20Regular,
+  ChevronRight20Regular,
+  DocumentText20Regular,
+  Flowchart20Regular,
+  HatGraduation20Regular,
+  LockClosed20Regular,
+  Open20Regular,
+  ShoppingBag20Regular,
+  Sparkle20Regular,
+  Table20Regular,
+} from '@fluentui/react-icons'
+import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from 'react'
+import {
+  HarnessDiagram6,
+  type DiagramViewMode,
+} from '../components/harness/HarnessDiagram6'
+import { TerminalCommandHub } from '../components/harness/TerminalCommandHub'
+import {
+  Step07MockupPreview,
+  StepMicroCards,
+} from '../components/harness/StepArtifactMockup'
+import { TechInspectorDrawer } from '../components/harness/TechInspectorDrawer'
+import { LiveTrustCockpit } from '../components/harness/LiveTrustCockpit'
+import { InteractiveTestDrive } from '../components/harness/InteractiveTestDrive'
+import { GovernanceMatrixTable } from '../components/harness/GovernanceMatrixTable'
+import {
+  HARNESS_SCENARIOS,
+  HARNESS_SHARED_RAILS,
+  type HarnessScenario,
+  type HarnessScenarioId,
+  type HarnessStep,
+} from '../harnessScenarios'
+import './harnessPage.css'
+import '../components/harness/harnessComponents.css'
 
-interface ToolSummary {
-  name: string
-  description: string
-  available: boolean
-  requires_approval: boolean
-  permissions: string[]
-  oauth_scopes: string[]
-  max_attempts: number
-  timeout_seconds: number | null
+const DOMAIN_ENTERPRISE_META: Record<HarnessScenarioId, {
+  tag: string
+  copy: string
+}> = {
+  banking: {
+    tag: 'BANKING',
+    copy: 'Đối soát chênh lệch sổ sách & Giữ trọn vết kiểm toán',
+  },
+  education: {
+    tag: 'EDUCATION',
+    copy: 'Nhận diện lỗ hổng kiến thức & Đánh giá khách quan theo rubric',
+  },
+  ecommerce: {
+    tag: 'E-COMMERCE',
+    copy: 'Phân tích biến động đơn hàng & Đề xuất phương án vận hành kho',
+  },
 }
 
-interface HarnessOverview {
-  runtime: {
-    orchestrator: string
-    orchestrator_class: string
-    primary_model: string
-    fallback_model: string
-    embedding_model: string
-    embedding_dimensions: number
+function outputIcon(label: string) {
+  if (label.toLowerCase().includes('sheet') || label.toLowerCase().includes('bảng')) return <Table20Regular />
+  if (label.toLowerCase().includes('gmail') || label.toLowerCase().includes('email')) return <Open20Regular />
+  if (label.toLowerCase().includes('skill')) return <Sparkle20Regular />
+  return <DocumentText20Regular />
+}
+
+function getDomainIcon(id: HarnessScenarioId) {
+  switch (id) {
+    case 'banking':
+      return <BuildingBank20Regular aria-hidden="true" />
+    case 'education':
+      return <HatGraduation20Regular aria-hidden="true" />
+    case 'ecommerce':
+      return <ShoppingBag20Regular aria-hidden="true" />
   }
-  context: { sessions: number; active_memories: number }
-  rag: { indexed_files: number; indexed_chunks: number }
-  tools: { total: number; available: number; approval_required: number; items: ToolSummary[] }
-  creation: {google_outputs: string[]; visuals: number; skills: number; approval_flow: string; local_visual_formats: string[]}
-  orchestration: { stages: string[]; checkpoint: string }
-  protocols: {
-    mcp: { enabled: boolean; mode: string; tools: string[] }
-    a2a: { enabled: boolean; mode: string; tools: string[] }
-    multi_agent_runtime: boolean
-  }
-  evaluation: {
-    routing_regression: {
-      suite: string
-      version: string
-      scope: string
-      passed: number
-      total: number
-      pass_rate: number | null
+}
+
+/**
+ * Parses query parameters from hash, e.g. `#/harness?domain=education&step=3`.
+ */
+function parseHarnessUrl(): { domain?: HarnessScenarioId; stepIndex?: number } {
+  try {
+    const hash = window.location.hash || ''
+    const qIndex = hash.indexOf('?')
+    if (qIndex === -1) return {}
+    const params = new URLSearchParams(hash.slice(qIndex + 1))
+    const domainParam = params.get('domain')?.toLowerCase()
+    const stepParam = params.get('step')
+
+    const domain: HarnessScenarioId | undefined =
+      domainParam === 'banking' || domainParam === 'education' || domainParam === 'ecommerce'
+        ? (domainParam as HarnessScenarioId)
+        : undefined
+
+    let stepIndex: number | undefined
+    if (stepParam !== null) {
+      const parsed = parseInt(stepParam, 10)
+      if (!Number.isNaN(parsed)) {
+        stepIndex = Math.max(0, Math.min(6, parsed - 1))
+      }
     }
-    audit_sample_size: number
-    tool_success_rate: number | null
-    latency_p50_ms: number | null
-    latency_p95_ms: number | null
-    feedback_count: number
-    helpful_rate: number | null
-    usage: { prompt_tokens: number; output_tokens: number; total_tokens: number; measured_runs: number }
-    quality_note: string
-    quality_audit: {responses: number; nonempty_rate: number | null; trace_integrity_rate: number | null; grounded_citation_rate: number | null}
+    return { domain, stepIndex }
+  } catch {
+    return {}
   }
 }
 
-function Metric({ value, label, detail }: { value: string; label: string; detail: string }) {
-  return <div className="harness-metric"><strong>{value}</strong><span>{label}</span><small>{detail}</small></div>
+const STEP_PHASE_LABELS: Record<string, string> = {
+  '01': 'GĐ 1 · Tiếp nhận',
+  '02': 'GĐ 1 · Thu thập',
+  '03': 'GĐ 2 · Tra cứu',
+  '04': 'GĐ 3 · Tính toán',
+  '05': 'GĐ 3 · Phối hợp',
+  '06': 'GĐ 4 · Kiểm duyệt',
+  '07': 'GĐ 4 · Bàn giao',
+}
+
+function HarnessFlow({
+  scenario,
+  activeStep,
+  onSelect,
+}: {
+  scenario: HarnessScenario
+  activeStep: number
+  onSelect: (index: number) => void
+}) {
+  const stepRefs = useRef<(HTMLButtonElement | null)[]>([])
+  const progress = `${(activeStep / Math.max(1, scenario.steps.length - 1)) * 100}%`
+  const activePhase = STEP_PHASE_LABELS[scenario.steps[activeStep]?.number ?? '01'] ?? 'Đang thực thi'
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>, index: number) => {
+    let nextIndex = index
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      e.preventDefault()
+      nextIndex = (index + 1) % scenario.steps.length
+    } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      nextIndex = (index - 1 + scenario.steps.length) % scenario.steps.length
+    } else if (e.key === 'Home') {
+      e.preventDefault()
+      nextIndex = 0
+    } else if (e.key === 'End') {
+      e.preventDefault()
+      nextIndex = scenario.steps.length - 1
+    }
+    if (nextIndex !== index) {
+      onSelect(nextIndex)
+      stepRefs.current[nextIndex]?.focus()
+    }
+  }
+
+  return (
+    <div className="harness-flow" aria-label={`Luồng xử lý ${scenario.domain}`}>
+      <div className="harness-flow__track-meta" aria-hidden="true">
+        <span className="harness-flow__track-label">Tiến trình thực thi 7 bước</span>
+        <span className="harness-flow__track-count">
+          Bước {activeStep + 1} / {scenario.steps.length} · {activePhase}
+        </span>
+      </div>
+      <div className="harness-flow__rail" aria-hidden="true">
+        <span style={{ width: progress, ['--flow-progress' as string]: progress }} />
+      </div>
+      <div className="harness-flow__steps" role="tablist" aria-label="Các bước xử lý">
+        {scenario.steps.map((step, index) => {
+          const isActive = activeStep === index
+          const isPast = index < activeStep
+          const phaseLabel = STEP_PHASE_LABELS[step.number] ?? `Bước ${step.number}`
+
+          return (
+            <button
+              key={step.id}
+              ref={(el) => {
+                stepRefs.current[index] = el
+              }}
+              type="button"
+              role="tab"
+              id={`harness-step-tab-${scenario.id}-${step.id}`}
+              aria-selected={isActive}
+              aria-controls={`harness-step-panel-${scenario.id}`}
+              tabIndex={isActive ? 0 : -1}
+              className={`harness-flow__step ${isActive ? 'is-active' : ''} ${
+                isPast ? 'is-past' : ''
+              }`}
+              onClick={() => onSelect(index)}
+              onKeyDown={(e) => handleKeyDown(e, index)}
+            >
+              <div className="harness-flow__step-top">
+                <div className="harness-flow__step-header-row">
+                  <span className="harness-flow__number">{step.number}</span>
+                  {isActive && (
+                    <span className="harness-flow__status-badge is-active">
+                      <span className="harness-flow__pulse-dot" aria-hidden="true" />
+                      <span>Đang xem</span>
+                    </span>
+                  )}
+                  {isPast && (
+                    <span className="harness-flow__status-badge is-past">
+                      <CheckmarkCircle20Regular className="harness-flow__status-icon" aria-hidden="true" />
+                      <span>Đã qua</span>
+                    </span>
+                  )}
+                  {!isActive && !isPast && (
+                    <span className="harness-flow__status-badge is-upcoming">
+                      <span>0{index + 1}/07</span>
+                    </span>
+                  )}
+                </div>
+                <span className="harness-flow__phase-badge" title={phaseLabel}>
+                  {phaseLabel}
+                </span>
+              </div>
+              <span className="harness-flow__step-copy">
+                <strong>{step.plainTitle}</strong>
+                <small title={step.plainSummary}>{step.plainSummary}</small>
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function HarnessStepPanel({
+  scenario,
+  step,
+  stepIndex,
+}: {
+  scenario: HarnessScenario
+  step: HarnessStep
+  stepIndex: number
+}) {
+  const isOutcomeStep = step.number === '07' || stepIndex === 6
+
+  return (
+    <article
+      className="harness-step-panel"
+      id={`harness-step-panel-${scenario.id}`}
+      role="tabpanel"
+      aria-live="polite"
+    >
+      {/* Top Banner: Symmetrical Header with Milestone Info & Assistant Role */}
+      <div className="harness-step-panel__header-row">
+        <div className="harness-step-panel__meta">
+          <span className="harness-step-panel__eyebrow">
+            BƯỚC {step.number} / 07 · {STEP_PHASE_LABELS[step.number] ?? 'TIẾN TRÌNH THỰC THI'}
+          </span>
+          <h3 className="harness-step-panel__title">{step.plainTitle}</h3>
+        </div>
+        <div className="harness-step-panel__assistant-tag">
+          <Sparkle20Regular aria-hidden="true" />
+          <span>Trợ lý số thực thi chuẩn mực</span>
+        </div>
+      </div>
+
+      {/* Symmetrical 3-Card Fact Grid spanning 100% width (Balanced, Zero Dead Space) */}
+      <div className="harness-step-panel__facts-grid">
+        <div className="harness-step-fact-card">
+          <div className="harness-step-fact-card__header">
+            <span className="fact-card-icon">🎯</span>
+            <strong>Mục tiêu xử lý của trợ lý</strong>
+          </div>
+          <p className="harness-step-fact-card__body">{step.plainSummary}</p>
+        </div>
+
+        <div className="harness-step-fact-card">
+          <div className="harness-step-fact-card__header">
+            <span className="fact-card-icon">📁</span>
+            <strong>Bằng chứng &amp; Hồ sơ đối chiếu</strong>
+          </div>
+          <p className="harness-step-fact-card__body">{step.evidence}</p>
+        </div>
+
+        <div className="harness-step-fact-card">
+          <div className="harness-step-fact-card__header">
+            <span className="fact-card-icon">⚙️</span>
+            <strong>Hệ thống điều phối ngầm</strong>
+          </div>
+          <p className="harness-step-fact-card__body">
+            <strong>{step.technicalTitle}:</strong> {step.technicalSummary}
+          </p>
+        </div>
+      </div>
+
+      {/* Full-width Detail Body (Zero empty space) */}
+      <div className="harness-step-panel__detail-body">
+        {isOutcomeStep ? (
+          <Step07MockupPreview scenarioId={scenario.id} />
+        ) : (
+          <StepMicroCards scenarioId={scenario.id} stepIndex={stepIndex} />
+        )}
+      </div>
+    </article>
+  )
 }
 
 export function HarnessPage() {
-  const [data, setData] = useState<HarnessOverview | null>(null)
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(true)
+  const initialParams = parseHarnessUrl()
+  const [selectedId, setSelectedId] = useState<HarnessScenarioId>(initialParams.domain ?? 'banking')
+  const [activeStep, setActiveStep] = useState(initialParams.stepIndex ?? 0)
+  const [diagramViewMode, setDiagramViewMode] = useState<DiagramViewMode>('business')
+  const [isTechDrawerOpen, setIsTechDrawerOpen] = useState(false)
+  const [selectedTechId, setSelectedTechId] = useState<string | null>(null)
+  const isInternalUpdate = useRef(false)
 
-  async function load() {
-    setLoading(true); setError('')
-    try { setData(await api<HarnessOverview>('/api/harness/overview')) }
-    catch (caught) { setError(caught instanceof Error ? caught.message : 'Không tải được Harness.') }
-    finally { setLoading(false) }
+  const scenario = useMemo(
+    () => HARNESS_SCENARIOS.find((item) => item.id === selectedId) ?? HARNESS_SCENARIOS[0]!,
+    [selectedId],
+  )
+  const step = scenario.steps[activeStep] ?? scenario.steps[0]!
+
+  function openTechInspector(techIdOrName: string | null) {
+    setSelectedTechId(techIdOrName)
+    setIsTechDrawerOpen(true)
   }
-  useEffect(() => { void load() }, [])
 
-  if (loading && !data) return <div className="harness-loading"><Spinner label="Đang đọc dữ liệu Harness thật" /></div>
-  if (error && !data) return <ErrorState message={error} retry={load} />
-  if (!data) return null
+  // Bidirectional URL deep-linking: update hash query params
+  useEffect(() => {
+    const currentHash = window.location.hash || ''
+    if (!currentHash || currentHash.startsWith('#/harness') || currentHash.startsWith('#harness')) {
+      const targetHash = `#/harness?domain=${selectedId}&step=${activeStep + 1}`
+      if (currentHash !== targetHash) {
+        isInternalUpdate.current = true
+        window.history.replaceState(null, '', targetHash)
+      }
+    }
+  }, [selectedId, activeStep])
 
-  const success = data.evaluation.tool_success_rate
-  const helpful = data.evaluation.helpful_rate
+  // Bidirectional URL deep-linking: listen for hashchange and popstate
+  useEffect(() => {
+    const handleLocationChange = () => {
+      if (isInternalUpdate.current) {
+        isInternalUpdate.current = false
+        return
+      }
+      const currentHash = window.location.hash || ''
+      if (!currentHash.startsWith('#/harness') && !currentHash.startsWith('#harness')) {
+        return
+      }
+      const { domain, stepIndex } = parseHarnessUrl()
+      if (domain && domain !== selectedId) {
+        setSelectedId(domain)
+      }
+      if (stepIndex !== undefined && stepIndex !== activeStep) {
+        setActiveStep(stepIndex)
+      }
+    }
+
+    window.addEventListener('hashchange', handleLocationChange)
+    window.addEventListener('popstate', handleLocationChange)
+    return () => {
+      window.removeEventListener('hashchange', handleLocationChange)
+      window.removeEventListener('popstate', handleLocationChange)
+    }
+  }, [selectedId, activeStep])
+
+  function selectScenario(id: HarnessScenarioId) {
+    setSelectedId(id)
+    setActiveStep(0)
+  }
+
   return (
-    <section className="harness-page">
-      <header className="harness-intro">
-        <div>
-          <p className="home-kicker">Agent Learning Lab</p>
-          <h2>Nhìn thấy cách Agent làm việc.</h2>
-          <p>Mỗi con số bên dưới được lấy từ tài khoản và runtime hiện tại.</p>
+    <section className="stack-page harness-flagship" data-domain={selectedId}>
+      {/* Enterprise Editorial Header without badge or noisy eyebrows */}
+      <header className="harness-flagship__header">
+        <div className="harness-flagship__header-content">
+          <h1 className="harness-flagship__title">
+            Kiến trúc Veridra: từ yêu cầu đến kết quả có thể kiểm tra
+          </h1>
+          <p className="harness-flagship__subtitle">
+            Minh bạch hóa mọi quyết định, luồng dữ liệu và rào cản an toàn trước khi bất kỳ tác vụ nào được ghi nhận.
+          </p>
         </div>
-        <Button icon={<ArrowClockwise20Regular />} onClick={() => void load()}>Làm mới</Button>
       </header>
 
-      <section className="harness-band" id="context-harness">
-        <div className="harness-band__heading"><span>01</span><div><h3>Context Harness</h3><p>Những gì Agent giữ lại để hiểu đúng phiên làm việc của bạn.</p></div></div>
-        <div className="harness-metrics">
-          <Metric value={String(data.context.sessions)} label="Cuộc trò chuyện" detail="Tách theo tài khoản" />
-          <Metric value={String(data.context.active_memories)} label="Bộ nhớ đang dùng" detail="Có thể xem và lưu trữ" />
-          <Metric value={data.orchestration.checkpoint} label="Checkpoint" detail="Khôi phục luồng Agent" />
+      <section className="harness-story" aria-labelledby="harness-story-title">
+        <div className="harness-story__copy">
+          <span className="harness-story__label">Bối cảnh sử dụng</span>
+          <h2 id="harness-story-title">Một yêu cầu ngắn thường che giấu cả một chuỗi rủi ro.</h2>
+          <p>
+            Người dùng bắt đầu bằng một email, tài liệu hoặc câu hỏi. Phần khó không phải tạo thêm văn bản,
+            mà là tìm đúng nguồn, phối hợp đúng công cụ, xin duyệt đúng lúc và để lại bằng chứng đủ rõ để kiểm tra lại.
+          </p>
+          <ol className="harness-story__sequence">
+            <li><strong>Nỗi đau:</strong><span>Dữ liệu nằm rải rác; kết quả nhanh nhưng khó biết claim nào dựa trên nguồn nào.</span></li>
+            <li><strong>Lý do có Veridra:</strong><span>Nối nguồn, Agent, tool và approval thành một hành trình có phạm vi.</span></li>
+            <li><strong>Cách giải quyết:</strong><span>Đọc và phân tích trước; mọi thao tác ghi được hỗ trợ đều qua preview, duyệt và read-back.</span></li>
+            <li><strong>Khác biệt cần kiểm chứng:</strong><span>Trace, citation và metric hiển thị phạm vi thật; thiếu bằng chứng được ghi N/A thay vì tự chấm đạt.</span></li>
+          </ol>
+        </div>
+        <figure className="harness-story__figure">
+          <img
+            className="harness-story__image harness-story__image--light"
+            src={`/harness/${scenario.id}.visual-check.1440x900.light.png`}
+            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở theme sáng`}
+          />
+          <img
+            className="harness-story__image harness-story__image--dark"
+            src={`/harness/${scenario.id}.visual-check.1440x900.dark.png`}
+            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở theme tối`}
+          />
+          <figcaption>Ảnh render thật của sơ đồ nghiệp vụ. Số liệu trong tình huống vẫn là dữ liệu minh họa, không phải kết quả pilot.</figcaption>
+        </figure>
+      </section>
+
+      <div className="harness-telemetry-disclosure" role="note">
+        Các tình huống và bản xem trước bên dưới là minh họa luồng nghiệp vụ. Số liệu trong ví dụ không phải kết quả pilot hay benchmark của hệ thống.
+      </div>
+
+      <section className="harness-casebook" aria-label="Ba ví dụ nghiệp vụ">
+        {/* Left Rail Switcher with Dedicated Vector Icons and Enterprise Domain Copy */}
+        <nav className="harness-casebook__rail" aria-label="Chọn domain nghiệp vụ">
+          <div className="harness-casebook__rail-heading">
+            <span>TÌNH HUỐNG DOANH NGHIỆP</span>
+            <p>Ba mô hình điều phối tác tử với rào cản an toàn riêng biệt.</p>
+          </div>
+          <div className="harness-casebook__rail-grid">
+            {HARNESS_SCENARIOS.map((item) => {
+              const meta = DOMAIN_ENTERPRISE_META[item.id]
+              const isSelected = selectedId === item.id
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  aria-pressed={isSelected}
+                  className={`harness-case harness-case--${item.id} ${isSelected ? 'is-active' : ''}`}
+                  onClick={() => selectScenario(item.id)}
+                >
+                  <span className="harness-case__icon-badge">
+                    {getDomainIcon(item.id)}
+                  </span>
+                  <span className="harness-case__copy">
+                    <strong className="harness-case__domain-tag">{meta?.tag ?? item.domain}</strong>
+                    <span className="harness-case__domain-desc">{meta?.copy ?? item.title}</span>
+                  </span>
+                  <ChevronRight20Regular className="harness-case__chevron" aria-hidden="true" />
+                </button>
+              )
+            })}
+          </div>
+        </nav>
+
+        <article className="harness-casebook__main">
+          <header className="harness-scenario-header">
+            <div>
+              <span className="harness-scenario-header__domain">{scenario.domain}</span>
+              <h2>{scenario.title}</h2>
+              <p>{scenario.subtitle}</p>
+            </div>
+          </header>
+
+          {/* Interactive Terminal Command Hub */}
+          <TerminalCommandHub
+            domainId={scenario.id}
+            suggestedCommand={scenario.suggestedCommand}
+            request={scenario.request}
+            title={scenario.title}
+          />
+
+          <div className="harness-scenario-brief">
+            <div>
+              <span>Vấn đề</span>
+              <p>{scenario.pain}</p>
+            </div>
+            <div>
+              <span>Yêu cầu mẫu</span>
+              <p>“{scenario.request}”</p>
+            </div>
+            <div>
+              <span>Kết quả cuối</span>
+              <p>{scenario.result}</p>
+            </div>
+          </div>
+
+          {/* Canonical 6-Harness Architecture Diagram */}
+          <HarnessDiagram6
+            domainId={scenario.id}
+            activeViewMode={diagramViewMode}
+            onViewModeChange={setDiagramViewMode}
+            onSelectTier={(tierIdx) => {
+              if (tierIdx >= 1 && tierIdx <= 7) {
+                setActiveStep(tierIdx - 1)
+              }
+            }}
+            onSelectStep={setActiveStep}
+          />
+
+          <div className="harness-flow-heading">
+            <div>
+              <span className="harness-flow-heading__eyebrow">ĐƯỜNG ĐI CÓ THỂ KIỂM TRA</span>
+              <h3>Nhấn vào từng bước để xem việc thật đã xảy ra.</h3>
+            </div>
+            <span className="harness-flow-heading__hint">
+              <Flowchart20Regular /> Không hiển thị suy nghĩ riêng của mô hình
+            </span>
+          </div>
+
+          <HarnessFlow scenario={scenario} activeStep={activeStep} onSelect={setActiveStep} />
+          <HarnessStepPanel scenario={scenario} step={step} stepIndex={activeStep} />
+
+          <div className="harness-scenario-columns">
+            <section className="harness-scenario-block">
+              <div className="harness-block-heading">
+                <span>ĐẦU VÀO</span>
+                <strong>Dữ liệu được dùng</strong>
+              </div>
+              <ul>
+                {scenario.inputs.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            </section>
+            <section className="harness-scenario-block harness-scenario-block--output">
+              <div className="harness-block-heading">
+                <span>ĐẦU RA</span>
+                <strong>Kết quả người dùng nhận</strong>
+              </div>
+              <ul className="harness-output-list">
+                {scenario.outputs.map((item) => (
+                  <li key={item}>
+                    {outputIcon(item)}
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <section className="harness-scenario-block harness-scenario-block--guard">
+              <div className="harness-block-heading">
+                <span>GIỚI HẠN</span>
+                <strong>Điều hệ thống không tự làm</strong>
+              </div>
+              <ul>
+                {scenario.guardrails.map((item) => (
+                  <li key={item}>
+                    <LockClosed20Regular aria-hidden="true" />
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </div>
+
+          {/* Technical Lens with Interactive Tech Inspector Chips */}
+          <details className="harness-technical-lens">
+            <summary>
+              <span>
+                <span className="harness-technical-lens__eyebrow">XEM CẤU TRÚC KỸ THUẬT</span>
+                <strong>Tên công nghệ được dùng trong ví dụ này</strong>
+              </span>
+              <ChevronRight20Regular aria-hidden="true" />
+            </summary>
+            <div className="harness-technical-lens__body">
+              <ul>
+                {scenario.technologies.map((item) => (
+                  <li key={item}>
+                    <button
+                      type="button"
+                      className="tech-chip-btn"
+                      onClick={() => openTechInspector(item)}
+                      title={`Xem giải phẫu 3 tầng của ${item}`}
+                    >
+                      <Sparkle20Regular aria-hidden="true" />
+                      <span>{item}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div style={{ marginTop: '14px' }}>
+                <Button
+                  appearance="subtle"
+                  size="small"
+                  icon={<Flowchart20Regular />}
+                  onClick={() => openTechInspector(null)}
+                >
+                  Khám phá toàn bộ 5/6 nhóm công nghệ (Tech Inspector)
+                </Button>
+              </div>
+              <p>
+                Nhấp vào bất kỳ chip công nghệ nào ở trên để mở Tech Inspector Drawer và xem giải phẫu 3 tầng: (1) Bản chất đời thường, (2) Vai trò trong Veridra, (3) Sơ đồ giải phẫu anatomy 3 bước (Kích hoạt → Kiểm soát → Xuất kết quả).
+              </p>
+            </div>
+          </details>
+        </article>
+      </section>
+
+      {/* ================================================================== */}
+      {/* FLAGSHIP ENDING (Milestone 2)                                      */}
+      {/* ================================================================== */}
+
+      {/* 1. Live Trust & Audit Cockpit */}
+      <LiveTrustCockpit />
+
+      {/* 2. 1-Click Interactive Test Drive */}
+      <InteractiveTestDrive scenario={scenario} />
+
+      {/* 3. Enterprise Governance Comparison Matrix */}
+      <GovernanceMatrixTable />
+
+      {/* Shared Rails */}
+      <section className="harness-shared-rails" aria-labelledby="harness-shared-rails-title">
+        <div>
+          <span className="harness-flagship__eyebrow">LỚP BẢO VỆ CHUNG</span>
+          <h2 id="harness-shared-rails-title">Mọi domain đều đi qua cùng một cổng kiểm soát.</h2>
+        </div>
+        <div className="harness-shared-rails__grid">
+          {HARNESS_SHARED_RAILS.map((rail) => (
+            <div key={rail.label}>
+              <span>{rail.label}</span>
+              <strong>{rail.value}</strong>
+            </div>
+          ))}
         </div>
       </section>
 
-      <section className="harness-band" id="rag-harness">
-        <div className="harness-band__heading"><span>02</span><div><h3>RAG Harness</h3><p>Từ tài liệu gốc đến đoạn bằng chứng và citation trong câu trả lời.</p></div></div>
-        <div className="harness-metrics">
-          <Metric value={String(data.rag.indexed_files)} label="Tệp đã lập chỉ mục" detail="Kiểm tra quyền và revision" />
-          <Metric value={String(data.rag.indexed_chunks)} label="Đoạn có thể truy xuất" detail="Dense + lexical + RRF" />
-          <Metric value={`${data.runtime.embedding_dimensions}D`} label={data.runtime.embedding_model} detail="Embedding hiện tại" />
+      <section className="harness-conclusion" aria-labelledby="harness-conclusion-title">
+        <div>
+          <h2 id="harness-conclusion-title">Kết quả tốt chưa đủ. Kết quả phải kiểm tra lại được.</h2>
+          <p>Veridra không thay người dùng chịu trách nhiệm cho quyết định nghiệp vụ. Sản phẩm giúp giảm công việc gom nguồn, làm phép tính, soạn đầu ra và lưu bằng chứng, trong khi giữ quyền duyệt ở người dùng.</p>
         </div>
+        <dl>
+          <div><dt>Khi dữ liệu thiếu</dt><dd>Dừng hoặc ghi rõ giới hạn.</dd></div>
+          <div><dt>Khi công cụ ghi</dt><dd>Xem trước, phê duyệt, thực thi, đọc lại.</dd></div>
+          <div><dt>Khi đánh giá</dt><dd>Công bố mẫu đo, công thức và hardgate N/A.</dd></div>
+        </dl>
       </section>
 
-      <section className="harness-band" id="tool-harness">
-        <div className="harness-band__heading"><span>03</span><div><h3>Tool Harness</h3><p>Schema, quyền, OAuth, giới hạn, retry và audit trước khi tool chạy.</p></div></div>
-        <div className="harness-metrics">
-          <Metric value={`${data.tools.available}/${data.tools.total}`} label="Tool có thể dùng" detail="Theo role hiện tại" />
-          <Metric value={String(data.tools.approval_required)} label="Tool cần xác nhận" detail="Không tự ghi ra ngoài" />
-          <Metric value={String(data.evaluation.audit_sample_size)} label="Tool run được đo" detail="Tối đa 100 lần gần nhất" />
-        </div>
-        <details className="tool-catalog"><summary>Xem catalog và chính sách từng tool</summary>
-          <div className="tool-catalog__list">{data.tools.items.map(tool => <div key={tool.name} className="tool-row">
-            <div>{tool.available ? <CheckmarkCircle20Regular /> : <Warning20Regular />}<strong>{tool.name}</strong></div>
-            <p>{tool.description}</p><small>{tool.permissions.join(', ')} · {tool.requires_approval ? 'cần duyệt' : `tối đa ${tool.max_attempts} lần`}</small>
-          </div>)}</div>
-        </details>
-      </section>
+      <footer className="harness-flagship__footer">
+        <CheckmarkCircle20Regular aria-hidden="true" />
+        <p>
+          Các luồng ghi được hỗ trợ yêu cầu bước xác nhận theo chính sách của công cụ. Audit ghi nhận sự kiện thao tác; các chỉ số đó không tự chứng minh câu trả lời đúng hoặc loại bỏ hoàn toàn hallucination.
+        </p>
+      </footer>
 
-      <section className="harness-band" id="orchestration-harness">
-        <div className="harness-band__heading"><span>04</span><div><h3>Orchestration Harness</h3><p>Lập kế hoạch, điều hướng, chạy tool, tổng hợp và phục hồi.</p></div></div>
-        <div className="orchestration-flow" aria-label="Luồng orchestration">
-          {data.orchestration.stages.map((stage, index) => <div key={stage}><span>{index + 1}</span><strong>{stage}</strong></div>)}
-        </div>
-        <p className="harness-fact">Runtime: <strong>{data.runtime.orchestrator_class}</strong> · model {data.runtime.primary_model} · fallback {data.runtime.fallback_model}</p>
-      </section>
-
-      <section className="harness-band" id="creation-harness">
-        <div className="harness-band__heading"><span>05</span><div><h3>Creation & Execution Harness</h3><p>Từ một spec đã kiểm tra đến đầu ra thật, có quyền, xác nhận và read-back.</p></div></div>
-        <div className="harness-metrics">
-          <Metric value={data.creation.google_outputs.join(' · ')} label="Google Workspace" detail="Tạo/sửa theo batch" />
-          <Metric value={String(data.creation.visuals)} label="Visual local" detail={data.creation.local_visual_formats.join(' + ')} />
-          <Metric value={String(data.creation.skills)} label="Reusable Skills" detail="Procedure có version" />
-        </div>
-        <p className="harness-fact">Luồng ghi: <strong>{data.creation.approval_flow}</strong></p>
-      </section>
-
-      <section className="harness-band" id="protocol-harness">
-        <div className="harness-band__heading"><span>06</span><div><h3>Multi-Agent, MCP & A2A</h3><p>Ranh giới kết nối hiện có và mức triển khai thật của hệ thống.</p></div></div>
-        <div className="protocol-ledger">
-          <div><strong>MCP</strong><span>{data.protocols.mcp.mode}</span><small>{data.protocols.mcp.tools.length} tool đọc</small></div>
-          <div><strong>A2A</strong><span>{data.protocols.a2a.mode}</span><small>{data.protocols.a2a.tools.length} tool đọc</small></div>
-          <div><strong>Multi-Agent runtime</strong><span>{data.protocols.multi_agent_runtime ? 'Đang chạy' : 'Chưa bật'}</span><small>Hiển thị trung thực theo runtime</small></div>
-        </div>
-      </section>
-
-      <section className="harness-band" id="evaluation-harness">
-        <div className="harness-band__heading"><span>07</span><div><h3>Evaluation Harness</h3><p>Đo khả năng hoàn thành, tốc độ và đánh giá trực tiếp từ người dùng.</p></div></div>
-        <div className="harness-metrics">
-          <Metric value={`${data.evaluation.routing_regression.passed}/${data.evaluation.routing_regression.total}`} label="Routing regression" detail={`Bộ dữ liệu ${data.evaluation.routing_regression.version}`} />
-          <Metric value={success === null ? 'Chưa đủ dữ liệu' : `${Math.round(success * 100)}%`} label="Tool success" detail={`${data.evaluation.audit_sample_size} run gần nhất`} />
-          <Metric value={data.evaluation.latency_p95_ms === null ? '—' : `${data.evaluation.latency_p95_ms} ms`} label="P95 latency" detail="Tool run đã hoàn tất" />
-          <Metric value={helpful === null ? 'Chưa có' : `${Math.round(helpful * 100)}%`} label="Câu trả lời hữu ích" detail={`${data.evaluation.feedback_count} lượt đánh giá`} />
-          <Metric value={data.evaluation.quality_audit.grounded_citation_rate === null ? 'Chưa có nguồn' : `${Math.round(data.evaluation.quality_audit.grounded_citation_rate * 100)}%`} label="Citation integrity" detail={`${data.evaluation.quality_audit.responses} response được audit`} />
-        </div>
-        <div className="evaluation-scope">
-          <strong>Đã đo</strong><span>Điều hướng deterministic, tool success, latency và phản hồi của bạn.</span>
-          <strong>Chưa kết luận</strong><span>Độ đúng đáp án, faithfulness và task success live cần golden dataset theo tài liệu thật.</span>
-        </div>
-        <p className="harness-fact">{data.evaluation.quality_note}</p>
-      </section>
+      {/* Interactive Tech Inspector Drawer / Modal */}
+      <TechInspectorDrawer
+        isOpen={isTechDrawerOpen}
+        selectedTechId={selectedTechId}
+        onClose={() => setIsTechDrawerOpen(false)}
+        onSelectTech={(techId) => setSelectedTechId(techId)}
+      />
     </section>
   )
 }

@@ -5,9 +5,12 @@ import pytest
 from pydantic import ValidationError
 
 from app.services.sheet_creator import (
+    SheetFormula,
+    SheetRowFormula,
     SpreadsheetCreator,
     SpreadsheetSpec,
     entered_value,
+    evaluate_cell,
     spreadsheet_body,
     verify_spreadsheet,
 )
@@ -32,6 +35,10 @@ def test_grid_and_chart_use_same_verified_source():
     source = spec()
     body = spreadsheet_body(source)
     assert body["sheets"][0]["properties"]["gridProperties"]["frozenRowCount"] == 1
+    header = body["sheets"][0]["data"][0]["rowData"][0]["values"][0]
+    assert header["userEnteredFormat"]["textFormat"]["bold"] is True
+    assert body["sheets"][0]["data"][0]["columnMetadata"][0]["pixelSize"] >= 100
+    assert body["properties"]["locale"] == "vi_VN"
     chart = body["sheets"][0]["charts"][0]
     series = chart["spec"]["basicChart"]["series"][0]["series"]["sourceRange"]["sources"][0]
     assert series["endRowIndex"] == 3 and series["startColumnIndex"] == 1
@@ -44,6 +51,52 @@ def test_text_is_not_formula_and_boolean_is_not_number():
     }
     assert entered_value(True) == {"boolValue": True}
     assert entered_value(None) == {}
+
+
+def test_safe_row_subtraction_and_formula_dependencies_are_verified():
+    source = SpreadsheetSpec(
+        title="Ngân sách",
+        tabs=[
+            {
+                "title": "Tháng",
+                "headers": ["Mục", "Ngân sách", "Thực chi", "Còn lại"],
+                "rows": [
+                    [
+                        "Sách",
+                        300,
+                        120,
+                        {
+                            "operator": "SUBTRACT",
+                            "left_column": 1,
+                            "right_column": 2,
+                            "row": 0,
+                        },
+                    ],
+                    [
+                        "Tổng",
+                        {"function": "SUM", "column": 1, "start_row": 0, "end_row": 1},
+                        {"function": "SUM", "column": 2, "start_row": 0, "end_row": 1},
+                        {"function": "SUM", "column": 3, "start_row": 0, "end_row": 1},
+                    ],
+                ],
+            }
+        ],
+    )
+    tab = source.tabs[0]
+    assert isinstance(tab.rows[0][3], SheetRowFormula)
+    assert entered_value(tab.rows[0][3]) == {"formulaValue": "=B2-C2"}
+    assert evaluate_cell(tab.rows, 0, 3) == 180
+    assert evaluate_cell(tab.rows, 1, 3) == 180
+
+    body = spreadsheet_body(source)
+    rendered_rows = body["sheets"][0]["data"][0]["rowData"]
+    for row_index, row in enumerate(tab.rows):
+        for column_index, value in enumerate(row):
+            if isinstance(value, (SheetFormula, SheetRowFormula)):
+                rendered_rows[row_index + 1]["values"][column_index]["effectiveValue"] = {
+                    "numberValue": evaluate_cell(tab.rows, row_index, column_index)
+                }
+    verify_spreadsheet(source, body)
 
 
 @pytest.mark.parametrize(
@@ -70,6 +123,24 @@ def test_readback_accepts_server_assigned_chart_id():
     body = spreadsheet_body(source)
     body["sheets"][0]["charts"][0]["chartId"] = 987654
     verify_spreadsheet(source, body)
+
+
+def test_readback_accepts_google_omitted_zero_sheet_id_in_chart_ranges():
+    source = spec()
+    body = spreadsheet_body(source)
+    basic_chart = body["sheets"][0]["charts"][0]["spec"]["basicChart"]
+    del basic_chart["domains"][0]["domain"]["sourceRange"]["sources"][0]["sheetId"]
+    del basic_chart["series"][0]["series"]["sourceRange"]["sources"][0]["sheetId"]
+    verify_spreadsheet(source, body)
+
+
+def test_readback_rejects_chart_from_different_sheet():
+    source = spec()
+    body = spreadsheet_body(source)
+    for source_range in body["sheets"][0]["charts"][0]["spec"]["basicChart"]["series"]:
+        source_range["series"]["sourceRange"]["sources"][0]["sheetId"] = 999
+    with pytest.raises(ToolError, match="kiểm tra"):
+        verify_spreadsheet(source, body)
 
 
 def test_formula_requires_evaluated_result():
@@ -100,6 +171,50 @@ def test_formula_requires_evaluated_result():
     cell["effectiveValue"] = {"errorValue": {"type": "ERROR"}}
     with pytest.raises(ToolError):
         verify_spreadsheet(source, body)
+
+
+def test_readback_accepts_google_single_cell_sum_normalization():
+    source = SpreadsheetSpec(
+        title="Sum",
+        tabs=[
+            {
+                "title": "Totals",
+                "headers": ["Values"],
+                "rows": [
+                    [10],
+                    [{"function": "SUM", "column": 0, "start_row": 0, "end_row": 1}],
+                ],
+            }
+        ],
+    )
+    body = spreadsheet_body(source)
+    total = body["sheets"][0]["data"][0]["rowData"][2]["values"][0]
+    assert total["userEnteredValue"] == {"formulaValue": "=SUM(A2:A2)"}
+    total["userEnteredValue"] = {"formulaValue": "=SUM(A2)"}
+    total["effectiveValue"] = {"numberValue": 10}
+    verify_spreadsheet(source, body)
+
+    total["userEnteredValue"] = {"formulaValue": "=SUM(A3)"}
+    with pytest.raises(ToolError):
+        verify_spreadsheet(source, body)
+
+
+def test_sum_can_total_a_blank_template_row_without_inventing_a_transaction():
+    source = SpreadsheetSpec(
+        title="Blank expense tracker",
+        tabs=[
+            {
+                "title": "Expenses",
+                "headers": ["Description", "Amount"],
+                "rows": [
+                    [None, None],
+                    ["Total", {"function": "SUM", "column": 1, "start_row": 0, "end_row": 1}],
+                ],
+            }
+        ],
+    )
+    assert evaluate_cell(source.tabs[0].rows, 1, 1) == 0
+    assert source.tabs[0].rows[0] == [None, None]
 
 
 @pytest.mark.parametrize(

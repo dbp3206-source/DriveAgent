@@ -1,0 +1,8 @@
+tunnel: REPLACE_WITH_TUNNEL_UUID
+credentials-file: C:/Users/REPLACE/.cloudflared/REPLACE_WITH_TUNNEL_UUID.json
+ingress:
+  - hostname: driveagent.example.com
+    service: http://127.0.0.1:8000
+    originRequest:
+      noTLSVerify: false
+  - service: http_status:404

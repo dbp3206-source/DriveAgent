@@ -1,8 +1,18 @@
-# DriveAgent
+# Veridra
 
-DriveAgent là trợ lý học tập và công việc chạy local, dùng Gemini để biến tài liệu thành câu trả lời, Google Docs/Slides/Sheets, visual và quy trình dùng lại được. Mọi tool đều đi qua Tool Registry có schema, xác thực, phân quyền, giới hạn, audit và retry có chọn lọc.
+Veridra là trợ lý học tập và công việc chạy local, dùng Gemini để biến Drive, Gmail và tài liệu riêng thành câu trả lời có nguồn, Google Docs/Sheets có thể duyệt và các quy trình dùng lại được. Mọi tool đều đi qua Tool Registry có schema, xác thực, phân quyền, giới hạn, audit và retry có chọn lọc.
 
-Bộ model mặc định: `gemini-3.5-flash-lite` cho chat/planning và fallback;
+**Trạng thái phát hành: HOLD.** Bản local đang được hoàn thiện; chưa có URL closed beta
+đã kiểm chứng. Kết quả unit/regression không chứng nhận toàn bộ chất lượng câu trả lời,
+OAuth/BYOK cloud hay khả năng phục vụ nhiều người dùng thật. Theo dõi gate tại Nhật ký
+và các báo cáo trong `design-work/qa/`; không dùng điểm trung bình suite làm nhãn ready.
+
+Chạy local không cần Docker. Stack quan sát nặng là tùy chọn; xem
+[phạm vi tài nguyên](docs/RESOURCE-PROFILE.md). PDF có lớp text tối đa 25 MiB được xử lý nền
+và theo dõi theo trang; OCR đã bị loại khỏi phạm vi vì chất lượng không đủ. Xem
+[PDF ingestion](docs/PDF-INGESTION.md) và [ranh giới BYOK](docs/BYOK-BOUNDARIES.md).
+
+Bộ model mặc định: `gemini-3.5-flash-lite` cho chat/planning, fallback cấu hình riêng;
 `gemini-embedding-2` với vector 768 chiều cho RAG/Memory.
 
 ## Có gì trong project
@@ -13,10 +23,9 @@ Bộ model mặc định: `gemini-3.5-flash-lite` cho chat/planning và fallback
 - Hybrid retrieval: Gemini dense embedding + lexical score + Reciprocal Rank Fusion.
 - Trả lời có citation dẫn tới tệp Drive gốc.
 - Bộ nhớ dài hạn có loại, dedup, semantic search, archive và delete.
-- Google Docs/Slides/Sheets theo hai pha: chuẩn bị bản xem trước, người dùng duyệt rồi mới tạo hoặc sửa.
-- Visual Studio dựng infographic, flowchart, timeline, comparison và chart thành PNG/SVG local, không gọi API ảnh.
+- Google Docs/Sheets theo hai pha: chuẩn bị bản xem trước, người dùng duyệt rồi mới tạo hoặc sửa.
 - Reusable Skills lưu goal, procedure, constraint và output theo phiên bản; mỗi lần chạy dùng input/context mới.
-- Gmail đọc, tóm tắt, soạn trước và chỉ gửi sau khi người dùng duyệt đúng nội dung.
+- Gmail tìm, phân trang, đọc chuỗi và tệp đính kèm, tóm tắt, trả lời đúng thread, CC/BCC, soạn trước và chỉ gửi sau khi người dùng duyệt đúng nội dung.
 - Google ADK coordinator với bốn Agent chuyên trách; LangGraph và compiler vẫn là backend so sánh.
 - MCP và A2A read-only dùng SDK thật, cùng ranh giới Tool Registry/RBAC/audit.
 - Harness dashboard thể hiện Context, RAG, Tool, Orchestration, Multi-Agent/MCP/A2A và Evaluation bằng số liệu thật.
@@ -77,12 +86,12 @@ backend/app/
   api/         REST API và session auth
   auth/        Google OAuth2, RBAC
   core/        Settings, encryption, redaction
-  db/          SQLite models và session
-  services/    RAG, memory, Workspace creators, visual renderer và skill store
+  db/          SQLAlchemy models, migration ledger và session SQLite/PostgreSQL
+  services/    RAG, memory, Workspace creators và skill store
   tools/       Tool Registry và toàn bộ governed capabilities
 frontend/src/
   components/  App shell và shared states
-  pages/       Chat, Drive, Visual Studio, Skills, Memory, Harness, Audit
+  pages/       Chat, Drive, Gmail, Docs/Sheets approval, Skills, Memory, Harness, Audit
 design-work/   Design brief và bằng chứng QA
 docs/          Hướng dẫn cho người mới
 scripts/       Setup, run và verify trên Windows
@@ -91,10 +100,12 @@ scripts/       Setup, run và verify trên Windows
 ## Quyền và dữ liệu
 
 - `drive.readonly` dùng để tìm/đọc; `drive.file` chỉ cho file app tạo hoặc người dùng chọn. App không xóa, di chuyển hay đổi chia sẻ.
-- Gmail gửi và Docs/Slides/Sheets ghi đều có human-in-the-loop hai pha; Agent không tự bấm duyệt.
-- Người đăng nhập đầu tiên là `super_admin`; người tiếp theo là `editor`.
+- Gmail gửi và Docs/Sheets ghi đều có human-in-the-loop hai pha; Agent không tự bấm duyệt.
+- Ở chế độ local, người đăng nhập đầu tiên là `super_admin`; ở closed beta,
+  `DRIVE_AGENT_BETA_OWNER_EMAIL` mới là `super_admin` bất kể thứ tự đăng nhập,
+  các email được mời khác là `editor`.
 - Dữ liệu riêng luôn có `user_id`. Query RAG, memory, chat và audit đều filter theo user.
-- OAuth credentials được mã hóa bằng `DRIVE_AGENT_APP_SECRET` trước khi ghi SQLite.
+- OAuth credentials được mã hóa bằng `DRIVE_AGENT_APP_SECRET` trước khi ghi database.
 - Không commit `.env`, OAuth JSON, database hoặc Qdrant data.
 
 ## Kiểm thử
@@ -108,6 +119,7 @@ Kiểm thử live Google Drive cần API key và OAuth client của chính bạn
 ## Tài liệu
 
 - [Thiết lập Google và Gemini](docs/SETUP_GOOGLE.md)
+- [Triển khai closed beta Render + Supabase](docs/DEPLOY_CLOSED_BETA.md)
 - [Kiến trúc](docs/ARCHITECTURE.md)
 - [Tool Registry sáu cổng](docs/TOOL_REGISTRY.md)
 - [RAG và Memory](docs/RAG_AND_MEMORY.md)

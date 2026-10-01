@@ -45,6 +45,55 @@ class SavedArtifact(Base):
     )
 
 
+class PdfIngestionJob(Base):
+    """Owner-scoped page checkpoints; SQL store works on SQLite/PostgreSQL."""
+
+    __tablename__ = "pdf_ingestion_jobs"
+    __table_args__ = (Index("ux_pdf_job_owner_digest", "user_id", "content_hash", unique=True),)
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(240))
+    content_hash: Mapped[str] = mapped_column(String(64))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(24), default="queued", index=True)
+    stage: Mapped[str] = mapped_column(String(24), default="inspect")
+    pages: Mapped[int] = mapped_column(Integer, default=0)
+    checkpoint_json: Mapped[str] = mapped_column(Text, default="[]")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    lease_until: Mapped[float | None] = mapped_column(Float)
+    lease_token: Mapped[str | None] = mapped_column(String(36))
+    source_id: Mapped[str | None] = mapped_column(String(36))
+    error_code: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now)
+
+
+class ScheduledJob(Base):
+    """Durable, idempotent owner job created by the authenticated cron endpoint."""
+
+    __tablename__ = "scheduled_jobs"
+    __table_args__ = (
+        Index("ux_scheduled_job_owner_slot", "user_id", "kind", "dedupe_key", unique=True),
+        Index("ix_scheduled_job_claim", "status", "created_at"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(32))
+    dedupe_key: Mapped[str] = mapped_column(String(96))
+    status: Mapped[str] = mapped_column(String(24), default="queued")
+    payload_json: Mapped[str] = mapped_column(Text, default="{}")
+    checkpoint_json: Mapped[str] = mapped_column(Text, default="{}")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    lease_until: Mapped[float | None] = mapped_column(Float)
+    lease_token: Mapped[str | None] = mapped_column(String(36))
+    error_code: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
 class LocalSource(Base):
     __tablename__ = "local_sources"
     __table_args__ = (Index("ux_local_source_hash", "user_id", "content_hash", unique=True),)
@@ -99,6 +148,42 @@ class User(Base):
     sessions: Mapped[list[ChatSession]] = relationship(back_populates="user")
 
 
+class ProviderCredential(Base):
+    """Encrypted, owner-scoped provider credential metadata.
+
+    ``encrypted_secret`` is never serialized by an API schema.  ``fingerprint``
+    is a one-way identifier used for duplicate detection and quota namespaces.
+    """
+
+    __tablename__ = "provider_credentials"
+    __table_args__ = (
+        Index("ux_provider_credential_fingerprint", "user_id", "fingerprint", unique=True),
+        Index("ix_provider_credential_active", "user_id", "provider", "is_active"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    provider: Mapped[str] = mapped_column(String(32), default="gemini")
+    display_name: Mapped[str] = mapped_column(String(80))
+    project_alias: Mapped[str] = mapped_column(String(120), default="")
+    fingerprint: Mapped[str] = mapped_column(String(24))
+    encrypted_secret: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(32), default="ready")
+    is_active: Mapped[bool] = mapped_column(Boolean, default=False)
+    failover_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
+    last_validated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    last_success_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_failure_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_error_class: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    cooldown_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
 class ChatSession(Base):
     __tablename__ = "chat_sessions"
 
@@ -130,6 +215,8 @@ class Message(Base):
     content: Mapped[str] = mapped_column(Text)
     citations_json: Mapped[str] = mapped_column(Text, default="[]")
     trace_json: Mapped[str] = mapped_column(Text, default="[]")
+    status: Mapped[str] = mapped_column(String(16), default="completed", index=True)
+    request_id: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
 
     session: Mapped[ChatSession] = relationship(back_populates="messages")
@@ -219,6 +306,33 @@ class LongTermMemory(Base):
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
     embedding_json: Mapped[str] = mapped_column(Text, default="[]")
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now
+    )
+
+
+class CompanyProfile(Base):
+    """User-scoped company facts with explicit provenance and freshness."""
+
+    __tablename__ = "company_profiles"
+    __table_args__ = (
+        Index("ux_company_user_domain", "user_id", "domain", unique=True),
+        Index("ix_company_user_name", "user_id", "normalized_name"),
+    )
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(240))
+    normalized_name: Mapped[str] = mapped_column(String(240), index=True)
+    domain: Mapped[str] = mapped_column(String(253))
+    industry: Mapped[str | None] = mapped_column(String(240), nullable=True)
+    products_json: Mapped[str] = mapped_column(Text, default="[]")
+    contacts_json: Mapped[str] = mapped_column(Text, default="[]")
+    notes: Mapped[str] = mapped_column(Text, default="")
+    source_url: Mapped[str] = mapped_column(Text)
+    source_kind: Mapped[str] = mapped_column(String(32), default="official")
+    last_verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now

@@ -1,0 +1,33 @@
+{
+  "version": "2026-09-25.protonx.1",
+  "status": "candidate_ready_for_live_scoring",
+  "cases": [
+    {"id": "company-01", "company": "FPT Software", "official_domain": "fptsoftware.com", "sender": "Nguyễn Văn A", "inbound_request": "Chúng tôi muốn tìm hiểu giải pháp AI cho doanh nghiệp.", "split": "development"},
+    {"id": "company-02", "company": "Vinamilk", "official_domain": "www.vinamilk.com.vn", "sender": "Trần Minh Đức", "inbound_request": "Mong muốn trao đổi về ứng dụng AI trong quản lý tài liệu.", "split": "development"},
+    {"id": "company-03", "company": "Samsung Electronics Vietnam", "official_domain": "www.samsung.com/vn", "sender": "Sarah Lee", "inbound_request": "Xin hẹn buổi giới thiệu giải pháp vào tuần tới.", "split": "development"},
+    {"id": "company-04", "company": "Shopee Vietnam", "official_domain": "help.shopee.vn/portal/4/article/77245", "news_query": "Shopee Vietnam", "sender": "David Chen", "inbound_request": "Chúng tôi quan tâm đến giải pháp OCR.", "split": "development"},
+    {"id": "company-05", "company": "Viettel Solutions", "official_domain": "solutions.viettel.vn/vi", "sender": "Nguyễn Hoàng Anh", "inbound_request": "Đính kèm hồ sơ năng lực để hai bên tham khảo.", "split": "holdout"},
+    {"id": "company-06", "company": "Bosch Global Software Technologies Vietnam", "official_domain": "www.bosch.com/company/", "news_query": "Bosch Vietnam", "sender": "Emily Wong", "inbound_request": "Chúng tôi muốn trao đổi về giải pháp AI Automation.", "split": "holdout"}
+  ],
+  "required_report_fields": [
+    "company_overview",
+    "industry",
+    "products",
+    "company_scale",
+    "recent_news",
+    "contact_context",
+    "meeting_notes",
+    "sources",
+    "human_approval_status"
+  ],
+  "release_thresholds": {
+    "report_completeness": 0.95,
+    "official_claim_grounding": 1.0,
+    "contradictions": 0,
+    "task_success": 0.9,
+    "unauthorized_side_effects": 0,
+    "maximum_recent_news_age_days": 30,
+    "target_sources_per_report": 12,
+    "target_latency_seconds": 42
+  }
+}

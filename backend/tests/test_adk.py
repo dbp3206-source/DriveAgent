@@ -1,7 +1,20 @@
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, patch
+
+import pytest
+from google import genai
 from google.adk.sessions import DatabaseSessionService
 from google.genai import types
 
-from app.agent.adk_orchestrator import AdkOrchestrator, GovernedAdkTool, RecoverableGemini
+from app.agent.adk_orchestrator import (
+    AdkOrchestrator,
+    GovernedAdkTool,
+    RecoverableGemini,
+)
+from app.agent.compiler import deterministic_static_answer
+from app.agent.controls import ChatControls
+from app.agent.orchestrator import AgentNotConfiguredError
+from app.agent.routing import route_request
 from app.core.config import Settings
 from app.tools.calculator import calculator_tool_definitions
 from app.tools.registry import ToolRegistry
@@ -34,6 +47,174 @@ async def test_fallback_does_not_deepcopy_tool_locks(monkeypatch):
     assert replies[0].content.parts[0].text == "OK"
     assert request.model == "gemini-primary"
     assert requests == ["gemini-primary", "gemini-fallback"]
+    assert model.records[-1] == {
+        "stage": "model",
+        "status": "fallback",
+        "model": "gemini-fallback",
+        "requested_model": "gemini-primary",
+        "actual_model": "gemini-fallback",
+        "fallback_model": "gemini-fallback",
+        "fallback_reason": "provider_429",
+        "provider_code": 429,
+    }
+
+
+async def test_recoverable_gemini_records_all_intermediate_fallback_failures(monkeypatch):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+    from google.genai.errors import ServerError
+
+    attempts = []
+
+    async def generate(self, request, stream=False):
+        attempts.append(self.model)
+        if self.model in {"gemini-3.5-flash-lite", "gemini-3.8-flash"}:
+            raise ServerError(503, {"error": {"message": f"{self.model} overloaded"}})
+        yield LlmResponse(content=types.Content(parts=[types.Part(text="OK from 3.6")]))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    model = RecoverableGemini(
+        model="gemini-3.5-flash-lite",
+        fallback_model="gemini-3.8-flash",
+    )
+    replies = [
+        response
+        async for response in model.generate_content_async(
+            LlmRequest(model="gemini-3.5-flash-lite")
+        )
+    ]
+
+    assert replies[0].content.parts[0].text == "OK from 3.6"
+    assert attempts == ["gemini-3.5-flash-lite", "gemini-3.8-flash", "gemini-3.6-flash"]
+    failed_records = [r for r in model.records if r.get("status") == "failed"]
+    assert len(failed_records) == 1
+    assert failed_records[0]["model"] == "gemini-3.8-flash"
+    assert failed_records[0]["fallback_error_code"] == 503
+
+    success_records = [r for r in model.records if r.get("status") == "fallback"]
+    assert len(success_records) == 1
+    assert success_records[0]["model"] == "gemini-3.6-flash"
+    assert model.model == "gemini-3.6-flash"
+
+
+
+@pytest.mark.parametrize("reserve_primary,expected_calls", [(False, 1), (True, 2)])
+async def test_fallback_reserves_quota_for_every_real_provider_attempt(
+    monkeypatch, reserve_primary, expected_calls
+):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+    from google.genai.errors import ClientError
+
+    attempts = []
+    reservations = []
+
+    class FakeQuota:
+        def reserve(self, bucket, tokens):
+            reservations.append((bucket, tokens))
+
+    async def generate(self, request, stream=False):
+        attempts.append(self.model)
+        if self.model == "gemini-primary":
+            raise ClientError(503, {"error": {"message": "unavailable"}})
+        yield LlmResponse(content=types.Content(parts=[types.Part(text="OK")]))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    model = RecoverableGemini(
+        model="gemini-primary",
+        fallback_model="gemini-fallback",
+        quota=FakeQuota(),
+        reserve_primary=reserve_primary,
+    )
+    replies = [
+        response
+        async for response in model.generate_content_async(LlmRequest(model="gemini-primary"))
+    ]
+
+    assert replies[0].content.parts[0].text == "OK"
+    assert attempts == ["gemini-primary", "gemini-fallback"]
+    assert len(reservations) == expected_calls
+    assert all(bucket == "flash" and tokens >= 8192 for bucket, tokens in reservations)
+
+
+async def test_primary_circuit_does_not_block_fallback_model(monkeypatch):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+    from google.genai.errors import ServerError
+
+    attempts = []
+    circuit_calls = []
+
+    class ModelScopedCircuit:
+        def before_request(self, capability):
+            circuit_calls.append(("before", capability))
+
+        def failure(self, capability, exc):
+            circuit_calls.append(("failure", capability))
+
+        def success(self, capability):
+            circuit_calls.append(("success", capability))
+
+    async def generate(self, request, stream=False):
+        attempts.append(self.model)
+        if self.model == "gemini-primary":
+            raise ServerError(503, {"error": {"message": "high demand"}})
+        yield LlmResponse(content=types.Content(parts=[types.Part(text="OK")]))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    model = RecoverableGemini(
+        model="gemini-primary",
+        fallback_model="gemini-fallback",
+        circuit=ModelScopedCircuit(),
+    )
+
+    replies = [
+        response
+        async for response in model.generate_content_async(LlmRequest(model="gemini-primary"))
+    ]
+
+    assert replies[0].content.parts[0].text == "OK"
+    assert attempts == ["gemini-primary", "gemini-fallback"]
+    assert circuit_calls == [
+        ("before", "generate:gemini-primary"),
+        ("failure", "generate:gemini-primary"),
+        ("before", "generate:gemini-fallback"),
+        ("success", "generate:gemini-fallback"),
+    ]
+
+
+async def test_quota_exhaustion_blocks_fallback_provider_attempt(monkeypatch):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.genai.errors import ClientError
+
+    from app.tools.contracts import ToolError
+
+    attempts = []
+
+    class FakeQuota:
+        def reserve(self, bucket, tokens):
+            raise ToolError("budget exhausted", code="quota_daily_exhausted")
+
+    async def generate(self, request, stream=False):
+        attempts.append(self.model)
+        raise ClientError(503, {"error": {"message": "unavailable"}})
+        yield  # pragma: no cover - keeps this an async generator
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    model = RecoverableGemini(
+        model="gemini-primary", fallback_model="gemini-fallback", quota=FakeQuota()
+    )
+    with pytest.raises(ToolError, match="budget exhausted"):
+        [
+            response
+            async for response in model.generate_content_async(LlmRequest(model="gemini-primary"))
+        ]
+
+    assert attempts == ["gemini-primary"]
 
 
 async def test_adk_session_persists_and_isolates_user(tmp_path):
@@ -73,6 +254,40 @@ def test_registry_schema_is_adk_function_declaration():
     assert "values" in declaration.parameters_json_schema["properties"]
 
 
+async def test_adk_returns_memoized_result_for_identical_tool_replay():
+    import asyncio
+    import json
+
+    args = {"operation": "add", "values": [40, 2]}
+    signature = "calculate" + json.dumps(args, sort_keys=True, ensure_ascii=False)
+    cached = {"result": 42}
+    records = []
+    tool = GovernedAdkTool(
+        calculator_tool_definitions()[0],
+        ToolRegistry(),
+        Settings(_env_file=None),
+        "actor",
+        "request",
+        records,
+        [],
+        asyncio.Semaphore(2),
+        {signature},
+        {signature: cached},
+    )
+
+    result = await tool.run_async(args=args, tool_context=None)
+
+    assert result == cached
+    assert records == [
+        {
+            "stage": "tool_cache",
+            "tool": "calculate",
+            "status": "success",
+            "cache_hit": True,
+        }
+    ]
+
+
 def test_adk_builds_real_coordinator_and_specialized_agents():
     """Multi-agent means an executable ADK tree, not only labels in the UI."""
 
@@ -82,10 +297,272 @@ def test_adk_builds_real_coordinator_and_specialized_agents():
 
     assert agent.name == "drive_coordinator"
     assert {child.name for child in agent.sub_agents} == {
-        "research_agent",
-        "communication_agent",
-        "study_agent",
-        "workspace_agent",
+        "email_agent",
+        "web_research_agent",
+        "company_info_agent",
+        "calendar_agent",
+        "report_generation_agent",
+        "memory_agent",
+        "human_approval_agent",
     }
     assert all(child.parent_agent is agent for child in agent.sub_agents)
     assert records[0]["stage"] == "multi_agent"
+
+
+def test_adk_auto_router_skips_coordinator_for_clear_specialist_intents():
+    assert AdkOrchestrator._auto_agent_for_request("So sánh hai cách ôn thi") == "study"
+    assert AdkOrchestrator._auto_agent_for_request("Liệt kê các file Drive") == "research"
+    assert (
+        AdkOrchestrator._auto_agent_for_request(
+            "Trong tài liệu DriveAgent QA Docs post-patch, mục tiêu là gì?"
+        )
+        == "research"
+    )
+    assert AdkOrchestrator._auto_agent_for_request("Tóm tắt email chưa đọc") == "communication"
+    assert (
+        AdkOrchestrator._auto_agent_for_request(
+            "Dùng số liệu giả, không truy cập Gmail/Drive.",
+            excluded_sources=frozenset({"gmail", "drive"}),
+        )
+        == "study"
+    )
+    assert AdkOrchestrator._auto_agent_for_request("Bạn làm được gì?") == "auto"
+
+
+def test_saved_skill_stays_in_adk_even_when_its_message_matches_direct_gmail_route():
+    controls = ChatControls(skill_name="daily_news_brief")
+    route = route_request("Tổng hợp email Bản chi tiết hôm nay")
+
+    assert route.tool and route.tool.startswith("gmail_")
+    assert not AdkOrchestrator._should_use_compiler(
+        controls, route, "Tổng hợp email Bản chi tiết hôm nay"
+    )
+    assert AdkOrchestrator._should_use_compiler(
+        ChatControls(),
+        route,
+        "Tổng hợp email Bản chi tiết hôm nay",
+    )
+
+
+def test_saved_skill_selects_dedicated_gmail_capability_agent():
+    records = []
+    model = RecoverableGemini(model="gemini-primary", fallback_model="gemini-fallback")
+    agent = AdkOrchestrator._build_agent_tree(
+        model,
+        [],
+        records,
+        selected_agent="skill",
+        selection_mode="user_selected",
+        skill_capabilities=frozenset({"gmail"}),
+    )
+
+    assert agent.name == "skill_agent"
+    assert "bắt buộc gọi skill_run" in agent.instruction
+    assert "chỉ trả kết quả trong chat" in agent.instruction
+    assert records[-1]["agent"] == "skill_agent"
+
+
+def test_study_agent_keeps_unsourced_scientific_claims_conditional():
+    records = []
+    model = RecoverableGemini(model="gemini-primary", fallback_model="gemini-fallback")
+    agent = AdkOrchestrator._build_agent_tree(
+        model, [], records, selected_agent="study", selection_mode="server_routed"
+    )
+
+    assert agent.name == "memory_agent"
+    assert "không tự thêm thời lượng, tỷ lệ" in agent.instruction
+    assert "gọi calculate cho các biểu thức then chốt" in agent.instruction
+    assert records[-1] == {
+        "stage": "agent_selection",
+        "status": "success",
+        "agent": "memory_agent",
+        "mode": "server_routed",
+    }
+
+
+def test_communication_agent_has_compact_evidence_aware_triage_contract():
+    records = []
+    model = RecoverableGemini(model="gemini-primary", fallback_model="gemini-fallback")
+    agent = AdkOrchestrator._build_agent_tree(
+        model, [], records, selected_agent="communication", selection_mode="server_routed"
+    )
+
+    assert agent.name == "email_agent"
+    assert "### Cần trả lời" in agent.instruction
+    assert "Không lặp thêm dòng `Bằng chứng: [n]`" in agent.instruction
+    assert "cảnh báo tự động/no-reply" in agent.instruction
+    assert "chỉ nêu deadline khi email nói rõ" in agent.instruction
+
+
+@pytest.mark.parametrize(
+    ("question", "required"),
+    [
+        (
+            "/general Tổng hợp email chưa đọc và phân nhóm hành động.",
+            (
+                "## Cần trả lời",
+                "## Cần theo dõi",
+                "## Chỉ để biết",
+                "## Bước tiếp theo",
+                "1.",
+                "2.",
+            ),
+        ),
+        (
+            "/general Tạo bản xem trước Google Doc từ ghi chú cuộc họp.",
+            ("## Bản xem trước trước khi tạo", "## Xác nhận cần thiết", "Duyệt và tạo", "đọc lại"),
+        ),
+        (
+            "/general Tạo bản xem trước Google Sheets theo dõi chi tiêu.",
+            (
+                "## Bản xem trước",
+                "## Công thức dự kiến",
+                "## Trước khi ghi",
+                "=SUM",
+                "Chưa tạo bảng",
+                "đọc lại",
+                "| Hạng mục |",
+            ),
+        ),
+    ],
+)
+def test_general_workflow_templates_are_scannable_and_truthful(question, required):
+    answer = deterministic_static_answer(question)
+    assert answer is not None
+    missing = [fragment for fragment in required if fragment not in answer]
+    assert not missing, f"missing={missing!r}; answer={answer!r}"
+
+
+def test_general_workflow_templates_do_not_intercept_real_provider_requests():
+    assert deterministic_static_answer("Tổng hợp email chưa đọc và phân nhóm hành động.") is None
+
+
+def test_short_mcp_explanation_is_plain_and_complete():
+    answer = deterministic_static_answer("Hãy trả lời ngắn gọn MCP là gì.", general_route=True)
+    assert answer is not None
+    assert "giao thức mở" in answer
+    assert "công cụ hoặc nguồn dữ liệu bên ngoài" in answer
+    assert len(answer.split()) < 80
+
+
+async def test_explicit_rag_only_request_uses_deterministic_compiler():
+    orchestrator = AdkOrchestrator(Settings(_env_file=None), ToolRegistry())
+    expected = SimpleNamespace(answer="stale index")
+    orchestrator.compiler.run = AsyncMock(return_value=expected)
+
+    result = await orchestrator.run(
+        user=SimpleNamespace(id="user-a"),
+        session_id="session-a",
+        request_id="request-a",
+        user_message="Chỉ dùng RAG đã lập chỉ mục: mục tiêu là gì?",
+    )
+
+    assert result is expected
+    assert orchestrator.compiler.run.await_args.kwargs["controls"].source == "rag"
+
+
+async def test_safe_direct_route_uses_compiler_without_coordinator_model_turn():
+    orchestrator = AdkOrchestrator(Settings(_env_file=None), ToolRegistry())
+    expected = SimpleNamespace(answer="13")
+    orchestrator.compiler.run = AsyncMock(return_value=expected)
+
+    result = await orchestrator.run(
+        user=SimpleNamespace(id="user-a"),
+        session_id="session-a",
+        request_id="request-a",
+        user_message="Tính 9 + 4",
+    )
+
+    assert result is expected
+    orchestrator.compiler.run.assert_awaited_once()
+
+
+async def test_local_source_request_uses_deterministic_compiler_gather():
+    orchestrator = AdkOrchestrator(Settings(_env_file=None), ToolRegistry())
+    expected = SimpleNamespace(answer="local")
+    orchestrator.compiler.run = AsyncMock(return_value=expected)
+
+    result = await orchestrator.run(
+        user=SimpleNamespace(id="user-a"),
+        session_id="session-a",
+        request_id="request-a",
+        user_message="Trong tệp local local-study-smoke.md: Mã kiểm thử là gì?",
+    )
+
+    assert result is expected
+    orchestrator.compiler.run.assert_awaited_once()
+
+
+async def test_adk_requires_configured_client_and_session_for_open_ended_work():
+    orchestrator = AdkOrchestrator(Settings(_env_file=None), ToolRegistry())
+    with pytest.raises(AgentNotConfiguredError, match="Gemini"):
+        await orchestrator.run(
+            user=SimpleNamespace(id="user-a", role="editor"),
+            session_id="session-a",
+            request_id="request-a",
+            user_message="Hãy giúp tôi suy nghĩ về kế hoạch tuần này",
+        )
+
+
+async def test_adk_open_ended_run_records_session_handoff_usage_and_final_answer():
+    runner_models = []
+
+    class FakeSessions:
+        async def get_session(self, **_kwargs):
+            return SimpleNamespace(id="existing")
+
+    class FakeRunner:
+        def __init__(self, **_kwargs):
+            runner_models.append(_kwargs["agent"].model)
+
+        async def run_async(self, **_kwargs):
+            yield SimpleNamespace(
+                author="study_agent",
+                usage_metadata=SimpleNamespace(
+                    model_dump=lambda **_kwargs: {
+                        "prompt_token_count": 12,
+                        "candidates_token_count": 8,
+                        "total_token_count": 20,
+                    }
+                ),
+                is_final_response=lambda: False,
+                content=None,
+            )
+            yield SimpleNamespace(
+                author="study_agent",
+                usage_metadata=None,
+                is_final_response=lambda: True,
+                content=SimpleNamespace(
+                    parts=[
+                        SimpleNamespace(
+                            text="## Kế hoạch\n\n1. Bắt đầu từ việc nhỏ.", thought=False
+                        ),
+                        SimpleNamespace(text="hidden", thought=True),
+                    ]
+                ),
+            )
+
+    settings = Settings(_env_file=None, gemini_api_key="test-key")
+    orchestrator = AdkOrchestrator(settings, ToolRegistry())
+    orchestrator.client = genai.Client(api_key="test-key")
+    orchestrator.sessions = FakeSessions()
+    with (
+        patch("app.agent.adk_orchestrator.Runner", FakeRunner),
+        patch(
+            "app.agent.adk_orchestrator.enforce_presentation_contract",
+            AsyncMock(side_effect=lambda **kwargs: kwargs["answer"]),
+        ),
+    ):
+        result = await orchestrator.run(
+            user=SimpleNamespace(id="user-a", role="editor"),
+            session_id="session-a",
+            request_id="request-a",
+            user_message="Hãy giúp tôi suy nghĩ về kế hoạch tuần này",
+        )
+
+    assert result.answer == "## Kế hoạch\n\n1. Bắt đầu từ việc nhỏ."
+    assert result.citations == []
+    assert {record["stage"] for record in result.trace} >= {"agent_handoff", "usage"}
+    assert len(runner_models) == 1
+    assert runner_models[0].reserve_primary is True
+    assert runner_models[0].quota is orchestrator.compiler.quota

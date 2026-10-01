@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: veridra-closed-beta
+    runtime: image
+    plan: free
+    region: singapore
+    numInstances: 1
+    image:
+      url: ghcr.io/dbp3206-source/veridra:closed-beta
+      creds:
+        fromRegistryCreds:
+          name: veridra-ghcr
+    healthCheckPath: /api/health
+    envVars:
+      - key: DRIVE_AGENT_ENVIRONMENT
+        value: production
+      - key: DRIVE_AGENT_ORCHESTRATOR_BACKEND
+        value: adk
+      - key: DRIVE_AGENT_NO_PAID_FALLBACK
+        value: "true"
+      - key: DRIVE_AGENT_QUOTA_PROFILE
+        value: conservative
+      - key: DRIVE_AGENT_STORAGE_BACKEND
+        value: supabase
+      - key: DRIVE_AGENT_SUPABASE_STORAGE_BUCKET
+        value: veridra-private
+      - key: DRIVE_AGENT_MAX_DOWNLOAD_MB
+        value: "25"
+      - key: DRIVE_AGENT_PDF_OCR_ENABLED
+        value: "false"
+      - key: DRIVE_AGENT_BETA_ALLOW_EXTERNAL_WRITES
+        value: "false"
+      - key: DRIVE_AGENT_ENABLE_DEMO_LOGIN
+        value: "false"
+      - key: DRIVE_AGENT_APP_SECRET
+        sync: false
+      - key: DRIVE_AGENT_DATABASE_URL
+        sync: false
+      - key: DRIVE_AGENT_RELATIONAL_STATE_URL
+        sync: false
+      - key: DRIVE_AGENT_SUPABASE_URL
+        sync: false
+      - key: DRIVE_AGENT_SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DRIVE_AGENT_GOOGLE_OAUTH_CLIENT_ID
+        sync: false
+      - key: DRIVE_AGENT_GOOGLE_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: DRIVE_AGENT_GOOGLE_REDIRECT_URI
+        sync: false
+      - key: DRIVE_AGENT_FRONTEND_ORIGIN
+        sync: false
+      - key: DRIVE_AGENT_PUBLIC_BASE_URL
+        sync: false
+      - key: DRIVE_AGENT_BETA_INVITED_EMAILS
+        sync: false
+      - key: DRIVE_AGENT_BETA_OWNER_EMAIL
+        sync: false
+      - key: DRIVE_AGENT_METRICS_BEARER_TOKEN
+        sync: false
+      - key: DRIVE_AGENT_SCHEDULER_BEARER_TOKEN
+        sync: false

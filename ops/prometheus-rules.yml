@@ -1,0 +1,17 @@
+groups:
+  - name: drive-agent
+    rules:
+      - alert: DriveAgentToolErrorsObserved
+        expr: sum(drive_agent_tool_requests_total{status=~"error|denied"}) > 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "DriveAgent có tool call lỗi hoặc bị từ chối trong cửa sổ lưu trữ"
+      - alert: DriveAgentMetricsMissing
+        expr: absent(drive_agent_observed_runs)
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus không thu được AgentOps metrics từ DriveAgent"

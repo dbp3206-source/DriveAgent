@@ -15,8 +15,6 @@ from app.api.documents import invoke
 from app.db.models import CreationProposalRecord
 from app.tools.documents import DocumentPrepare
 from app.tools.sheets import SpreadsheetPrepare
-from app.tools.slides import SlidesPrepare
-from app.tools.visuals import VisualRender
 
 router = APIRouter(prefix="/api/creation", tags=["creation"])
 
@@ -31,9 +29,20 @@ async def prepare(proposal_id: str, request: Request, user: CurrentUser, db: DbS
     )
     if record is None:
         raise HTTPException(status_code=404, detail="Không tìm thấy bản đề xuất.")
-    proposal = CreationAnswer(answer="Preview", proposals=[json.loads(record.spec_json)]).proposals[
-        0
-    ]
+    raw_proposal = json.loads(record.spec_json)
+    # Old chat history remains visible after retiring creative generators, but it
+    # must never be parsed as a currently executable contract.
+    if raw_proposal.get("kind") not in {
+        "document",
+        "spreadsheet",
+        "document_edit",
+        "spreadsheet_edit",
+    }:
+        raise HTTPException(
+            status_code=410,
+            detail="Google Slides và Visual Studio đã được rút khỏi phạm vi sản phẩm.",
+        )
+    proposal = CreationAnswer(answer="Preview", proposals=[raw_proposal]).proposals[0]
     # A stable key binds all retries/reloads to this one proposal, never a new file.
     if proposal.kind == "document":
         payload = DocumentPrepare(
@@ -53,11 +62,6 @@ async def prepare(proposal_id: str, request: Request, user: CurrentUser, db: DbS
     if proposal.kind == "spreadsheet":
         payload = SpreadsheetPrepare(request_key=record.id, spreadsheet=proposal.spreadsheet)
         return await invoke("sheets_prepare", payload, request, user, db)
-    if proposal.kind == "presentation":
-        payload = SlidesPrepare(
-            request_key=record.id, action="create", presentation=proposal.presentation
-        )
-        return await invoke("slides_prepare", payload, request, user, db)
     if proposal.kind == "spreadsheet_edit":
         return await invoke(
             "sheets_prepare",
@@ -68,14 +72,4 @@ async def prepare(proposal_id: str, request: Request, user: CurrentUser, db: DbS
             user,
             db,
         )
-    if proposal.kind == "presentation_edit":
-        return await invoke(
-            "slides_prepare",
-            SlidesPrepare(
-                request_key=record.id, action="edit", edit=proposal.presentation_edit
-            ),
-            request,
-            user,
-            db,
-        )
-    return await invoke("visual_render", VisualRender(visual=proposal.visual), request, user, db)
+    raise HTTPException(status_code=422, detail="Loại đề xuất không được hỗ trợ.")

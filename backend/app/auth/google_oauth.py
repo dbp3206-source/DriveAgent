@@ -4,10 +4,7 @@ import json
 import os
 from datetime import UTC, datetime
 from typing import Any
-
-# Cho phép OAuth trên localhost và bỏ qua cảnh báo thay đổi scope từ Google
-os.environ.setdefault("OAUTHLIB_INSECURE_TRANSPORT", "1")
-os.environ.setdefault("OAUTHLIB_RELAX_TOKEN_SCOPE", "1")
+from urllib.parse import urlparse
 
 import httpx
 from google.auth.exceptions import RefreshError, TransportError
@@ -26,18 +23,51 @@ class OAuthNotConfiguredError(RuntimeError):
     pass
 
 
-def build_flow(settings: Settings, *, state: str | None = None, workspace: bool = False) -> Flow:
+def _is_loopback_http(url: str) -> bool:
+    parsed = urlparse(url)
+    return parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+
+
+def configure_oauthlib(settings: Settings) -> None:
+    """Allow insecure OAuth transport only for the documented loopback profile.
+
+    The local runner uses HTTP because Google redirects back to localhost.  The
+    previous module-level environment mutation also affected production imports;
+    this function is called per flow so a production process cannot inherit the
+    local exception merely by importing the module.
+    """
+
+    local_loopback = (
+        settings.environment.casefold() in {"local", "development"}
+        and _is_loopback_http(settings.public_base_url)
+        and _is_loopback_http(settings.google_redirect_uri)
+    )
+    if local_loopback:
+        os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
+        os.environ["OAUTHLIB_RELAX_TOKEN_SCOPE"] = "1"
+    else:
+        os.environ.pop("OAUTHLIB_INSECURE_TRANSPORT", None)
+        os.environ.pop("OAUTHLIB_RELAX_TOKEN_SCOPE", None)
+
+
+def build_flow(
+    settings: Settings,
+    *,
+    state: str | None = None,
+    workspace: bool = False,
+    gmail_compose: bool = False,
+) -> Flow:
     """Tạo Flow mới cho từng request để state không bị dùng chung giữa người dùng."""
 
+    configure_oauthlib(settings)
     if not settings.oauth_is_configured:
         raise OAuthNotConfiguredError(
             "Chưa tìm thấy OAuth client JSON. Hãy làm theo hướng dẫn trong docs/SETUP_GOOGLE.md."
         )
-    return Flow.from_client_secrets_file(
-        str(settings.resolved_google_oauth_client_file),
+    flow_options = {
         # Google trả scope dạng URL đầy đủ; dùng cùng dạng để OAuthlib không
         # hiểu email/profile và userinfo.email/userinfo.profile là đổi quyền.
-        scopes=[
+        "scopes": [
             {
                 "email": "https://www.googleapis.com/auth/userinfo.email",
                 "profile": "https://www.googleapis.com/auth/userinfo.profile",
@@ -45,10 +75,20 @@ def build_flow(settings: Settings, *, state: str | None = None, workspace: bool 
             for scope in dict.fromkeys(
                 settings.google_drive_scopes
                 + (["https://www.googleapis.com/auth/drive.file"] if workspace else [])
+                + (
+                    ["https://www.googleapis.com/auth/gmail.compose"]
+                    if gmail_compose
+                    else []
+                )
             )
         ],
-        state=state,
-        redirect_uri=settings.google_redirect_uri,
+        "state": state,
+        "redirect_uri": settings.google_redirect_uri,
+    }
+    if settings.oauth_client_config is not None:
+        return Flow.from_client_config(settings.oauth_client_config, **flow_options)
+    return Flow.from_client_secrets_file(
+        str(settings.resolved_google_oauth_client_file), **flow_options
     )
 
 
@@ -59,7 +99,7 @@ def credentials_to_dict(credentials: Credentials) -> dict[str, Any]:
 
 def credentials_from_user(user: User, settings: Settings) -> Credentials:
     if not user.encrypted_google_credentials:
-        raise PermissionError("Tài khoản chưa kết nối Google Drive.")
+        raise ToolAccessDeniedError("Tài khoản chưa kết nối Google Drive.")
     info = decrypt_json(user.encrypted_google_credentials, settings)
     # Tương thích credential đã lưu trước bản sửa; không buộc user cấp quyền lại.
     if info.get("expiry"):
@@ -95,7 +135,7 @@ async def refresh_and_store_if_needed(
         user.encrypted_google_credentials = encrypt_json(credentials_to_dict(credentials), settings)
         await db.commit()
     if not credentials.valid:
-        raise PermissionError("Phiên Google đã hết hạn. Vui lòng kết nối lại.")
+        raise ToolAccessDeniedError("Phiên Google đã hết hạn. Vui lòng kết nối lại.")
     return credentials
 
 

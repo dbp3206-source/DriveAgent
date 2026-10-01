@@ -8,6 +8,13 @@ from app.auth import google_oauth
 from app.tools.contracts import ToolAccessDeniedError, ToolError
 
 
+def test_missing_google_credentials_is_an_access_error_not_a_transport_error():
+    user = SimpleNamespace(encrypted_google_credentials=None)
+
+    with pytest.raises(ToolAccessDeniedError):
+        google_oauth.credentials_from_user(user, SimpleNamespace())
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     "failure,retryable",

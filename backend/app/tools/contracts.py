@@ -3,7 +3,7 @@
 from dataclasses import dataclass, field
 from typing import Any, Protocol, TypeVar
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
@@ -11,6 +11,10 @@ from app.db.models import User
 
 InputT = TypeVar("InputT", bound=BaseModel)
 OutputT = TypeVar("OutputT", bound=BaseModel)
+
+
+class OperationReference(BaseModel):
+    operation_id: str = Field(pattern=r"^[a-f0-9-]{36}$")
 
 
 @dataclass(slots=True)
@@ -41,6 +45,8 @@ class ToolDefinition:
     max_attempts: int = 3
     # Server-owned policy: tool is available only after a deliberate UI/API action.
     requires_user_action: bool = False
+    # Cloud-side write, distinct from preparing a local proposal or read-back.
+    external_write: bool = False
 
 
 class ToolError(RuntimeError):

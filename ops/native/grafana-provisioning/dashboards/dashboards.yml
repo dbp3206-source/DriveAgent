@@ -1,0 +1,14 @@
+apiVersion: 1
+
+providers:
+  - name: Veridra
+    orgId: 1
+    folder: Veridra
+    type: file
+    disableDeletion: true
+    editable: false
+    updateIntervalSeconds: 10
+    options:
+      # The native launcher runs with the repository root as its working directory.
+      # Use the canonical dashboard source so native and container installs stay in sync.
+      path: ops/grafana/provisioning/dashboards/json

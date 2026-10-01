@@ -12,11 +12,23 @@ import {
   Input,
   Option,
   Textarea,
+  Tooltip,
 } from '@fluentui/react-components'
-import { Add24Regular, Archive24Regular, Delete24Regular, Search24Regular } from '@fluentui/react-icons'
-import { FormEvent, useCallback, useEffect, useState } from 'react'
+import {
+  Add24Regular,
+  Archive24Regular,
+  Delete24Regular,
+  Search24Regular,
+  Dismiss16Regular,
+  Copy16Regular,
+  Checkmark16Regular,
+  BrainCircuit20Regular,
+  Sparkle20Regular,
+  Flash20Regular,
+} from '@fluentui/react-icons'
+import { FormEvent, useCallback, useEffect, useState, useMemo } from 'react'
 import { api, formatDate } from '../api'
-import { EmptyState, ErrorState, LoadingState } from '../components/AsyncState'
+import { ErrorState, LoadingState } from '../components/AsyncState'
 import type { MemoryItem, MemoryKind } from '../types'
 
 const kindLabels: Record<MemoryKind, string> = {
@@ -37,6 +49,15 @@ const kindBadgeColor: Record<MemoryKind, 'brand' | 'important' | 'success' | 'wa
   summary: 'subtle',
 }
 
+const kindIcons: Record<MemoryKind, string> = {
+  fact: '🏢',
+  preference: '🎯',
+  context: '📌',
+  episodic: '📅',
+  procedural: '💡',
+  summary: '📑',
+}
+
 const kindColors: Record<MemoryKind, string> = {
   fact: '#2563eb',
   preference: '#8b5cf6',
@@ -45,6 +66,37 @@ const kindColors: Record<MemoryKind, string> = {
   procedural: '#0ea5e9',
   summary: '#64748b',
 }
+
+const STARTER_PRESETS = [
+  {
+    kind: 'preference' as MemoryKind,
+    icon: '🎯',
+    title: 'Phong cách trả lời Antigravity',
+    content: 'Tôi muốn các câu trả lời ngắn gọn, có cấu trúc phân tích chuyên sâu, kèm trích dẫn số liệu rõ ràng và không dùng lời chào rườm rà.',
+    tags: ['phong_cach', 'antigravity'],
+  },
+  {
+    kind: 'context' as MemoryKind,
+    icon: '📌',
+    title: 'Dự án Veridra Local Production',
+    content: 'Tôi đang vận hành Veridra phiên bản local single-admin, kết nối Google Drive & Gmail thật, sử dụng gemini-3.5-flash-lite và Qdrant RAG.',
+    tags: ['du_an', 'veridra', 'local'],
+  },
+  {
+    kind: 'procedural' as MemoryKind,
+    icon: '💡',
+    title: 'Quy trình xử lý thư quan trọng',
+    content: 'Khi đọc email từ các hệ thống bảo mật hoặc đối tác, luôn trích xuất tóm tắt các action items chính, deadline và người liên quan lên đầu.',
+    tags: ['quy_trinh', 'gmail'],
+  },
+  {
+    kind: 'fact' as MemoryKind,
+    icon: '🏢',
+    title: 'Múi giờ & Ngôn ngữ hệ thống',
+    content: 'Thời gian làm việc theo múi giờ GMT+7 (Asia/Ho_Chi_Minh), ngôn ngữ giao tiếp chính của hệ thống là Tiếng Việt.',
+    tags: ['thong_tin', 'timezone', 'vietnam'],
+  },
+]
 
 interface DonutSlice {
   key: string
@@ -137,8 +189,6 @@ function SvgDonutChart({
 }
 
 function MemoryVisualizationDashboard({ items }: { items: MemoryItem[] }) {
-  const [activeTab, setActiveTab] = useState<'pies' | 'line'>('pies')
-
   const kindCounts = items.reduce<Record<string, number>>((acc, item) => {
     acc[item.kind] = (acc[item.kind] || 0) + 1
     return acc
@@ -159,149 +209,56 @@ function MemoryVisualizationDashboard({ items }: { items: MemoryItem[] }) {
     { key: 'archived', label: 'Đã cất', count: archivedCount, color: '#94a3b8' },
   ]
 
-  const highConf = items.filter((i) => i.confidence >= 0.9).length
-  const normalConf = items.length - highConf
-  const confSlices: DonutSlice[] = [
-    { key: 'high', label: 'Xác thực cao (≥90%)', count: highConf, color: '#3b82f6' },
-    { key: 'review', label: 'Đang theo dõi (<90%)', count: normalConf, color: '#f59e0b' },
-  ]
-
-  const sortedByDate = [...items].sort(
-    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  return (
+    <section className="memory-viz-section" aria-label="Trực quan hóa bộ nhớ">
+      <div className="donut-charts-grid">
+        <SvgDonutChart
+          title="Phân bố theo loại"
+          subtitle="Tỉ lệ các mục theo phân loại"
+          slices={kindSlices}
+          total={items.length}
+          centerLabel={String(items.length)}
+        />
+        <SvgDonutChart
+          title="Trạng thái lưu trữ"
+          subtitle="Tỉ lệ mục đang dùng vs đã cất"
+          slices={statusSlices}
+          total={items.length}
+          centerLabel={String(activeCount)}
+        />
+      </div>
+    </section>
   )
-  const timelineMap: Record<string, number> = {}
-  sortedByDate.forEach((item) => {
-    const d = new Date(item.created_at).toLocaleDateString('vi-VN')
-    timelineMap[d] = (timelineMap[d] || 0) + 1
-  })
-  const timelineEntries = Object.entries(timelineMap)
-  let runningTotal = 0
-  const timelinePoints = timelineEntries.map(([date, count]) => {
-    runningTotal += count
-    return { date, count: runningTotal }
-  })
+}
 
-  const svgW = 680
-  const svgH = 190
-  const padL = 40
-  const padR = 24
-  const padT = 20
-  const padB = 30
-  const chartW = svgW - padL - padR
-  const chartH = svgH - padT - padB
-  const maxVal = Math.max(...timelinePoints.map((p) => p.count), 5)
-  const stepX = timelinePoints.length > 1 ? chartW / (timelinePoints.length - 1) : chartW / 2
-
-  const pts = timelinePoints.map((p, i) => ({
-    x: padL + i * stepX,
-    y: padT + chartH - (p.count / maxVal) * chartH,
-    date: p.date,
-    count: p.count,
-  }))
-
-  const linePath = pts.reduce(
-    (acc, pt, idx) => `${acc} ${idx === 0 ? 'M' : 'L'} ${pt.x.toFixed(1)},${pt.y.toFixed(1)}`,
-    ''
-  )
-  const firstP = pts[0]
-  const lastP = pts[pts.length - 1]
-  const areaPath =
-    firstP && lastP
-      ? `${linePath} L ${lastP.x.toFixed(1)},${(padT + chartH).toFixed(1)} L ${firstP.x.toFixed(1)},${(padT + chartH).toFixed(1)} Z`
-      : ''
+function MemorySummaryBar({ items }: { items: MemoryItem[] }) {
+  const activeCount = items.filter((item) => !item.is_archived).length
+  const kinds = new Set(items.map((item) => item.kind)).size
+  const highConf = items.filter((item) => (item.confidence ?? 1) >= 0.8).length
 
   return (
-    <section className="memory-analytics-card" aria-label="Trực quan hóa dữ liệu bộ nhớ">
-      <div className="memory-analytics-header">
-        <div>
-          <h3>Trực quan hóa cấu trúc bộ nhớ</h3>
-          <p>Phân tích đa chiều trên tổng số {items.length} mục bộ nhớ của tài khoản.</p>
-        </div>
-        <div className="analytics-tabs">
-          <Button
-            size="small"
-            appearance={activeTab === 'pies' ? 'primary' : 'subtle'}
-            onClick={() => setActiveTab('pies')}
-          >
-            Đa biểu đồ tròn (Pie Charts)
-          </Button>
-          <Button
-            size="small"
-            appearance={activeTab === 'line' ? 'primary' : 'subtle'}
-            onClick={() => setActiveTab('line')}
-          >
-            Tiến trình tích lũy (Line Chart)
-          </Button>
-        </div>
-      </div>
-
-      {activeTab === 'pies' ? (
-        <div className="donut-grid">
-          <SvgDonutChart
-            title="1. Theo Thể loại"
-            subtitle="Phân bố chức năng bộ nhớ"
-            slices={kindSlices}
-            total={items.length}
-            centerLabel={`${items.length}`}
-          />
-          <SvgDonutChart
-            title="2. Theo Vòng đời"
-            subtitle="Tình trạng sử dụng"
-            slices={statusSlices}
-            total={items.length}
-            centerLabel={`${activeCount}`}
-          />
-          <SvgDonutChart
-            title="3. Theo Độ tin cậy"
-            subtitle="Mức độ kiểm chứng"
-            slices={confSlices}
-            total={items.length}
-            centerLabel={`${highConf}`}
-          />
-        </div>
-      ) : (
-        <div className="memory-line-wrapper">
-          <svg viewBox={`0 0 ${svgW} ${svgH}`} className="memory-line-svg">
-            <defs>
-              <linearGradient id="memGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.0" />
-              </linearGradient>
-            </defs>
-            <line x1={padL} y1={padT} x2={svgW - padR} y2={padT} stroke="var(--border)" strokeDasharray="3 3" />
-            <line x1={padL} y1={padT + chartH / 2} x2={svgW - padR} y2={padT + chartH / 2} stroke="var(--border)" strokeDasharray="3 3" />
-            <line x1={padL} y1={padT + chartH} x2={svgW - padR} y2={padT + chartH} stroke="var(--border)" />
-
-            <text x={padL - 8} y={padT + 4} textAnchor="end" className="chart-axis-text">{maxVal}</text>
-            <text x={padL - 8} y={padT + chartH / 2 + 4} textAnchor="end" className="chart-axis-text">{Math.round(maxVal / 2)}</text>
-            <text x={padL - 8} y={padT + chartH + 4} textAnchor="end" className="chart-axis-text">0</text>
-
-            <path d={areaPath} fill="url(#memGrad)" />
-            <path d={linePath} fill="none" stroke="#8b5cf6" strokeWidth="2.5" strokeLinecap="round" />
-
-            {pts.map((p, idx) => (
-              <circle
-                key={idx}
-                cx={p.x}
-                cy={p.y}
-                r="4"
-                fill="#8b5cf6"
-                stroke="var(--surface-raised)"
-                strokeWidth="2"
-              >
-                <title>{`${p.date}: ${p.count} mục tích lũy`}</title>
-              </circle>
-            ))}
-          </svg>
-          <div className="chart-legend">
-            <span className="legend-item">
-              <span className="legend-dot" style={{ background: '#8b5cf6' }} />
-              Đường tích lũy kiến thức bộ nhớ theo ngày
-            </span>
-          </div>
-        </div>
-      )}
-    </section>
+    <div
+      className="memory-summary-bar"
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '8px',
+        margin: '14px 0 18px',
+      }}
+    >
+      <span className="memory-stat-pill">
+        <strong>{items.length}</strong> mục bộ nhớ
+      </span>
+      <span className="memory-stat-pill">
+        <strong>{activeCount}</strong> đang sử dụng
+      </span>
+      <span className="memory-stat-pill">
+        <strong>{kinds}</strong> phân loại
+      </span>
+      <span className="memory-stat-pill">
+        <strong>{highConf}</strong> tin cậy cao
+      </span>
+    </div>
   )
 }
 
@@ -309,12 +266,15 @@ export function MemoryPage() {
   const [items, setItems] = useState<MemoryItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
   const [query, setQuery] = useState('')
-  const [activeQuery, setActiveQuery] = useState('')
+  const [filterKind, setFilterKind] = useState<string>('all')
   const [dialogOpen, setDialogOpen] = useState(false)
   const [kind, setKind] = useState<MemoryKind>('fact')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
+  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [addingPreset, setAddingPreset] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -322,7 +282,6 @@ export function MemoryPage() {
     try {
       const result = await api<{ memories: MemoryItem[] }>('/api/memories')
       setItems(result.memories)
-      setActiveQuery('')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Không thể tải bộ nhớ.')
     } finally {
@@ -330,7 +289,9 @@ export function MemoryPage() {
     }
   }, [])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void load()
+  }, [load])
 
   async function search(event: FormEvent) {
     event.preventDefault()
@@ -342,9 +303,10 @@ export function MemoryPage() {
     }
     setError('')
     try {
-      const result = await api<{ memories: MemoryItem[] }>(`/api/memories/search?q=${encodeURIComponent(trimmed)}`)
+      const result = await api<{ memories: MemoryItem[] }>(
+        `/api/memories/search?q=${encodeURIComponent(trimmed)}`
+      )
       setItems(result.memories)
-      setActiveQuery(trimmed)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Không thể tìm bộ nhớ.')
     }
@@ -365,73 +327,311 @@ export function MemoryPage() {
       setDialogOpen(false)
       setContent('')
       setTags('')
+      setNotice('Đã lưu mục bộ nhớ mới thành công!')
       await load()
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Không thể lưu bộ nhớ.')
     }
   }
 
+  async function addQuickStarter(preset: typeof STARTER_PRESETS[0]) {
+    setAddingPreset(preset.title)
+    setError('')
+    setNotice('')
+    try {
+      await api<MemoryItem>('/api/memories', {
+        method: 'POST',
+        body: JSON.stringify({
+          kind: preset.kind,
+          content: preset.content,
+          tags: preset.tags,
+          confidence: 0.95,
+        }),
+      })
+      setNotice(`Đã thêm mục bộ nhớ "${preset.title}" thành công!`)
+      await load()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Không thể thêm bộ nhớ mẫu.')
+    } finally {
+      setAddingPreset(null)
+    }
+  }
+
   async function archive(item: MemoryItem) {
     await api(`/api/memories/${item.id}`, {
       method: 'PATCH',
-      body: JSON.stringify({ is_archived: true }),
+      body: JSON.stringify({ is_archived: !item.is_archived }),
     })
+    setNotice(item.is_archived ? 'Đã khôi phục bộ nhớ.' : 'Đã cất bộ nhớ.')
     await load()
   }
 
   async function remove(item: MemoryItem) {
     if (!window.confirm('Xóa vĩnh viễn bộ nhớ này?')) return
     await api(`/api/memories/${item.id}`, { method: 'DELETE' })
+    setNotice('Đã xóa bộ nhớ.')
     await load()
   }
 
+  function copyMemory(item: MemoryItem) {
+    void navigator.clipboard.writeText(item.content)
+    setCopiedId(item.id)
+    setTimeout(() => setCopiedId(null), 2000)
+  }
+
+  // Filtered by search & kind
+  const filteredItems = useMemo(() => {
+    return items.filter((item) => {
+      const matchKind = filterKind === 'all' || item.kind === filterKind
+      return matchKind
+    })
+  }, [items, filterKind])
+
   return (
-    <section className="stack-page">
+    <section className="stack-page memory-page-v2">
+      {/* Header */}
       <div className="page-heading">
-        <div>
-          <h2>Những điều agent ghi nhớ</h2>
-          <p>Mỗi bộ nhớ thuộc riêng tài khoản của bạn và có thể được xem, lưu trữ hoặc xóa.</p>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+          <div className="page-icon-badge" style={{ background: 'rgba(139, 92, 246, 0.1)', borderColor: 'rgba(139, 92, 246, 0.25)' }}>
+            <BrainCircuit20Regular style={{ fontSize: '24px', color: '#a78bfa' }} />
+          </div>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <p className="home-kicker">Long-term Memory</p>
+              <Badge appearance="filled" color="brand">Persistent Knowledge</Badge>
+            </div>
+            <h2>Bộ nhớ dài hạn & Phong cách cá nhân</h2>
+            <ul className="page-summary-points">
+              <li>Lưu sự thật, sở thích, ngữ cảnh và quy trình.</li>
+              <li>Agent dùng lại khi phù hợp với yêu cầu của bạn.</li>
+              <li>Có thể thêm thủ công hoặc nói trong chat: “Ghi nhớ rằng …”.</li>
+            </ul>
+          </div>
         </div>
         <Button appearance="primary" icon={<Add24Regular />} onClick={() => setDialogOpen(true)}>
-          Thêm bộ nhớ
+          Thêm bộ nhớ mới
         </Button>
       </div>
-      <form className="search-row" onSubmit={search}>
-        <Input id="memory-search" name="query" aria-label="Tìm bộ nhớ" value={query} onChange={(_, data) => setQuery(data.value)} contentBefore={<Search24Regular />} placeholder="Tìm theo ý nghĩa hoặc từ khóa" />
-        <Button type="submit">Tìm</Button>
-      </form>
+
+      {notice && (
+        <div className="artifact-success-notice" style={{ margin: '10px 0' }}>
+          <span>✓ {notice}</span>
+        </div>
+      )}
+
       {error ? <ErrorState message={error} retry={load} /> : null}
-      {loading ? <LoadingState /> : null}
-      {!loading && !error && items.length === 0 ? (
-        <EmptyState
-          title={activeQuery ? 'Không tìm thấy bộ nhớ phù hợp' : 'Chưa có bộ nhớ'}
-          description={activeQuery
-            ? 'Thử một từ khóa gần với nội dung đã lưu, hoặc xóa ô tìm kiếm để xem tất cả.'
-            : 'Bạn có thể tự lưu một fact hoặc để agent ghi nhớ trong khi trò chuyện.'}
-        />
-      ) : null}
-      {!loading && !error && items.length > 0 ? (
-        <MemoryVisualizationDashboard items={items} />
-      ) : null}
-      <div className="memory-list">
-        {items.map((item) => (
-          <article key={item.id} className="memory-row">
-            <div className="memory-row__type"><Badge appearance="tint" color={kindBadgeColor[item.kind] ?? 'informative'}>{kindLabels[item.kind]}</Badge></div>
-            <div className="memory-row__content">
-              <p>{item.content}</p>
-              <div className="memory-meta">
-                <span>Cập nhật {formatDate(item.updated_at)}</span>
-                {item.tags.map((tag) => <span key={tag}>#{tag}</span>)}
+
+      {/* Quick Starters Section */}
+      <section className="memory-starters-section" aria-label="Gợi ý bộ nhớ khởi đầu">
+        <div className="starters-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Sparkle20Regular style={{ color: '#fbbf24' }} />
+            <strong>Khởi tạo bộ nhớ 1-Click (Quick Starters)</strong>
+          </div>
+          <span style={{ fontSize: '12px', color: '#94a3b8' }}>
+            Nhấn thêm để nạp ngay các quy chuẩn phản hồi & ngữ cảnh dự án vào Agent
+          </span>
+        </div>
+
+        <div className="starters-grid">
+          {STARTER_PRESETS.map((p) => {
+            const isAdded = items.some((i) => i.content === p.content)
+            return (
+              <div key={p.title} className="starter-card">
+                <div className="starter-card__top">
+                  <span className="starter-card__icon">{p.icon}</span>
+                  <Badge appearance="tint" color={kindBadgeColor[p.kind]}>
+                    {kindLabels[p.kind]}
+                  </Badge>
+                </div>
+                <strong className="starter-card__title">{p.title}</strong>
+                <p className="starter-card__content">{p.content}</p>
+                <div className="starter-card__bottom">
+                  <div className="starter-tags">
+                    {p.tags.map((t) => (
+                      <span key={t} className="starter-tag">
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                  <Button
+                    size="small"
+                    appearance={isAdded ? 'subtle' : 'primary'}
+                    disabled={isAdded || addingPreset === p.title}
+                    icon={isAdded ? <Checkmark16Regular /> : <Flash20Regular />}
+                    onClick={() => void addQuickStarter(p)}
+                  >
+                    {isAdded ? 'Đã có' : addingPreset === p.title ? 'Đang lưu…' : 'Nạp vào'}
+                  </Button>
+                </div>
               </div>
-            </div>
-            <div className="row-actions">
-              <Button appearance="subtle" icon={<Archive24Regular />} aria-label="Lưu trữ" onClick={() => archive(item)} />
-              <Button appearance="subtle" icon={<Delete24Regular />} aria-label="Xóa" onClick={() => remove(item)} />
-            </div>
-          </article>
-        ))}
+            )
+          })}
+        </div>
+      </section>
+
+      {/* Search and Category Filter Toolbar */}
+      <div className="memory-toolbar-card">
+        <form className="search-row" onSubmit={search} style={{ margin: 0, flex: 1 }}>
+          <Input
+            id="memory-search"
+            name="query"
+            aria-label="Tìm bộ nhớ"
+            value={query}
+            onChange={(_, data) => setQuery(data.value)}
+            contentBefore={<Search24Regular />}
+            contentAfter={
+              query ? (
+                <Button
+                  size="small"
+                  appearance="subtle"
+                  icon={<Dismiss16Regular />}
+                  onClick={() => {
+                    setQuery('')
+                    void load()
+                  }}
+                  aria-label="Xóa tìm kiếm"
+                />
+              ) : undefined
+            }
+            placeholder="Tìm theo ý nghĩa hoặc từ khóa (ví dụ: phong cách, email, drive)..."
+            style={{ width: '100%' }}
+          />
+          <Button type="submit">Tìm kiếm</Button>
+        </form>
+
+        {/* Category Pills */}
+        <div className="memory-category-pills">
+          <button
+            type="button"
+            className={`kind-pill ${filterKind === 'all' ? 'kind-pill--active' : ''}`}
+            onClick={() => setFilterKind('all')}
+          >
+            Tất cả ({items.length})
+          </button>
+          {(Object.keys(kindLabels) as MemoryKind[]).map((k) => {
+            const count = items.filter((i) => i.kind === k).length
+            return (
+              <button
+                key={k}
+                type="button"
+                className={`kind-pill ${filterKind === k ? 'kind-pill--active' : ''}`}
+                onClick={() => setFilterKind(k)}
+              >
+                {kindIcons[k]} {kindLabels[k]} ({count})
+              </button>
+            )
+          })}
+        </div>
       </div>
 
+      {loading ? <LoadingState /> : null}
+
+      {!loading && items.length > 0 ? (
+        items.length >= 6 ? (
+          <MemoryVisualizationDashboard items={items} />
+        ) : (
+          <MemorySummaryBar items={items} />
+        )
+      ) : null}
+
+      {/* Memory List Cards */}
+      <div className="memory-cards-grid">
+        {!loading && filteredItems.length === 0 && (
+          <div className="empty-state" style={{ gridColumn: '1 / -1', padding: '36px' }}>
+            <p className="rail-empty">
+              {query
+                ? `Không tìm thấy bộ nhớ phù hợp với từ khóa "${query}".`
+                : 'Chưa có bộ nhớ nào thuộc phân loại này. Bạn có thể nạp từ các mẫu phía trên.'}
+            </p>
+          </div>
+        )}
+
+        {filteredItems.map((item) => {
+          const conf = Math.round((item.confidence ?? 1) * 100)
+          return (
+            <article
+              key={item.id}
+              className={`memory-card-v2 ${item.is_archived ? 'memory-card-v2--archived' : ''}`}
+            >
+              <div className="memory-card-v2__top">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span className="memory-card-v2__icon">{kindIcons[item.kind] ?? '📝'}</span>
+                  <Badge appearance="tint" color={kindBadgeColor[item.kind] ?? 'informative'}>
+                    {kindLabels[item.kind]}
+                  </Badge>
+                  {item.is_archived && (
+                    <Badge appearance="filled" color="subtle">
+                      Đã cất
+                    </Badge>
+                  )}
+                </div>
+
+                {/* Confidence Meter */}
+                <div className="confidence-meter" title={`Độ tin cậy của bộ nhớ: ${conf}%`}>
+                  <div className="confidence-track">
+                    <div
+                      className="confidence-fill"
+                      style={{
+                        width: `${conf}%`,
+                        background: conf >= 80 ? '#10b981' : conf >= 50 ? '#f59e0b' : '#ef4444',
+                      }}
+                    />
+                  </div>
+                  <span className="confidence-label">{conf}%</span>
+                </div>
+              </div>
+
+              <div className="memory-card-v2__body">
+                <p className="memory-card-v2__text">{item.content}</p>
+              </div>
+
+              <div className="memory-card-v2__bottom">
+                <div className="memory-card-v2__tags">
+                  {item.tags.map((tag) => (
+                    <span key={tag} className="memory-tag-chip">
+                      #{tag}
+                    </span>
+                  ))}
+                </div>
+
+                <div className="memory-card-v2__actions">
+                  <span className="memory-date-text">{formatDate(item.updated_at)}</span>
+                  <Tooltip content={copiedId === item.id ? 'Đã sao chép!' : 'Sao chép nội dung'} relationship="label">
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      icon={copiedId === item.id ? <Checkmark16Regular /> : <Copy16Regular />}
+                      onClick={() => copyMemory(item)}
+                      aria-label="Sao chép"
+                    />
+                  </Tooltip>
+                  <Tooltip content={item.is_archived ? 'Khôi phục' : 'Lưu trữ / Cất'} relationship="label">
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      icon={<Archive24Regular style={{ fontSize: '16px' }} />}
+                      onClick={() => void archive(item)}
+                      aria-label="Lưu trữ"
+                    />
+                  </Tooltip>
+                  <Tooltip content="Xóa vĩnh viễn" relationship="label">
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      icon={<Delete24Regular style={{ fontSize: '16px' }} />}
+                      onClick={() => void remove(item)}
+                      aria-label="Xóa"
+                    />
+                  </Tooltip>
+                </div>
+              </div>
+            </article>
+          )
+        })}
+      </div>
+
+      {/* Manual Add Dialog */}
       <Dialog open={dialogOpen} onOpenChange={(_, data) => setDialogOpen(data.open)}>
         <DialogSurface>
           <form onSubmit={save}>
@@ -439,20 +639,52 @@ export function MemoryPage() {
               <DialogTitle>Thêm bộ nhớ có kiểm soát</DialogTitle>
               <DialogContent className="dialog-form">
                 <Field label="Loại bộ nhớ" required>
-                  <Dropdown id="memory-kind" name="kind" value={kindLabels[kind]} selectedOptions={[kind]} onOptionSelect={(_, data) => setKind(data.optionValue as MemoryKind)}>
-                    {Object.entries(kindLabels).map(([value, label]) => <Option key={value} value={value}>{label}</Option>)}
+                  <Dropdown
+                    id="memory-kind"
+                    name="kind"
+                    value={kindLabels[kind]}
+                    selectedOptions={[kind]}
+                    onOptionSelect={(_, data) => setKind(data.optionValue as MemoryKind)}
+                  >
+                    {Object.entries(kindLabels).map(([value, label]) => (
+                      <Option
+                        key={value}
+                        value={value}
+                        text={`${kindIcons[value as MemoryKind]} ${label}`}
+                      >
+                        {kindIcons[value as MemoryKind]} {label}
+                      </Option>
+                    ))}
                   </Dropdown>
                 </Field>
-                <Field label="Nội dung" hint="Không nhập API key, token hoặc mật khẩu." required>
-                  <Textarea id="memory-content" name="content" value={content} onChange={(_, data) => setContent(data.value)} resize="vertical" />
+                <Field label="Nội dung cần nhớ" hint="Không nhập API key, token hoặc mật khẩu nhạy cảm." required>
+                  <Textarea
+                    id="memory-content"
+                    name="content"
+                    value={content}
+                    placeholder="Ví dụ: Tôi thích tóm tắt bằng bảng và trích dẫn chuẩn Antigravity..."
+                    onChange={(_, data) => setContent(data.value)}
+                    resize="vertical"
+                    rows={4}
+                  />
                 </Field>
-                <Field label="Nhãn" hint="Phân tách bằng dấu phẩy">
-                  <Input id="memory-tags" name="tags" value={tags} onChange={(_, data) => setTags(data.value)} />
+                <Field label="Nhãn phân loại (Tags)" hint="Phân tách bằng dấu phẩy, ví dụ: cong_viec, email, phong_cach">
+                  <Input
+                    id="memory-tags"
+                    name="tags"
+                    value={tags}
+                    placeholder="cong_viec, email"
+                    onChange={(_, data) => setTags(data.value)}
+                  />
                 </Field>
               </DialogContent>
               <DialogActions>
-                <Button appearance="secondary" onClick={() => setDialogOpen(false)}>Hủy</Button>
-                <Button appearance="primary" type="submit" disabled={!content.trim()}>Lưu</Button>
+                <Button appearance="secondary" onClick={() => setDialogOpen(false)}>
+                  Hủy
+                </Button>
+                <Button appearance="primary" type="submit" disabled={!content.trim()}>
+                  Lưu vào bộ nhớ
+                </Button>
               </DialogActions>
             </DialogBody>
           </form>

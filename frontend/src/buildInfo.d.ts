@@ -1,0 +1,1 @@
+declare const __DRIVEAGENT_FRONTEND_BUILT_AT__: string

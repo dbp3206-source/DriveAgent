@@ -9,25 +9,34 @@ import {
   Input,
   MessageBar,
   MessageBarBody,
-  Select,
   Spinner,
   Textarea,
 } from '@fluentui/react-components'
 import {
   ArrowReset20Regular,
   ArrowTrendingLines20Regular,
+  Bot16Regular,
+  Brain16Regular,
+  Calculator16Regular,
   Chat16Regular,
   Checkmark16Regular,
   ChevronUp16Regular,
+  Copy20Regular,
   Delete16Regular,
+  Dismiss16Regular,
+  DismissCircle24Regular,
   DocumentBulletList20Regular,
   DocumentLink24Regular,
+  DocumentText16Regular,
+  Mail16Regular,
   Mail20Regular,
   Search20Regular,
   Send24Regular,
-  WeatherSunny20Regular,
+  Sparkle16Regular,
+  Table16Regular,
+  WeatherSunny16Regular,
 } from '@fluentui/react-icons'
-import { FormEvent, useEffect, useRef, useState } from 'react'
+import { FormEvent, isValidElement, useEffect, useMemo, useRef, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { api, ApiError } from '../api'
@@ -39,12 +48,30 @@ import {
   type PreparedDocumentExport,
 } from '../components/DocumentExportApproval'
 import { AVAILABLE_MODELS, type ModelOption } from '../modelOptions'
+import { markdownToDocumentBlocks as parseMarkdownDocument } from '../documentMarkdown.js'
+import { normalizeMathNotation } from '../markdownPresentation.mjs'
+import {
+  DEFAULT_CHAT_CONTROLS,
+  displaySessionTitle,
+  filterSlashOptions,
+  mergeChatControls,
+  slashOptions,
+  type ChatControls,
+  type SlashOption,
+} from '../chatControls'
+import { useResizable } from '../hooks/useResizable'
+import { MermaidDiagram } from '../components/MermaidDiagram'
 
 function formatRelativeTime(isoDate: string): string {
+  if (!isoDate) return ''
   try {
+    let normalized = isoDate.replace(' ', 'T')
+    if (!normalized.endsWith('Z') && !/[+-]\d{2}(?::?\d{2})?$/.test(normalized)) {
+      normalized += 'Z'
+    }
+    const time = new Date(normalized).getTime()
+    if (Number.isNaN(time)) return ''
     const now = Date.now()
-    const time = new Date(isoDate).getTime()
-    if (isNaN(time)) return ''
     const diff = Math.max(0, Math.floor((now - time) / 1000))
     if (diff < 60) return 'Vừa xong'
     if (diff < 3600) return `${Math.floor(diff / 60)}m`
@@ -55,13 +82,100 @@ function formatRelativeTime(isoDate: string): string {
     return ''
   }
 }
-import type { ChatMessage, ChatSession, Citation } from '../types'
+
+function citationHref(citation: Citation): { href: string; title: string } {
+  // Drive citations open the in-app reader so the user can inspect the exact
+  // indexed chunk. Gmail and local-source citations have different readers;
+  // sending those IDs through /#/drive silently opened the wrong screen.
+  const isGmail = citation.web_view_link?.startsWith('https://mail.google.com/')
+  const isLocal = citation.file_id.startsWith('local:')
+  if ((isGmail || isLocal) && citation.web_view_link) {
+    return {
+      href: citation.web_view_link,
+      title: isGmail ? 'Mở đúng chuỗi email trong Gmail' : 'Mở nội dung nguồn local',
+    }
+  }
+  return {
+    href: `/#/drive?file=${encodeURIComponent(citation.file_id)}${citation.page_number ? `&page=${citation.page_number}` : ''}`,
+    title: 'Mở đúng đoạn nguồn trong trình đọc Veridra',
+  }
+}
+import type { ChatMessage, ChatSession, Citation, ProviderCapacity } from '../types'
+
+interface SessionTopicMeta {
+  type: 'briefing' | 'mail' | 'sheets' | 'docs' | 'compute' | 'chat'
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  accentClass: 'amber' | 'emerald' | 'cyan' | 'indigo' | 'violet'
+}
+
+function getSessionTopicMeta(title: string, id: string): SessionTopicMeta {
+  const lower = (title || '').toLowerCase()
+  if (/bản tin|briefing|thời tiết|tin tức/i.test(lower)) {
+    return {
+      type: 'briefing',
+      label: 'Bản tin sáng',
+      icon: WeatherSunny16Regular,
+      accentClass: 'amber',
+    }
+  }
+  if (/gmail|hộp thư|email|thư điện tử|quét thư/i.test(lower)) {
+    return {
+      type: 'mail',
+      label: 'Gmail & Thư',
+      icon: Mail16Regular,
+      accentClass: 'amber',
+    }
+  }
+  if (/sheet|bảng tính|excel|csv|xlsx|xls|dữ liệu|thống kê|doanh thu|bảng biểu/i.test(lower)) {
+    return {
+      type: 'sheets',
+      label: 'Bảng tính Sheets',
+      icon: Table16Regular,
+      accentClass: 'emerald',
+    }
+  }
+  if (/doc|tài liệu|drive|tệp|file|văn bản|pdf|hợp đồng/i.test(lower)) {
+    return {
+      type: 'docs',
+      label: 'Tài liệu Drive',
+      icon: DocumentText16Regular,
+      accentClass: 'cyan',
+    }
+  }
+  if (/giả lập|mô phỏng|simulation/i.test(lower)) {
+    return {
+      type: 'compute',
+      label: 'Giả lập AI',
+      icon: Brain16Regular,
+      accentClass: 'indigo',
+    }
+  }
+  if (/tính toán|tính|toán|công thức|phân tích|thuật toán|kịch bản/i.test(lower)) {
+    return {
+      type: 'compute',
+      label: 'Tính & Công thức',
+      icon: Calculator16Regular,
+      accentClass: 'indigo',
+    }
+  }
+
+  // Fallback: deterministic variety based on session id or title
+  const seed = (id || title || 'chat').split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0)
+  const variants: SessionTopicMeta[] = [
+    { type: 'chat', label: 'Hội thoại AI', icon: Sparkle16Regular, accentClass: 'cyan' },
+    { type: 'chat', label: 'Trợ lý Veridra', icon: Bot16Regular, accentClass: 'violet' },
+    { type: 'chat', label: 'Hỏi đáp AI', icon: Chat16Regular, accentClass: 'indigo' },
+  ]
+  return variants[seed % variants.length]!
+}
 
 interface ChatResult {
   proposals?: Proposal[]
   session_id: string
   message_id: string
   answer: string
+  status: 'completed' | 'incomplete'
   citations: Citation[]
   trace: Array<Record<string, unknown>>
 }
@@ -73,22 +187,76 @@ const prompts = [
   'Tôi đã lưu sở thích trình bày nào?',
 ]
 
+
 interface ChatPageProps {
   onBusyChange?: (busy: boolean) => void
+  isActive?: boolean
 }
 
-export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
+type FeedbackReason = 'incorrect' | 'missing_source' | 'hard_to_follow' | 'too_short' | 'too_long' | 'other'
+const feedbackReasons: Array<{id: FeedbackReason; label: string}> = [
+  {id: 'incorrect', label: 'Có thông tin sai'},
+  {id: 'missing_source', label: 'Thiếu hoặc sai nguồn'},
+  {id: 'hard_to_follow', label: 'Khó đọc, khó theo dõi'},
+  {id: 'too_short', label: 'Quá ngắn hoặc thiếu ý'},
+  {id: 'too_long', label: 'Quá dài, lặp ý'},
+  {id: 'other', label: 'Vấn đề khác'},
+]
+
+type ChatSkill = {name: string; title: string}
+type ChatLaunch = {prompt: string; controls: ChatControls}
+type PreparedGmailDraft = {
+  operation_id: string
+  digest: string
+  state: string
+  error_code?: string | null
+  result?: {draft_id?: string; gmail_draft_url?: string} | null
+  preview: {
+    recipient: string
+    subject: string
+    body: string
+    cc?: string
+    bcc?: string
+  }
+}
+
+function sanitizeMarkdown(content: string): string {
+  if (!content) return ''
+  return normalizeMathNotation(content)
+    .replace(/(?:\r?\n){3,}/g, '\n\n')
+    .replace(/^[ \t]*•\s+/gm, '- ')
+}
+
+function cleanProps<T extends Record<string, unknown>>(props: T): Omit<T, 'node'> {
+  const copy = { ...props }
+  delete copy.node
+  return copy as Omit<T, 'node'>
+}
+
+function markdownToDocumentBlocks(markdown: string) {
+  return parseMarkdownDocument(markdown)
+}
+const controlLabels = {
+  source: {drive: 'Drive', rag: 'RAG', gmail: 'Gmail', local: 'Tài liệu local', memory: 'Memory', general: 'Không dữ liệu riêng'},
+  agent: {research: 'Research Agent', communication: 'Communication Agent', study: 'Study Agent', workspace: 'Workspace Agent'},
+  output: {document: 'Google Docs', spreadsheet: 'Google Sheets'},
+  workflow: {source_summary: 'Tóm tắt có nguồn', email_digest: 'Tổng hợp hộp thư', meeting_notes: 'Biên bản họp', study_plan: 'Lộ trình học', budget_tracker: 'Theo dõi ngân sách', compare_sources: 'So sánh nguồn'},
+} as const
+
+export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) {
   const [sessions, setSessions] = useState<ChatSession[]>([])
+  const [sessionCursor, setSessionCursor] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [showAllSessions, setShowAllSessions] = useState(false)
   const [sessionId, setSessionIdState] = useState<string | null>(() => {
     try {
-      return sessionStorage.getItem('drive_agent_active_session') || null
+      return sessionStorage.getItem('drive_agent_session_id') || null
     } catch {
       return null
     }
   })
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [messageCursor, setMessageCursor] = useState<string | null>(null)
   const [input, setInputState] = useState<string>(() => {
     try {
       return sessionStorage.getItem('drive_agent_draft_input') || ''
@@ -97,12 +265,17 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
     }
   })
   const [busy, setBusy] = useState(false)
+  const [liveProgress, setLiveProgress] = useState<Array<Record<string, unknown>>>([])
   const [briefingBusy, setBriefingBusy] = useState(false)
   const [error, setError] = useState('')
   const [savedMessages, setSavedMessages] = useState<Set<string>>(new Set())
   const [savingMessage, setSavingMessage] = useState<string | null>(null)
   const [exportingDoc, setExportingDoc] = useState<string | null>(null)
   const [preparedDocs, setPreparedDocs] = useState<Record<string, PreparedDocumentExport>>({})
+  const [preparedDrafts, setPreparedDrafts] = useState<Record<string, PreparedGmailDraft>>({})
+  const [createdDrafts, setCreatedDrafts] = useState<Record<string, { draft_id: string; url: string }>>({})
+  const [draftingMessage, setDraftingMessage] = useState<string | null>(null)
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null)
   const [feedbackByMessage, setFeedbackByMessage] = useState<Record<string, 'helpful' | 'not_helpful'>>({})
   const endRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
@@ -111,6 +284,106 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
   const [selectedModel, setSelectedModel] = useState<ModelOption>(AVAILABLE_MODELS[0]!)
   const [modelMenuOpen, setModelMenuOpen] = useState(false)
   const [usageDialogOpen, setUsageDialogOpen] = useState(false)
+  const [capacity, setCapacity] = useState<ProviderCapacity | null>(null)
+  const capacityRequestVersion = useRef(0)
+  const [feedbackTarget, setFeedbackTarget] = useState<string | null>(null)
+  const [feedbackReasonSelection, setFeedbackReasonSelection] = useState<FeedbackReason[]>([])
+  const [feedbackComment, setFeedbackComment] = useState('')
+  const [controls, setControls] = useState<ChatControls>(DEFAULT_CHAT_CONTROLS)
+  const [skills, setSkills] = useState<ChatSkill[]>([])
+  const [slashMenuOpen, setSlashMenuOpen] = useState(false)
+  const [slashIndex, setSlashIndex] = useState(0)
+  const [elapsedSeconds, setElapsedSeconds] = useState(0)
+  const timerRef = useRef<number | null>(null)
+  const abortControllerRef = useRef<AbortController | null>(null)
+
+  function stopGeneration() {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort()
+      abortControllerRef.current = null
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    setBusy(false)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current)
+      if (abortControllerRef.current) abortControllerRef.current.abort()
+    }
+  }, [])
+
+  const estimatedSessionTokens = useMemo(() => {
+    const charCount = messages.reduce((acc, m) => acc + m.content.length, 0)
+    return Math.round(charCount / 3.5)
+  }, [messages])
+
+  async function loadCapacity() {
+    const version = ++capacityRequestVersion.current
+    try {
+      const next = await api<ProviderCapacity>('/api/settings/providers/gemini/status')
+      if (version === capacityRequestVersion.current) setCapacity(next)
+    } catch {
+      if (version === capacityRequestVersion.current) setCapacity(null)
+    }
+  }
+
+  useEffect(() => {
+    if (!isActive) return
+    void loadCapacity()
+    const timer = window.setInterval(() => void loadCapacity(), 60_000)
+    const changing = () => { capacityRequestVersion.current++; setCapacity(null) }
+    const changed = () => { void loadCapacity() }
+    window.addEventListener('veridra-credential-changing', changing)
+    window.addEventListener('veridra-credential-changed', changed)
+    return () => {
+      window.clearInterval(timer)
+      window.removeEventListener('veridra-credential-changing', changing)
+      window.removeEventListener('veridra-credential-changed', changed)
+    }
+  }, [isActive])
+
+
+  useEffect(() => {
+    const applyLaunch = (detail: ChatLaunch) => {
+      if (!detail?.prompt || !detail?.controls) return
+      setInputState(detail.prompt)
+      setControls(detail.controls)
+      setSlashMenuOpen(false)
+      try {
+        sessionStorage.setItem('drive_agent_draft_input', detail.prompt)
+        sessionStorage.removeItem('drive_agent_chat_launch')
+      } catch { /* storage is optional */ }
+      window.setTimeout(() => inputRef.current?.focus(), 0)
+    }
+    const onLaunch = (event: Event) => applyLaunch((event as CustomEvent<ChatLaunch>).detail)
+    window.addEventListener('driveagent:chat-launch', onLaunch)
+    try {
+      const stored = sessionStorage.getItem('drive_agent_chat_launch')
+      if (stored) applyLaunch(JSON.parse(stored) as ChatLaunch)
+    } catch { /* malformed or unavailable storage is ignored */ }
+    return () => window.removeEventListener('driveagent:chat-launch', onLaunch)
+  }, [])
+
+  const { size: railWidth, isDragging: isRailDragging, resizerProps: railResizerProps } = useResizable({
+    initialSize: 280,
+    minSize: 200,
+    maxSize: 480,
+    direction: 'horizontal',
+    storageKey: 'driveagent_chat_rail_width',
+  })
+  const [zoomedDiagram, setZoomedDiagram] = useState<string | null>(null)
+  const [zoomedImage, setZoomedImage] = useState<{ src: string; alt: string } | null>(null)
+
+  const allSlashOptions = useMemo(() => slashOptions(skills), [skills])
+  const slashQuery = input.startsWith('/') ? input.slice(1) : ''
+  const visibleSlashOptions = useMemo(
+    () => filterSlashOptions(allSlashOptions, slashQuery),
+    [allSlashOptions, slashQuery],
+  )
 
   const setInput = (val: string) => {
     setInputState(val)
@@ -127,14 +400,126 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
 
   const setSessionId = (id: string | null) => {
     setSessionIdState(id)
+    // Errors belong to the request/session that produced them. Do not carry a
+    // stale RAG/Drive error into a different conversation.
+    setError('')
     try {
       if (id) {
-        sessionStorage.setItem('drive_agent_active_session', id)
+        sessionStorage.setItem('drive_agent_session_id', id)
       } else {
-        sessionStorage.removeItem('drive_agent_active_session')
+        sessionStorage.removeItem('drive_agent_session_id')
       }
     } catch {
       // ignore
+    }
+  }
+
+  const [isPickerOpen, setIsPickerOpen] = useState(false)
+  const pickerRef = useRef<HTMLDivElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (!isPickerOpen) return
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      if (pickerRef.current && e.target && !pickerRef.current.contains(e.target as Node)) {
+        setIsPickerOpen(false)
+      }
+    }
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setIsPickerOpen(false)
+        triggerRef.current?.focus()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    document.addEventListener('keydown', handleKeyDown)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isPickerOpen])
+
+  useEffect(() => {
+    if (isPickerOpen) {
+      requestAnimationFrame(() => {
+        const activeItem = pickerRef.current?.querySelector<HTMLButtonElement>('.session-picker-item--active')
+        const firstItem = pickerRef.current?.querySelector<HTMLButtonElement>('.session-picker-item')
+        ;(activeItem || firstItem)?.focus()
+      })
+    }
+  }, [isPickerOpen])
+
+  const currentSession = useMemo(() => sessions.find((s) => s.id === sessionId), [sessions, sessionId])
+  const currentSessionTitle = sessionId
+    ? (currentSession ? displaySessionTitle(currentSession.title) : 'Cuộc trò chuyện')
+    : 'Cuộc trò chuyện mới'
+
+  const handleSelectSession = (id: string | null) => {
+    if (busy) return
+    if (id === null) {
+      setSessionId(null)
+      setMessages([])
+      setError('')
+    } else if (id !== sessionId) {
+      setSessionId(id)
+      setMessages([])
+      setError('')
+    }
+    setIsPickerOpen(false)
+    triggerRef.current?.focus()
+  }
+
+  const handleSelectRailSession = (id: string) => {
+    if (busy) return
+    if (id !== sessionId) {
+      setSessionId(id)
+      setMessages([])
+      setError('')
+    }
+  }
+
+  const handleMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      setIsPickerOpen(false)
+      triggerRef.current?.focus()
+      return
+    }
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      const focusableItems = Array.from(
+        e.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+      )
+      if (focusableItems.length === 0) return
+      const activeEl = document.activeElement as HTMLButtonElement | null
+      const currentIndex = activeEl ? focusableItems.indexOf(activeEl) : -1
+      let nextIndex = 0
+      if (e.key === 'ArrowDown') {
+        nextIndex = currentIndex < focusableItems.length - 1 ? currentIndex + 1 : 0
+      } else {
+        nextIndex = currentIndex > 0 ? currentIndex - 1 : focusableItems.length - 1
+      }
+      focusableItems[nextIndex]?.focus()
+      return
+    }
+    if (e.key === 'Home') {
+      e.preventDefault()
+      const focusableItems = Array.from(
+        e.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+      )
+      focusableItems[0]?.focus()
+      return
+    }
+    if (e.key === 'End') {
+      e.preventDefault()
+      const focusableItems = Array.from(
+        e.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+      )
+      focusableItems[focusableItems.length - 1]?.focus()
+      return
     }
   }
 
@@ -143,13 +528,26 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
   }, [busy, briefingBusy, onBusyChange])
 
   useEffect(() => {
-    api<ChatSession[]>('/api/chat/sessions').then(setSessions)
-      .catch(() => setError('Chưa tải được lịch sử. Bạn vẫn có thể bắt đầu cuộc trò chuyện mới.'))
+    let mounted = true
+    api<{items: ChatSession[]; next_cursor: string | null}>('/api/chat/sessions-page')
+      .then(data => { if (mounted) { setSessions(data.items); setSessionCursor(data.next_cursor) } })
+      .catch(() => { if (mounted) setError('Chưa tải được lịch sử. Bạn vẫn có thể bắt đầu cuộc trò chuyện mới.') })
+    return () => { mounted = false }
   }, [])
+
+  useEffect(() => {
+    if (!isActive) return
+    let active = true
+    api<{data: {items: ChatSkill[]}}>('/api/skills')
+      .then(response => { if (active) setSkills(response.data.items) })
+      .catch(() => { if (active) setSkills([]) })
+    return () => { active = false }
+  }, [isActive])
 
   useEffect(() => {
     if (!sessionId) {
       setMessages([])
+      setMessageCursor(null)
       return
     }
     if (freshlyCreatedSession.current === sessionId) {
@@ -157,11 +555,37 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
       return
     }
     let active = true
-    api<ChatMessage[]>(`/api/chat/sessions/${sessionId}/messages`)
-      .then((rows) => { if (active) setMessages(rows) })
+    api<{items: ChatMessage[]; next_cursor: string | null}>(`/api/chat/sessions/${sessionId}/messages-page`)
+      .then((page) => { if (active) { setMessages(page.items); setMessageCursor(page.next_cursor) } })
       .catch((caught: ApiError) => { if (active) setError(caught.message) })
     return () => { active = false }
   }, [sessionId])
+
+  async function loadOlderMessages() {
+    if (!sessionId || !messageCursor) return
+    try {
+      const page = await api<{items: ChatMessage[]; next_cursor: string | null}>(
+        `/api/chat/sessions/${sessionId}/messages-page?cursor=${encodeURIComponent(messageCursor)}`,
+      )
+      setMessages((current) => [...page.items, ...current])
+      setMessageCursor(page.next_cursor)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Không tải được tin nhắn cũ hơn.')
+    }
+  }
+
+  async function loadOlderSessions() {
+    if (!sessionCursor) return
+    try {
+      const page = await api<{items: ChatSession[]; next_cursor: string | null}>(
+        `/api/chat/sessions-page?cursor=${encodeURIComponent(sessionCursor)}`,
+      )
+      setSessions((current) => [...current, ...page.items])
+      setSessionCursor(page.next_cursor)
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Không tải được lịch sử cũ hơn.')
+    }
+  }
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'auto', block: 'nearest' })
@@ -175,45 +599,128 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
     setInput('')
     setError('')
     setBusy(true)
+    const startTime = Date.now()
+    setElapsedSeconds(0)
+    if (timerRef.current) clearInterval(timerRef.current)
+    timerRef.current = window.setInterval(() => {
+      setElapsedSeconds(Number(((Date.now() - startTime) / 1000).toFixed(1)))
+    }, 100)
+
+    const controller = new AbortController()
+    abortControllerRef.current = controller
+    const executionId = crypto.randomUUID()
+    setLiveProgress([])
+    let progressPending = false
+    const progressTimer = window.setInterval(() => {
+      if (progressPending || controller.signal.aborted) return
+      progressPending = true
+      api<{events: Array<Record<string, unknown>>}>(`/api/chat/progress/${executionId}`, {signal: controller.signal})
+        .then(data => { if (!controller.signal.aborted) setLiveProgress(data.events) })
+        .catch(() => { /* Progress outage must not fail the user's chat. */ })
+        .finally(() => { progressPending = false })
+    }, 1200)
+
     const optimistic: ChatMessage = {
       id: `local-${Date.now()}`,
       role: 'user',
       content,
       citations: [],
       trace: [],
+      status: 'running',
       created_at: new Date().toISOString(),
     }
     setMessages((current) => [...current, optimistic])
     try {
       const result = await api<ChatResult>('/api/chat', {
         method: 'POST',
+        headers: {'X-Request-ID': executionId},
+        signal: controller.signal,
         body: JSON.stringify({
           message: content,
           session_id: sessionId,
           model: selectedModel.id,
+          controls,
         }),
       })
+      if (controller.signal.aborted) return
+      const durationMs = Date.now() - startTime
       if (!sessionId) freshlyCreatedSession.current = result.session_id
       setSessionId(result.session_id)
       setMessages((current) => [
-        ...current,
+          ...current.map(m => m.id === optimistic.id ? { ...m, status: 'completed' as const } : m),
         {
           id: result.message_id,
           role: 'assistant',
           content: result.answer,
+          status: result.status,
           citations: result.citations,
           trace: result.trace,
           proposals: result.proposals,
           created_at: new Date().toISOString(),
+          latency_ms: durationMs,
         },
       ])
-      api<ChatSession[]>('/api/chat/sessions').then(setSessions)
+      api<{items: ChatSession[]; next_cursor: string | null}>('/api/chat/sessions-page')
+        .then((page) => { setSessions(page.items); setSessionCursor(page.next_cursor) })
         .catch(() => setError('Đã nhận câu trả lời, nhưng chưa cập nhật được danh sách lịch sử.'))
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Không thể gửi câu hỏi.')
+      const isAborted = controller.signal.aborted ||
+        (caught instanceof Error && caught.name === 'AbortError') ||
+        (caught instanceof DOMException && caught.name === 'AbortError')
+      if (isAborted) {
+        setMessages((current) => current.filter(message => message.id !== optimistic.id))
+        setInput(content)
+        setError('Đã dừng. Nội dung đã được giữ lại trong ô nhập.')
+      } else {
+        setMessages((current) => current.map(message =>
+          message.id === optimistic.id ? {...message, status: 'failed'} : message
+        ))
+        setInput(content)
+        setError(caught instanceof Error ? caught.message : 'Không thể gửi câu hỏi.')
+      }
     } finally {
+      clearInterval(progressTimer)
+      controller.abort()
+      abortControllerRef.current = null
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+        timerRef.current = null
+      }
       setBusy(false)
+      void loadCapacity()
     }
+  }
+
+  function selectSlashOption(option: SlashOption) {
+    setControls(current => mergeChatControls(current, option.patch))
+    if (input.startsWith('/')) setInput('')
+    setSlashMenuOpen(false)
+    setSlashIndex(0)
+    requestAnimationFrame(() => inputRef.current?.focus())
+  }
+
+  function clearControl(key: keyof ChatControls) {
+    setControls(current => {
+      if (key === 'skill_name') {
+        const next = {...current}
+        delete next.skill_name
+        return next
+      }
+      return {...current, [key]: DEFAULT_CHAT_CONTROLS[key]}
+    })
+  }
+
+  const activeControls: Array<{key: keyof ChatControls; label: string}> = []
+  if (controls.source !== 'auto') activeControls.push({key: 'source', label: controlLabels.source[controls.source]})
+  if (controls.agent !== 'auto') activeControls.push({key: 'agent', label: controlLabels.agent[controls.agent]})
+  if (controls.workflow !== 'auto') activeControls.push({key: 'workflow', label: controlLabels.workflow[controls.workflow]})
+  if (controls.output !== 'chat') activeControls.push({key: 'output', label: controlLabels.output[controls.output]})
+  if (controls.skill_name) {
+    const names = controls.skill_name.split('+')
+    activeControls.push({
+      key: 'skill_name',
+      label: names.length > 1 ? `Chuỗi ${names.length} Skill: ${names.join(' → ')}` : `Skill: ${names[0]}`,
+    })
   }
 
   async function deleteSession(id: string) {
@@ -234,22 +741,28 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
     setBriefingBusy(true)
     setError('')
     try {
-      const result = await api<{ session_id: string; title: string; answer: string; message_id: string }>(
-        '/api/chat/morning-briefing',
-        { method: 'POST' }
-      )
+      const result = await api<{
+        session_id: string
+        title: string
+        summary?: string
+        answer?: string
+        message_id: string
+      }>('/api/chat/morning-briefing', { method: 'POST' })
+      const content = result.answer || result.summary || ''
+      freshlyCreatedSession.current = result.session_id
       setSessionId(result.session_id)
       setMessages([
         {
           id: result.message_id,
           role: 'assistant',
-          content: result.answer,
+          content,
           citations: [],
           trace: [],
           created_at: new Date().toISOString(),
         },
       ])
-      api<ChatSession[]>('/api/chat/sessions').then(setSessions).catch(() => {})
+      api<{items: ChatSession[]; next_cursor: string | null}>('/api/chat/sessions-page')
+        .then((page) => { setSessions(page.items); setSessionCursor(page.next_cursor) }).catch(() => {})
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Không thể tạo bản tin sáng.')
     } finally {
@@ -262,7 +775,7 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
     setError('')
     try {
       const firstLine = (message.content.split('\n')[0] ?? '').replace(/^#+\s*/, '').slice(0, 50).trim()
-      const title = firstLine ? `DriveAgent: ${firstLine}` : `Tài liệu DriveAgent - ${new Date().toLocaleDateString('vi-VN')}`
+      const title = firstLine ? `Veridra: ${firstLine}` : `Tài liệu Veridra - ${new Date().toLocaleDateString('vi-VN')}`
       const result = await api<{
         data: { operation_id: string; digest: string; state: string }
       }>(
@@ -274,7 +787,18 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
             action: 'create',
             document: {
               title,
-              blocks: [{ text: message.content, style: 'NORMAL_TEXT' }],
+              blocks: [
+                ...markdownToDocumentBlocks(message.content),
+                ...(message.citations.length ? [
+                  {kind: 'paragraph' as const, text: 'Nguồn', style: 'HEADING_2' as const, list_style: 'none' as const},
+                  ...message.citations.map((citation, index) => ({
+                    kind: 'paragraph' as const,
+                    text: `[${index + 1}] ${citation.file_name}${citation.web_view_link ? ` — ${citation.web_view_link}` : ''}`,
+                    style: 'NORMAL_TEXT' as const,
+                    list_style: 'bullet' as const,
+                  })),
+                ] : []),
+              ],
             },
           }),
         }
@@ -288,6 +812,113 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
     } finally {
       setExportingDoc(null)
     }
+  }
+
+  async function createDraftFromMessage(message: ChatMessage) {
+    setDraftingMessage(message.id)
+    setError('')
+    try {
+      const firstLine = (message.content.split('\n')[0] ?? '').replace(/^#+\s*/, '').slice(0, 60).trim()
+      const subject = firstLine ? `Veridra: ${firstLine}` : `Thông tin trao đổi - ${new Date().toLocaleDateString('vi-VN')}`
+      const requestKey = `chat-draft-${crypto.randomUUID()}`
+      const res = await api<{data: PreparedGmailDraft}>('/api/gmail/draft', {
+        method: 'POST',
+        body: JSON.stringify({
+          request_key: requestKey,
+          draft: {recipient: '', subject, body: message.content},
+        }),
+      })
+      if (res.data.state === 'succeeded' && res.data.result?.draft_id) {
+        setCreatedDrafts(prev => ({
+          ...prev,
+          [message.id]: {
+            draft_id: res.data.result!.draft_id!,
+            url: res.data.result!.gmail_draft_url ?? 'https://mail.google.com/mail/u/0/#drafts',
+          },
+        }))
+      } else {
+        setPreparedDrafts(prev => ({...prev, [message.id]: res.data}))
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Không thể chuẩn bị thư nháp Gmail.')
+    } finally {
+      setDraftingMessage(null)
+    }
+  }
+
+  async function approveDraftFromMessage(message: ChatMessage) {
+    const prepared = preparedDrafts[message.id]
+    if (!prepared) return
+    setDraftingMessage(message.id)
+    setError('')
+    try {
+      const res = await api<{draft_id: string; gmail_draft_url: string}>(
+        '/api/gmail/draft/approve',
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            operation_id: prepared.operation_id,
+            approved_digest: prepared.digest,
+          }),
+        },
+      )
+      setCreatedDrafts(prev => ({
+        ...prev,
+        [message.id]: {draft_id: res.draft_id, url: res.gmail_draft_url},
+      }))
+      setPreparedDrafts(prev => {
+        const next = {...prev}
+        delete next[message.id]
+        return next
+      })
+    } catch (e) {
+      try {
+        const status = await api<{
+          state: string
+          error_code?: string | null
+          result?: {draft_id?: string; gmail_draft_url?: string} | null
+        }>(`/api/gmail/operations/${prepared.operation_id}`)
+        if (status.state === 'succeeded' && status.result?.draft_id) {
+          setCreatedDrafts(prev => ({
+            ...prev,
+            [message.id]: {
+              draft_id: status.result!.draft_id!,
+              url: status.result!.gmail_draft_url ?? 'https://mail.google.com/mail/u/0/#drafts',
+            },
+          }))
+          setPreparedDrafts(prev => {
+            const next = {...prev}
+            delete next[message.id]
+            return next
+          })
+          return
+        }
+        setPreparedDrafts(prev => ({
+          ...prev,
+          [message.id]: {...prepared, state: status.state, error_code: status.error_code},
+        }))
+        setError(
+          status.state === 'uncertain'
+            ? 'Gmail chưa xác nhận kết quả. Không bấm tạo lại; hãy kiểm tra thư nháp trong Gmail.'
+            : (e instanceof Error ? e.message : 'Không thể xác nhận thao tác Gmail.'),
+        )
+      } catch {
+        setError(
+          'Không nhận được xác nhận từ Gmail và chưa kiểm tra được trạng thái. Hãy kiểm tra Gmail trước khi thử lại.',
+        )
+      }
+    } finally {
+      setDraftingMessage(null)
+    }
+  }
+
+  function copyMessageContent(message: ChatMessage) {
+    navigator.clipboard.writeText(message.content).then(() => {
+      setCopiedMessageId(message.id)
+      setTimeout(() => setCopiedMessageId(null), 2000)
+    }).catch(() => {
+      setError('Không thể sao chép vào bộ nhớ tạm.')
+    })
   }
 
   async function saveAnswer(message: ChatMessage) {
@@ -304,14 +935,22 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
     finally { setSavingMessage(null) }
   }
 
-  async function rateAnswer(messageId: string, rating: 'helpful' | 'not_helpful') {
+  async function rateAnswer(
+    messageId: string,
+    rating: 'helpful' | 'not_helpful',
+    reasons: FeedbackReason[] = [],
+    comment = '',
+  ) {
     setError('')
     try {
       await api(`/api/harness/feedback/${messageId}`, {
         method: 'POST',
-        body: JSON.stringify({rating, reasons: []}),
+        body: JSON.stringify({rating, reasons, comment: comment.trim() || undefined}),
       })
       setFeedbackByMessage(current => ({...current, [messageId]: rating}))
+      setFeedbackTarget(null)
+      setFeedbackReasonSelection([])
+      setFeedbackComment('')
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Chưa lưu được đánh giá.')
     }
@@ -324,28 +963,36 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
   const remainingCount = filteredSessions.length - 10
 
   return (
-    <div className="chat-layout">
-      <aside className="session-rail" aria-label="Lịch sử trò chuyện">
+    <div
+      className="chat-layout"
+      style={{ ['--chat-rail-width' as string]: `${railWidth}px` }}
+    >
+      <aside className="session-rail" aria-label="Lịch sử trò chuyện" style={{ width: `${railWidth}px` }}>
         <div className="rail-top-actions">
           <p className="rail-heading">Góc làm việc</p>
-          <Button
-            appearance="primary"
+          <button
+            type="button"
+            className="new-chat-btn"
             disabled={busy || briefingBusy}
             onClick={() => { setSessionId(null); setMessages([]); setError('') }}
-            style={{ width: '100%', marginBottom: '8px' }}
           >
+            <span className="new-chat-btn__icon">✦</span>
             Cuộc trò chuyện mới
-          </Button>
-          <Button
-            appearance="outline"
-            icon={briefingBusy ? <Spinner size="tiny" /> : <WeatherSunny20Regular />}
+          </button>
+          <button
+            type="button"
+            className={`briefing-btn${briefingBusy ? ' briefing-btn--busy' : ''}`}
             disabled={busy || briefingBusy}
             onClick={() => void fetchMorningBriefing()}
-            style={{ width: '100%', marginBottom: '12px' }}
             title="Tự động quét Gmail chưa đọc và tài liệu Drive mới cập nhật tối qua"
           >
+            {briefingBusy ? (
+              <Spinner size="tiny" />
+            ) : (
+              <span className="briefing-btn__sparkle">✨</span>
+            )}
             {briefingBusy ? 'Đang tổng hợp…' : 'Bản tin sáng'}
-          </Button>
+          </button>
           <Input
             className="session-search-input"
             aria-label="Tìm kiếm trò chuyện"
@@ -369,53 +1016,66 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
             </p>
           ) : null}
 
-          {displayedSessions.map((session) => (
-            <div
-              key={session.id}
-              className={`session-card ${sessionId === session.id ? 'session-card--active' : ''}`}
-              onClick={() => setSessionId(session.id)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault()
-                  setSessionId(session.id)
-                }
-              }}
-            >
-              <div className="session-card__body">
-                <div className="session-card__top">
-                  <span className="session-card__title" title={session.title}>
-                    {session.title}
-                  </span>
-                  <span className="session-card__time">
-                    {formatRelativeTime(session.updated_at)}
-                  </span>
-                </div>
-                <div className="session-card__bottom">
-                  <span className="session-card__tag">
-                    <Chat16Regular /> DriveAgent
-                  </span>
-                  {sessionId === session.id ? (
-                    <span className="session-card__active-dot" title="Đang mở" />
-                  ) : null}
-                </div>
-              </div>
-              <button
-                type="button"
-                className="session-card__delete"
-                title="Xóa cuộc trò chuyện này"
-                aria-label={`Xóa ${session.title}`}
-                disabled={busy}
-                onClick={(e) => {
-                  e.stopPropagation()
-                  void deleteSession(session.id)
+          {displayedSessions.map((session) => {
+            const meta = getSessionTopicMeta(session.title, session.id)
+            const MetaIcon = meta.icon
+            const isActive = sessionId === session.id
+
+            return (
+              <div
+                key={session.id}
+                className={`session-card session-card--${meta.accentClass} ${isActive ? 'session-card--active' : ''}`}
+                onClick={() => handleSelectRailSession(session.id)}
+                role="button"
+                tabIndex={0}
+                aria-current={isActive ? 'true' : undefined}
+                onKeyDown={(e) => {
+                  if (e.target !== e.currentTarget) return
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    handleSelectRailSession(session.id)
+                  }
                 }}
               >
-                <Delete16Regular />
-              </button>
-            </div>
-          ))}
+                <div className="session-card__body">
+                  <div className="session-card__top">
+                    <span className="session-card__title" title={displaySessionTitle(session.title)}>
+                      {displaySessionTitle(session.title)}
+                    </span>
+                    <span className="session-card__time">
+                      {formatRelativeTime(session.updated_at)}
+                    </span>
+                  </div>
+                  <div className="session-card__bottom">
+                    <span className={`session-card__tag session-card__tag--${meta.accentClass}`}>
+                      <MetaIcon className="session-card__tag-icon" /> {meta.label}
+                    </span>
+                    {isActive ? (
+                      <span className="session-card__active-dot" title="Đang mở" aria-label="Đang mở" />
+                    ) : null}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="session-card__delete"
+                  title="Xóa cuộc trò chuyện này"
+                  aria-label={`Xóa ${displaySessionTitle(session.title)}`}
+                  disabled={busy}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    void deleteSession(session.id)
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.stopPropagation()
+                    }
+                  }}
+                >
+                  <Delete16Regular />
+                </button>
+              </div>
+            )
+          })}
 
           {filteredSessions.length > 10 ? (
             <Button
@@ -427,30 +1087,152 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
               {showAllSessions ? 'Thu gọn (chỉ hiện 10 phiên gần nhất)' : `Xem thêm (${remainingCount} cuộc trò chuyện cũ hơn)`}
             </Button>
           ) : null}
+          {sessionCursor ? <Button appearance="subtle" size="small" className="session-expand-btn" onClick={() => void loadOlderSessions()}>
+            Tải thêm lịch sử
+          </Button> : null}
         </div>
       </aside>
 
+      <div
+        className={`split-resizer ${isRailDragging ? 'split-resizer--dragging' : ''}`}
+        title="Kéo sang trái/phải để thay đổi kích thước danh sách trò chuyện. Bấm đúp để đặt lại."
+        aria-label="Thanh kéo điều chỉnh độ rộng lịch sử trò chuyện"
+        {...railResizerProps}
+      />
+
       <section className="chat-main" aria-label="Nội dung trò chuyện">
-        <Select
-          className="session-picker"
-          aria-label="Chọn cuộc trò chuyện"
-          value={sessionId ?? ''}
-          disabled={busy}
-          onChange={(_, data) => { setSessionId(data.value || null); setMessages([]); setError('') }}
-        >
-          <option value="">Cuộc trò chuyện mới</option>
-          {sessions.map((session) => <option key={session.id} value={session.id}>{session.title}</option>)}
-        </Select>
+        <div className="session-picker-wrap" ref={pickerRef}>
+          <button
+            ref={triggerRef}
+            type="button"
+            className={`session-picker-trigger ${isPickerOpen ? 'session-picker-trigger--open' : ''}`}
+            aria-label="Chọn cuộc trò chuyện"
+            aria-haspopup="listbox"
+            aria-expanded={isPickerOpen}
+            aria-controls="session-picker-menu"
+            disabled={busy}
+            onClick={() => {
+              if (!busy) setIsPickerOpen((prev) => !prev)
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                e.preventDefault()
+                if (!busy) setIsPickerOpen(true)
+              }
+            }}
+          >
+            <span className="session-picker-icon">
+              {sessionId ? <Chat16Regular /> : <ArrowTrendingLines20Regular />}
+            </span>
+            <span className="session-picker-title" title={currentSessionTitle}>
+              {currentSessionTitle}
+            </span>
+            <span
+              className={`session-picker-chevron ${isPickerOpen ? 'session-picker-chevron--open' : ''}`}
+              aria-hidden="true"
+            >
+              ⌄
+            </span>
+          </button>
+
+          {isPickerOpen && (
+            <div
+              id="session-picker-menu"
+              className="session-picker-menu"
+              role="listbox"
+              aria-label="Danh sách cuộc trò chuyện"
+              aria-activedescendant={sessionId ? `session-picker-opt-${sessionId}` : 'session-picker-opt-new'}
+              onKeyDown={handleMenuKeyDown}
+            >
+              <div className="session-picker-menu__header" role="presentation">
+                <span className="session-picker-menu__header-title">Chọn cuộc trò chuyện</span>
+                <span className="session-picker-menu__header-count">{sessions.length} phiên</span>
+              </div>
+
+              <button
+                id="session-picker-opt-new"
+                type="button"
+                className={`session-picker-item session-picker-item--new ${sessionId === null ? 'session-picker-item--active' : ''}`}
+                role="option"
+                aria-selected={sessionId === null}
+                disabled={busy}
+                onClick={() => handleSelectSession(null)}
+              >
+                <span className="session-picker-item-icon session-picker-item-icon--new">✦</span>
+                <div className="session-picker-item-content">
+                  <div className="session-picker-item-title">+ Cuộc trò chuyện mới</div>
+                  <div className="session-picker-item-sub">Khởi tạo ngữ cảnh trò chuyện hoàn toàn mới</div>
+                </div>
+                {sessionId === null && <span className="session-picker-item-active-dot" title="Đang mở" />}
+              </button>
+
+              <div className="session-picker-divider" role="separator" />
+
+              <div className="session-picker-list" role="presentation">
+                {sessions.length === 0 ? (
+                  <div className="session-picker-empty" role="presentation">Chưa có lịch sử cuộc trò chuyện nào</div>
+                ) : (
+                  sessions.map((session) => {
+                    const isSelected = sessionId === session.id
+                    return (
+                      <button
+                        id={`session-picker-opt-${session.id}`}
+                        type="button"
+                        key={session.id}
+                        className={`session-picker-item ${isSelected ? 'session-picker-item--active' : ''}`}
+                        role="option"
+                        aria-selected={isSelected}
+                        disabled={busy}
+                        onClick={() => handleSelectSession(session.id)}
+                      >
+                        <span className="session-picker-item-icon">
+                          <Chat16Regular />
+                        </span>
+                        <div className="session-picker-item-content">
+                          <div className="session-picker-item-title" title={displaySessionTitle(session.title)}>
+                            {displaySessionTitle(session.title)}
+                          </div>
+                          <div className="session-picker-item-sub">
+                            <span className="session-picker-item-time">{formatRelativeTime(session.updated_at) || 'Vừa xong'}</span>
+                            <span className="session-picker-item-bullet">•</span>
+                            <span className="session-picker-item-tag">Veridra</span>
+                          </div>
+                        </div>
+                        {isSelected && <span className="session-picker-item-active-dot" title="Đang mở" />}
+                      </button>
+                    )
+                  })
+                )}
+                {sessionCursor ? (
+                  <button
+                    type="button"
+                    className="session-picker-load-more"
+                    disabled={busy}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      void loadOlderSessions()
+                    }}
+                  >
+                    Tải thêm cuộc trò chuyện cũ hơn…
+                  </button>
+                ) : null}
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="message-scroll" aria-live="polite">
+          {messageCursor ? <Button appearance="subtle" size="small" className="message-load-older" onClick={() => void loadOlderMessages()}>
+            Tải tin nhắn cũ hơn
+          </Button> : null}
           {messages.length === 0 ? (
             <EmptyState
               title="Bạn muốn bắt đầu từ đâu?"
-              description="Nêu việc bạn cần hoàn thành hoặc chọn một gợi ý. DriveAgent sẽ tìm nguồn, giải thích và xin bạn duyệt trước mọi thao tác ghi."
+              description="Nêu việc bạn cần hoàn thành hoặc chọn một gợi ý. Veridra sẽ tìm nguồn, giải thích và xin bạn duyệt trước mọi thao tác ghi."
               action={
                 <div className="prompt-grid">
-                  {prompts.map((prompt) => (
-                    <button type="button" key={prompt} onClick={() => { setInput(prompt); inputRef.current?.focus() }}>
+                  {prompts.map((prompt, index) => (
+                    <button type="button" key={prompt} className={`prompt-card prompt-card--${index}`} onClick={() => { setInput(prompt); inputRef.current?.focus() }}>
                       {prompt}
                     </button>
                   ))}
@@ -461,31 +1243,106 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
             messages.map((message) => (
               <article key={message.id} className={`message message--${message.role}`}>
                 <div className="message__meta">
-                  {message.role === 'assistant' ? 'DriveAgent' : 'Bạn'}
+                  <span>{message.role === 'assistant' ? 'Veridra' : 'Bạn'}</span>
+                  {message.status === 'running' ? ' · Đang xử lý' : ''}
+                  {message.status === 'cancelled' ? ' · Đã dừng' : ''}
+                  {message.status === 'failed' ? ' · Chưa hoàn tất' : ''}
+                  {message.status === 'incomplete' ? ' · Bản nháp chưa đạt yêu cầu định dạng' : ''}
                 </div>
                 <div className="message__content">
                   {message.role === 'assistant' ? (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]} skipHtml components={{
-                      img: ({ alt }) => <span className="omitted-image">[Hình ảnh: {alt || 'không tải tự động'}]</span>,
-                      a: ({ href, children }) => /^https?:\/\//i.test(href ?? '')
-                        ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>
-                        : <span>{children}</span>,
-                    }}>{message.content}</ReactMarkdown>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm]}
+                      skipHtml
+                      components={{
+                        img: ({ src, alt }) => src
+                          ? (
+                            <span
+                              className="image-preview-wrapper"
+                              onClick={() => setZoomedImage({ src: src || '', alt: alt || '' })}
+                              role="button"
+                              tabIndex={0}
+                              onKeyDown={(e) => { if (e.key === 'Enter') setZoomedImage({ src: src || '', alt: alt || '' }) }}
+                              title="Nhấp để phóng to hình ảnh"
+                            >
+                              <img src={src} alt={alt || 'Hình ảnh trong tài liệu'} loading="lazy" />
+                              <span className="image-zoom-hint">🔍 Nhấp phóng to</span>
+                            </span>
+                          )
+                          : <span className="omitted-image">[Hình ảnh không có đường dẫn]</span>,
+                        a: ({ href, children }) => {
+                          const url = href ?? ''
+                          if (/^https?:\/\//i.test(url)) {
+                            return <a href={url} target="_blank" rel="noopener noreferrer">{children}</a>
+                          }
+                          if (/^(?:\/#|\/?#|\/drive|\/api\/drive)/i.test(url)) {
+                            return <a href={url} className="citation-deep-link">{children}</a>
+                          }
+                          return <span>{children}</span>
+                        },
+                        table: ({ children, ...props }) => (
+                          <div className="table-container">
+                            <table className="markdown-table" {...cleanProps(props)}>{children}</table>
+                          </div>
+                        ),
+                        th: ({ children, ...props }) => <th className="markdown-th" {...cleanProps(props)}>{children}</th>,
+                        td: ({ children, ...props }) => <td className="markdown-td" {...cleanProps(props)}>{children}</td>,
+                        pre: ({ children, ...props }) => {
+                          const childArr = Array.isArray(children) ? children : [children]
+                          const isMermaid = childArr.some((c) => isValidElement<{ className?: string }>(c) && typeof c.props?.className === 'string' && c.props.className.includes('language-mermaid'))
+                          if (isMermaid) {
+                            return <div className="mermaid-pre-wrapper">{children}</div>
+                          }
+                          return <pre className="markdown-pre" {...cleanProps(props)}>{children}</pre>
+                        },
+                        code: ({ className, children, ...props }) => {
+                          const match = /language-mermaid/.exec(className || '')
+                          if (match) {
+                            return <MermaidDiagram chart={String(children)} onZoom={setZoomedDiagram} />
+                          }
+                          return (
+                            <code className={className ? `markdown-code ${className}` : 'markdown-inline-code'} {...cleanProps(props)}>
+                              {children}
+                            </code>
+                          )
+                        },
+                      }}
+                    >
+                      {sanitizeMarkdown(message.content)}
+                    </ReactMarkdown>
                   ) : message.content}
                 </div>
+
+                {message.role === 'user' && message.status === 'failed' ? (
+                  <div className="message-retry-draft">
+                    <Button
+                      appearance="outline"
+                      size="small"
+                      icon={<ArrowReset20Regular />}
+                      onClick={() => { setInput(message.content); inputRef.current?.focus() }}
+                    >
+                      Đưa lại vào ô nhập
+                    </Button>
+                    <span>Kiểm tra Skill, nguồn và model trước khi gửi lại.</span>
+                  </div>
+                ) : null}
 
                 {message.citations.length > 0 ? (
                   <div className="citations" aria-label="Nguồn trích dẫn">
                     {message.citations.map((citation, index) => (
                       <a
                         key={`${citation.file_id}-${citation.chunk_index}`}
-                        href={/^https?:\/\//i.test(citation.web_view_link ?? '') ? citation.web_view_link! : undefined}
+                        href={citationHref(citation).href}
                         target="_blank"
                         rel="noreferrer"
                         className="citation-link"
+                        title={citationHref(citation).title}
                       >
                         <DocumentLink24Regular />
-                        <span>[{index + 1}] {citation.file_name}</span>
+                        <span>
+                          [{index + 1}] {citation.file_name}
+                          {citation.page_number ? ` · trang ${citation.page_number}` : ''}
+                        </span>
                       </a>
                     ))}
                   </div>
@@ -495,14 +1352,77 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
                   <ExecutionTrace trace={message.trace} />
                 ) : null}
 
-                {message.proposals?.map(proposal => <CreationProposal key={proposal.id} proposal={proposal} />)}
+                {message.status !== 'incomplete' ? message.proposals?.map(proposal => <CreationProposal key={proposal.id} proposal={proposal} />) : null}
+
+                {preparedDrafts[message.id] ? (
+                  <section className="gmail-draft-review" aria-label="Xem trước thư nháp Gmail">
+                    <div className="gmail-draft-review__heading">Kiểm tra trước khi lưu vào Gmail</div>
+                    <dl>
+                      <div><dt>Người nhận</dt><dd>{preparedDrafts[message.id]!.preview.recipient || 'Chưa đặt người nhận'}</dd></div>
+                      <div><dt>Tiêu đề</dt><dd>{preparedDrafts[message.id]!.preview.subject}</dd></div>
+                    </dl>
+                    <pre>{preparedDrafts[message.id]!.preview.body}</pre>
+                    {preparedDrafts[message.id]!.state !== 'pending' ? (
+                      <p role="status">
+                        Trạng thái: {preparedDrafts[message.id]!.state}
+                        {preparedDrafts[message.id]!.error_code
+                          ? ` · ${preparedDrafts[message.id]!.error_code}`
+                          : ''}
+                      </p>
+                    ) : null}
+                    <div className="gmail-draft-review__actions">
+                      <Button
+                        appearance="primary"
+                        disabled={draftingMessage === message.id || preparedDrafts[message.id]!.state !== 'pending'}
+                        onClick={() => void approveDraftFromMessage(message)}
+                      >
+                        {draftingMessage === message.id ? 'Đang lưu nháp…' : 'Xác nhận lưu thư nháp'}
+                      </Button>
+                      <Button
+                        disabled={draftingMessage === message.id}
+                        onClick={() => setPreparedDrafts(prev => {
+                          const next = {...prev}
+                          delete next[message.id]
+                          return next
+                        })}
+                      >
+                        Hủy
+                      </Button>
+                      {['failed', 'expired'].includes(preparedDrafts[message.id]!.state) ? (
+                        <Button
+                          disabled={draftingMessage === message.id}
+                          onClick={() => void createDraftFromMessage(message)}
+                        >
+                          Chuẩn bị yêu cầu mới
+                        </Button>
+                      ) : null}
+                    </div>
+                  </section>
+                ) : null}
+
+                {createdDrafts[message.id] ? (
+                  <div className="gmail-draft-badge-card">
+                    <div className="gmail-draft-badge-content">
+                      <Mail20Regular primaryFill="var(--colorBrandForeground1)" />
+                      <span>Đã tạo Thư nháp trong Gmail của bạn (Mã: <code>{createdDrafts[message.id]!.draft_id}</code>)</span>
+                    </div>
+                    <a
+                      href={createdDrafts[message.id]!.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="gmail-draft-link-button"
+                    >
+                      Mở trong Gmail ↗
+                    </a>
+                  </div>
+                ) : null}
 
                 {message.role === 'assistant' && (
                   <div className="message-action-toolbar">
                     <Button
                       appearance="subtle"
                       size="small"
-                      disabled={savingMessage !== null || savedMessages.has(message.id)}
+                      disabled={message.status === 'incomplete' || savingMessage !== null || savedMessages.has(message.id)}
                       onClick={() => void saveAnswer(message)}
                     >
                       {savedMessages.has(message.id) ? 'Đã lưu ghi chú' : savingMessage === message.id ? 'Đang lưu…' : 'Lưu ghi chú'}
@@ -511,7 +1431,7 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
                       appearance="subtle"
                       size="small"
                       icon={<DocumentBulletList20Regular />}
-                      disabled={exportingDoc === message.id || Boolean(preparedDocs[message.id])}
+                      disabled={message.status === 'incomplete' || exportingDoc === message.id || Boolean(preparedDocs[message.id])}
                       onClick={() => void exportToGoogleDoc(message)}
                     >
                       {exportingDoc === message.id ? 'Đang chuẩn bị…' : 'Xuất Google Doc'}
@@ -520,13 +1440,24 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
                       appearance="subtle"
                       size="small"
                       icon={<Mail20Regular />}
-                      onClick={() => {
-                        setInput(`Hãy soạn email tóm tắt gửi cho đối tác với nội dung: ${message.content.slice(0, 160)}...`)
-                        inputRef.current?.focus()
-                      }}
+                      disabled={message.status === 'incomplete' || draftingMessage === message.id || Boolean(createdDrafts[message.id]) || Boolean(preparedDrafts[message.id])}
+                      onClick={() => void createDraftFromMessage(message)}
                     >
-                      Soạn gửi Gmail
+                      {draftingMessage === message.id ? 'Đang chuẩn bị…' : createdDrafts[message.id] ? 'Đã tạo nháp Gmail' : 'Chuẩn bị lưu thư nháp'}
                     </Button>
+                    <Button
+                      appearance="subtle"
+                      size="small"
+                      icon={copiedMessageId === message.id ? <Checkmark16Regular /> : <Copy20Regular />}
+                      onClick={() => copyMessageContent(message)}
+                    >
+                      {copiedMessageId === message.id ? 'Đã chép' : 'Sao chép'}
+                    </Button>
+                    {message.latency_ms ? (
+                      <span className="message-latency-pill" title={`Thời gian xử lý: ${(message.latency_ms / 1000).toFixed(1)} giây`}>
+                        ⏱️ {(message.latency_ms / 1000).toFixed(1)}s
+                      </span>
+                    ) : null}
                     <span className="message-feedback" aria-label="Đánh giá câu trả lời">
                       <button
                         type="button"
@@ -538,7 +1469,11 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
                       <button
                         type="button"
                         aria-pressed={feedbackByMessage[message.id] === 'not_helpful'}
-                        onClick={() => void rateAnswer(message.id, 'not_helpful')}
+                        onClick={() => {
+                          setFeedbackTarget(message.id)
+                          setFeedbackReasonSelection([])
+                          setFeedbackComment('')
+                        }}
                       >
                         Chưa ổn
                       </button>
@@ -553,8 +1488,39 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
           )}
 
           {busy ? (
-            <div className="agent-working">
-              <Spinner size="tiny" /> Agent đang xử lý, kiểm tra nguồn và chuẩn bị câu trả lời…
+            <div className="agent-working" role="status" aria-live="polite">
+              <div className="agent-working-header">
+                <div className="agent-working-stopwatch-badge">
+                  <Spinner size="tiny" />
+                  <span className="agent-working-stopwatch-text">⏱️ {elapsedSeconds.toFixed(1)}s</span>
+                </div>
+                <Button
+                  appearance="subtle"
+                  size="small"
+                  icon={<Dismiss16Regular />}
+                  onClick={stopGeneration}
+                  className="agent-stop-button"
+                  title="Ngừng chờ phản hồi trên trình duyệt"
+                >
+                  Ngừng chờ
+                </Button>
+              </div>
+              <span className="agent-working-status-text">
+                {elapsedSeconds < 30
+                  ? 'Đang chờ Agent trả lời…'
+                  : 'Yêu cầu đang mất nhiều thời gian hơn. Bạn có thể tiếp tục chờ hoặc ngừng chờ phản hồi.'}
+              </span>
+              {liveProgress.length > 0 ? <div className="agent-working-events">
+                <strong>Sự kiện thực thi thực tế</strong>
+                <ol>{liveProgress.slice(-6).map((item, index) => <li key={index}>
+                  {item.stage === 'agent_handoff'
+                    ? `${String(item.from)} → ${String(item.to)}: được điều phối`
+                    : item.stage === 'tool'
+                      ? `${String(item.tool)}: ${item.status === 'running' ? 'đang chạy' : String(item.status)}`
+                      : 'Điều phối yêu cầu đang chạy'}
+                </li>)}</ol>
+                <small>Đây là trạng thái agent/tool, không phải suy nghĩ nội bộ. Không có sự kiện A2A nếu yêu cầu không dùng A2A.</small>
+              </div> : null}
             </div>
           ) : null}
           <div ref={endRef} />
@@ -563,6 +1529,11 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
         {error ? (
           <div className="chat-error-banner">
             <ErrorState message={error} />
+            {error.includes('Google chưa cấp quyền cần thiết') ? (
+              <a className="gmail-draft-link-button" href="/api/auth/google?capability=gmail">
+                Cấp quyền tạo thư nháp Gmail
+              </a>
+            ) : null}
             {lastUserPrompt && (
               <Button
                 appearance="outline"
@@ -574,10 +1545,48 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
                 Thử lại câu hỏi vừa rồi
               </Button>
             )}
+            {/quota|API key|Gemini/i.test(error) ? (
+              <Button appearance="subtle" size="small" onClick={() => { window.location.hash = '#/settings' }}>
+                Xem năng lực AI và key
+              </Button>
+            ) : null}
           </div>
         ) : null}
 
         <form className="composer-container" onSubmit={(e) => void submit(e)}>
+          {slashMenuOpen ? (
+            <div id="slash-command-menu" className="slash-menu" role="listbox" aria-label="Khả năng nhanh của Veridra">
+              <header>
+                <strong>Chọn cách Agent làm việc</strong>
+                <span>Gõ để lọc · ↑↓ để di chuyển · Enter để chọn</span>
+              </header>
+              <div className="slash-menu__options">
+                {visibleSlashOptions.length ? visibleSlashOptions.map((option, index) => {
+                  const previous = visibleSlashOptions[index - 1]
+                  return <div key={option.id}>
+                    {previous?.group !== option.group ? <p className="slash-menu__group">{option.group}</p> : null}
+                    <button
+                      type="button"
+                      id={`slash-option-${option.id}`}
+                      role="option"
+                      aria-selected={index === slashIndex}
+                      className={`slash-option${option.group === 'Skill của bạn' ? ' slash-option--skill' : ''}${index === slashIndex ? ' slash-option--active' : ''}`}
+                      onMouseEnter={() => setSlashIndex(index)}
+                      onClick={() => selectSlashOption(option)}
+                    >
+                      <code>{option.command}</code>
+                      <span><strong>{option.label}</strong><small>{option.description}</small></span>
+                    </button>
+                  </div>
+                }) : <p className="slash-menu__empty">Không có lệnh phù hợp. Thử /drive, /gmail hoặc /doc.</p>}
+              </div>
+            </div>
+          ) : null}
+          {activeControls.length ? <div className="composer-controls" aria-label="Điều khiển đang chọn">
+            {activeControls.map(item => <button type="button" key={item.key} onClick={() => clearControl(item.key)} title="Bỏ lựa chọn này">
+              {item.label}<span aria-hidden="true">×</span>
+            </button>)}
+          </div> : null}
           <Textarea
             ref={inputRef}
             id="chat-input"
@@ -585,10 +1594,39 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
             className="composer-textarea"
             resize="vertical"
             value={input}
-            onChange={(_, data) => setInput(data.value)}
-            placeholder="Hỏi về tài liệu Drive, tóm tắt Gmail, hoặc yêu cầu soạn thảo tài liệu…"
+            onChange={(_, data) => {
+              setInput(data.value)
+              const commandMode = data.value.startsWith('/') && !/\s/.test(data.value)
+              setSlashMenuOpen(commandMode)
+              setSlashIndex(0)
+            }}
+            placeholder="Nêu việc cần làm, hoặc gõ / để chọn nguồn, agent, skill…"
             aria-label="Nội dung câu hỏi"
+            aria-controls={slashMenuOpen ? 'slash-command-menu' : undefined}
+            aria-activedescendant={slashMenuOpen && visibleSlashOptions[slashIndex] ? `slash-option-${visibleSlashOptions[slashIndex]!.id}` : undefined}
             onKeyDown={(event) => {
+              if (slashMenuOpen) {
+                if (event.key === 'ArrowDown') {
+                  event.preventDefault()
+                  setSlashIndex(current => Math.min(current + 1, Math.max(0, visibleSlashOptions.length - 1)))
+                  return
+                }
+                if (event.key === 'ArrowUp') {
+                  event.preventDefault()
+                  setSlashIndex(current => Math.max(0, current - 1))
+                  return
+                }
+                if (event.key === 'Escape') {
+                  event.preventDefault()
+                  setSlashMenuOpen(false)
+                  return
+                }
+                if (event.key === 'Enter' && visibleSlashOptions[slashIndex]) {
+                  event.preventDefault()
+                  selectSlashOption(visibleSlashOptions[slashIndex]!)
+                  return
+                }
+              }
               if (event.key === 'Enter' && !event.shiftKey && !event.nativeEvent.isComposing) {
                 event.preventDefault()
                 event.currentTarget.form?.requestSubmit()
@@ -597,6 +1635,19 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
           />
 
           <div className="composer-bottom-bar">
+            <button
+              type="button"
+              className="slash-trigger"
+              aria-expanded={slashMenuOpen}
+              onClick={() => {
+                setSlashMenuOpen(current => !current)
+                setSlashIndex(0)
+                inputRef.current?.focus()
+              }}
+              title="Chọn nhanh nguồn, agent, quy trình hoặc đầu ra"
+            >
+              <span>/</span> Khả năng
+            </button>
             <div className="model-selector-wrapper">
               <button
                 type="button"
@@ -604,7 +1655,7 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
                 onClick={() => setModelMenuOpen((prev) => !prev)}
                 aria-expanded={modelMenuOpen}
                 aria-haspopup="true"
-                title="Chọn model để trả lời (ngăn cạn quota)"
+              title="Chọn model trả lời"
               >
                 <span className="model-plus-icon">+</span>
                 <span className="model-btn-name">{selectedModel.name}</span>
@@ -653,15 +1704,41 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
               )}
             </div>
 
-            <Button
-              type="submit"
-              appearance="primary"
-              className="composer-send-btn"
-              icon={<Send24Regular />}
-              disabled={!input.trim() || busy}
+            <button
+              type="button"
+              className="composer-quota-pill"
+              onClick={() => setUsageDialogOpen(true)}
+              title="Mở trạng thái model và ngân sách an toàn local"
             >
-              Gửi
-            </Button>
+              <span className="composer-quota-label">
+                {capacity?.local_budget
+                  ? <>Năng lực AI <strong className="composer-quota-val">{capacity.local_budget.daily_remaining}/{capacity.local_budget.daily_limit} lượt local</strong></>
+                  : <>Ngữ cảnh <strong className="composer-quota-val">~{estimatedSessionTokens.toLocaleString('vi-VN')} token</strong></>}
+              </span>
+            </button>
+
+            {busy ? (
+              <Button
+                type="button"
+                appearance="secondary"
+                className="composer-send-btn composer-stop-btn"
+                icon={<DismissCircle24Regular primaryFill="#ea4335" />}
+                onClick={stopGeneration}
+                title="Ngừng chờ phản hồi trên trình duyệt"
+              >
+                Ngừng chờ
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                appearance="primary"
+                className="composer-send-btn"
+                icon={<Send24Regular />}
+                disabled={!input.trim()}
+              >
+                Gửi
+              </Button>
+            )}
           </div>
         </form>
 
@@ -673,14 +1750,51 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
                 <div className="usage-dialog-content">
                   <p><strong>Model hiện tại:</strong> {selectedModel.name} (<code>{selectedModel.id}</code>)</p>
                   <p>{selectedModel.description}</p>
+                  {capacity?.local_budget ? (
+                    <div className="usage-budget-grid">
+                      <p><strong>Key đã chọn:</strong> {capacity.active_display_name || capacity.credential_source}</p>
+                      <p><strong>Project/key hiệu lực:</strong> {capacity.display_name || capacity.credential_source}{capacity.failover_active ? ' (dự phòng)' : ''}</p>
+                      <p><strong>Ledger hôm nay:</strong> {capacity.local_budget.daily_used}/{capacity.local_budget.daily_limit} lượt đã ghi nhận</p>
+                      <p><strong>Cửa sổ 60 giây:</strong> {capacity.local_budget.minute_used}/{capacity.local_budget.minute_limit} lượt</p>
+                      <p><strong>Reset:</strong> {new Date(capacity.local_budget.resets_at).toLocaleString('vi-VN')}</p>
+                      <p><strong>Model dự phòng:</strong> <code>{capacity.fallback_model}</code></p>
+                    </div>
+                  ) : null}
                   <p className="usage-dialog-note">
-                    DriveAgent không suy đoán hạn mức của Google. Quota thực tế phụ thuộc
-                    project và được báo bằng lỗi có Request ID khi nhà cung cấp từ chối.
+                    {capacity?.provider_balance_note || 'Veridra chưa đọc được trạng thái năng lực AI. Hãy kiểm tra key trong Cài đặt.'}
                   </p>
                 </div>
               </DialogContent>
               <DialogActions>
                 <Button appearance="primary" onClick={() => setUsageDialogOpen(false)}>Đóng</Button>
+              </DialogActions>
+            </DialogBody>
+          </DialogSurface>
+        </Dialog>
+
+        <Dialog open={Boolean(feedbackTarget)} onOpenChange={(_, data) => { if (!data.open) setFeedbackTarget(null) }}>
+          <DialogSurface>
+            <DialogBody>
+              <DialogTitle>Câu trả lời chưa ổn ở điểm nào?</DialogTitle>
+              <DialogContent>
+                <p>Chọn các vấn đề bạn gặp. Phản hồi này chỉ được dùng để đo và cải thiện chất lượng trên tài khoản của bạn.</p>
+                <div className="feedback-reason-grid">
+                  {feedbackReasons.map(reason => <button type="button" key={reason.id}
+                    aria-pressed={feedbackReasonSelection.includes(reason.id)}
+                    onClick={() => setFeedbackReasonSelection(current => current.includes(reason.id)
+                      ? current.filter(item => item !== reason.id) : [...current, reason.id])}>
+                    {reason.label}
+                  </button>)}
+                </div>
+                <label className="feedback-comment-label" htmlFor="feedback-comment">Ghi chú thêm (không bắt buộc)</label>
+                <Textarea id="feedback-comment" rows={4} value={feedbackComment} onChange={(_, data) => setFeedbackComment(data.value)} placeholder="Ví dụ: bảng thiếu tiêu chí chi phí và citation [2] mở sai file…" />
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setFeedbackTarget(null)}>Hủy</Button>
+                <Button appearance="primary" disabled={!feedbackTarget || feedbackReasonSelection.length === 0}
+                  onClick={() => feedbackTarget && void rateAnswer(feedbackTarget, 'not_helpful', feedbackReasonSelection, feedbackComment)}>
+                  Gửi đánh giá
+                </Button>
               </DialogActions>
             </DialogBody>
           </DialogSurface>
@@ -692,6 +1806,30 @@ export function ChatPage({ onBusyChange }: ChatPageProps = {}) {
           </MessageBarBody>
         </MessageBar>
       </section>
+
+      {zoomedDiagram ? (
+        <div className="diagram-lightbox-backdrop" onClick={() => setZoomedDiagram(null)}>
+          <div className="diagram-lightbox-content" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontWeight: 600 }}>Sơ đồ trực quan</span>
+              <Button appearance="subtle" icon={<Dismiss16Regular />} onClick={() => setZoomedDiagram(null)} aria-label="Đóng" />
+            </div>
+            <div dangerouslySetInnerHTML={{ __html: zoomedDiagram }} style={{ overflow: 'auto', display: 'flex', justifyContent: 'center' }} />
+          </div>
+        </div>
+      ) : null}
+
+      {zoomedImage ? (
+        <div className="diagram-lightbox-backdrop" onClick={() => setZoomedImage(null)}>
+          <div className="diagram-lightbox-content" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <span style={{ fontWeight: 600 }}>{zoomedImage.alt || 'Hình ảnh tài liệu'}</span>
+              <Button appearance="subtle" icon={<Dismiss16Regular />} onClick={() => setZoomedImage(null)} aria-label="Đóng" />
+            </div>
+            <img src={zoomedImage.src} alt={zoomedImage.alt} style={{ maxWidth: '100%', maxHeight: '75vh', objectFit: 'contain', borderRadius: '8px' }} />
+          </div>
+        </div>
+      ) : null}
     </div>
   )
 }

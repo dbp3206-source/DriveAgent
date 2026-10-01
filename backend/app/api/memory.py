@@ -10,15 +10,18 @@ from app.api.dependencies import CurrentUser, DbSession, require_permission
 from app.api.drive import execute
 from app.api.schemas import MemoryCreateRequest, MemoryResponse, MemoryUpdateRequest
 from app.auth.permissions import MEMORY_READ, MEMORY_WRITE
+from app.core.config import get_settings
+from app.core.json_utils import json_list
 from app.core.security import SENSITIVE_CONTENT
 from app.db.models import LongTermMemory
-from app.services.embeddings import EmbeddingTask
+from app.services.embeddings import EmbeddingTask, scoped_embeddings
 from app.services.memory import (
     MemoryListResponse,
     SaveMemoryInput,
     SearchMemoryInput,
     memory_response,
 )
+from app.services.user_inference import user_runtime_settings
 from app.services.vector_store import MEMORY_COLLECTION
 
 router = APIRouter(prefix="/api/memories", tags=["memory"])
@@ -98,9 +101,9 @@ async def update_memory(
         row.content = updates["content"]
         normalized = " ".join(row.content.strip().casefold().split())
         row.normalized_hash = hashlib.sha256(normalized.encode()).hexdigest()
-        vector = await request.app.state.embeddings.embed(
-            row.content, EmbeddingTask.SEMANTIC_SIMILARITY
-        )
+        settings = await user_runtime_settings(db, user.id, get_settings())
+        async with scoped_embeddings(request.app.state.embeddings, settings) as embeddings:
+            vector = await embeddings.embed(row.content, EmbeddingTask.SEMANTIC_SIMILARITY)
         row.embedding_json = json.dumps(vector)
     if "tags" in updates:
         row.tags_json = json.dumps(sorted(set(updates["tags"])), ensure_ascii=False)
@@ -112,7 +115,7 @@ async def update_memory(
         await request.app.state.vector_store.upsert(
             MEMORY_COLLECTION,
             row.id,
-            json.loads(row.embedding_json),
+            json_list(row.embedding_json),
             {"user_id": user.id, "kind": row.kind},
         )
     await db.commit()

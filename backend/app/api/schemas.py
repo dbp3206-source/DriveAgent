@@ -4,14 +4,25 @@ Không trả thẳng SQLAlchemy model để tránh vô tình làm lộ credentia
 trường nội bộ khi mô hình dữ liệu thay đổi.
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_serializer, field_validator
+
+from app.agent.controls import ChatControls
 
 
 class ApiModel(BaseModel):
     model_config = ConfigDict(from_attributes=True)
+
+    @field_serializer("*", when_used="always", check_fields=False)
+    def serialize_legacy_utc(self, value: Any) -> Any:
+        """SQLite drops timezone metadata; public API timestamps are always UTC."""
+
+        if isinstance(value, datetime):
+            aware = value.replace(tzinfo=UTC) if value.tzinfo is None else value.astimezone(UTC)
+            return aware.isoformat().replace("+00:00", "Z")
+        return value
 
 
 class UserResponse(ApiModel):
@@ -40,6 +51,7 @@ class DriveFileResponse(BaseModel):
     web_view_link: str | None = None
     owners: list[str] = Field(default_factory=list)
     indexed: bool = False
+    index_status: Literal["not_indexed", "fresh", "stale"] = "not_indexed"
 
 
 class DriveFileListResponse(BaseModel):
@@ -51,6 +63,7 @@ class FileContentResponse(BaseModel):
     file: DriveFileResponse
     text: str
     truncated: bool = False
+    assets: list[str] = Field(default_factory=list)
 
 
 class IndexFileResponse(BaseModel):
@@ -61,10 +74,18 @@ class IndexFileResponse(BaseModel):
     message: str
 
 
+class UnindexFileResponse(BaseModel):
+    file_id: str
+    file_name: str
+    chunks_removed: int
+    message: str
+
+
 class Citation(BaseModel):
     file_id: str
     file_name: str
     chunk_index: int
+    page_number: int | None = None
     snippet: str
     web_view_link: str | None = None
     score: float
@@ -119,6 +140,7 @@ class ChatRequest(BaseModel):
     message: str = Field(min_length=1, max_length=12000)
     session_id: str | None = None
     model: str | None = None
+    controls: ChatControls = Field(default_factory=ChatControls)
 
 
 class ChatResponse(BaseModel):
@@ -126,6 +148,7 @@ class ChatResponse(BaseModel):
     session_id: str
     message_id: str
     answer: str
+    status: Literal["completed", "incomplete"] = "completed"
     citations: list[Citation] = Field(default_factory=list)
     trace: list[dict[str, Any]] = Field(default_factory=list)
 
@@ -136,6 +159,11 @@ class SessionResponse(ApiModel):
     summary: str | None
     created_at: datetime
     updated_at: datetime
+
+
+class SessionPage(ApiModel):
+    items: list[SessionResponse]
+    next_cursor: str | None = None
 
 
 class SessionUpdateRequest(BaseModel):
@@ -149,7 +177,13 @@ class MessageResponse(ApiModel):
     content: str
     citations: list[Citation] = Field(default_factory=list)
     trace: list[dict[str, Any]] = Field(default_factory=list)
+    status: Literal["running", "completed", "incomplete", "failed", "cancelled"] = "completed"
     created_at: datetime
+
+
+class MessagePage(ApiModel):
+    items: list[MessageResponse]
+    next_cursor: str | None = None
 
 
 class AuditResponse(ApiModel):
@@ -167,13 +201,22 @@ class AuditResponse(ApiModel):
     created_at: datetime
 
 
+class AuditPage(ApiModel):
+    items: list[AuditResponse]
+    next_cursor: str | None = None
+
+
 class HealthResponse(BaseModel):
     status: Literal["ok", "degraded"]
     database: bool
     gemini_configured: bool
+    gemini_connectivity: Literal["not_probed"] = "not_probed"
     google_oauth_configured: bool
+    google_workspace_connectivity: Literal["not_probed"] = "not_probed"
     vector_store: str
     gemini_chat_model: str
     gemini_fallback_model: str
     gemini_embedding_model: str
     embedding_dimensions: int
+    runtime_started_at: str | None = None
+    runtime_pid: int | None = None

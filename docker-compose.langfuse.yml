@@ -1,0 +1,114 @@
+# Adapted from the official Langfuse v4 Compose topology (MIT outside ee/).
+# All host ports are loopback-only; secrets are generated in ignored ops/secrets.
+name: veridra-langfuse
+services:
+  web:
+    image: docker.langfuse.com/langfuse/langfuse:4@sha256:74376cff9caad24edb50bedce04053e1d2031942f14a5d6001e7046d825e2bd3
+    mem_limit: 2g
+    restart: unless-stopped
+    ports: ["127.0.0.1:3035:3000"]
+    env_file: ops/secrets/langfuse.env
+    environment: &lf-env
+      NEXTAUTH_URL: http://localhost:3035
+      DATABASE_URL: postgresql://postgres:${LF_POSTGRES_PASSWORD:?}@postgres:5432/postgres
+      CLICKHOUSE_MIGRATION_URL: clickhouse://clickhouse:9000
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: ${LF_CLICKHOUSE_PASSWORD:?}
+      CLICKHOUSE_CLUSTER_ENABLED: "false"
+      REDIS_HOST: redis
+      REDIS_AUTH: ${LF_REDIS_PASSWORD:?}
+      REDIS_TLS_ENABLED: "false"
+      TELEMETRY_ENABLED: "false"
+      LANGFUSE_IN_APP_AGENT_ENABLED: "false"
+      LANGFUSE_S3_EVENT_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_EVENT_UPLOAD_REGION: auto
+      LANGFUSE_S3_EVENT_UPLOAD_ACCESS_KEY_ID: veridra
+      LANGFUSE_S3_EVENT_UPLOAD_SECRET_ACCESS_KEY: ${LF_MINIO_PASSWORD:?}
+      LANGFUSE_S3_EVENT_UPLOAD_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_EVENT_UPLOAD_FORCE_PATH_STYLE: "true"
+      LANGFUSE_S3_MEDIA_UPLOAD_BUCKET: langfuse
+      LANGFUSE_S3_MEDIA_UPLOAD_REGION: auto
+      LANGFUSE_S3_MEDIA_UPLOAD_ACCESS_KEY_ID: veridra
+      LANGFUSE_S3_MEDIA_UPLOAD_SECRET_ACCESS_KEY: ${LF_MINIO_PASSWORD:?}
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://localhost:9095
+      LANGFUSE_S3_MEDIA_UPLOAD_INTERNAL_ENDPOINT: http://minio:9000
+      LANGFUSE_S3_MEDIA_UPLOAD_FORCE_PATH_STYLE: "true"
+    depends_on: &lf-deps
+      postgres: {condition: service_healthy}
+      clickhouse: {condition: service_healthy}
+      redis: {condition: service_healthy}
+      minio: {condition: service_healthy}
+    logging: &lf-logs
+      driver: json-file
+      options: {max-size: "10m", max-file: "3"}
+  worker:
+    image: docker.langfuse.com/langfuse/langfuse-worker:4@sha256:3fe007098e3dcd89fe546256b2e1eec417e9e44b4366683cdc70dc63bbc6a59b
+    mem_limit: 1536m
+    restart: unless-stopped
+    env_file: ops/secrets/langfuse.env
+    environment:
+      <<: *lf-env
+      LANGFUSE_S3_MEDIA_UPLOAD_ENDPOINT: http://minio:9000
+    depends_on: *lf-deps
+    logging: *lf-logs
+  postgres:
+    image: postgres:17@sha256:d74eeac9a635390a49bc21bd49fccd973de707e2a53a76ac49b552b8712ec46f
+    mem_limit: 512m
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: ${LF_POSTGRES_PASSWORD:?}
+      POSTGRES_DB: postgres
+    volumes: ["lf-postgres:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 20
+    logging: *lf-logs
+  clickhouse:
+    image: clickhouse/clickhouse-server:25.12@sha256:8a790dd3468db22b1d4e7b18a176f378ff5ff6053b9c48dd4ea1fa71a24c5ba6
+    mem_limit: 1536m
+    restart: unless-stopped
+    environment:
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: ${LF_CLICKHOUSE_PASSWORD:?}
+    volumes: ["lf-clickhouse:/var/lib/clickhouse"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://localhost:8123/ping"]
+      interval: 5s
+      retries: 20
+    logging: *lf-logs
+  redis:
+    image: redis:7@sha256:c6eabf748fc7a61dbb5a705c78bcf3d6377b1127a97d0ce965c11c44ba46896f
+    mem_limit: 256m
+    restart: unless-stopped
+    environment:
+      REDIS_AUTH: ${LF_REDIS_PASSWORD:?}
+    command: ["redis-server", "--requirepass", "${LF_REDIS_PASSWORD:?}", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD-SHELL", "REDISCLI_AUTH=$$REDIS_AUTH redis-cli ping | grep PONG"]
+      interval: 5s
+      retries: 20
+    volumes: ["lf-redis:/data"]
+    logging: *lf-logs
+  minio:
+    image: cgr.dev/chainguard/minio@sha256:71674988a1c7ddd5724928633199152b11e4ddefd6c6ce2d60772ff4a8f22ca9
+    mem_limit: 512m
+    restart: unless-stopped
+    entrypoint: sh
+    command: -c 'mkdir -p /data/langfuse && minio server --address ":9000" /data'
+    environment:
+      MINIO_ROOT_USER: veridra
+      MINIO_ROOT_PASSWORD: ${LF_MINIO_PASSWORD:?}
+    ports: ["127.0.0.1:9095:9000"]
+    volumes: ["lf-minio:/data"]
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      retries: 20
+    logging: *lf-logs
+volumes:
+  lf-postgres:
+  lf-clickhouse:
+  lf-redis:
+  lf-minio:

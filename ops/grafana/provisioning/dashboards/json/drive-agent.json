@@ -1,0 +1,20 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "panels": [
+    {"type":"stat","title":"Tool requests (30d)","gridPos":{"h":7,"w":6,"x":0,"y":0},"targets":[{"expr":"sum(drive_agent_tool_requests_total)","refId":"A"}]},
+    {"type":"stat","title":"Observed agent runs","gridPos":{"h":7,"w":6,"x":6,"y":0},"targets":[{"expr":"drive_agent_observed_runs","refId":"A"}]},
+    {"type":"stat","title":"Model tokens","gridPos":{"h":7,"w":6,"x":12,"y":0},"targets":[{"expr":"sum(drive_agent_model_tokens_total)","refId":"A"}]},
+    {"type":"stat","title":"Estimated cost / run (USD)","gridPos":{"h":7,"w":6,"x":18,"y":0},"targets":[{"expr":"drive_agent_model_estimated_cost_usd_per_run","refId":"A"}]},
+    {"type":"timeseries","title":"Requests by tool/status","gridPos":{"h":9,"w":12,"x":0,"y":7},"targets":[{"expr":"sum by (tool,status) (drive_agent_tool_requests_total)","legendFormat":"{{tool}} · {{status}}","refId":"A"}]},
+    {"type":"barchart","title":"Cumulative latency by tool","gridPos":{"h":9,"w":12,"x":12,"y":7},"targets":[{"expr":"sum by (tool) (drive_agent_tool_latency_ms_sum)","legendFormat":"{{tool}}","refId":"A"}]}
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["Veridra", "AgentOps"],
+  "templating": {"list": []},
+  "time": {"from":"now-24h","to":"now"},
+  "title": "Veridra AgentOps",
+  "uid": "drive-agent-agentops",
+  "version": 1
+}

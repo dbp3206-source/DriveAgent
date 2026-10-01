@@ -2,8 +2,16 @@
 .env
 client_secret*.json
 credentials*.json
+cookies*.txt
 data/
 .local-backups/
+.runtime/
+ops/secrets/
+tools/Docker Desktop Installer.exe
+tools/tesseract-*/
+tools/tesseract-ocr-*.exe
+# Downloaded observability runtimes are machine-local, not source artifacts.
+tools/
 *.db
 *.sqlite
 *.sqlite3
@@ -38,3 +46,27 @@ coverage/
 htmlcov/
 .coverage
 design-work/qa/screenshots/*.tmp.png
+# Connected-account browser QA may capture private Gmail/Drive content.
+design-work/qa/screenshots/browser-smoke-*/
+design-work/qa/screenshots/canvas-readiness-*/
+# User-supplied PDF visual QA is private unless redistribution is authorized.
+design-work/qa/renders/pdf-ingestion-*/
+# Live probes contain private mail bodies/citations or conversation output.
+design-work/qa/private/
+design-work/qa/qa_live_*-docker-20260930.json
+design-work/qa/gmail-scope-followup*-docker-20260930.json
+# Raw live outputs may contain Gmail/Drive content, identifiers or citations.
+# Commit curated Markdown acceptance reports; keep raw evidence local.
+design-work/qa/validation/
+design-work/qa/**/*.xml
+design-work/qa/screenshots/
+design-work/qa/renders/
+design-work/qa/diagnostic-errors-*/
+design-work/qa/*live*.json
+design-work/qa/*current.json
+design-work/qa/app-langfuse-*.json
+design-work/qa/container-runtime-*.json
+backend/evals/results/
+backend/evals/business_live.json
+frontend/public/*.visual-check.*
+frontend/public/harness/*.visual-check.*

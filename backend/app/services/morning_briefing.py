@@ -8,7 +8,7 @@ from sqlalchemy import select
 
 from app.core.config import Settings
 from app.db.models import ChatSession, Message, User
-from app.tools.contracts import ToolContext, ToolError
+from app.tools.contracts import ToolContext
 from app.tools.registry import ToolRegistry
 
 
@@ -55,8 +55,8 @@ class MorningBriefingService:
             )
             unread_count = gmail.total_found
             recent_emails = gmail.messages[:3]
-        except ToolError as exc:
-            gmail_notice = self._safe_notice(exc.code, "Gmail")
+        except Exception as exc:
+            gmail_notice = self._safe_notice(getattr(exc, "code", "error"), "Gmail")
 
         try:
             drive = await self.registry.execute(
@@ -71,46 +71,47 @@ class MorningBriefingService:
                 if item.modified_time
                 and datetime.fromisoformat(item.modified_time.replace("Z", "+00:00")) >= threshold
             ][:5]
-        except (ToolError, ValueError):
+        except Exception:
             drive_notice = "Chưa đọc được thay đổi gần đây trên Google Drive."
 
         now = self._now()
         today = now.strftime("%d/%m/%Y")
         lines = [
-            f"# Bản tin ngày {today}",
+            f"# ☀️ Bản tin buổi sáng ngày {today}",
             "",
-            "Dưới đây là những việc mới trong 24 giờ gần nhất.",
+            "Chào bạn! Dưới đây là tổng hợp nhanh các thông tin và cập nhật mới trong 24 giờ qua:",
             "",
-            "## Gmail",
+            "## 📬 Hộp thư Gmail",
         ]
         if gmail_notice:
-            lines.append(f"- {gmail_notice}")
+            lines.append(f"- *{gmail_notice}*")
         elif unread_count:
-            lines.append(f"- Có **{unread_count} email chưa đọc** trong kết quả hiện tại.")
+            lines.append(f"- Có **{unread_count} email chưa đọc** trong kết quả hiện tại:")
             for email in recent_emails:
                 lines.append(f"  - **{email.sender}** — {email.subject}")
         else:
-            lines.append("- Không có email chưa đọc trong 24 giờ gần nhất.")
+            lines.append("- *Không có email chưa đọc trong 24 giờ gần nhất.*")
 
-        lines.extend(["", "## Google Drive"])
+        lines.extend(["", "## 📂 Google Drive cập nhật"])
         if drive_notice:
-            lines.append(f"- {drive_notice}")
+            lines.append(f"- *{drive_notice}*")
         elif recent_files:
             lines.append(f"- Có **{len(recent_files)} tệp** vừa được cập nhật:")
             for item in recent_files:
                 if item.web_view_link:
-                    lines.append(f"  - [{item.name}]({item.web_view_link})")
+                    lines.append(f"  - 📄 [{item.name}]({item.web_view_link})")
                 else:
-                    lines.append(f"  - {item.name}")
+                    lines.append(f"  - 📄 {item.name}")
         else:
-            lines.append("- Không có tệp nào được cập nhật trong 24 giờ gần nhất.")
+            lines.append("- *Không có tệp nào được cập nhật trong 24 giờ gần nhất.*")
 
         lines.extend(
             [
                 "",
-                "## Bạn có thể làm tiếp",
-                "- Yêu cầu tóm tắt một email hoặc tài liệu cụ thể.",
-                "- Lập chỉ mục tài liệu quan trọng để hỏi lại bằng RAG.",
+                "## 💡 Gợi ý hành động hôm nay",
+                "- Yêu cầu tóm tắt một email hoặc tài liệu cụ thể bằng cách nhập tên tệp.",
+                "- Tra cứu số liệu, biểu bảng tài chính nhanh qua công cụ RAG biểu bảng.",
+                "- Tạo bản thảo Google Docs hoặc Sheets và gửi duyệt an toàn qua HiTL.",
             ]
         )
         summary = "\n".join(lines)
@@ -137,6 +138,7 @@ class MorningBriefingService:
             )
             if existing is not None:
                 existing.content = summary
+                session.updated_at = datetime.now(UTC)
                 await db.commit()
                 return self._result(session, existing, summary, unread_count, recent_files)
 
@@ -147,6 +149,7 @@ class MorningBriefingService:
             content=summary,
         )
         db.add(message)
+        session.updated_at = datetime.now(UTC)
         await db.commit()
         return self._result(session, message, summary, unread_count, recent_files)
 
@@ -170,6 +173,7 @@ class MorningBriefingService:
             "session_id": session.id,
             "title": session.title,
             "summary": summary,
+            "answer": summary,
             "unread_emails": unread_count,
             "modified_files": len(recent_files),
             "message_id": message.id,

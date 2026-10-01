@@ -21,12 +21,51 @@ export interface Health {
   status: 'ok' | 'degraded'
   database: boolean
   gemini_configured: boolean
+  gemini_connectivity: 'not_probed'
   google_oauth_configured: boolean
+  google_workspace_connectivity: 'not_probed'
   vector_store: string
   gemini_chat_model: string
   gemini_fallback_model: string
   gemini_embedding_model: string
   embedding_dimensions: number
+  runtime_started_at?: string | null
+  runtime_pid?: number | null
+}
+
+export interface ProviderCapacity {
+  configured: boolean
+  credential_source: 'user' | 'environment' | 'unconfigured'
+  active_credential_id: string | null
+  active_display_name: string | null
+  effective_credential_id: string | null
+  display_name: string | null
+  project_alias: string | null
+  fingerprint: string | null
+  failover_active: boolean
+  primary_model: string
+  fallback_model: string
+  local_budget: {
+    bucket: string
+    minute_used: number
+    minute_limit: number
+    minute_tokens_used: number
+    minute_tokens_limit: number
+    daily_used: number
+    daily_limit: number
+    daily_remaining: number
+    resets_at: string
+    scope: string
+  } | null
+  circuits: Array<{
+    capability: string
+    consecutive_failures: number
+    circuit_open: boolean
+    retry_after_seconds: number
+    last_error_class: string | null
+  }>
+  provider_balance_available: false
+  provider_balance_note: string
 }
 
 export interface DriveFile {
@@ -38,12 +77,14 @@ export interface DriveFile {
   web_view_link: string | null
   owners: string[]
   indexed: boolean
+  index_status: 'not_indexed' | 'fresh' | 'stale'
 }
 
 export interface Citation {
   file_id: string
   file_name: string
   chunk_index: number
+  page_number?: number | null
   snippet: string
   web_view_link: string | null
   score: number
@@ -56,7 +97,9 @@ export interface ChatMessage {
   content: string
   citations: Citation[]
   trace: Array<Record<string, unknown>>
+  status?: 'running' | 'completed' | 'incomplete' | 'failed' | 'cancelled'
   created_at: string
+  latency_ms?: number
 }
 
 export interface ChatSession {

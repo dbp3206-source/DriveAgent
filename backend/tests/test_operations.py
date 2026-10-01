@@ -48,3 +48,72 @@ def test_success_is_durable_and_cannot_be_overwritten(tmp_path):
     assert store.get("a", row["id"])["state"] == "succeeded"
     with pytest.raises(ToolError):
         store.uncertain("a", row["id"], "late-error")
+
+
+def test_expired_preview_is_terminal_and_visible(tmp_path):
+    store = OperationStore(tmp_path / "operations.db")
+    row = store.prepare("a", "expired-request", "gmail_draft_create", {"subject": "Hello"})
+    with store.connect() as db:
+        db.execute("UPDATE operations SET created=0 WHERE id=?", (row["id"],))
+
+    with pytest.raises(ToolError) as exc_info:
+        store.claim("a", row["id"], row["digest"])
+
+    assert exc_info.value.code == "approval_expired"
+    assert store.get("a", row["id"])["state"] == "expired"
+
+
+def test_status_ledger_is_user_scoped_redacted_and_marks_safe_reconciliation(tmp_path):
+    store = OperationStore(tmp_path / "operations.db")
+    row = store.prepare(
+        "user-a",
+        "secret-request",
+        "sheets_create",
+        {"title": "Private budget", "rows": [["Sensitive value"]]},
+    )
+    store.claim("user-a", row["id"], row["digest"])
+    store.checkpoint("user-a", row["id"], "sheet-id")
+    store.uncertain("user-a", row["id"], "verification_failed")
+    store.prepare("user-b", "other", "docs_create", {"content": "Other tenant"})
+
+    result = store.list_status("user-a")
+
+    assert result["attention_count"] == 1
+    assert result["pending_previews"] == 0
+    assert len(result["items"]) == 1
+    assert result["items"][0]["reconcilable"] is True
+    assert set(result["items"][0]) == {
+        "id", "capability", "state", "created", "resource_id", "error_code", "reconcilable"
+    }
+    serialized = str(result)
+    assert "Private budget" not in serialized
+    assert "Sensitive value" not in serialized
+    assert "Other tenant" not in serialized
+
+    store.acknowledge_uncertain("user-a", row["id"])
+    reviewed = store.get("user-a", row["id"])
+    assert reviewed["state"] == "reviewed"
+    assert store.list_status("user-a")["attention_count"] == 0
+    with pytest.raises(ToolError):
+        store.acknowledge_uncertain("user-a", row["id"])
+
+
+def test_status_expires_abandoned_preview_and_archive_hides_terminal_work(tmp_path):
+    store = OperationStore(tmp_path / "operations.db")
+    row = store.prepare("user-a", "old", "docs_create", {"title": "Old"})
+    with store.connect() as db:
+        db.execute("UPDATE operations SET created=0 WHERE id=?", (row["id"],))
+
+    status = store.list_status("user-a")
+    assert status["summary"]["expired"] == 1
+    assert status["pending_previews"] == 0
+    store.archive("user-a", row["id"])
+    assert store.list_status("user-a")["items"] == []
+
+
+def test_archive_rejects_active_operation(tmp_path):
+    store = OperationStore(tmp_path / "operations.db")
+    row = store.prepare("user-a", "active", "docs_create", {})
+    store.claim("user-a", row["id"], row["digest"])
+    with pytest.raises(ToolError, match="đang chạy"):
+        store.archive("user-a", row["id"])

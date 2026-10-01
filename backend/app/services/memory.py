@@ -11,7 +11,13 @@ from app.api.schemas import MemoryResponse
 from app.auth.permissions import MEMORY_READ, MEMORY_WRITE
 from app.core.security import SENSITIVE_CONTENT
 from app.db.models import LongTermMemory, MemoryKind
-from app.services.embeddings import EmbeddingService, EmbeddingTask, cosine_similarity, tokenize
+from app.services.embeddings import (
+    EmbeddingService,
+    EmbeddingTask,
+    cosine_similarity,
+    scoped_embeddings,
+    tokenize,
+)
 from app.services.vector_store import MEMORY_COLLECTION, VectorStore
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 
@@ -85,7 +91,8 @@ class MemoryService:
             await context.db.commit()
             return memory_response(existing)
 
-        vector = await self.embeddings.embed(payload.content, EmbeddingTask.SEMANTIC_SIMILARITY)
+        async with scoped_embeddings(self.embeddings, context.settings) as embeddings:
+            vector = await embeddings.embed(payload.content, EmbeddingTask.SEMANTIC_SIMILARITY)
         row = LongTermMemory(
             user_id=context.user.id,
             kind=payload.kind.value,
@@ -117,7 +124,8 @@ class MemoryService:
                 LongTermMemory.kind.in_([kind.value for kind in payload.kinds])
             )
         rows = list((await context.db.scalars(statement)).all())
-        query_vector = await self.embeddings.embed(payload.query, EmbeddingTask.SEMANTIC_SIMILARITY)
+        async with scoped_embeddings(self.embeddings, context.settings) as embeddings:
+            query_vector = await embeddings.embed(payload.query, EmbeddingTask.SEMANTIC_SIMILARITY)
         query_terms = set(tokenize(payload.query))
 
         # Qdrant là đường tìm dense chính. SQLite giữ vector dự phòng để ứng dụng vẫn

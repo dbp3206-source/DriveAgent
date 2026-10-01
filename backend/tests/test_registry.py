@@ -9,7 +9,10 @@ from app.auth.permissions import MEMORY_READ, MEMORY_WRITE
 from app.core.config import Settings
 from app.db.models import AuditEvent, Base, User, UserRole
 from app.tools.contracts import ToolAccessDeniedError, ToolContext, ToolDefinition, ToolError
+from app.tools.documents import document_tool_definitions
+from app.tools.gmail import gmail_tool_definitions
 from app.tools.registry import ToolRegistry
+from app.tools.sheets import spreadsheet_tool_definitions
 
 
 class EchoInput(BaseModel):
@@ -20,12 +23,81 @@ class EchoOutput(BaseModel):
     value: str
 
 
+def test_gmail_compose_scope_satisfies_send_but_not_readonly() -> None:
+    """Compose includes sending, but must not grant mailbox read access."""
+    scopes = {"https://www.googleapis.com/auth/gmail.compose"}
+    assert ToolRegistry._is_oauth_scope_satisfied(
+        "https://www.googleapis.com/auth/gmail.send", scopes
+    )
+    assert not ToolRegistry._is_oauth_scope_satisfied(
+        "https://www.googleapis.com/auth/gmail.readonly", scopes
+    )
+
+
 async def create_session(tmp_path: Path):
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'test.db'}")
     async with engine.begin() as connection:
         await connection.run_sync(Base.metadata.create_all)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     return engine, factory
+
+
+def test_beta_cloud_write_markers_cover_only_execution_not_preview_or_readback():
+    definitions = {
+        item.name: item
+        for item in [
+            *document_tool_definitions(),
+            *spreadsheet_tool_definitions(),
+            *gmail_tool_definitions(),
+        ]
+    }
+    assert {name for name, item in definitions.items() if item.external_write} == {
+        "docs_execute", "sheets_execute", "gmail_create_draft", "gmail_send"
+    }
+
+
+@pytest.mark.asyncio
+async def test_closed_beta_cloud_write_gate_blocks_handler_and_audits(tmp_path):
+    engine, factory = await create_session(tmp_path)
+    registry = ToolRegistry()
+    called = []
+
+    async def handler(payload, _context):
+        called.append(payload.text)
+        return EchoOutput(value=payload.text)
+
+    registry.register(
+        ToolDefinition(
+            name="cloud_write_simulation",
+            description="Test cloud write gate",
+            input_model=EchoInput,
+            output_model=EchoOutput,
+            handler=handler,
+            required_permissions={MEMORY_WRITE},
+            external_write=True,
+        )
+    )
+    async with factory() as db:
+        user = User(email="beta@test.invalid", display_name="Beta", role="editor")
+        db.add(user)
+        await db.commit()
+        denied = ToolContext(
+            request_id="beta-denied", user=user, db=db,
+            settings=Settings(environment="production", beta_allow_external_writes=False),
+        )
+        with pytest.raises(ToolAccessDeniedError, match="chỉ đọc"):
+            await registry.execute("cloud_write_simulation", {"text": "write"}, denied)
+        assert called == []
+        audit = await db.scalar(select(AuditEvent).where(AuditEvent.request_id == "beta-denied"))
+        assert audit.status == "denied"
+
+        allowed = ToolContext(
+            request_id="beta-allowed", user=user, db=db,
+            settings=Settings(environment="production", beta_allow_external_writes=True),
+        )
+        await registry.execute("cloud_write_simulation", {"text": "write"}, allowed)
+        assert called == ["write"]
+    await engine.dispose()
 
 
 @pytest.mark.asyncio
@@ -107,6 +179,10 @@ async def test_registry_executes_and_writes_completed_audit(tmp_path: Path) -> N
         assert audit is not None
         assert audit.status == "success"
         assert audit.latency_ms is not None
+        assert "xin chào" not in audit.arguments_json.lower()
+        assert "xin chào" not in audit.result_json.lower()
+        assert "XIN CHÀO" not in audit.result_json
+        assert '"argument_count": 1' in audit.arguments_json
     await engine.dispose()
 
 
@@ -186,6 +262,45 @@ async def test_registry_audits_invalid_arguments_without_calling_handler(tmp_pat
         assert audit is not None
         assert audit.status == "error"
         assert audit.error_type == "invalid_arguments"
+        assert audit.error_message == "Tool không hoàn tất; xem mã lỗi và request ID."
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_tool_error_text_never_enters_metadata_audit(tmp_path: Path) -> None:
+    engine, factory = await create_session(tmp_path)
+    registry = ToolRegistry()
+
+    async def handler(_payload: EchoInput, _context: ToolContext) -> EchoOutput:
+        raise ToolError("private-document-canary", code="provider_failure")
+
+    registry.register(
+        ToolDefinition(
+            name="read_private_document",
+            description="Privacy audit test",
+            input_model=EchoInput,
+            output_model=EchoOutput,
+            handler=handler,
+            required_permissions={MEMORY_READ},
+        )
+    )
+    async with factory() as db:
+        user = User(email="private@example.com", display_name="Private", role="editor")
+        db.add(user)
+        await db.commit()
+        with pytest.raises(ToolError):
+            await registry.execute(
+                "read_private_document",
+                {"text": "private-request-canary"},
+                ToolContext(request_id="privacy-request", user=user, db=db, settings=Settings()),
+            )
+        audit = await db.scalar(
+            select(AuditEvent).where(AuditEvent.request_id == "privacy-request")
+        )
+        assert audit is not None
+        assert audit.error_type == "provider_failure"
+        assert "private-request-canary" not in audit.arguments_json
+        assert "private-document-canary" not in audit.error_message
     await engine.dispose()
 
 
@@ -224,6 +339,52 @@ async def test_registry_retries_only_retryable_errors(tmp_path: Path) -> None:
         )
         assert result.value == "done"
         assert attempts == 3
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_registry_redacts_platform_transport_error_from_user(tmp_path: Path, caplog) -> None:
+    engine, factory = await create_session(tmp_path)
+    registry = ToolRegistry()
+
+    async def broken_transport(_payload: EchoInput, _context: ToolContext) -> EchoOutput:
+        raise OSError("[WinError 10013] https://private.example/?token=secret-transport-canary")
+
+    registry.register(
+        ToolDefinition(
+            name="broken_transport",
+            description="Transport error test",
+            input_model=EchoInput,
+            output_model=EchoOutput,
+            handler=broken_transport,
+            required_permissions={MEMORY_READ},
+            max_attempts=1,
+        )
+    )
+    async with factory() as db:
+        user = User(email="transport@example.com", display_name="Transport", role="editor")
+        db.add(user)
+        await db.commit()
+        with pytest.raises(ToolError) as failure:
+            await registry.execute(
+                "broken_transport",
+                {"text": "hello"},
+                ToolContext(
+                    request_id="request-transport", user=user, db=db, settings=Settings()
+                ),
+            )
+        assert failure.value.code == "connection_error"
+        assert "WinError" not in str(failure.value)
+        assert "kiểm tra kết nối mạng" in str(failure.value)
+        assert "secret-transport-canary" not in caplog.text
+        assert "private.example" not in caplog.text
+        assert "request-transport" in caplog.text
+        audit = await db.scalar(
+            select(AuditEvent).where(AuditEvent.request_id == "request-transport")
+        )
+        assert audit is not None
+        assert audit.error_type == "connection_error"
+        assert "WinError" not in (audit.error_message or "")
     await engine.dispose()
 
 

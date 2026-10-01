@@ -1,0 +1,157 @@
+{
+  "version": "1.3.0",
+  "purpose": "Observable output plus explicit answer-key hard checks; not a general truth certificate.",
+  "cases": [
+    {
+      "id": "compare-structured",
+      "question": "So sánh học theo video và sách, rồi khuyến nghị cách chọn.",
+      "answer": "## So sánh\n\n| Tiêu chí | Video | Sách |\n|---|---|---|\n| Tốc độ bắt đầu | Nhanh | Chậm hơn |\n| Tra cứu | Khó hơn | Dễ hơn |\n\n## Khuyến nghị\n\nNếu cần hình dung nhanh ⇒ xem video trước. Nếu cần ôn thi và tra cứu ⇒ dùng sách làm nguồn chính.",
+      "expected_intent": "compare",
+      "min_score": 90,
+      "max_score": 100
+    },
+    {
+      "id": "howto-structured",
+      "question": "Hướng dẫn từng bước để kiểm tra báo cáo trước khi nộp.",
+      "answer": "## Chuẩn bị\n\nCó đề bài và rubric chấm điểm.\n\n## Các bước\n\n1. Đối chiếu từng yêu cầu với mục tương ứng.\n2. Kiểm tra số liệu và nguồn trích dẫn.\n3. Đọc lại định dạng trên PDF cuối.\n\n## Cách kiểm tra\n\nHoàn thành khi mọi dòng rubric đều có bằng chứng và không còn lỗi font.",
+      "expected_intent": "howto",
+      "min_score": 90,
+      "max_score": 100
+    },
+    {
+      "id": "plan-too-thin",
+      "question": "Lên kế hoạch ôn thi trong bốn tuần.",
+      "answer": "Bạn nên học đều mỗi ngày và cố gắng làm nhiều bài tập.",
+      "expected_intent": "plan",
+      "min_score": 0,
+      "max_score": 59,
+      "min_words": 80,
+      "expected_pass": false
+    },
+    {
+      "id": "citation-broken",
+      "question": "Tóm tắt tài liệu đã lập chỉ mục.",
+      "answer": "Tài liệu nêu ba ưu tiên [3].",
+      "citations": [{"file_id": "a", "file_name": "source.md"}],
+      "expected_intent": "summary",
+      "min_score": 0,
+      "max_score": 59,
+      "expected_pass": false
+    },
+    {
+      "id": "direct-concise",
+      "question": "MCP là gì?",
+      "answer": "MCP là giao thức chuẩn để ứng dụng AI khám phá và gọi các công cụ hoặc nguồn dữ liệu bên ngoài qua một hợp đồng thống nhất.",
+      "expected_intent": "direct",
+      "min_score": 90,
+      "max_score": 100
+    },
+    {
+      "id": "wrong-fact-hard-fail",
+      "question": "Tính 2 + 2.",
+      "answer": "2 + 2 = 5.",
+      "expected_intent": "direct",
+      "expected_facts": ["4"],
+      "min_score": 0,
+      "max_score": 59,
+      "expected_pass": false
+    },
+    {
+      "id": "empty-answer-hard-fail",
+      "question": "Mã kiểm thử trong tài liệu là gì?",
+      "answer": "",
+      "expected_intent": "direct",
+      "expected_facts": ["DA-LOCAL-2026"],
+      "min_score": 0,
+      "max_score": 59,
+      "expected_pass": false
+    },
+    {
+      "id": "numeric-substring-false-positive",
+      "question": "Tính 2 + 2.",
+      "answer": "Đáp án là 14.",
+      "expected_intent": "direct",
+      "expected_facts": ["4"],
+      "min_score": 0,
+      "max_score": 59,
+      "expected_pass": false
+    },
+    {
+      "id": "required-citation-without-claim-binding",
+      "question": "Tóm tắt tài liệu.",
+      "answer": "Tài liệu có một kết luận đáng chú ý [1].",
+      "citations": [
+        {
+          "file_id": "qa-doc",
+          "file_name": "qa-source.md",
+          "snippet": "Một fact không liên quan đến câu trả lời."
+        }
+      ],
+      "expected_intent": "summary",
+      "require_citations": true,
+      "min_score": 0,
+      "max_score": 59,
+      "expected_pass": false
+    },
+    {
+      "id": "citation-claim-binding-valid",
+      "question": "Mã kiểm thử trong tài liệu là gì?",
+      "answer": "Mã kiểm thử là DA-LOCAL-2026 [1].",
+      "citations": [
+        {
+          "file_id": "qa-doc",
+          "file_name": "qa-source.md",
+          "snippet": "Mã kiểm thử là DA-LOCAL-2026."
+        }
+      ],
+      "expected_claim_citations": [
+        {
+          "claim": "DA-LOCAL-2026",
+          "citation_index": 1,
+          "file_id": "qa-doc",
+          "evidence_fact": "DA-LOCAL-2026"
+        }
+      ],
+      "expected_intent": "direct",
+      "require_citations": true,
+      "min_score": 90,
+      "max_score": 100,
+      "expected_pass": true
+    },
+    {
+      "id": "citation-claim-wrong-source",
+      "question": "Mã kiểm thử trong tài liệu là gì?",
+      "answer": "Mã kiểm thử là DA-LOCAL-2026 [1].",
+      "citations": [
+        {
+          "file_id": "wrong-doc",
+          "file_name": "wrong-source.md",
+          "snippet": "Mã kiểm thử là DA-LOCAL-2026."
+        }
+      ],
+      "expected_claim_citations": [
+        {
+          "claim": "DA-LOCAL-2026",
+          "citation_index": 1,
+          "file_id": "qa-doc",
+          "evidence_fact": "DA-LOCAL-2026"
+        }
+      ],
+      "expected_intent": "direct",
+      "require_citations": true,
+      "min_score": 0,
+      "max_score": 59,
+      "expected_pass": false
+    },
+    {
+      "id": "uncited-categorical-comparison",
+      "question": "So sánh hai cách học nhưng không đưa khẳng định khoa học nếu không có nguồn.",
+      "answer": "## So sánh\n\n| Tiêu chí | Flashcard | Đọc lại |\n|---|---|---|\n| Ghi nhớ dài hạn | Cao, bền vững | Thấp, dễ quên nhanh |",
+      "expected_intent": "compare",
+      "forbid_uncited_categorical_claims": true,
+      "min_score": 0,
+      "max_score": 59,
+      "expected_pass": false
+    }
+  ]
+}

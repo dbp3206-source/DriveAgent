@@ -16,7 +16,7 @@ Không thêm dấu nháy. Không commit `.env`.
 1. Mở <https://console.cloud.google.com/>.
 2. Chọn hoặc tạo một Google Cloud project.
 3. Vào **APIs & Services > Library**.
-4. Bật **Google Drive API**, **Google Docs API**, **Google Slides API**, **Google Sheets API** và **Gmail API**.
+4. Bật **Google Drive API**, **Google Docs API**, **Google Sheets API** và **Gmail API**.
 
 ## 3. Cấu hình OAuth consent screen
 
@@ -25,7 +25,7 @@ Không thêm dấu nháy. Không commit `.env`.
 3. Chọn audience phù hợp. Tài khoản Gmail cá nhân dùng **External**.
 4. Khi app còn ở Testing, thêm email Google của bạn vào **Test users**.
 5. Trong **Data Access**, thêm `openid`, `email`, `profile`, `drive.readonly`,
-   `drive.file`, `gmail.readonly` và `gmail.send` (dùng URL scope đầy đủ như `.env.example`).
+   `drive.file`, `gmail.readonly` và `gmail.compose` (dùng URL scope đầy đủ như `.env.example`).
 
 Các quyền này truy cập dữ liệu riêng; giữ app ở Testing và chỉ thêm đúng Test users.
 Giai đoạn local dùng Testing và danh sách Test users; chưa cần publish công khai.

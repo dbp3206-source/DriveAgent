@@ -66,10 +66,19 @@ async def test_document_prepare_policy(tmp_path, role, scopes, source, allowed, 
                 assert result.data["preview"] == {
                     **payload,
                     "patch": None,
-                    "document": {
-                        "title": "Report",
-                        "blocks": [{"text": "Hello", "style": "NORMAL_TEXT"}],
-                    },
+                        "document": {
+                            "title": "Report",
+                            "theme": "editorial",
+                            "blocks": [
+                                {
+                                    "kind": "paragraph",
+                                    "text": "Hello",
+                                    "rows": None,
+                                    "style": "NORMAL_TEXT",
+                                    "list_style": "none",
+                                }
+                            ],
+                        },
                 }
         else:
             with pytest.raises(ToolAccessDeniedError):

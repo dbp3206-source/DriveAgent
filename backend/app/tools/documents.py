@@ -17,7 +17,8 @@ from app.services.document_creator import (
     document_tab,
 )
 from app.services.operations import OperationStore
-from app.tools.contracts import ToolContext, ToolDefinition, ToolError
+from app.services.relational_operations import operation_store_for
+from app.tools.contracts import OperationReference, ToolContext, ToolDefinition, ToolError
 from app.tools.google_errors import workspace_http_error
 
 DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file"
@@ -63,7 +64,7 @@ class DocumentOperationResult(BaseModel):
 
 
 def operation_store(context: ToolContext) -> OperationStore:
-    return OperationStore(context.settings.data_dir / "operations.db")
+    return operation_store_for(context.settings)
 
 
 async def docs_prepare(payload: DocumentPrepare, context: ToolContext):
@@ -127,16 +128,16 @@ async def docs_execute(payload: DocumentApproval, context: ToolContext):
         try:
             with build("docs", "v1", credentials=credentials, cache_discovery=False) as service:
                 creator = DocumentCreator(service)
-                result = (
-                    creator.create(
+                if spec.action == "create":
+                    result = creator.create(
                         spec.document,
                         lambda resource_id: store.checkpoint(
                             context.user.id, row["id"], resource_id
                         ),
                     )
-                    if spec.action == "create"
-                    else creator.apply_patch(spec.patch)
-                )
+                else:
+                    store.checkpoint(context.user.id, row["id"], spec.patch.document_id)
+                    result = creator.apply_patch(spec.patch)
             store.finish(context.user.id, row["id"], result)
             return DocumentOperationResult(data={"operation_id": row["id"], **result})
         except Exception as exc:
@@ -156,32 +157,80 @@ async def docs_execute(payload: DocumentApproval, context: ToolContext):
     return await asyncio.to_thread(execute)
 
 
+async def docs_reconcile(operation_id: str, context: ToolContext):
+    """Read back an uncertain Docs write without sending it again."""
+
+    store = operation_store(context)
+    row = await asyncio.to_thread(store.get, context.user.id, operation_id)
+    if row["state"] != "uncertain" or row["capability"] not in {"docs_create", "docs_edit"}:
+        raise ToolError("Thao tác Docs không thể đối soát.", code="invalid_operation")
+    if not row["resource_id"]:
+        raise ToolError("Thao tác chưa có Document ID để đọc lại.", code="reconcile_unavailable")
+    spec = DocumentPrepare.model_validate_json(row["spec"])
+    credentials = await refresh_and_store_if_needed(context.user, context.db, context.settings)
+
+    def reconcile():
+        with build("docs", "v1", credentials=credentials, cache_discovery=False) as service:
+            creator = DocumentCreator(service)
+            if spec.action == "create":
+                creator.verify_created(row["resource_id"], spec.document)
+            else:
+                creator.verify_patch_applied(spec.patch)
+        result = {
+            "document_id": row["resource_id"],
+            "verified": True,
+            "reconciled": True,
+            "url": f"https://docs.google.com/document/d/{row['resource_id']}/edit",
+        }
+        store.finish_reconciliation(context.user.id, operation_id, result)
+        return DocumentOperationResult(data={"operation_id": operation_id, **result})
+
+    return await asyncio.to_thread(reconcile)
+
+
+async def docs_reconcile_tool(payload: OperationReference, context: ToolContext):
+    return await docs_reconcile(payload.operation_id, context)
+
+
 def document_tool_definitions() -> list[ToolDefinition]:
     return [
         ToolDefinition(
-            name=name,
-            description=description,
-            input_model=input_model,
+            name="docs_prepare",
+            description=(
+                "Xem trước bản tạo/sửa Google Docs để người dùng kiểm tra và duyệt."
+            ),
+            input_model=DocumentPrepare,
             output_model=DocumentOperationResult,
-            handler=handler,
+            handler=docs_prepare,
             required_permissions={DRIVE_WRITE},
             required_oauth_scopes={DRIVE_FILE_SCOPE},
             max_attempts=1,
             timeout_seconds=90,
             requires_user_action=True,
-        )
-        for name, description, input_model, handler in [
-            (
-                "docs_prepare",
-                "Xem trước bản tạo/sửa Google Docs, chưa ghi dữ liệu.",
-                DocumentPrepare,
-                docs_prepare,
-            ),
-            (
-                "docs_execute",
-                "Thực hiện đúng bản Google Docs người dùng vừa duyệt.",
-                DocumentApproval,
-                docs_execute,
-            ),
-        ]
+        ),
+        ToolDefinition(
+            name="docs_execute",
+            description="Thực hiện đúng bản Google Docs người dùng vừa duyệt trên giao diện.",
+            input_model=DocumentApproval,
+            output_model=DocumentOperationResult,
+            handler=docs_execute,
+            external_write=True,
+            required_permissions={DRIVE_WRITE},
+            required_oauth_scopes={DRIVE_FILE_SCOPE},
+            max_attempts=1,
+            timeout_seconds=90,
+            requires_user_action=True,
+        ),
+        ToolDefinition(
+            name="docs_reconcile",
+            description="Đọc lại một thao tác Docs chưa xác định mà không ghi lần nữa.",
+            input_model=OperationReference,
+            output_model=DocumentOperationResult,
+            handler=docs_reconcile_tool,
+            required_permissions={DRIVE_WRITE},
+            required_oauth_scopes={DRIVE_FILE_SCOPE},
+            max_attempts=1,
+            timeout_seconds=60,
+            requires_user_action=True,
+        ),
     ]

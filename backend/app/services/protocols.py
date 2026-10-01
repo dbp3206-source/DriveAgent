@@ -159,7 +159,7 @@ class KnowledgeExecutor(AgentExecutor):
 
 def build_protocol_apps(settings: Settings, session_factory=SessionFactory):
     bridge = KnowledgeBridge(settings, session_factory)
-    mcp = MCPServer("DriveAgent Knowledge")
+    mcp = MCPServer("Veridra Knowledge")
 
     @mcp.tool()
     async def knowledge_read(
@@ -199,7 +199,7 @@ def build_protocol_apps(settings: Settings, session_factory=SessionFactory):
         max_request_body_size=65536,
     )
     card = proto.AgentCard(
-        name="DriveAgent Knowledge",
+        name="Veridra Knowledge",
         version="1.0.0",
         description="Authenticated read-only knowledge access; no delegated LLM or writes.",
         supported_interfaces=[

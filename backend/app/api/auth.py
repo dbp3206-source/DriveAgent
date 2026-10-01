@@ -5,6 +5,7 @@ import json
 import logging
 import secrets
 from typing import Literal
+from urllib.parse import urlsplit
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -21,8 +22,9 @@ from app.auth.google_oauth import (
     fetch_google_profile,
 )
 from app.core.config import Settings, get_settings
+from app.core.json_utils import json_list
 from app.core.security import decrypt_json, encrypt_json
-from app.db.models import User, UserRole
+from app.db.models import ProviderCredential, User, UserRole
 from app.db.session import get_db
 
 router = APIRouter(prefix="/api/auth", tags=["authentication"])
@@ -36,7 +38,7 @@ def user_response(user: User) -> UserResponse:
         display_name=user.display_name,
         avatar_url=user.avatar_url,
         role=user.role,
-        scopes=json.loads(user.oauth_scopes_json or "[]"),
+        scopes=[str(item) for item in json_list(user.oauth_scopes_json)],
     )
 
 
@@ -49,12 +51,27 @@ async def auth_status(
     user = None
     if user_id := request.session.get("user_id"):
         user = await db.get(User, user_id)
+    authenticated = bool(
+        user and user.is_active and settings.beta_identity_allowed(user.email, user.role)
+    )
+    gemini_configured = settings.gemini_is_configured
+    if authenticated and not gemini_configured:
+        # BYOK is scoped to this authenticated user. Never require an app-wide
+        # Gemini key or reveal another user's key configuration at login.
+        own_active_key = await db.scalar(
+            select(ProviderCredential.id).where(
+                ProviderCredential.user_id == user.id,
+                ProviderCredential.provider == "gemini",
+                ProviderCredential.is_active.is_(True),
+            )
+        )
+        gemini_configured = own_active_key is not None
     return AuthStatusResponse(
-        authenticated=bool(user and user.is_active),
+        authenticated=authenticated,
         oauth_configured=settings.oauth_is_configured,
-        gemini_configured=settings.gemini_is_configured,
+        gemini_configured=gemini_configured,
         demo_login_enabled=settings.enable_demo_login and settings.environment == "development",
-        user=user_response(user) if user and user.is_active else None,
+        user=user_response(user) if authenticated else None,
     )
 
 
@@ -86,25 +103,47 @@ async def demo_login(
 async def google_login(
     request: Request,
     settings: Settings = Depends(get_settings),
-    capability: Literal["workspace"] | None = None,
+    capability: Literal["workspace", "gmail", "reconnect"] | None = None,
 ):
+    # OAuth state is stored in a host-bound session cookie.  Keep loopback aliases
+    # consistent with the registered redirect URI; otherwise a user who opens
+    # 127.0.0.1 while Google redirects to localhost loses the state cookie and
+    # receives a misleading HTTP 400 callback error.
+    request_url = getattr(request, "url", None)
+    request_host = getattr(request_url, "hostname", None)
+    configured_host = urlsplit(settings.public_base_url).hostname
+    loopback_hosts = {"localhost", "127.0.0.1", "::1"}
+    if (
+        settings.environment.casefold() in {"local", "development"}
+        and request_host in loopback_hosts
+        and configured_host in loopback_hosts
+        and request_host != configured_host
+    ):
+        return RedirectResponse(f"{settings.public_base_url.rstrip('/')}/api/auth/google")
     if capability and not request.session.get("user_id"):
         raise HTTPException(
-            status_code=401, detail="Đăng nhập trước khi kết nối quyền tạo tài liệu."
+            status_code=401, detail="Đăng nhập trước khi cấp thêm quyền Google."
         )
     try:
-        flow = build_flow(settings, workspace=True) if capability else build_flow(settings)
+        flow = build_flow(
+            settings,
+            workspace=capability in {"workspace", "reconnect"},
+            gmail_compose=capability in {"gmail", "reconnect"},
+        )
     except RuntimeError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
     nonce = secrets.token_urlsafe(24)
     authorization_url, state = flow.authorization_url(
         access_type="offline",
-        include_granted_scopes="true",
+        # Không cộng dồn các scope cũ từ những lần cấp quyền trước. Nếu bật
+        # tuỳ chọn này, Google có thể trả lại gmail.send dù phiên hiện tại chỉ
+        # xin gmail.compose, khiến UI và capability thực tế lệch nhau.
+        include_granted_scopes="false",
         prompt="consent",
         state=nonce,
     )
     request.session["oauth_state"] = state
-    request.session["oauth_workspace"] = bool(capability)
+    request.session["oauth_capability"] = capability
     request.session["oauth_upgrade_user"] = request.session.get("user_id") if capability else None
     # Flow được tạo lại ở callback. Giữ verifier của đúng lần đăng nhập này;
     # mã hóa trước khi lưu vì session cookie được ký nhưng không tự mã hóa.
@@ -118,17 +157,35 @@ async def google_callback(
     db: AsyncSession = Depends(get_db),
     settings: Settings = Depends(get_settings),
 ):
+    returned_state = request.query_params.get("state")
+    code = request.query_params.get("code")
+    oauth_error = request.query_params.get("error")
+    if oauth_error:
+        safe_error = (
+            oauth_error
+            if oauth_error in {"access_denied", "interaction_required", "login_required"}
+            else "oauth_error"
+        )
+        logger.warning("Google OAuth declined: %s", safe_error)
+        return RedirectResponse(f"{settings.frontend_origin}/?auth_error={safe_error}")
+    if not returned_state and not code:
+        return RedirectResponse(f"{settings.frontend_origin}/")
+
     expected_state = request.session.pop("oauth_state", None)
     encrypted_pkce = request.session.pop("oauth_pkce", None)
-    workspace = request.session.pop("oauth_workspace", False)
+    capability = request.session.pop("oauth_capability", None)
+    # Accept an in-flight workspace upgrade issued by the previous build.
+    legacy_workspace = request.session.pop("oauth_workspace", False)
+    if legacy_workspace and capability is None:
+        capability = "workspace"
     upgrade_user = request.session.pop("oauth_upgrade_user", None)
-    returned_state = request.query_params.get("state")
     if not expected_state or not secrets.compare_digest(expected_state, returned_state or ""):
         raise HTTPException(status_code=400, detail="OAuth state không hợp lệ.")
-    flow = (
-        build_flow(settings, state=expected_state, workspace=True)
-        if workspace
-        else build_flow(settings, state=expected_state)
+    flow = build_flow(
+        settings,
+        state=expected_state,
+        workspace=capability in {"workspace", "reconnect"},
+        gmail_compose=capability in {"gmail", "reconnect"},
     )
     try:
         flow.code_verifier = decrypt_json(encrypted_pkce, settings)["verifier"]
@@ -155,7 +212,7 @@ async def google_callback(
     except Warning as warn:
         # oauthlib raises Warning if Google returns scopes in different order or normalized.
         # This is expected and safe when user authorizes scopes.
-        logger.info("OAuth scope notice (acceptable): %s", warn)
+        logger.info("OAuth scope notice (acceptable): %s", type(warn).__name__)
         token_data = getattr(warn, "token", None) or {}
         if isinstance(token_data, dict) and "access_token" in token_data:
             from google.oauth2.credentials import Credentials
@@ -173,29 +230,49 @@ async def google_callback(
             credentials = flow.credentials
         profile = await fetch_google_profile(credentials.token)
     except Exception as exc:
-        # Provider error có thể chứa chi tiết request nhạy cảm. Chỉ ghi server log,
-        # không phản chiếu nguyên văn về trình duyệt.
-        logger.error("Google OAuth callback failure: %s: %s", type(exc).__name__, exc)
+        # SDK exceptions may contain authorization codes, tokens or request URLs.
+        # Neither the browser nor default application logs may receive them.
+        logger.error("Google OAuth callback failure: %s", type(exc).__name__)
         raise HTTPException(
             status_code=400,
-            detail=f"Google OAuth thất bại: {exc}",
-        ) from exc
+            detail=(
+                "Google OAuth thất bại. Vui lòng kết nối lại; "
+                "nếu vẫn lỗi, kiểm tra cấu hình server."
+            ),
+        ) from None
 
     email = profile.get("email")
     if not email or not profile.get("email_verified", False):
         raise HTTPException(status_code=400, detail="Google chưa xác minh email của tài khoản.")
+    if not settings.beta_email_allowed(email):
+        raise HTTPException(status_code=403, detail="Tài khoản chưa được mời vào closed beta.")
     user = await db.scalar(select(User).where(User.email == email))
-    if workspace and (not user or user.id != upgrade_user or not user.is_active):
+    if capability and (not user or user.id != upgrade_user or not user.is_active):
         raise HTTPException(status_code=403, detail="Hãy chọn đúng tài khoản đang đăng nhập.")
     if not user:
-        total_users = await db.scalar(select(func.count()).select_from(User)) or 0
+        if settings.is_local_environment:
+            total_users = await db.scalar(select(func.count()).select_from(User)) or 0
+            role = UserRole.SUPER_ADMIN.value if total_users == 0 else UserRole.EDITOR.value
+        else:
+            role = (
+                UserRole.SUPER_ADMIN.value
+                if email.strip().casefold() == settings.beta_owner_email.strip().casefold()
+                else UserRole.EDITOR.value
+            )
         user = User(
             email=email,
             display_name=profile.get("name") or email.split("@")[0],
             avatar_url=profile.get("picture"),
-            role=(UserRole.SUPER_ADMIN.value if total_users == 0 else UserRole.EDITOR.value),
+            role=role,
         )
         db.add(user)
+    elif not settings.is_local_environment:
+        # Migrated local databases may contain a first-login super-admin that
+        # is not the designated beta owner. Reconcile on authenticated login.
+        if email.strip().casefold() == settings.beta_owner_email.strip().casefold():
+            user.role = UserRole.SUPER_ADMIN.value
+        elif user.role == UserRole.SUPER_ADMIN.value:
+            user.role = UserRole.EDITOR.value
     previous_refresh_token = None
     if user.encrypted_google_credentials:
         previous_refresh_token = decrypt_json(user.encrypted_google_credentials, settings).get(

@@ -1,12 +1,6 @@
 import {
   Badge,
   Button,
-  Dialog,
-  DialogActions,
-  DialogBody,
-  DialogContent,
-  DialogSurface,
-  DialogTitle,
   Input,
   MessageBar,
   MessageBarBody,
@@ -14,7 +8,6 @@ import {
   Table,
   TableBody,
   TableCell,
-  TableCellLayout,
   TableHeader,
   TableHeaderCell,
   TableRow,
@@ -22,18 +15,20 @@ import {
 import {
   ArrowSync24Regular,
   DatabaseArrowDownRegular,
-  Dismiss24Regular,
-  Eye24Regular,
+  Delete24Regular,
   Open24Regular,
   Search24Regular,
 } from '@fluentui/react-icons'
-import { FormEvent, useCallback, useEffect, useState } from 'react'
+import { FormEvent, useCallback, useEffect, useRef, useState } from 'react'
 import { api, formatDate, humanFileSize } from '../api'
 import { EmptyState, ErrorState, LoadingState } from '../components/AsyncState'
+import { driveFileCapability } from '../driveCapabilities.mjs'
 import type { DriveFile } from '../types'
 
+type DriveCapability = { readable: boolean; indexable: boolean; previewMode: 'none' | 'source' | 'brief'; reason: string }
+const getDriveCapability = (mimeType: string, fileName: string) => driveFileCapability(mimeType, fileName) as DriveCapability
+
 interface FileList { files: DriveFile[]; next_page_token: string | null }
-interface FileContent { file: DriveFile; text: string; truncated: boolean }
 interface IndexResult { chunks: number; skipped: boolean; message: string }
 
 function readableType(mime: string) {
@@ -50,38 +45,47 @@ export function DrivePage() {
   const [query, setQuery] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [preview, setPreview] = useState<FileContent | null>(null)
-  const [previewBusy, setPreviewBusy] = useState(false)
   const [indexing, setIndexing] = useState<string | null>(null)
+  const [unindexing, setUnindexing] = useState<string | null>(null)
   const [notice, setNotice] = useState('')
   const [nextPage, setNextPage] = useState<string | null>(null)
   const [activeQuery, setActiveQuery] = useState('')
   const [folderStack, setFolderStack] = useState<Array<{ id: string; name: string }>>([])
+  const listRequest = useRef<AbortController | null>(null)
+  const currentFolderId = folderStack[folderStack.length - 1]?.id ?? null
 
   const load = useCallback(async (search = '', pageToken: string | null = null, folderId: string | null = null) => {
+    listRequest.current?.abort()
+    const controller = new AbortController()
+    listRequest.current = controller
     setLoading(true)
     setError('')
     try {
       const params = new URLSearchParams({ page_size: '50' })
       if (search.trim()) params.set('query', search.trim())
       if (pageToken) params.set('page_token', pageToken)
-      const lastInStack = folderStack[folderStack.length - 1]
-      const targetFolderId = folderId !== undefined ? folderId : (lastInStack ? lastInStack.id : null)
-      if (targetFolderId && !search.trim()) params.set('folder_id', targetFolderId)
-      const result = await api<FileList>(`/api/drive/files?${params}`)
+      if (folderId && !search.trim()) params.set('folder_id', folderId)
+      const result = await api<FileList>(`/api/drive/files?${params}`, { signal: controller.signal })
+      // A previous folder/search response must never replace the latest selection.
+      if (controller.signal.aborted) return
       setFiles((current) => pageToken
         ? [...current, ...result.files.filter((file) => !current.some((old) => old.id === file.id))]
         : result.files)
       setNextPage(result.next_page_token)
       setActiveQuery(search)
     } catch (caught) {
+      if (controller.signal.aborted) return
       setError(caught instanceof Error ? caught.message : 'Không thể tải tệp Drive.')
     } finally {
-      setLoading(false)
+      if (!controller.signal.aborted) setLoading(false)
     }
-  }, [folderStack])
+  }, [])
 
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void load()
+    return () => listRequest.current?.abort()
+  }, [load])
+
 
   function openFolder(folder: DriveFile) {
     const nextStack = [...folderStack, { id: folder.id, name: folder.name }]
@@ -106,20 +110,25 @@ export function DrivePage() {
 
   async function search(event: FormEvent) {
     event.preventDefault()
-    await load(query)
+    await load(query, null, currentFolderId)
   }
 
-  async function read(file: DriveFile) {
+
+  async function unindex(file: DriveFile) {
+    if (!window.confirm(`Hoàn tác lập chỉ mục cho “${file.name}”? Tệp gốc trên Drive sẽ không bị thay đổi.`)) return
     setError('')
-    setPreviewBusy(true)
-    setPreview({ file, text: '', truncated: false })
+    setUnindexing(file.id)
+    setNotice('')
     try {
-      setPreview(await api<FileContent>(`/api/drive/files/${file.id}/content`))
+      const result = await api<{message: string}>(`/api/drive/files/${encodeURIComponent(file.id)}/index`, { method: 'DELETE' })
+      setNotice(result.message)
+      setFiles(current => current.map(item => item.id === file.id
+        ? {...item, indexed: false, index_status: 'not_indexed'}
+        : item))
     } catch (caught) {
-      setPreview(null)
-      setError(caught instanceof Error ? caught.message : 'Không thể đọc tệp.')
+      setError(caught instanceof Error ? caught.message : 'Không thể hoàn tác lập chỉ mục.')
     } finally {
-      setPreviewBusy(false)
+      setUnindexing(null)
     }
   }
 
@@ -130,7 +139,9 @@ export function DrivePage() {
     try {
       const result = await api<IndexResult>(`/api/drive/files/${file.id}/index`, { method: 'POST' })
       setNotice(`${file.name}: ${result.message}`)
-      setFiles((current) => current.map((item) => item.id === file.id ? { ...item, indexed: true } : item))
+      setFiles((current) => current.map((item) => item.id === file.id
+        ? { ...item, indexed: true, index_status: 'fresh' }
+        : item))
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Không thể lập chỉ mục.')
     } finally {
@@ -145,11 +156,11 @@ export function DrivePage() {
           <h2>Tệp bạn đã cấp quyền</h2>
           <p>Danh sách đến trực tiếp từ Drive API. Lập chỉ mục để hỏi đáp có trích dẫn.</p>
         </div>
-        <Button appearance="subtle" icon={<ArrowSync24Regular />} onClick={() => load(query)}>
+        <Button appearance="subtle" icon={<ArrowSync24Regular />} onClick={() => load(query, null, currentFolderId)}>
           Làm mới
         </Button>
       </div>
-      <form className="search-row" onSubmit={search}>
+      <form className="search-row drive-search-form" onSubmit={search}>
         <Input
           id="drive-search"
           name="query"
@@ -158,13 +169,14 @@ export function DrivePage() {
           contentBefore={<Search24Regular />}
           placeholder="Tìm theo tên hoặc nội dung"
           aria-label="Tìm tệp Google Drive"
+          className="drive-search-capsule"
         />
-        <Button appearance="primary" type="submit" disabled={loading}>Tìm kiếm</Button>
+        <Button appearance="primary" type="submit" disabled={loading} className="drive-search-btn">Tìm kiếm</Button>
       </form>
       {notice ? (
         <MessageBar intent="success"><MessageBarBody>{notice}</MessageBarBody></MessageBar>
       ) : null}
-      {error ? <ErrorState message={error} retry={() => load(query)} /> : null}
+      {error ? <ErrorState message={error} retry={() => load(query, null, currentFolderId)} /> : null}
       {loading ? <LoadingState label="Đang lấy danh sách từ Google Drive" /> : null}
       {!loading && !error && files.length === 0 ? (
         <EmptyState title="Không tìm thấy tệp" description="Hãy đổi từ khóa hoặc kiểm tra quyền Google Drive." />
@@ -194,7 +206,7 @@ export function DrivePage() {
       </div>
       {!loading && files.length > 0 ? (
         <div className="table-scroll">
-          <Table aria-label="Danh sách tệp Google Drive">
+          <Table className="drive-file-table" aria-label="Danh sách tệp Google Drive">
             <TableHeader>
               <TableRow>
                 <TableHeaderCell>Tên tệp</TableHeaderCell>
@@ -206,47 +218,84 @@ export function DrivePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {files.map((file) => (
+              {files.map((file) => {
+                const capability = getDriveCapability(file.mime_type, file.name)
+                const isFolder = file.mime_type.includes('folder')
+                return (
                 <TableRow key={file.id}>
                   <TableCell>
-                    {file.mime_type.includes('folder') ? (
+                    {isFolder ? (
                       <button
                         type="button"
                         className="folder-link-btn"
                         onClick={() => openFolder(file)}
                         title="Mở thư mục này"
                       >
-                        📁 <strong>{file.name}</strong>
+                        📁 <strong
+                          className="drive-file-name"
+                          style={{
+                            display: 'block',
+                            minWidth: 0,
+                            maxWidth: '100%',
+                            overflowWrap: 'anywhere',
+                            wordBreak: 'normal',
+                            whiteSpace: 'normal',
+                          }}
+                        >{file.name}</strong>
                       </button>
                     ) : (
-                      <TableCellLayout>{file.name}</TableCellLayout>
+                      <span
+                        className="drive-file-name"
+                        title={file.name}
+                        style={{
+                          display: 'block',
+                          minWidth: 0,
+                          maxWidth: '100%',
+                          overflowWrap: 'anywhere',
+                          wordBreak: 'normal',
+                          whiteSpace: 'normal',
+                        }}
+                      >{file.name}</span>
                     )}
                   </TableCell>
                   <TableCell>{readableType(file.mime_type)}</TableCell>
                   <TableCell>{formatDate(file.modified_time)}</TableCell>
                   <TableCell className="numeric">{humanFileSize(file.size)}</TableCell>
                   <TableCell>
-                    <Badge appearance="tint" color={file.indexed ? 'success' : 'informative'}>
-                      {file.indexed ? 'Đã index' : 'Chưa index'}
+                    <Badge
+                      appearance="tint"
+                      color={!capability.indexable
+                        ? 'informative'
+                        : file.index_status === 'fresh'
+                        ? 'success'
+                        : file.index_status === 'stale' ? 'warning' : 'informative'}
+                      title={!capability.indexable ? capability.reason : undefined}
+                    >
+                      {!capability.indexable
+                        ? (isFolder ? '—' : 'Không hỗ trợ')
+                        : file.index_status === 'fresh'
+                        ? 'Đã index'
+                        : file.index_status === 'stale' ? 'Cần index lại' : 'Chưa index'}
                     </Badge>
                   </TableCell>
                   <TableCell>
                     <div className="row-actions">
-                      {!file.mime_type.includes('folder') ? (
-                        <Button
-                          appearance="subtle"
-                          icon={<Eye24Regular />}
-                          aria-label={`Đọc ${file.name}`}
-                          onClick={() => read(file)}
-                        />
-                      ) : null}
-                      {!file.mime_type.includes('folder') ? (
+                      {capability.indexable ? (
                         <Button
                           appearance="subtle"
                           icon={indexing === file.id ? <Spinner size="tiny" /> : <DatabaseArrowDownRegular />}
-                          aria-label={`Lập chỉ mục ${file.name}`}
+                          aria-label={`${file.index_status === 'stale' ? 'Lập lại' : 'Lập'} chỉ mục ${file.name}`}
                           disabled={indexing !== null}
                           onClick={() => index(file)}
+                        />
+                      ) : null}
+                      {capability.indexable && file.index_status !== 'not_indexed' ? (
+                        <Button
+                          appearance="subtle"
+                          icon={unindexing === file.id ? <Spinner size="tiny" /> : <Delete24Regular />}
+                          aria-label={`Hoàn tác lập chỉ mục ${file.name}`}
+                          disabled={indexing !== null || unindexing !== null}
+                          onClick={() => void unindex(file)}
                         />
                       ) : null}
                       {file.web_view_link ? (
@@ -262,30 +311,15 @@ export function DrivePage() {
                     </div>
                   </TableCell>
                 </TableRow>
-              ))}
+                )
+              })}
             </TableBody>
           </Table>
         </div>
       ) : null}
 
-      {nextPage ? <Button disabled={loading} onClick={() => load(activeQuery, nextPage)}>Tải thêm tệp</Button> : null}
+      {nextPage ? <Button disabled={loading} onClick={() => load(activeQuery, nextPage, currentFolderId)}>Tải thêm tệp</Button> : null}
 
-      <Dialog open={Boolean(preview)} onOpenChange={(_, data) => !data.open && setPreview(null)}>
-        <DialogSurface className="preview-dialog">
-          <DialogBody>
-            <DialogTitle action={<Button aria-label="Đóng xem trước" appearance="subtle" icon={<Dismiss24Regular />} onClick={() => setPreview(null)} />}>
-              {preview?.file.name}
-            </DialogTitle>
-            <DialogContent>
-              {previewBusy ? <LoadingState label="Đang đọc và chuyển đổi tệp" /> : <pre className="file-preview">{preview?.text}</pre>}
-              {preview?.truncated ? <p className="muted">Preview đã được rút gọn để bảo vệ trình duyệt.</p> : null}
-            </DialogContent>
-            <DialogActions>
-              <Button appearance="primary" onClick={() => setPreview(null)}>Đóng</Button>
-            </DialogActions>
-          </DialogBody>
-        </DialogSurface>
-      </Dialog>
     </section>
   )
 }

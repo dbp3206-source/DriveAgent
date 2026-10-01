@@ -23,9 +23,9 @@ class SkillSpec(BaseModel):
     constraints: list[str] = Field(default_factory=list, max_length=20)
     preferred_capabilities: list[
         Literal[
-            "drive", "rag", "memory", "docs", "slides", "sheets", "visuals", "gmail", "artifacts"
+            "drive", "rag", "memory", "docs", "sheets", "gmail", "artifacts"
         ]
-    ] = Field(default_factory=list, max_length=9)
+    ] = Field(default_factory=list, max_length=7)
     output_format: str = Field(min_length=2, max_length=100)
 
     @field_validator("procedure", "constraints")
@@ -117,6 +117,13 @@ class SkillStore:
         row = self.get(user_id, name)
         if not row["active"]:
             raise ToolError("Skill đã được lưu trữ.", code="skill_archived")
+        retired = {"slides", "visuals"} & set(row.get("preferred_capabilities", []))
+        if retired:
+            raise ToolError(
+                "Skill cũ dùng Slides/Visual đã rút khỏi sản phẩm. "
+                "Hãy tạo phiên bản mới bằng Docs, Sheets hoặc Gmail.",
+                code="skill_capability_retired",
+            )
         placeholders = set(re.findall(r"\{([a-zA-Z][a-zA-Z0-9_]*)\}", json.dumps(row)))
         missing = placeholders - inputs.keys()
         if missing:

@@ -77,7 +77,7 @@ async def test_real_mcp_and_a2a_sdk_routes_require_user_and_execute_without_llm(
             assert "0.3" in result.text
             card = await client.get("/a2a/.well-known/agent-card.json", headers=headers)
             assert card.status_code == 200, card.text
-            assert card.json()["name"] == "DriveAgent Knowledge"
+            assert card.json()["name"] == "Veridra Knowledge"
             a2a_headers = {**headers, "A2A-Version": "1.0"}
             sent = await client.post(
                 "/a2a/",

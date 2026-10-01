@@ -1,13 +1,53 @@
 name: CI
 
+permissions:
+  contents: read
+  packages: write
+
 on:
   push:
   pull_request:
 
 jobs:
+  postgres-state:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: veridra_ci
+          POSTGRES_USER: veridra_ci
+          POSTGRES_PASSWORD: isolated-ci-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U veridra_ci -d veridra_ci"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      VERIDRA_TEST_POSTGRES_URL: postgresql+psycopg://veridra_ci:isolated-ci-only@localhost:5432/veridra_ci
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install locked backend
+        run: |
+          python -m pip install uv==0.12.19
+          uv sync --project backend --frozen --extra dev
+      - name: Verify real PostgreSQL state contract
+        run: backend/.venv/bin/python -m pytest backend/tests/test_postgres_state.py -q --junitxml=postgres-state.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: postgres-state-${{ github.sha }}
+          path: postgres-state.xml
   verify:
+    needs: postgres-state
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
 
     steps:
       - name: Checkout
@@ -21,13 +61,37 @@ jobs:
           cache-dependency-path: backend/pyproject.toml
 
       - name: Install backend
-        run: python -m pip install -e "backend[dev]"
+        run: |
+          python -m pip install uv==0.12.19
+          uv sync --project backend --frozen --extra dev
+          echo "$GITHUB_WORKSPACE/backend/.venv/bin" >> "$GITHUB_PATH"
 
       - name: Lint backend
         run: python -m ruff check backend
 
+      - name: Lint scripts
+        working-directory: backend
+        run: python -m ruff check ../scripts
+
+      - name: Reject credentials and private runtime files
+        run: python scripts/scan_release_secrets.py
+
+      - name: Check backend dependencies
+        run: uv pip check --python backend/.venv/bin/python
+
       - name: Test backend
-        run: python -m pytest backend/tests
+        # This is a release gate, not a cosmetic statistic: critical API,
+        # orchestration, RAG and document paths must remain exercised.
+        run: python -m pytest backend/tests --cov=app --cov-report=term-missing --cov-fail-under=85
+
+      - name: Run versioned offline evaluation gate
+        run: python scripts/evaluate_release_offline.py --output release-evaluation.json
+
+      - name: Preserve evaluation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: regression-${{ github.sha }}
+          path: release-evaluation.json
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -40,6 +104,10 @@ jobs:
         working-directory: frontend
         run: npm ci
 
+      - name: Test frontend
+        working-directory: frontend
+        run: npm test
+
       - name: Lint frontend
         working-directory: frontend
         run: npm run lint
@@ -47,3 +115,55 @@ jobs:
       - name: Build frontend
         working-directory: frontend
         run: npm run build
+
+      - name: Build runtime image
+        run: docker build --tag veridra:${{ github.sha }} .
+
+      - name: Check packaged runtime
+        run: docker run --rm --entrypoint python veridra:${{ github.sha }} -c "import app.main; import pathlib; assert pathlib.Path('/app/frontend/dist/index.html').is_file()"
+
+      - name: Save verified image
+        run: docker save veridra:${{ github.sha }} --output release-image.tar
+
+      - name: Sign in to GitHub Container Registry
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/staging/'))
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish the verified image
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/staging/'))
+        shell: bash
+        run: |
+          IMAGE="ghcr.io/dbp3206-source/veridra"
+          docker tag "veridra:${GITHUB_SHA}" "${IMAGE}:${GITHUB_SHA}"
+          CHANNEL="staging"
+          if [ "${GITHUB_REF}" = "refs/heads/main" ]; then CHANNEL="closed-beta"; fi
+          docker tag "veridra:${GITHUB_SHA}" "${IMAGE}:${CHANNEL}"
+          docker push "${IMAGE}:${GITHUB_SHA}"
+          docker push "${IMAGE}:${CHANNEL}"
+          DIGEST="$(docker buildx imagetools inspect "${IMAGE}:${GITHUB_SHA}" --format '{{json .Manifest.Digest}}' | tr -d '\"')"
+          test "${DIGEST#sha256:}" != "${DIGEST}"
+          printf '%s@%s\n' "${IMAGE}" "${DIGEST}" > release-image-digest.txt
+
+      - name: Deploy the exact verified image to Render
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.RENDER_DEPLOY_HOOK != ''
+        env:
+          RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
+        shell: bash
+        run: |
+          IMAGE_REF="$(cat release-image-digest.txt)"
+          curl --fail --silent --show-error --retry 3 --retry-all-errors \
+            --get --data-urlencode "imgURL=${IMAGE_REF}" "${RENDER_DEPLOY_HOOK}"
+
+      - name: Upload versioned image for controlled deployment
+        uses: actions/upload-artifact@v4
+        with:
+          name: veridra-image-${{ github.sha }}
+          path: |
+            release-image.tar
+            release-image-digest.txt
+          if-no-files-found: error
+          retention-days: 7

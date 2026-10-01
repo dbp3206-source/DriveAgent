@@ -14,6 +14,9 @@ from app.tools.contracts import ToolContext, ToolError
 class SameVectorEmbeddings:
     """Simulate a dense model that over-scores every candidate equally."""
 
+    def __init__(self, settings):
+        self.settings = settings
+
     async def embed(self, _text, _task):
         return [1.0] + [0.0] * 767
 
@@ -57,7 +60,7 @@ async def test_memory_search_returns_empty_instead_of_unrelated_top_k(tmp_path: 
         await connection.run_sync(Base.metadata.create_all)
     factory = async_sessionmaker(engine, expire_on_commit=False)
     settings = Settings(gemini_api_key="", qdrant_path=str(tmp_path / "qdrant-no-match"))
-    service = MemoryService(SameVectorEmbeddings(), VectorStore(settings))
+    service = MemoryService(SameVectorEmbeddings(settings), VectorStore(settings))
 
     async with factory() as db:
         user = User(email="memory@example.com", display_name="Memory", role=UserRole.EDITOR.value)

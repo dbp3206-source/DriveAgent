@@ -1,3 +1,4 @@
+param([switch]$WithLocalLangfuse)
 $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $backendPython = Join-Path $repoRoot "backend\.venv\Scripts\python.exe"
@@ -26,6 +27,16 @@ try {
     # OAuthlib normally requires HTTPS. This exception is limited to this loopback-only
     # process; never bind this runner to 0.0.0.0 or expose it through a public tunnel.
     $previousTransport = $env:OAUTHLIB_INSECURE_TRANSPORT
+    $previousLangfuseUrl = $env:DRIVE_AGENT_LANGFUSE_LOCAL_URL
+    $previousLangfuseFile = $env:DRIVE_AGENT_LANGFUSE_CREDENTIALS_FILE
+    if ($WithLocalLangfuse) {
+        $credentials = Join-Path $repoRoot 'ops\secrets\langfuse-export.json'
+        if (-not (Test-Path -LiteralPath $credentials)) {
+            throw 'Provision local Langfuse first; see ops/README.md.'
+        }
+        $env:DRIVE_AGENT_LANGFUSE_LOCAL_URL = 'http://127.0.0.1:3035'
+        $env:DRIVE_AGENT_LANGFUSE_CREDENTIALS_FILE = $credentials
+    }
     $env:OAUTHLIB_INSECURE_TRANSPORT = "1"
     try {
         Write-Host "Open http://localhost:8000 . Stop with Ctrl+C."
@@ -34,6 +45,8 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "Local server stopped with an error." }
     } finally {
         $env:OAUTHLIB_INSECURE_TRANSPORT = $previousTransport
+        $env:DRIVE_AGENT_LANGFUSE_LOCAL_URL = $previousLangfuseUrl
+        $env:DRIVE_AGENT_LANGFUSE_CREDENTIALS_FILE = $previousLangfuseFile
     }
 } finally {
     Pop-Location

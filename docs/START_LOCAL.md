@@ -1,4 +1,4 @@
-# Bắt đầu dùng DriveAgent thật trên máy local
+# Bắt đầu dùng Veridra trên máy local
 
 Mục tiêu hiện tại: bạn hoặc nhóm nhỏ đăng nhập Google và dùng dữ liệu Drive thật
 trên máy này. Chưa cần domain, VPS, Cloud SQL hoặc Redis. Đây chưa phải dịch vụ public.
@@ -38,23 +38,23 @@ Nguồn: https://ai.google.dev/gemini-api/docs/api-key
 1. Mở https://console.cloud.google.com/ và chọn project, nên dùng cùng project ở bước 2.
 2. Vào APIs & Services → Library.
 3. Tìm và bật lần lượt: **Google Drive API**, **Google Docs API**,
-   **Google Slides API**, **Google Sheets API** và **Gmail API**.
+   **Google Sheets API** và **Gmail API**.
 
 Chỉ cấp OAuth scope là chưa đủ: nếu API tương ứng vẫn ở trạng thái Disabled,
 Google sẽ trả 403 dù đăng nhập đã thành công. Mở trang chi tiết từng API và xác nhận
-trạng thái là **Enabled** trước khi thử tạo Docs, Slides hoặc Sheets.
+trạng thái là **Enabled** trước khi thử tạo Docs hoặc Sheets.
 
 ## 4. Thiết lập Google Auth Platform
 
 1. Mở Google Auth Platform → Get started nếu chưa khởi tạo.
-2. Branding: đặt tên DriveAgent Local, chọn support email và developer email của bạn.
+2. Branding: đặt tên Veridra Local, chọn support email và developer email của bạn.
 3. Audience: chọn External khi dùng Gmail cá nhân. Giữ trạng thái Testing.
 4. Test users: thêm email bạn sẽ dùng đăng nhập; thêm từng email thành viên nếu cần.
 5. Data Access → Add or remove scopes: thêm `openid`, `email`, `profile`,
    `https://www.googleapis.com/auth/drive.readonly`,
    `https://www.googleapis.com/auth/drive.file`,
    `https://www.googleapis.com/auth/gmail.readonly` và
-   `https://www.googleapis.com/auth/gmail.send`.
+   `https://www.googleapis.com/auth/gmail.compose` (tạo nháp và chỉ gửi sau bước xác nhận).
 
 Không bật Publish App ở giai đoạn này. Một số scope trên thuộc nhóm sensitive/restricted;
 Testing có refresh token hết hạn sau 7 ngày với quyền Drive, khi đó đăng nhập lại.
@@ -64,7 +64,7 @@ Nguồn: https://developers.google.com/identity/protocols/oauth2
 
 ## 5. Tạo OAuth client JSON
 
-1. Clients → Create client → Web application, đặt tên DriveAgent Local Web.
+1. Clients → Create client → Web application, đặt tên Veridra Local Web.
 2. Authorized JavaScript origins: `http://localhost:8000`.
 3. Authorized redirect URIs: **chính xác** `http://localhost:8000/api/auth/google/callback`.
 4. Create → Download JSON.
@@ -97,7 +97,7 @@ Bạn đăng nhập đầu tiên bằng tài khoản quản trị dự định s
 super_admin cho user đầu tiên và editor cho user mới tiếp theo.
 Nếu đã có dữ liệu QA thì không tự xóa database; kiểm tra vai trò trong trang quyền.
 
-1. Tạo thủ công một Google Doc thử nghiệm tên `DriveAgent smoke test`.
+1. Tạo thủ công một Google Doc thử nghiệm tên `Veridra smoke test`.
 2. Nội dung: `Mã kiểm thử là DA-LOCAL-2026. Ngày họp là thứ Sáu.`
 3. Kết nối Google Drive, dùng đúng email Test user, chỉ chấp thuận quyền đã dự kiến.
 4. Liệt kê Drive, tìm đúng tên file, đọc và xác nhận đúng mã/ngày họp.
@@ -105,8 +105,7 @@ Nếu đã có dữ liệu QA thì không tự xóa database; kiểm tra vai tr�
 6. Lập chỉ mục file qua UI, hỏi lại bằng RAG, mở citation để xác nhận đúng file.
 7. Lưu một preference không nhạy cảm vào Memory, khởi động lại app và kiểm tra còn lưu.
 8. Dùng browser profile riêng cho user B: chat, memory, RAG của A không được xuất hiện.
-9. Tạo thử một Docs, Sheets và Slides qua luồng xem trước → xác nhận → đọc lại.
-   Với Slides, thêm speaker notes để kiểm tra cả vùng ghi chú người thuyết trình.
+9. Tạo thử một Docs và Sheets qua luồng xem trước → xác nhận → đọc lại; soạn một Gmail và chỉ gửi sau khi kiểm tra bản duyệt.
 10. Kiểm tra Audit cho các thao tác vừa thực hiện.
 
 Các bước này cần credential và người dùng chấp thuận OAuth thật, không thể được
@@ -129,11 +128,39 @@ truy cập chung qua LAN/web cần cấu hình triển khai riêng.
 - `redirect_uri_mismatch`: kiểm tra URI trong Cloud Console, `.env`, JSON và cổng 8000.
 - `access_denied`: thêm đúng email vào Test users, kiểm tra chính sách Workspace.
 - `api_disabled` hoặc Google 403 sau khi đã cấp scope: quay lại bước 3 và bật đúng
-  Docs/Slides/Sheets/Gmail API trong chính Google Cloud project của OAuth client.
+  Docs/Sheets/Gmail API trong chính Google Cloud project của OAuth client.
 - `invalid_grant`: token bị thu hồi/hết hạn; kết nối Google lại.
-- Port 8000 đang dùng: dừng đúng phiên DriveAgent cũ trước, không tắt process bất kỳ.
+- Port 8000 đang dùng: dừng đúng phiên Veridra cũ trước, không tắt process bất kỳ.
 - Gemini 429: kiểm tra Usage/quota/billing; đợi và giảm tần suất gọi.
 - Thay APP_SECRET khiến không giải mã được: khôi phục secret cũ từ backup.
+
+## Sao lưu và khôi phục dữ liệu
+
+Dừng Veridra bằng `Ctrl+C` trước khi sao lưu. Script từ chối chạy nếu cổng 8000
+còn lắng nghe, copy toàn bộ `data/`, kiểm SHA-256 từng file và ghi `manifest.json`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/backup-local.ps1
+```
+
+Khôi phục mặc định vào `data-restored/` để bạn kiểm tra trước, không ghi đè `data/`:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/restore-local.ps1 `
+  -BackupPath ".local-backups\<mốc-thời-gian>"
+```
+
+Muốn khôi phục vào `data/`, vẫn phải dừng server và chỉ rõ đích. Nếu thư mục đích
+đang có dữ liệu, thêm `-ReplaceExisting`; script sẽ chuyển bản cũ sang thư mục
+`data.restore-previous-<mốc-thời-gian>` thay vì xóa, rồi kiểm lại toàn bộ hash:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/restore-local.ps1 `
+  -BackupPath ".local-backups\<mốc-thời-gian>" `
+  -Destination ".\data" -ReplaceExisting
+```
+
+`.env`, APP_SECRET và OAuth JSON không nằm trong `data/`; sao lưu riêng vào nơi mã hóa.
 
 Lần nghiệm thu gần nhất đã xác nhận Gemini, Drive list/search/read, RAG và citation
 trên tài khoản test. Khi đổi key, project hoặc Test user, hãy lặp lại bước 7.

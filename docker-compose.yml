@@ -1,0 +1,25 @@
+services:
+  app:
+    build: .
+    image: veridra:local
+    ports: ["127.0.0.1:8000:8000"]
+    env_file: .env
+    environment:
+      DRIVE_AGENT_DATABASE_URL: sqlite+aiosqlite:////app/data/drive_agent.db
+      DRIVE_AGENT_STATE_DIR: /app/data
+      DRIVE_AGENT_QDRANT_PATH: /app/data/qdrant
+      DRIVE_AGENT_GOOGLE_OAUTH_CLIENT_FILE: /run/secrets/google_client.json
+      DRIVE_AGENT_CONTAINER_LOCAL_GATEWAY: 172.30.80.1
+    volumes:
+      - veridra-state:/app/data
+      - ./client_secret.json:/run/secrets/google_client.json:ro
+    restart: unless-stopped
+    networks: [local-app]
+volumes:
+  veridra-state:
+networks:
+  local-app:
+    ipam:
+      config:
+        - subnet: 172.30.80.0/24
+          gateway: 172.30.80.1
