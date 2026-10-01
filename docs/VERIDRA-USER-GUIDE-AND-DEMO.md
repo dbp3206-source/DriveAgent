@@ -145,7 +145,17 @@ trên là hướng dẫn cho máy mới, không còn là trạng thái máy hi�
 
 Trong demo observability: mở Nhật ký → chạy regression offline → thấy bốn suite
 hoàn tất → reload vẫn thấy đúng job; mở Langfuse để truy trace; mở Grafana để xem
-metrics. Không gọi những số này là điểm chất lượng toàn sản phẩm. Long-running
-Chat hiện chưa có durable resume như job evaluation.
+metrics. Không gọi những số này là điểm chất lượng toàn sản phẩm.
+
+Chat dùng queue SQL và hai worker có giới hạn. Gửi yêu cầu, reload hoặc đóng tab rồi
+mở lại Chat: giao diện tìm task đang xử lý của đúng tài khoản và đọc checkpoint kết quả.
+Yêu cầu chưa hoàn tất sau khi process bị ngắt sẽ được xử lý lại khi lease 120 giây hết hạn,
+tối đa ba lần; không tạo thêm user message hay công bố kết quả từ worker cũ. Đây là
+checkpoint theo **toàn lượt**, không phải tiếp tục tại chính xác từng token/tool. Một lần
+phục hồi có thể đọc nguồn và gọi model lại, tiêu thêm quota. Lỗi quota/provider đã nhận
+được không bị tự thử vô hạn. Nếu bộ nhớ có thể đã ghi trước khi ngắt, task dừng để bạn
+kiểm tra bộ nhớ, không replay thao tác ghi mù. Google write vẫn đi qua approval ledger
+riêng. Bấm dừng sẽ thu hồi quyền công bố kết quả; một request provider đang chạy có thể
+vẫn tiêu quota cho tới khi kết thúc. Kiểm thử restart trên cloud vẫn là gate riêng.
 
 Nguồn tham khảo: [GetLayers, chính sách sử dụng](https://www.getlayers.ai/), [Langfuse self-host Docker Compose](https://langfuse.com/self-hosting/deployment/docker-compose), [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/). Hướng dẫn này không cam kết quyền sử dụng commercial template của GetLayers; nền Veridra là implementation riêng.

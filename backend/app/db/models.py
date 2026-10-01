@@ -69,6 +69,29 @@ class PdfIngestionJob(Base):
         DateTime(timezone=True), default=utc_now, onupdate=utc_now)
 
 
+class ChatTask(Base):
+    """Owner-scoped chat queue; a completed turn is its atomic checkpoint."""
+
+    __tablename__ = "chat_tasks"
+    __table_args__ = (
+        Index("ux_chat_task_owner_key", "user_id", "client_key", unique=True),
+        Index("ix_chat_task_claim", "status", "created_at"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    session_id: Mapped[str] = mapped_column(
+        ForeignKey("chat_sessions.id", ondelete="CASCADE"), index=True)
+    client_key: Mapped[str] = mapped_column(String(36))
+    payload_json: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(24), default="queued", index=True)
+    result_json: Mapped[str] = mapped_column(Text, default="{}")
+    error_message: Mapped[str | None] = mapped_column(Text)
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    lease_until: Mapped[float | None] = mapped_column(Float)
+    lease_token: Mapped[str | None] = mapped_column(String(36))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
 class ScheduledJob(Base):
     """Durable, idempotent owner job created by the authenticated cron endpoint."""
 

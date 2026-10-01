@@ -102,12 +102,19 @@ def _scheduled_jobs(connection: Connection) -> None:
     ScheduledJob.__table__.create(connection, checkfirst=True)
 
 
+def _chat_tasks(connection: Connection) -> None:
+    from app.db.models import ChatTask
+
+    ChatTask.__table__.create(connection, checkfirst=True)
+
+
 MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (1, _message_lifecycle),
     (2, _company_profiles),
     (3, _enable_existing_provider_failover),
     (4, _pdf_ingestion_jobs),
     (5, _scheduled_jobs),
+    (6, _chat_tasks),
 )
 
 
@@ -143,7 +150,7 @@ def apply_postgres_migrations(connection: Connection) -> None:
     postgres_schema_migrations.create(connection, checkfirst=True)
     applied = set(connection.execute(select(postgres_schema_migrations.c.version)).scalars())
     migrations: tuple[tuple[int, Migration], ...] = ((1, lambda _connection: None),
-                                                     (2, _scheduled_jobs))
+                                                     (2, _scheduled_jobs), (3, _chat_tasks))
     for version, migration in migrations:
         if version in applied:
             continue

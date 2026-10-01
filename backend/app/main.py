@@ -24,6 +24,7 @@ from app.api import (
     auth,
     briefings,
     chat,
+    chat_tasks,
     creation,
     documents,
     drive,
@@ -251,10 +252,18 @@ async def lifespan(app: FastAPI):
     from app.services.scheduled_jobs import worker as scheduled_worker
 
     scheduler_task = asyncio.create_task(scheduled_worker(SessionFactory, settings, registry))
+    from app.services.chat_tasks import worker as chat_worker
+
+    chat_workers = [asyncio.create_task(chat_worker(SessionFactory, app)) for _ in range(2)]
     try:
         async with mcp_lifespan_app.router.lifespan_context(mcp_lifespan_app):
             yield
     finally:
+        for task in chat_workers:
+            task.cancel()
+        for task in chat_workers:
+            with suppress(asyncio.CancelledError):
+                await task
         scheduler_task.cancel()
         with suppress(asyncio.CancelledError):
             await scheduler_task
@@ -431,6 +440,7 @@ for api_router in (
     rag.router,
     memory.router,
     metrics.router,
+    chat_tasks.router,
     chat.router,
     creation.router,
     audit.router,

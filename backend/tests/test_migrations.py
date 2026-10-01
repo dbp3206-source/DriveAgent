@@ -31,5 +31,5 @@ def test_message_lifecycle_migration_upgrades_existing_database_once(tmp_path):
     assert tuple(row) == ("Nội dung cũ", "completed", None)
     assert {"user_id", "domain", "source_url", "last_verified_at"}.issubset(company_columns)
     assert {"user_id", "kind", "dedupe_key", "lease_token"}.issubset(scheduled_columns)
-    assert versions == [(1,), (2,), (3,), (4,), (5,)]
+    assert versions == [(1,), (2,), (3,), (4,), (5,), (6,)]
     engine.dispose()

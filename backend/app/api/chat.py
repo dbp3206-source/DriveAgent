@@ -513,7 +513,11 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
             (
                 await db.scalars(
                     select(Message)
-                    .where(Message.session_id == session.id, Message.user_id == user.id)
+                    .where(
+                        Message.session_id == session.id, Message.user_id == user.id,
+                        or_(Message.request_id.is_(None),
+                            Message.request_id != request.state.request_id),
+                    )
                     .order_by(Message.created_at.desc(), Message.id.desc())
                     .limit(12)
                 )
@@ -530,7 +534,12 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
     publish_progress(user.id, request_id, {"stage": "orchestration", "status": "running"})
     session_id_value = session.id
     started = time.perf_counter()
-    user_row = Message(
+    task_context = getattr(request.state, "chat_task", None)
+    user_row = (await db.scalar(select(Message).where(
+        Message.user_id == user.id, Message.request_id == request_id,
+        Message.role == "user", Message.session_id == session.id,
+    ))) if task_context else None
+    user_row = user_row or Message(
         session_id=session.id,
         user_id=user.id,
         role="user",
@@ -575,6 +584,11 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
         """Keep the user's request and record why the task did not complete."""
 
         await db.rollback()
+        if task_context:
+            from app.services.chat_tasks import fence
+
+            await fence(db, request_id, task_context["token"], task_context["attempt"],
+                        lease_until=time.time() + 120)
         persisted = await db.get(Message, user_row_id)
         if persisted is not None:
             persisted.status = status
@@ -657,6 +671,10 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
                 if resolver is not None
                 else request.app.state.orchestrator
             )
+            if task_context:
+                # Queue sessions use expire_on_commit=False. Release the small
+                # PostgreSQL pool before ADK opens independent tool sessions.
+                await db.commit()
             return await run_provider_chain(orchestrator)
 
         if pinning is None:
@@ -795,6 +813,11 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
             ),
         ) from exc
     except (asyncio.CancelledError, GeneratorExit) as exc:
+        if task_context:
+            # Worker shutdown is resumable, not a user's explicit cancellation.
+            # The cancel endpoint owns user cancellations and revokes the lease.
+            await db.rollback()
+            raise
         # Shield the tiny status write from the request cancellation so a page
         # refresh shows an honest cancelled turn instead of making it vanish.
         await asyncio.shield(finish_failed_turn("cancelled", exc))
@@ -866,8 +889,7 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
         }
     )
     task_audit.latency_ms = round((time.perf_counter() - started) * 1000)
-    await db.commit()
-    return ChatResponse(
+    response = ChatResponse(
         session_id=session_id_value,
         message_id=assistant_message_id,
         answer=result.answer,
@@ -876,6 +898,16 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
         trace=response_trace,
         proposals=response_proposals,
     )
+    if task_context:
+        from app.services.chat_tasks import fence
+
+        # Publish the answer, proposals and completed task checkpoint in one
+        # transaction. A stale worker cannot publish after cancel/reclaim.
+        await fence(db, request_id, task_context["token"], task_context["attempt"],
+                    status="completed", result_json=response.model_dump_json(),
+                    lease_until=None, lease_token=None)
+    await db.commit()
+    return response
 
 
 @router.patch("/sessions/{session_id}", response_model=SessionResponse)

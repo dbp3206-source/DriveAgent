@@ -26,7 +26,10 @@ Bộ model mặc định: `gemini-3.5-flash-lite` cho chat/planning, fallback c�
 - Google Docs/Sheets theo hai pha: chuẩn bị bản xem trước, người dùng duyệt rồi mới tạo hoặc sửa.
 - Reusable Skills lưu goal, procedure, constraint và output theo phiên bản; mỗi lần chạy dùng input/context mới.
 - Gmail tìm, phân trang, đọc chuỗi và tệp đính kèm, tóm tắt, trả lời đúng thread, CC/BCC, soạn trước và chỉ gửi sau khi người dùng duyệt đúng nội dung.
-- Google ADK coordinator với bốn Agent chuyên trách; LangGraph và compiler vẫn là backend so sánh.
+- Google ADK coordinator với bảy vai trò Email, Web Research, Company Info, Calendar,
+  Report Generation, Memory và Human Approval; Skill Agent được thêm khi chọn Skill.
+  Các lượt deterministic có thể đi qua compiler thay vì gọi mọi Agent; việc có cấu trúc
+  Agent không chứng minh tất cả workflow đã đạt nghiệm thu live.
 - MCP và A2A read-only dùng SDK thật, cùng ranh giới Tool Registry/RBAC/audit.
 - Harness dashboard thể hiện Context, RAG, Tool, Orchestration, Multi-Agent/MCP/A2A và Evaluation bằng số liệu thật.
 - RBAC tách biệt với Google OAuth scopes.

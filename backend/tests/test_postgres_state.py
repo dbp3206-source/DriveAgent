@@ -247,12 +247,69 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 2
+            )).scalar_one() == 3
             assert db.execute(text(
                 "SELECT has_schema_privilege('public', 'veridra_private', 'USAGE')"
             )).scalar_one() is False
     finally:
         engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_postgres_chat_queue_duplicate_submit_parallel_claim_and_owner_isolation():
+    from time import time
+
+    from fastapi import HTTPException
+    from sqlalchemy import delete, select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from app.api.chat_tasks import SubmitTask, enqueue, get_task
+    from app.db.models import Base, ChatTask, User
+    from app.services.chat_tasks import claim
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL service; queue cloud gate not proven locally")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("PostgreSQL contract only permits the isolated veridra_ci database")
+    engine = create_async_engine(url, pool_size=4, max_overflow=0).execution_options(
+        schema_translate_map={None: "veridra_private"})
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    owners = []
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+        async with factory() as db:
+            owners = [User(email=f"chat-{uuid4()}@example.com", display_name="CI", role="editor")
+                      for _ in range(4)]
+            db.add_all(owners)
+            await db.commit()
+        payloads = [SubmitTask(message="synthetic CI queue", client_key=str(uuid4()))
+                    for _ in owners]
+
+        async def submit(index):
+            async with factory() as db:
+                return await enqueue(payloads[index], owners[index], db)
+
+        results = await asyncio.gather(*(submit(index) for index in range(4)))
+        duplicates = await asyncio.gather(*(submit(0) for _ in range(4)))
+        assert {row["id"] for row in duplicates} == {results[0]["id"]}
+        claims = await asyncio.gather(*(claim(factory, now=time()) for _ in range(4)))
+        assert len({row["id"] for row in claims if row}) == 4
+        async with factory() as db:
+            with pytest.raises(HTTPException) as error:
+                await get_task(results[0]["id"], owners[1], db)
+            assert error.value.status_code == 404
+            rows = (await db.scalars(select(ChatTask).where(
+                ChatTask.user_id.in_([owner.id for owner in owners])))).all()
+            assert len(rows) == 4
+    finally:
+        if owners:
+            async with factory() as db:
+                await db.execute(delete(User).where(User.id.in_([owner.id for owner in owners])))
+                await db.commit()
+        await engine.dispose()
 
 
 def test_postgres_remote_action_nonce_is_atomic():

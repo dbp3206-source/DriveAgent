@@ -40,6 +40,7 @@ import { FormEvent, isValidElement, useEffect, useMemo, useRef, useState } from 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { api, ApiError } from '../api'
+import { waitForChatTask } from '../chatTaskPolling.mjs'
 import { EmptyState, ErrorState } from '../components/AsyncState'
 import { ExecutionTrace } from '../components/ExecutionTrace'
 import { CreationProposal, type Proposal } from '../components/CreationProposal'
@@ -296,8 +297,20 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
   const [elapsedSeconds, setElapsedSeconds] = useState(0)
   const timerRef = useRef<number | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
+  const activeTaskRef = useRef<string | null>(null)
 
-  function stopGeneration() {
+  async function stopGeneration() {
+    if (activeTaskRef.current) {
+      try {
+        const task = await api<{status: string}>(
+          `/api/chat/tasks/${activeTaskRef.current}/cancel`, {method: 'POST'},
+        )
+        if (task.status === 'completed') return // Let polling show the completed checkpoint.
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : 'Chưa xác nhận dừng trên server.')
+        return
+      }
+    }
     if (abortControllerRef.current) {
       abortControllerRef.current.abort()
       abortControllerRef.current = null
@@ -314,6 +327,36 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
       if (timerRef.current) clearInterval(timerRef.current)
       if (abortControllerRef.current) abortControllerRef.current.abort()
     }
+  }, [])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    // A reload discovers owner-scoped pending tasks from SQL, not localStorage.
+    api<{items: Array<{id: string; session_id: string}>}>('/api/chat/tasks', {signal: controller.signal})
+      .then(async ({items}) => {
+        const task = items[0]
+        if (!task || controller.signal.aborted || activeTaskRef.current) return
+        activeTaskRef.current = task.id
+        abortControllerRef.current = controller
+        setSessionId(task.session_id)
+        setBusy(true)
+        try {
+          await waitForChatTask<ChatResult>(
+            () => api(`/api/chat/tasks/${task.id}`, {signal: controller.signal}), controller.signal,
+          )
+          const page = await api<{items: ChatMessage[]; next_cursor: string | null}>(
+            `/api/chat/sessions/${task.session_id}/messages-page`, {signal: controller.signal},
+          )
+          if (!controller.signal.aborted) { setMessages(page.items); setMessageCursor(page.next_cursor) }
+        } catch (caught) {
+          if (!controller.signal.aborted) setError(caught instanceof Error ? caught.message : 'Chưa tải được kết quả.')
+        } finally {
+          if (activeTaskRef.current === task.id) activeTaskRef.current = null
+          if (!controller.signal.aborted) setBusy(false)
+        }
+      })
+      .catch(() => { /* History remains accessible if discovery is unavailable. */ })
+    return () => controller.abort()
   }, [])
 
   const estimatedSessionTokens = useMemo(() => {
@@ -398,7 +441,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
     }
   }
 
-  const setSessionId = (id: string | null) => {
+  function setSessionId(id: string | null) {
     setSessionIdState(id)
     // Errors belong to the request/session that produced them. Do not carry a
     // stale RAG/Drive error into a different conversation.
@@ -608,7 +651,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
 
     const controller = new AbortController()
     abortControllerRef.current = controller
-    const executionId = crypto.randomUUID()
+    let executionId: string = crypto.randomUUID()
     setLiveProgress([])
     let progressPending = false
     const progressTimer = window.setInterval(() => {
@@ -631,7 +674,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
     }
     setMessages((current) => [...current, optimistic])
     try {
-      const result = await api<ChatResult>('/api/chat', {
+      const task = await api<{id: string; session_id: string}>('/api/chat/tasks', {
         method: 'POST',
         headers: {'X-Request-ID': executionId},
         signal: controller.signal,
@@ -640,8 +683,16 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
           session_id: sessionId,
           model: selectedModel.id,
           controls,
+          client_key: executionId,
         }),
       })
+      executionId = task.id
+      activeTaskRef.current = task.id
+      if (!sessionId) freshlyCreatedSession.current = task.session_id
+      setSessionId(task.session_id)
+      const result = await waitForChatTask<ChatResult>(
+        () => api(`/api/chat/tasks/${task.id}`, {signal: controller.signal}), controller.signal,
+      )
       if (controller.signal.aborted) return
       const durationMs = Date.now() - startTime
       if (!sessionId) freshlyCreatedSession.current = result.session_id
@@ -682,6 +733,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
       clearInterval(progressTimer)
       controller.abort()
       abortControllerRef.current = null
+      activeTaskRef.current = null
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null
@@ -1500,9 +1552,9 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
                   icon={<Dismiss16Regular />}
                   onClick={stopGeneration}
                   className="agent-stop-button"
-                  title="Ngừng chờ phản hồi trên trình duyệt"
+                  title="Dừng yêu cầu trên server; lời gọi provider đã bắt đầu vẫn có thể tiêu quota"
                 >
-                  Ngừng chờ
+                  Dừng yêu cầu
                 </Button>
               </div>
               <span className="agent-working-status-text">
@@ -1724,9 +1776,9 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
                 className="composer-send-btn composer-stop-btn"
                 icon={<DismissCircle24Regular primaryFill="#ea4335" />}
                 onClick={stopGeneration}
-                title="Ngừng chờ phản hồi trên trình duyệt"
+                title="Dừng yêu cầu trên server; lời gọi provider đã bắt đầu vẫn có thể tiêu quota"
               >
-                Ngừng chờ
+                Dừng yêu cầu
               </Button>
             ) : (
               <Button

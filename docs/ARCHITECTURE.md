@@ -6,7 +6,7 @@
 React UI
   -> FastAPI session auth
   -> Google ADK coordinator
-       -> Research / Communication / Study / Workspace specialist
+       -> Email / Web Research / Company Info / Calendar / Report / Memory / Human Approval
   -> Tool Registry
        1. Resolve registered tool
        2. Audit STARTED + redact arguments
