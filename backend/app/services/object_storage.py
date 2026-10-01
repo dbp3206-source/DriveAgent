@@ -121,6 +121,16 @@ class SupabasePdfObjectStorage(PdfObjectStorage):
             "allowed_mime_types": ["application/pdf"],
         }
         async with httpx.AsyncClient(timeout=15) as client:
+            existing = await client.get(
+                f"{self.base_url}/bucket/{quote(self.bucket, safe='')}",
+                headers=self._headers(),
+            )
+            if existing.status_code == 200:
+                if existing.json().get("public") is not False:
+                    raise ObjectStorageError("storage_bucket_not_private")
+                return
+            if existing.status_code != 404:
+                raise ObjectStorageError("storage_bucket_unavailable")
             response = await client.post(
                 f"{self.base_url}/bucket", headers=self._headers(), json=payload
             )
@@ -130,6 +140,7 @@ class SupabasePdfObjectStorage(PdfObjectStorage):
     async def put(self, owner: str, job_id: str, data: bytes) -> None:
         if not data or len(data) > self.maximum:
             raise ObjectStorageError("object_size_invalid")
+        await self.initialize()
         async with httpx.AsyncClient(timeout=45) as client:
             response = await client.post(
                 f"{self.base_url}/object/{self.bucket}/{self._object(owner, job_id)}",

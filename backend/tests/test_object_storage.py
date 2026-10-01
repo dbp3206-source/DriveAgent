@@ -36,6 +36,9 @@ async def test_supabase_storage_uses_private_authenticated_routes_and_backend_se
         supabase_service_role_key="backend-secret",
     )
     storage = SupabasePdfObjectStorage(settings)
+    respx.get("https://project-ref.supabase.co/storage/v1/bucket/veridra-private").mock(
+        side_effect=[httpx.Response(404), httpx.Response(200, json={"public": False})]
+    )
     bucket = respx.post("https://project-ref.supabase.co/storage/v1/bucket").mock(
         return_value=httpx.Response(409)
     )
@@ -82,3 +85,23 @@ async def test_supabase_storage_returns_safe_error_codes_only():
         await storage.get("owner-a", "missing")
     assert missing.value.code == "object_not_found"
     assert "private provider detail" not in str(missing.value)
+
+
+@respx.mock
+async def test_existing_private_bucket_does_not_get_recreated():
+    storage = SupabasePdfObjectStorage(Settings(
+        _env_file=None, storage_backend="supabase",
+        supabase_url="https://project-ref.supabase.co",
+        supabase_service_role_key="backend-secret",
+    ))
+    existing = respx.get("https://project-ref.supabase.co/storage/v1/bucket/veridra-private").mock(
+        return_value=httpx.Response(200, json={"public": False})
+    )
+    creation = respx.post("https://project-ref.supabase.co/storage/v1/bucket").mock(
+        return_value=httpx.Response(400)
+    )
+    await storage.initialize()
+    assert existing.called and not creation.called
+    existing.return_value = httpx.Response(200, json={"public": True})
+    with pytest.raises(ObjectStorageError, match="storage_bucket_not_private"):
+        await storage.initialize()

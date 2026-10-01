@@ -74,3 +74,38 @@
   .topbar__actions { width: 100%; justify-content: flex-end; flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .workspace-canvas--motion::after { animation: none; opacity: 0; } }
+
+/* Số liệu là điểm nhấn; màu biểu thị nhóm, chữ giải thích luôn đọc được. */
+.release-benchmark { position: relative; overflow: hidden; border-top: 3px solid var(--accent); }
+.release-benchmark__header { display: block; margin-top: 26px; }
+.release-benchmark__header h3 { font-size: clamp(22px, 2.2vw, 30px); letter-spacing: -.035em; }
+.release-benchmark__table { font-size: 13px; }
+.release-benchmark__table thead th { padding-block: 15px; color: var(--text); }
+.measurement-row { --measurement-color: var(--accent); }
+.measurement-row--1 { --measurement-color: var(--success); }
+.measurement-row--2 { --measurement-color: var(--warning); }
+.release-benchmark__table .measurement-row > * { padding-block: 20px; vertical-align: middle; }
+.measurement-row:hover { background: color-mix(in srgb, var(--measurement-color) 5%, var(--surface-raised)); }
+.measurement-criterion { display: block; padding-left: 12px; border-left: 3px solid var(--measurement-color); line-height: 1.6; }
+.measurement-result { font-weight: 750; color: var(--text); font-size: 16px; white-space: nowrap; }
+.measurement-score { display: inline-flex; align-items: baseline; gap: 5px; padding: 8px 10px; border: 1px solid color-mix(in srgb, var(--success) 40%, var(--border)); border-radius: 10px; background: color-mix(in srgb, var(--success) 9%, var(--surface-raised)); font-size: 20px; white-space: nowrap; }
+.measurement-score small { color: var(--text-secondary); font-size: 11px; font-weight: 500; }
+.measurement-score--attention { border-color: color-mix(in srgb, var(--warning) 50%, var(--border)); background: color-mix(in srgb, var(--warning) 10%, var(--surface-raised)); }
+.measurement-explanation summary { cursor: pointer; color: var(--text); min-height: 32px; display: list-item; padding-block: 5px; }
+.measurement-explanation p { margin: 8px 0 0; line-height: 1.7; }
+.measurement-explanation summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
+.evaluation-job-control { padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface-muted); }
+.evaluation-job-control > p { margin: 10px 0; max-width: 75ch; color: var(--text-secondary); font-size: 13px; line-height: 1.6; }
+@media (prefers-reduced-motion: no-preference) {
+  .measurement-row { animation: measurement-enter .35s ease-out both; transition: background .18s ease; }
+  .measurement-row--1 { animation-delay: .05s; }
+  .measurement-row--2 { animation-delay: .1s; }
+  .measurement-score { transition: transform .18s ease; }
+  .measurement-row:hover .measurement-score { transform: translateY(-2px); }
+  @keyframes measurement-enter { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+}
+@media (max-width: 47.99rem) {
+  .release-benchmark__table .measurement-row > * { padding-block: 7px; }
+  .release-benchmark__table td:last-child { min-width: 0; }
+  .measurement-result { white-space: normal; }
+}

@@ -41,7 +41,7 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
     // This failure is between the browser and the local app. It does not prove
     // that Google itself is degraded; provider status changes only from a
     // response carrying a recognized Google-specific error code.
-    throw new ApiError('Mất kết nối với ứng dụng. Kiểm tra server local còn chạy rồi thử lại.', 0, 'network_error')
+    throw new ApiError('Chưa kết nối được ứng dụng. Máy chủ có thể đang khởi động lại; hãy thử lại sau ít phút.', 0, 'network_error')
   }
   if (!response.ok) {
     const body = await response.json().catch(() => ({}))

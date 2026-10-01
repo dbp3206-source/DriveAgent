@@ -6,7 +6,6 @@ import {
   Database20Regular,
   Flash20Regular,
   Info20Regular,
-  LockClosed20Regular,
   ShieldCheckmark20Regular,
   Sparkle20Regular,
   Timer20Regular,
@@ -34,86 +33,86 @@ interface CheatsheetTerm {
 const CHEATSHEET_TERMS: CheatsheetTerm[] = [
   {
     id: 'qdrant',
-    name: 'Qdrant Embedded 768d',
-    tabLabel: 'Qdrant Vector',
+    name: 'Kho tìm kiếm theo ý nghĩa',
+    tabLabel: 'Tìm tài liệu',
     tag: 'TẦNG 03 · KHO LƯU TRỮ',
     icon: Database20Regular,
     metaphor: 'Như "Ngăn kéo tài liệu thông minh" tìm kiếm bài theo ý nghĩa ngữ cảnh thay vì từ khóa rời rạc.',
-    architectureRole: 'Kho vector nhúng chạy trong tiến trình ứng dụng. Embedding và câu hỏi vẫn có thể được gửi tới dịch vụ Google tùy thao tác; không xem “local” là cam kết không truyền dữ liệu.',
+    architectureRole: 'Tài liệu được tìm theo ý nghĩa, lưu trên máy khi chạy tại máy hoặc trong cơ sở dữ liệu khi chạy trực tuyến. Các đoạn liên quan có thể được gửi tới Google để trả lời câu hỏi.',
     anatomy: [
       'Kích hoạt: Khi người dùng đặt câu hỏi cần tìm điều khoản, số liệu trong kho tài liệu.',
-      'Kiểm soát: Lọc kết quả theo phạm vi nguồn người dùng và metadata đã lưu.',
-      'Xuất kết quả: Trả các đoạn có metadata vị trí nếu bộ đọc nguồn cung cấp được.',
+      'Kiểm soát: Lọc kết quả theo phạm vi nguồn người dùng và thông tin nguồn đã lưu.',
+      'Xuất kết quả: Trả các đoạn có thông tin nguồn vị trí nếu bộ đọc nguồn cung cấp được.',
     ],
   },
   {
     id: 'sqlite_wal',
-    name: 'SQLite WAL Ledger',
-    tabLabel: 'SQLite WAL',
+    name: 'Nhật ký dữ liệu',
+    tabLabel: 'Lưu nhật ký',
     tag: 'TẦNG 03 · NHẬT KÝ KIỂM TOÁN',
     icon: ShieldCheckmark20Regular,
     metaphor: 'Như nhật ký ghi lại các lần gọi công cụ để có thể tra cứu và đối soát.',
-    architectureRole: 'Lưu audit trong SQLite; WAL là chế độ ghi của SQLite, không tự làm dữ liệu bất biến hay tạo chữ ký pháp lý.',
+    architectureRole: 'Lưu thời gian và kết quả thao tác trên máy hoặc trong cơ sở dữ liệu trực tuyến. Nhật ký hỗ trợ đối soát, không phải chứng thư pháp lý.',
     anatomy: [
       'Kích hoạt: Bất kỳ công cụ hay tác tử nào bắt đầu tiếp nhận hoặc xử lý công việc.',
-      'Kiểm soát: Gắn thời gian và trạng thái thao tác theo dữ liệu audit hiện có.',
-      'Xuất kết quả: Tra cứu sự kiện audit theo quyền tài khoản.',
+      'Kiểm soát: Gắn thời gian và trạng thái thao tác theo nhật ký thực thi hiện có.',
+      'Xuất kết quả: Tra cứu sự kiện thực thi theo quyền tài khoản.',
     ],
   },
   {
     id: 'python_sandbox',
-    name: 'AST Python Calculator Sandbox',
-    tabLabel: 'Python Sandbox',
+    name: 'Bộ tính toán giới hạn',
+    tabLabel: 'Tính toán',
     tag: 'TẦNG 04 · CÔNG CỤ TÍNH TOÁN',
     icon: Wrench20Regular,
     metaphor: 'Như "Phòng thí nghiệm cách ly" để trợ lý tính toán số học mà không chạm vào máy tính bạn.',
     architectureRole: 'Bộ tính toán giới hạn biểu thức cho các phép toán được hỗ trợ; không chạy mã Python tổng quát.',
     anatomy: [
       'Kích hoạt: Khi cần tính toán chênh lệch số dư, tỷ lệ tồn kho hoặc trung bình điểm số.',
-      'Kiểm soát: Chỉ chấp nhận các toán tử và đầu vào nằm trong hợp đồng của calculator.',
+      'Kiểm soát: Chỉ chấp nhận các toán tử và đầu vào nằm trong hợp đồng của bộ tính toán.',
       'Xuất kết quả: Trả kết quả phép tính để đối chiếu với đầu vào và công thức.',
     ],
   },
   {
     id: 'dag_orchestrator',
-    name: 'ADK Agent Coordinator',
-    tabLabel: 'ADK Coordinator',
+    name: 'Bộ điều phối trợ lý',
+    tabLabel: 'Điều phối',
     tag: 'TẦNG 05 · ĐIỀU PHỐI TÁC TỬ',
     icon: Sparkle20Regular,
     metaphor: 'Như "Trợ lý trưởng phân chia việc cho cấp dưới" theo đúng sở trường chuyên môn.',
-    architectureRole: 'ADK coordinator định tuyến và bàn giao giữa các agent chuyên trách theo cấu hình hiện tại.',
+    architectureRole: 'Bộ điều phối định tuyến và bàn giao giữa các trợ lý chuyên trách theo cấu hình hiện tại.',
     anatomy: [
       'Kích hoạt: Tiếp nhận yêu cầu nghiệp vụ phức tạp đòi hỏi nhiều bước xử lý tuần tự.',
       'Kiểm soát: Có giới hạn số lần gọi và lỗi công cụ; không khẳng định đã đo mọi dạng vòng lặp.',
-      'Xuất kết quả: Trace có thể ghi nhận agent handoff và trạng thái của một số bước.',
+      'Xuất kết quả: Nhật ký có thể ghi nhận việc chuyển trợ lý và trạng thái của một số bước.',
     ],
   },
   {
     id: 'citation_readback',
-    name: 'Citation & Output Checks',
-    tabLabel: 'Citation & Read-Back',
+    name: 'Kiểm tra nguồn và kết quả',
+    tabLabel: 'Nguồn và đọc lại',
     tag: 'TẦNG 06 · KIỂM DUYỆT CHẤT LƯỢNG',
     icon: CheckmarkCircle20Regular,
     metaphor: 'Như "Thẩm định viên đối chiếu lại văn bản gốc trước khi đóng dấu trình sếp".',
-    architectureRole: 'Một số luồng kiểm tra cấu trúc đầu ra, marker citation và read-back sau khi ghi; chưa chứng minh ngữ nghĩa mọi claim.',
+    architectureRole: 'Một số luồng kiểm tra cấu trúc đầu ra, liên kết nguồn và đọc lại sau khi ghi; chưa chứng minh ngữ nghĩa mọi nhận định.',
     anatomy: [
       'Kích hoạt: Trước khi xuất câu trả lời hoặc tạo văn bản Google Docs/Sheets.',
-      'Kiểm soát: Kết quả phụ thuộc loại tác vụ; citation metadata không đồng nghĩa claim đã được chứng minh.',
+      'Kiểm soát: Kết quả phụ thuộc loại tác vụ; thông tin liên kết nguồn không đồng nghĩa nhận định đã được chứng minh.',
       'Xuất kết quả: Hiển thị trạng thái kiểm tra thực tế nếu bước đó đã chạy.',
     ],
   },
   {
     id: 'telemetry_latency',
-    name: 'Độ trễ P50 / P95',
-    tabLabel: 'Độ Trễ P50/P95',
+    name: 'Thời gian xử lý',
+    tabLabel: 'Thời gian xử lý',
     tag: 'GIÁM SÁT · HIỆU NĂNG THỰC',
     icon: Timer20Regular,
-    metaphor: 'Như "Đồng hồ bấm giờ" đo tốc độ xử lý việc bình thường (P50) và việc hóc búa (P95).',
-    architectureRole: 'P50/P95 mô tả phân bố độ trễ trên mẫu đã thu thập; chỉ hiển thị khi có mẫu và phạm vi đo rõ.',
+    metaphor: 'Như đồng hồ bấm giờ: một mốc cho biết một nửa số lượt đã hoàn tất, mốc còn lại cho biết 95% số lượt đã hoàn tất.',
+    architectureRole: 'Hai mốc 50% và 95% mô tả thời gian xử lý trên mẫu đã thu thập; chỉ hiển thị khi có mẫu và phạm vi đo rõ.',
     anatomy: [
-      'Kích hoạt: Ghi nhận khi một request hoặc thao tác bắt đầu.',
+      'Kích hoạt: Ghi nhận khi một yêu cầu hoặc thao tác bắt đầu.',
       'Kiểm soát: Tách loại độ trễ, cỡ mẫu và khoảng thời gian quan sát.',
-      'Xuất kết quả: Hiển thị số liệu API cùng nguồn và thời điểm tổng hợp.',
+      'Xuất kết quả: Hiển thị số liệu đã ghi nhận cùng nguồn và thời điểm tổng hợp.',
     ],
   },
 ]
@@ -131,7 +130,7 @@ const STAGE_LABELS: Record<string, string> = {
   presentation: 'Định dạng câu trả lời',
   control_resolution: 'Phân loại yêu cầu',
   deterministic_analysis: 'Phân tích xác định',
-  agent_task: 'Lần chạy Agent',
+  agent_task: 'Lần chạy trợ lý',
 }
 
 function stageLabel(stage?: string) {
@@ -230,13 +229,13 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
           <div className="cockpit-dictionary-title-wrap">
             <span className="cockpit-dictionary-eyebrow">
               <BookOpen20Regular aria-hidden="true" />
-              TỪ ĐIỂN KHÁI NIỆM & GIẢI PHẪU KIẾN TRÚC (CHEATSHEET)
+              HIỂU CÁCH HỆ THỐNG HOẠT ĐỘNG
             </span>
             <h3 className="cockpit-dictionary-title">
               Hiểu Nhanh Công Nghệ Qua Góc Nhìn Người Trợ Lý
             </h3>
             <p className="cockpit-dictionary-subtitle">
-              Giải mã các thuật ngữ kỹ thuật (Qdrant, SQLite WAL, AST Sandbox...) bằng các ví dụ đời thường để bạn dễ hình dung vai trò của từng mắt xích.
+              Những ví dụ gần gũi giúp bạn hiểu cách tìm tài liệu, tính toán và kiểm tra kết quả.
             </p>
           </div>
         </div>
@@ -271,13 +270,13 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
             </div>
             <span className="cockpit-dictionary-card__concept-badge">
               <Sparkle20Regular aria-hidden="true" />
-              Khái niệm 1 Concept Chuẩn
+              Cách hoạt động
             </span>
           </div>
 
           <div className="cockpit-dictionary-card__grid">
             <div className="cockpit-dictionary-pane cockpit-dictionary-pane--metaphor">
-              <span className="pane-label">Ẩn dụ đời thường (Assistant Metaphor)</span>
+              <span className="pane-label">Cách hiểu đơn giản</span>
               <p className="pane-text"><strong>{activeTerm.metaphor}</strong></p>
               <div className="pane-role">
                 <span className="pane-role-label">Vai trò trong Veridra:</span>
@@ -286,7 +285,7 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
             </div>
 
             <div className="cockpit-dictionary-pane cockpit-dictionary-pane--anatomy">
-              <span className="pane-label">Quy trình giải phẫu 3 bước (Mini-Anatomy)</span>
+              <span className="pane-label">Quy trình ba bước</span>
               <ul className="cockpit-anatomy-steps">
                 {activeTerm.anatomy.map((stepText, sIdx) => {
                   const [stepPrefix, stepBody] = stepText.split(': ')
@@ -313,13 +312,13 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
         <div className="cockpit-header__main">
           <span className="cockpit-header__eyebrow">
             <Sparkle20Regular aria-hidden="true" />
-            PHẦN 2 · TELEMETRY VÀ AUDIT
+            THEO DÕI THỰC THI
           </span>
           <h2 id="cockpit-title" className="cockpit-header__title">
-            Theo dõi lần chạy và audit
+            Theo dõi từng lần xử lý
           </h2>
           <p className="cockpit-header__subtitle">
-            Số liệu đọc từ API audit trong phạm vi tài khoản. Chất lượng nội dung cần benchmark và người đánh giá riêng.
+            Số liệu lấy từ nhật ký của tài khoản. Độ đúng của nội dung cần được đối chiếu riêng với nguồn.
           </p>
         </div>
 
@@ -334,7 +333,7 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
                 ? `Dữ liệu tài khoản · n=${auditSampleSize}`
                 : telemetryState === 'loading'
                   ? 'Đang tải số liệu…'
-                  : 'Telemetry hiện không khả dụng'}
+                  : 'Chưa lấy được nhật ký'}
             </span>
           </div>
           <button
@@ -342,87 +341,59 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
             className="cockpit-reload-btn"
             onClick={fetchTelemetry}
             disabled={loading}
-            title="Làm mới dữ liệu telemetry"
+            title="Làm mới số liệu"
           >
             <ArrowClockwise20Regular className={loading ? 'is-spinning' : ''} aria-hidden="true" />
-            <span>{loading ? 'Đang cập nhật…' : 'Cập nhật HUD'}</span>
+            <span>{loading ? 'Đang cập nhật…' : 'Cập nhật số liệu'}</span>
           </button>
         </div>
       </header>
 
       {telemetryState === 'unavailable' ? (
         <div className="cockpit-telemetry-state" role="status">
-          Không lấy được dữ liệu thật từ API. Các chỉ số bên dưới sẽ hiển thị “Chưa đo” thay vì dùng số liệu mẫu.
+          Chưa lấy được số liệu. Hệ thống không hiển thị điểm đánh giá khi chưa có dữ liệu thật.
         </div>
       ) : null}
 
       {/* 4 HUD Core Metric Cards */}
       <div className="cockpit-hud-grid">
         {/* Metric 1: Grounded Citations */}
-        <div className="cockpit-hud-card cockpit-hud-card--grounded">
+        {citationSampleSize > 0 && citationIntegrity != null ? <div className="cockpit-hud-card cockpit-hud-card--grounded">
           <div className="cockpit-hud-card__top">
-            <span className="cockpit-hud-card__label">CITATION METADATA</span>
+            <span className="cockpit-hud-card__label">THÔNG TIN NGUỒN</span>
             <ShieldCheckmark20Regular className="cockpit-hud-card__icon" aria-hidden="true" />
           </div>
           <div className="cockpit-hud-card__value">{formatRate(citationIntegrity)}</div>
           <div className="cockpit-hud-card__subtext">
-            Tỷ lệ citation qua kiểm tra metadata trong {citationSampleSize} câu có nguồn; chưa đo mức độ nguồn chứng minh nội dung nhận định.
+            Tỷ lệ liên kết nguồn đủ thông tin trong {citationSampleSize} câu có nguồn; chưa đo mức độ nguồn chứng minh nội dung nhận định.
           </div>
           <div className="cockpit-hud-card__badge">
             <Info20Regular aria-hidden="true" />
             <span>Kiểm tra cấu trúc, không phải kiểm chứng sự thật</span>
           </div>
-        </div>
+        </div> : null}
 
         {/* Metric 2: Hallucination Tolerance */}
-        <div className="cockpit-hud-card cockpit-hud-card--tolerance">
-          <div className="cockpit-hud-card__top">
-            <span className="cockpit-hud-card__label">ĐÁNH GIÁ TÍNH ĐÚNG</span>
-            <LockClosed20Regular className="cockpit-hud-card__icon" aria-hidden="true" />
-          </div>
-          <div className="cockpit-hud-card__value">Chưa đo</div>
-          <div className="cockpit-hud-card__subtext">
-            Chưa có chỉ số live dựa trên oracle nghiệp vụ hoặc chấm duyệt của con người để ước tính độ đúng.
-          </div>
-          <div className="cockpit-hud-card__badge cockpit-hud-card__badge--green">
-            <Info20Regular aria-hidden="true" />
-            <span>Đầu ra contract không đồng nghĩa nội dung đúng</span>
-          </div>
-        </div>
 
         {/* Metric 3: Latency Profile */}
-        <div className="cockpit-hud-card cockpit-hud-card--latency">
+        {latencySampleSize > 0 && p50 != null && p95 != null ? <div className="cockpit-hud-card cockpit-hud-card--latency">
           <div className="cockpit-hud-card__top">
-            <span className="cockpit-hud-card__label">TOOL LATENCY (P50 / P95)</span>
+            <span className="cockpit-hud-card__label">THỜI GIAN XỬ LÝ</span>
             <Timer20Regular className="cockpit-hud-card__icon" aria-hidden="true" />
           </div>
           <div className="cockpit-hud-card__value">
             {p50 == null ? '—' : `${p50}ms`} <span className="cockpit-hud-card__unit">/ {p95 == null ? '—' : `${p95}ms`}</span>
           </div>
           <div className="cockpit-hud-card__subtext">
-            Độ trễ thao tác công cụ theo dữ liệu audit đã tải; không phải thời gian phản hồi toàn bộ chat.
+            Độ trễ thao tác công cụ theo nhật ký thực thi đã tải; không phải thời gian phản hồi toàn bộ chat.
           </div>
           <div className="cockpit-hud-card__badge">
             <Flash20Regular aria-hidden="true" />
-            <span>n={latencySampleSize} lượt tool</span>
+            <span>n={latencySampleSize} lượt gọi công cụ</span>
           </div>
-        </div>
+        </div> : null}
 
         {/* Metric 4: Local-First Isolation */}
-        <div className="cockpit-hud-card cockpit-hud-card--isolation">
-          <div className="cockpit-hud-card__top">
-            <span className="cockpit-hud-card__label">PHẠM VI QUYỀN</span>
-            <Database20Regular className="cockpit-hud-card__icon" aria-hidden="true" />
-          </div>
-          <div className="cockpit-hud-card__value">OAuth + RBAC</div>
-          <div className="cockpit-hud-card__subtext">
-            Các thao tác nguồn Google phụ thuộc OAuth scope và quyền của tài khoản. Chỉ số telemetry này không chứng minh không có dữ liệu ra dịch vụ bên ngoài.
-          </div>
-          <div className="cockpit-hud-card__badge">
-            <Info20Regular aria-hidden="true" />
-            <span>Thông tin kiến trúc, không phải tỷ lệ đo được</span>
-          </div>
-        </div>
       </div>
 
       {/* ================================================================== */}
@@ -435,16 +406,16 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
               Sự kiện ghi nhận ở lần chạy gần nhất
             </h3>
             <p className="cockpit-checkpoints-subtitle">
-              Đây là trace vận hành của một lần chạy; trạng thái thành công ở một bước không chứng minh câu trả lời đúng.
+              Đây là nhật ký xử lý của một lần chạy; trạng thái thành công ở một bước không chứng minh câu trả lời đúng.
             </p>
           </div>
           <span className="cockpit-checkpoints-metric">
-            Tool không ghi nhận lỗi: <strong>{formatRate(toolSuccessRate)}</strong> · n={auditSampleSize}
+            Công cụ chạy thành công: <strong>{formatRate(toolSuccessRate)}</strong> · n={auditSampleSize}
           </span>
         </div>
         {data?.recent_runs?.[0]?.run_id ? (
           <p className="cockpit-checkpoints-subtitle" aria-label="Mã liên kết lần chạy">
-            Mã lần chạy để đối chiếu với Audit: <code>{data.recent_runs[0].run_id}</code>
+            Mã lần chạy để đối chiếu với Nhật ký: <code>{data.recent_runs[0].run_id}</code>
           </p>
         ) : null}
 
@@ -479,8 +450,8 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
           {checkpoints.length === 0 ? (
             <div className="cockpit-telemetry-state" role="status">
               {telemetryState === 'live'
-                ? 'Chưa có trace của lần chạy gần nhất để hiển thị.'
-                : 'Trace sẽ xuất hiện khi API telemetry có dữ liệu khả dụng.'}
+                ? 'Chưa có nhật ký của lần chạy gần nhất để hiển thị.'
+                : 'Nhật ký xuất hiện sau khi bạn thực hiện yêu cầu.'}
             </div>
           ) : null}
         </div>
@@ -489,8 +460,8 @@ export function LiveTrustCockpit({ onRefresh }: LiveTrustCockpitProps) {
           <ChevronRight20Regular aria-hidden="true" />
           <span>
             {lastFetched
-              ? `API tổng hợp số liệu lúc ${new Date(lastFetched).toLocaleString('vi-VN')}. Dữ liệu hiện tại chỉ phản ánh mẫu audit của tài khoản này.`
-              : 'Chưa có thời điểm tổng hợp số liệu từ API.'}
+              ? `Hệ thống tổng hợp số liệu lúc ${new Date(lastFetched).toLocaleString('vi-VN')}. Dữ liệu hiện tại chỉ phản ánh mẫu nhật ký của tài khoản này.`
+              : 'Chưa ghi nhận thời điểm tổng hợp số liệu.'}
           </span>
         </div>
       </div>

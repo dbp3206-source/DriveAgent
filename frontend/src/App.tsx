@@ -78,12 +78,14 @@ export default function App() {
     }
   })
   const [dark, setDark] = useState(preferredDarkMode)
+  const [chatOpened, setChatOpened] = useState(page === 'chat')
   const [error, setError] = useState('')
   const [isChatBusy, setIsChatBusy] = useState(false)
   const [chatCompletedNotice, setChatCompletedNotice] = useState(false)
   const prevBusy = useRef(isChatBusy)
 
   const setPage = (next: PageKey) => {
+    if (next === 'chat') setChatOpened(true)
     setPageState(next)
     const nextHash = hashForPage(next)
     if (window.location.hash !== nextHash) {
@@ -100,6 +102,7 @@ export default function App() {
     const restoreRoute = () => {
       const routed = pageFromHash(window.location.hash)
       if (isPageKey(routed)) {
+        if (routed === 'chat') setChatOpened(true)
         setPageState(routed)
         try {
           sessionStorage.setItem('drive_agent_active_page', routed)
@@ -156,14 +159,11 @@ export default function App() {
   async function load() {
     setError('')
     try {
-      const [auth, system] = await Promise.all([
-        api<AuthStatus>('/api/auth/status'),
-        api<Health>('/api/health'),
-      ])
+      void api<Health>('/api/health').then(setHealth).catch(() => setHealth(null))
+      const auth = await api<AuthStatus>('/api/auth/status')
       setStatus(auth)
-      setHealth(system)
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : 'Không thể kết nối backend.')
+      setError(caught instanceof Error ? caught.message : 'Chưa kết nối được máy chủ. Hãy thử lại.')
     }
   }
 
@@ -213,14 +213,14 @@ export default function App() {
         isChatBusy={isChatBusy}
         isChatDoneNotice={chatCompletedNotice}
       >
-        <div
+        {chatOpened && <div
           className={`chat-tab-container ${page === 'chat' ? '' : 'chat-tab-container--hidden'}`}
           aria-hidden={page !== 'chat'}
         >
           <Suspense fallback={<Spinner label="Đang mở cuộc trò chuyện" />}>
             <ChatPage onBusyChange={setIsChatBusy} isActive={page === 'chat'} />
           </Suspense>
-        </div>
+        </div>}
 
         {page !== 'chat' && pageContent[page] && (
           <ScreenBoundary key={page}>

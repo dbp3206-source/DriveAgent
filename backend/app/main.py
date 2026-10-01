@@ -9,6 +9,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
+import httpx
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -127,7 +128,14 @@ async def lifespan(app: FastAPI):
     await init_database()
     from app.services.object_storage import initialize_object_storage
 
-    await initialize_object_storage(settings)
+    try:
+        await initialize_object_storage(settings)
+        app.state.object_storage_healthy = True
+    except (httpx.HTTPError, RuntimeError) as exc:
+        app.state.object_storage_healthy = False
+        logging.getLogger(__name__).error(
+            "Private object storage unavailable at startup; type=%s", type(exc).__name__
+        )
     from app.services.relational_state import prepare_state_schema, state_engine
 
     if settings.relational_state_url is not None:

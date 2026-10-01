@@ -101,7 +101,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
           <div>
             <div className="governance-matrix-header__tag">
               <ShieldCheckmark20Regular aria-hidden="true" />
-              <span>CONTROL DESIGN &amp; EXAMPLES</span>
+              <span>CÁCH KIỂM SOÁT VÀ VÍ DỤ</span>
             </div>
             <h2 id="governance-matrix-title" className="governance-matrix-header__title">
               Năng lực kiểm soát và giới hạn hiện tại
@@ -130,7 +130,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
               onClick={() => setActiveTab('pilot')}
             >
               <DocumentCheckmark20Regular aria-hidden="true" />
-              <span>Kịch bản minh họa (5 case)</span>
+              <span>Năm tình huống minh họa</span>
             </button>
           </div>
         </div>
@@ -144,25 +144,25 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
           <table className="governance-matrix-table" role="table">
             <thead>
               <tr>
-                <th scope="col" className="col-dimension">Tiêu Chí Quản Trị (Chuẩn Quốc Tế)</th>
+                <th scope="col" className="col-dimension">Tiêu chí kiểm soát</th>
                 <th scope="col" className="col-drive-agent">
                   <div className="col-header-drive">
                     <div className="col-header-drive__title-row">
-                      <span className="col-header-drive__badge">Khuyên Dùng</span>
-                      <strong>Veridra (6 Tầng Harness)</strong>
+                      <span className="col-header-drive__badge">Theo thiết kế</span>
+                      <strong>Veridra, sáu bước kiểm soát</strong>
                     </div>
-                    <span className="col-header-drive__sub">Kiến trúc Zero Trust · Bảo vệ toàn diện</span>
+                    <span className="col-header-drive__sub">Kiểm tra quyền trước từng thao tác</span>
                   </div>
                 </th>
                 <th scope="col" className="col-generic-llm">
                   <div className="col-header-other">
-                    <strong>Chatbot LLM Thông Thường</strong>
+                    <strong>Trợ lý chỉ tạo văn bản</strong>
                     <span className="col-header-other__sub">Thực thi tự do · Thiếu rào chắn</span>
                   </div>
                 </th>
                 <th scope="col" className="col-traditional-rpa">
                   <div className="col-header-other">
-                    <strong>RPA Truyền Thống</strong>
+                    <strong>Tự động hóa theo kịch bản</strong>
                     <span className="col-header-other__sub">Kịch bản tĩnh · Chi phí bảo trì cao</span>
                   </div>
                 </th>
@@ -201,10 +201,10 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                           className={`dimension-pilot-toggle ${isPilotOpen ? 'is-open' : ''}`}
                           onClick={() => togglePilot(index)}
                           aria-expanded={isPilotOpen}
-                          title="Xem ví dụ thử nghiệm pilot thực tế"
+                          title="Xem tình huống minh họa"
                         >
                           <Sparkle20Regular aria-hidden="true" />
-                          <span>{isPilotOpen ? 'Đóng Case Pilot' : 'Xem Case Pilot'}</span>
+                          <span>{isPilotOpen ? 'Đóng ví dụ' : 'Xem ví dụ'}</span>
                           {isPilotOpen ? <ChevronUp20Regular aria-hidden="true" /> : <ChevronDown20Regular aria-hidden="true" />}
                         </button>
                       ) : null}
@@ -232,7 +232,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                     <td className="cell-generic-llm">
                       <div className="cell-verdict-pill cell-verdict-pill--warning">
                         <Warning20Regular aria-hidden="true" />
-                        <span>⚠️ Rủi Ro Ảo Giác Cao</span>
+                        <span>Rủi ro nội dung sai</span>
                       </div>
                       <div className="cell-body">
                         <p className="cell-summary">
@@ -252,7 +252,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                     <td className="cell-traditional-rpa">
                       <div className="cell-verdict-pill cell-verdict-pill--danger">
                         <DismissCircle20Regular aria-hidden="true" />
-                        <span>✕ Kịch Bản Tĩnh · Dễ Gãy</span>
+                        <span>Kịch bản khó thích nghi</span>
                       </div>
                       <div className="cell-body">
                         <p className="cell-summary">
@@ -273,11 +273,11 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                   isPilotOpen && row.pilotExample ? (
                     <tr key={`pilot-tray-${rowKey}`} className="row-pilot-expanded">
                       <td colSpan={4} className="cell-pilot-tray">
-                        <div className="pilot-tray-card" role="region" aria-label={`Chi tiết thử nghiệm pilot cho ${row.criterion}`}>
+                        <div className="pilot-tray-card" role="region" aria-label={`Chi tiết minh họa cho ${row.criterion}`}>
                           <header className="pilot-tray-card__top">
                             <div className="pilot-tray-card__title-group">
                               <div className="pilot-tray-card__badge-row">
-                                <span className="pilot-tray-idx">CASE 0{index + 1} PILOT</span>
+                                <span className="pilot-tray-idx">VÍ DỤ 0{index + 1}</span>
                                 <span className="pilot-tray-criterion">{row.criterion || row.dimension}</span>
                               </div>
                               <h4 className="pilot-tray-card__title">{row.pilotExample.title}</h4>
@@ -298,7 +298,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                                 type="button"
                                 className="pilot-tray-close-btn"
                                 onClick={() => setExpandedPilotIndex(null)}
-                                aria-label="Đóng chi tiết pilot"
+                                aria-label="Đóng chi tiết ví dụ"
                               >
                                 ✕ Thu gọn
                               </button>
@@ -309,7 +309,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                             <div className="pilot-tray-side pilot-tray-side--other">
                               <div className="pilot-tray-side__header">
                                 <DismissCircle20Regular className="side-icon is-danger" aria-hidden="true" />
-                                <strong>Hạn chế ở Sản phẩm khác (Chatbot / RPA)</strong>
+                                <strong>Hạn chế ở Sản phẩm khác theo thiết kế giả định</strong>
                               </div>
                               <ul className="pilot-tray-side__bullets">
                                 {formatPilotPoints(row.pilotExample.otherIssue).map((point, pIdx) => (
@@ -321,7 +321,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                             <div className="pilot-tray-side pilot-tray-side--drive">
                               <div className="pilot-tray-side__header">
                                 <CheckmarkCircle20Regular className="side-icon is-success" aria-hidden="true" />
-                                <strong>Đột phá của Veridra</strong>
+                                <strong>Cách xử lý của Veridra</strong>
                               </div>
                               <ul className="pilot-tray-side__bullets">
                                 {formatPilotPoints(row.pilotExample.driveSolution).map((point, pIdx) => (
@@ -332,7 +332,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                           </div>
 
                           <footer className="pilot-tray-card__metrics-bar">
-                            <span className="metrics-bar__label">📊 Kết quả kiểm toán &amp; đo lường:</span>
+                            <span className="metrics-bar__label">Phạm vi minh họa:</span>
                             <div className="metrics-bar__pills">
                               {parseMetricPills(row.pilotExample.metrics).map((pill, pillIdx) => (
                                 <span key={pillIdx} className="metric-pill">
@@ -352,14 +352,14 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
         </div>
       ) : (
         /* ================================================================== */
-        /* TAB 2: DEDICATED PILOT EVALUATION REPORT                           */
+        /* TAB 2: DEDICATED EVALUATION REPORT                           */
         /* ================================================================== */
         <div className="governance-pilot-report" role="region" aria-label="Các kịch bản minh họa">
           <div className="governance-pilot-intro">
             <span className="governance-pilot-intro__eyebrow">DỮ LIỆU VÀ KẾT QUẢ GIẢ LẬP</span>
             <h3>Kịch bản dùng để giải thích cách kiểm soát</h3>
             <p>
-              Đây không phải khảo sát khách hàng, kết quả pilot hay so sánh sản phẩm đã kiểm nghiệm. Benchmark sẽ được công bố riêng sau khi có tập test, phương pháp và bằng chứng.
+              Đây không phải khảo sát khách hàng, kết quả thử nghiệm hay so sánh sản phẩm đã kiểm nghiệm. Kết quả đo chỉ được công bố khi có mẫu, phương pháp và bằng chứng.
             </p>
           </div>
 
@@ -371,7 +371,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                 <article key={idx} className="governance-pilot-card">
                   <header className="governance-pilot-card__header">
                     <div className="governance-pilot-card__tag-row">
-                      <span className="pilot-idx">CASE 0{idx + 1}</span>
+                      <span className="pilot-idx">VÍ DỤ 0{idx + 1}</span>
                       <span className="pilot-criterion">{row.criterion || row.dimension}</span>
                     </div>
                     <h4 className="governance-pilot-card__title">{p.title}</h4>
@@ -407,7 +407,7 @@ export function GovernanceMatrixTable({ className = '' }: GovernanceMatrixTableP
                   </div>
 
                   <footer className="governance-pilot-card__footer">
-                    <span className="metrics-label">Kết quả benchmark độc lập:</span>
+                    <span className="metrics-label">Phạm vi minh họa:</span>
                     <div className="governance-pilot-card__pills">
                       {parseMetricPills(p.metrics).map((pill, pillIdx) => (
                         <span key={pillIdx} className="metric-pill">

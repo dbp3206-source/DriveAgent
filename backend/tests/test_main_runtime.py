@@ -172,7 +172,8 @@ def test_request_fixture_has_state_namespace():
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("retention_error", [None, PermissionError("private archive")])
-async def test_lifespan_initializes_and_closes_runtime_services(retention_error):
+@pytest.mark.parametrize("storage_error", [None, RuntimeError("storage_bucket_unavailable")])
+async def test_lifespan_initializes_and_closes_runtime_services(retention_error, storage_error):
     class AsyncContext:
         def __init__(self, value=None):
             self.value = value
@@ -206,6 +207,10 @@ async def test_lifespan_initializes_and_closes_runtime_services(retention_error)
 
     with (
         patch.object(main, "settings", settings),
+        patch(
+            "app.services.object_storage.initialize_object_storage",
+            AsyncMock(side_effect=storage_error),
+        ),
         patch.object(main, "VectorStore", return_value=vector_store),
         patch.object(main, "EmbeddingService", return_value=embeddings),
         patch.object(main, "RagService", return_value=SimpleNamespace()),
@@ -228,6 +233,7 @@ async def test_lifespan_initializes_and_closes_runtime_services(retention_error)
             assert fake_app.state.orchestrator is orchestrator
             assert protocol_bridge.registry is fake_app.state.registry
             assert fake_app.state.encrypted_backup_retention_healthy is (retention_error is None)
+            assert fake_app.state.object_storage_healthy is (storage_error is None)
 
     vector_store.initialize.assert_awaited_once()
     orchestrator.initialize.assert_awaited_once()

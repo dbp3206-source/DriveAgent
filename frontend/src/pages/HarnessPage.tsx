@@ -41,15 +41,15 @@ const DOMAIN_ENTERPRISE_META: Record<HarnessScenarioId, {
   copy: string
 }> = {
   banking: {
-    tag: 'BANKING',
+    tag: 'NGÂN HÀNG',
     copy: 'Đối soát chênh lệch sổ sách & Giữ trọn vết kiểm toán',
   },
   education: {
-    tag: 'EDUCATION',
-    copy: 'Nhận diện lỗ hổng kiến thức & Đánh giá khách quan theo rubric',
+    tag: 'GIÁO DỤC',
+    copy: 'Nhận diện lỗ hổng kiến thức & Đánh giá khách quan theo tiêu chí đã định',
   },
   ecommerce: {
-    tag: 'E-COMMERCE',
+    tag: 'THƯƠNG MẠI',
     copy: 'Phân tích biến động đơn hàng & Đề xuất phương án vận hành kho',
   },
 }
@@ -379,34 +379,34 @@ export function HarnessPage() {
             mà là tìm đúng nguồn, phối hợp đúng công cụ, xin duyệt đúng lúc và để lại bằng chứng đủ rõ để kiểm tra lại.
           </p>
           <ol className="harness-story__sequence">
-            <li><strong>Nỗi đau:</strong><span>Dữ liệu nằm rải rác; kết quả nhanh nhưng khó biết claim nào dựa trên nguồn nào.</span></li>
-            <li><strong>Lý do có Veridra:</strong><span>Nối nguồn, Agent, tool và approval thành một hành trình có phạm vi.</span></li>
-            <li><strong>Cách giải quyết:</strong><span>Đọc và phân tích trước; mọi thao tác ghi được hỗ trợ đều qua preview, duyệt và read-back.</span></li>
-            <li><strong>Khác biệt cần kiểm chứng:</strong><span>Trace, citation và metric hiển thị phạm vi thật; thiếu bằng chứng được ghi N/A thay vì tự chấm đạt.</span></li>
+            <li><strong>Nỗi đau:</strong><span>Dữ liệu nằm rải rác; kết quả nhanh nhưng khó biết nhận định nào dựa trên nguồn nào.</span></li>
+            <li><strong>Lý do có Veridra:</strong><span>Nối nguồn, trợ lý, công cụ và bước duyệt thành một hành trình có phạm vi.</span></li>
+            <li><strong>Cách giải quyết:</strong><span>Đọc và phân tích trước; mọi thao tác ghi được hỗ trợ đều qua xem trước, duyệt và đọc lại.</span></li>
+            <li><strong>Khác biệt cần kiểm chứng:</strong><span>Nhật ký, nguồn trích dẫn và số liệu cho biết điều đã được kiểm tra.</span></li>
           </ol>
         </div>
         <figure className="harness-story__figure">
           <img
             className="harness-story__image harness-story__image--light"
             src={`/harness/${scenario.id}.visual-check.1440x900.light.png`}
-            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở theme sáng`}
+            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở giao diện sáng`}
           />
           <img
             className="harness-story__image harness-story__image--dark"
             src={`/harness/${scenario.id}.visual-check.1440x900.dark.png`}
-            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở theme tối`}
+            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở giao diện tối`}
           />
-          <figcaption>Ảnh render thật của sơ đồ nghiệp vụ. Số liệu trong tình huống vẫn là dữ liệu minh họa, không phải kết quả pilot.</figcaption>
+          <figcaption>Ảnh chụp thật của sơ đồ nghiệp vụ. Số liệu trong tình huống vẫn là dữ liệu minh họa, không phải kết quả thử nghiệm thực tế.</figcaption>
         </figure>
       </section>
 
       <div className="harness-telemetry-disclosure" role="note">
-        Các tình huống và bản xem trước bên dưới là minh họa luồng nghiệp vụ. Số liệu trong ví dụ không phải kết quả pilot hay benchmark của hệ thống.
+        Các tình huống và bản xem trước bên dưới là minh họa luồng nghiệp vụ. Số liệu trong ví dụ không phải kết quả kiểm thử hoặc điểm đánh giá thực tế của hệ thống.
       </div>
 
       <section className="harness-casebook" aria-label="Ba ví dụ nghiệp vụ">
         {/* Left Rail Switcher with Dedicated Vector Icons and Enterprise Domain Copy */}
-        <nav className="harness-casebook__rail" aria-label="Chọn domain nghiệp vụ">
+        <nav className="harness-casebook__rail" aria-label="Chọn lĩnh vực nghiệp vụ">
           <div className="harness-casebook__rail-heading">
             <span>TÌNH HUỐNG DOANH NGHIỆP</span>
             <p>Ba mô hình điều phối tác tử với rào cản an toàn riêng biệt.</p>
@@ -569,11 +569,11 @@ export function HarnessPage() {
                   icon={<Flowchart20Regular />}
                   onClick={() => openTechInspector(null)}
                 >
-                  Khám phá toàn bộ 5/6 nhóm công nghệ (Tech Inspector)
+                  Khám phá các nhóm công nghệ
                 </Button>
               </div>
               <p>
-                Nhấp vào bất kỳ chip công nghệ nào ở trên để mở Tech Inspector Drawer và xem giải phẫu 3 tầng: (1) Bản chất đời thường, (2) Vai trò trong Veridra, (3) Sơ đồ giải phẫu anatomy 3 bước (Kích hoạt → Kiểm soát → Xuất kết quả).
+                Chọn một nhóm để xem cách hoạt động, vai trò trong Veridra và quy trình từ tiếp nhận đến trả kết quả.
               </p>
             </div>
           </details>
@@ -597,7 +597,7 @@ export function HarnessPage() {
       <section className="harness-shared-rails" aria-labelledby="harness-shared-rails-title">
         <div>
           <span className="harness-flagship__eyebrow">LỚP BẢO VỆ CHUNG</span>
-          <h2 id="harness-shared-rails-title">Mọi domain đều đi qua cùng một cổng kiểm soát.</h2>
+          <h2 id="harness-shared-rails-title">Mọi lĩnh vực đều đi qua cùng một cổng kiểm soát.</h2>
         </div>
         <div className="harness-shared-rails__grid">
           {HARNESS_SHARED_RAILS.map((rail) => (
@@ -617,14 +617,14 @@ export function HarnessPage() {
         <dl>
           <div><dt>Khi dữ liệu thiếu</dt><dd>Dừng hoặc ghi rõ giới hạn.</dd></div>
           <div><dt>Khi công cụ ghi</dt><dd>Xem trước, phê duyệt, thực thi, đọc lại.</dd></div>
-          <div><dt>Khi đánh giá</dt><dd>Công bố mẫu đo, công thức và hardgate N/A.</dd></div>
+          <div><dt>Khi đánh giá</dt><dd>Công bố mẫu đo, công thức và giới hạn còn chưa kiểm chứng.</dd></div>
         </dl>
       </section>
 
       <footer className="harness-flagship__footer">
         <CheckmarkCircle20Regular aria-hidden="true" />
         <p>
-          Các luồng ghi được hỗ trợ yêu cầu bước xác nhận theo chính sách của công cụ. Audit ghi nhận sự kiện thao tác; các chỉ số đó không tự chứng minh câu trả lời đúng hoặc loại bỏ hoàn toàn hallucination.
+          Các luồng ghi được hỗ trợ yêu cầu bước xác nhận theo chính sách của công cụ. Nhật ký ghi nhận sự kiện thao tác; các chỉ số đó không tự chứng minh câu trả lời đúng hoặc loại bỏ hoàn toàn nội dung bịa đặt.
         </p>
       </footer>
 

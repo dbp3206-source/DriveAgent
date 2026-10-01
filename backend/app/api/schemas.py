@@ -209,6 +209,7 @@ class AuditPage(ApiModel):
 class HealthResponse(BaseModel):
     status: Literal["ok", "degraded"]
     database: bool
+    object_storage: bool = True
     gemini_configured: bool
     gemini_connectivity: Literal["not_probed"] = "not_probed"
     google_oauth_configured: bool

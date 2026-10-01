@@ -33,6 +33,7 @@ async def health(request: Request, db: DbSession):
     except Exception:
         database_ok = False
     vector_backend = request.app.state.vector_store.backend_name
+    storage_ok = getattr(request.app.state, "object_storage_healthy", True)
     return HealthResponse(
         # SQLite keeps retrieval available, but a silent fallback usually means
         # Qdrant could not acquire its local storage (often another process).
@@ -40,10 +41,12 @@ async def health(request: Request, db: DbSession):
         status=(
             "ok"
             if database_ok
+            and storage_ok
             and vector_backend in {"qdrant-embedded", "postgres-hybrid", "postgres-pgvector"}
             else "degraded"
         ),
         database=database_ok,
+        object_storage=storage_ok,
         gemini_configured=settings.gemini_is_configured,
         google_oauth_configured=settings.oauth_is_configured,
         vector_store=vector_backend,

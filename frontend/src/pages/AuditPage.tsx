@@ -53,6 +53,8 @@ function DonutPieChart({
   const successStroke = total > 0 ? (successCount / total) * circumference : 0
   const errorStroke = total > 0 ? (errorCount / total) * circumference : 0
 
+  if (total === 0) return <p className="audit-chart-empty">Chưa có lượt hoàn tất để đo tỷ lệ.</p>
+
   return (
     <div className="donut-pie-container">
       <svg width={size} height={size} viewBox="0 0 120 120" className="donut-pie-svg">
@@ -149,7 +151,7 @@ function AuditPerformanceChart({ events, p95 }: { events: AuditEvent[]; p95: num
     .slice(0, 8)
 
   const totalSuccess = events.filter((e) => e.status === 'success').length
-  const totalError = events.filter((e) => e.status === 'error' || e.status === 'denied').length
+  const totalError = events.filter((e) => e.status !== 'started' && e.status !== 'success').length
 
   const svgWidth = 540
   const svgHeight = 200
@@ -203,14 +205,14 @@ function AuditPerformanceChart({ events, p95 }: { events: AuditEvent[]; p95: num
             appearance={chartMode === 'line' ? 'primary' : 'subtle'}
             onClick={() => setChartMode('line')}
           >
-            Xu hướng & Tỷ lệ (Line + Pie)
+            Xu hướng và tỷ lệ
           </Button>
           <Button
             size="small"
             appearance={chartMode === 'bar' ? 'primary' : 'subtle'}
             onClick={() => setChartMode('bar')}
           >
-            Theo công cụ (Bar Xanh/Đỏ)
+            Theo từng công cụ
           </Button>
         </div>
       </div>
@@ -259,7 +261,7 @@ function AuditPerformanceChart({ events, p95 }: { events: AuditEvent[]; p95: num
                       strokeDasharray="4 4"
                     />
                     <text x={svgWidth - padRight} y={p95Y - 4} textAnchor="end" fill="#f59e0b" fontSize="10" fontWeight="600">
-                      P95: {p95 != null ? (p95 / 1000).toFixed(2) : '-'}s
+                      95%: {p95 != null ? (p95 / 1000).toFixed(2) : '-'}s
                     </text>
                   </g>
                 ) : null}
@@ -308,7 +310,7 @@ function AuditPerformanceChart({ events, p95 }: { events: AuditEvent[]; p95: num
               <div className="chart-legend">
                 <span className="legend-item"><span className="legend-dot legend-dot--success" /> Thành công</span>
                 <span className="legend-item"><span className="legend-dot legend-dot--error" /> Lỗi / Từ chối</span>
-                <span className="legend-item"><span className="legend-dash legend-dash--p95" /> Ngưỡng P95</span>
+                <span className="legend-item"><span className="legend-dash legend-dash--p95" /> Thời gian của 95% lượt</span>
               </div>
             </div>
           )}
@@ -435,13 +437,12 @@ export function AuditPage() {
     setError('')
     try {
       const query = status === 'all' ? '' : `?status=${encodeURIComponent(status)}`
-      const [data, benchmarkResult] = await Promise.all([
-        api<AuditPagePayload>(`/api/audit/page${query}`, { signal: controller.signal }),
-        api<HarnessOverviewData>('/api/harness/overview', { signal: controller.signal }).catch(() => null),
-      ])
+      void api<HarnessOverviewData>('/api/harness/overview', { signal: controller.signal })
+        .then(result => { if (!controller.signal.aborted) setBenchmark(result) })
+        .catch(() => { /* Nhật ký vẫn dùng được khi bộ đo chưa phản hồi. */ })
+      const data = await api<AuditPagePayload>(`/api/audit/page${query}`, { signal: controller.signal })
       setEvents(data.items)
       setNextCursor(data.next_cursor)
-      setBenchmark(benchmarkResult)
       setNowTs(Date.now())
     } catch (caught) {
       if (caught instanceof DOMException && caught.name === 'AbortError') return
@@ -488,7 +489,7 @@ export function AuditPage() {
     return val !== undefined ? val : null
   }, [completed])
 
-  const successCount = useMemo(() => events.filter((e) => e.status === 'success').length, [events])
+  const successCount = useMemo(() => completed.filter((e) => e.status === 'success').length, [completed])
 
   const benchmarkRows = useMemo(() => {
     const evaluation = benchmark?.evaluation
@@ -497,66 +498,66 @@ export function AuditPage() {
       : Math.max(0, Math.min(10, (rate <= 1 ? rate * 10 : rate / 10)))
     return [
       {
-        criterion: 'Định tuyến tác vụ',
+        criterion: 'Chọn đúng cách xử lý',
         sampleSize: evaluation?.routing_regression?.total ?? 0,
         metric: evaluation?.routing_regression?.pass_rate == null ? 'Chưa đo' : `${Math.round(evaluation.routing_regression.pass_rate * 100)}%`,
-        sample: `${evaluation?.routing_regression?.passed ?? 0}/${evaluation?.routing_regression?.total ?? 0} ca hồi quy`,
+        sample: `${evaluation?.routing_regression?.passed ?? 0}/${evaluation?.routing_regression?.total ?? 0} tình huống kiểm thử`,
         score: asScore(evaluation?.routing_regression?.pass_rate),
-        scope: 'Golden routing offline; không đo độ đúng của câu trả lời.',
+        scope: 'Kiểm tra việc chọn công cụ trên bộ câu hỏi cố định; chưa đánh giá nội dung trả lời.',
         required: true,
       },
       {
-        criterion: 'Hợp đồng đầu ra',
+        criterion: 'Định dạng câu trả lời',
         sampleSize: evaluation?.answer_contract_benchmark?.total ?? 0,
         metric: evaluation?.answer_contract_benchmark?.pass_rate == null ? 'Chưa đo' : `${Math.round(evaluation.answer_contract_benchmark.pass_rate * 100)}%`,
         sample: `${evaluation?.answer_contract_benchmark?.passed ?? 0}/${evaluation?.answer_contract_benchmark?.total ?? 0} ca xác định`,
         score: asScore(evaluation?.answer_contract_benchmark?.pass_rate),
-        scope: 'Kiểm tra định dạng và constraint trên mẫu cố định, không phải benchmark model live.',
+        scope: 'Kiểm tra bố cục và yêu cầu đầu ra trên mẫu cố định.',
         required: true,
       },
       {
-        criterion: 'Chất lượng output gần đây',
+        criterion: 'Cách trình bày câu trả lời',
         sampleSize: evaluation?.recent_output_quality?.measured ?? 0,
         metric: evaluation?.recent_output_quality?.average_score == null ? 'Chưa đo' : `${evaluation.recent_output_quality.average_score}/100`,
         sample: `${evaluation?.recent_output_quality?.measured ?? 0} câu trả lời`,
         score: evaluation?.recent_output_quality?.average_score == null ? null : evaluation.recent_output_quality.average_score / 10,
-        scope: evaluation?.recent_output_quality?.scope ?? 'Chưa có mô tả phạm vi.',
+        scope: 'Đánh giá bố cục, độ đầy đủ và cách diễn đạt; chưa xác minh từng nhận định với nguồn.',
         required: true,
       },
       {
-        criterion: 'Độ tin cậy tool',
+        criterion: 'Công cụ chạy thành công',
         sampleSize: evaluation?.audit_sample_size ?? 0,
         metric: evaluation?.tool_success_rate == null ? 'Chưa đo' : `${(evaluation.tool_success_rate * 100).toFixed(1)}%`,
-        sample: `${evaluation?.audit_sample_size ?? 0} sự kiện audit`,
+        sample: `${evaluation?.audit_sample_size ?? 0} thao tác đã ghi nhận`,
         score: asScore(evaluation?.tool_success_rate),
-        scope: 'Tool trả thành công; không tự chứng minh mục tiêu nghiệp vụ đã đạt.',
+        scope: 'Đo số thao tác không lỗi; cần đối soát riêng để biết công việc đã hoàn tất.',
         required: true,
       },
       {
-        criterion: 'Liên kết citation',
+        criterion: 'Liên kết đến nguồn',
         sampleSize: evaluation?.quality_audit?.grounded_responses ?? 0,
         metric: evaluation?.quality_audit?.grounded_citation_rate == null ? 'Chưa đo' : `${(evaluation.quality_audit.grounded_citation_rate * 100).toFixed(1)}%`,
-        sample: `${evaluation?.quality_audit?.grounded_responses ?? 0} câu có citation`,
+        sample: `${evaluation?.quality_audit?.grounded_responses ?? 0} câu trả lời có nguồn`,
         score: asScore(evaluation?.quality_audit?.grounded_citation_rate),
-        scope: 'Kiểm marker và metadata; chưa kiểm entailment ngữ nghĩa của từng claim.',
+        scope: 'Kiểm tra liên kết và thông tin nguồn; chưa xác minh nguồn chứng minh từng nhận định.',
         required: true,
       },
       {
-        criterion: 'Chống mutation / guardrail',
+        criterion: 'Chặn đầu vào gây lỗi',
         sampleSize: evaluation?.adversarial_mutation_regression?.total ?? 0,
         metric: evaluation?.adversarial_mutation_regression?.pass_rate == null ? 'Chưa đo' : `${Math.round(evaluation.adversarial_mutation_regression.pass_rate * 100)}%`,
         sample: `${evaluation?.adversarial_mutation_regression?.passed ?? 0}/${evaluation?.adversarial_mutation_regression?.total ?? 0} ca`,
         score: asScore(evaluation?.adversarial_mutation_regression?.pass_rate),
-        scope: 'Regression xác định cho evaluator, không thay thế pentest độc lập.',
+        scope: 'Thử các đầu vào bất thường với bộ kiểm tra; phạm vi giới hạn ở những tình huống đã đo.',
         required: true,
       },
       {
-        criterion: 'Benchmark nghiệp vụ có oracle',
+        criterion: 'Tác vụ có đáp án đối chiếu',
         sampleSize: evaluation?.automated_business_benchmark?.sample_size ?? 0,
         metric: evaluation?.automated_business_benchmark?.pass_rate == null ? 'Chưa có dữ liệu đo' : `${(evaluation.automated_business_benchmark.pass_rate * 100).toFixed(1)}%`,
         sample: evaluation?.automated_business_benchmark?.sample_size ? `${evaluation.automated_business_benchmark.sample_size} tác vụ giả lập` : 'Chưa có bộ oracle đã xuất bản',
         score: asScore(evaluation?.automated_business_benchmark?.pass_rate),
-        scope: evaluation?.automated_business_benchmark?.scope ?? 'Hardgate: execution success không được dùng thay thế oracle.',
+        scope: 'So sánh kết quả các tác vụ mẫu với đáp án đã định sẵn.',
         required: true,
       },
     ].filter((row) => row.sampleSize > 0 && row.score != null && Number.isFinite(row.score))
@@ -644,12 +645,12 @@ export function AuditPage() {
       <div className="page-heading">
         <div>
           <div className="page-heading-kicker-row">
-            <span className="home-kicker">Security & Telemetry Audit</span>
-            <Badge appearance="filled" color="brand">6-Gate Audit Trail</Badge>
+            <span className="home-kicker">Nhật ký và hiệu quả sử dụng</span>
+            <Badge appearance="filled" color="brand">Theo dõi từng thao tác</Badge>
           </div>
-          <h2 className="artistic-page-title">Mọi tool call đều để lại dấu vết</h2>
+          <h2 className="artistic-page-title">Mỗi thao tác đều có thể kiểm tra lại</h2>
           <p>
-            Kiểm tra chi tiết từng công cụ, trạng thái thực thi và độ trễ chính xác. Hệ thống tự động che thông tin xác thực đã nhận diện trước khi ghi audit.
+            Kiểm tra chi tiết từng công cụ, trạng thái thực thi và độ trễ chính xác. Hệ thống tự động che thông tin xác thực đã nhận diện trước khi ghi nhật ký.
           </p>
         </div>
         <div className="page-heading__actions">
@@ -680,19 +681,19 @@ export function AuditPage() {
             <h3>Hiệu quả thực thi công cụ</h3>
             <ul className="audit-measurement-context">
               <li><strong>Mẫu đo:</strong> {events.length} sự kiện gần nhất đã tải.</li>
-              <li><strong>Thiếu dữ liệu:</strong> hiển thị N/A, không tự quy thành 0%.</li>
+              <li><strong>Phạm vi:</strong> chỉ hiển thị tiêu chí có số liệu thực tế.</li>
             </ul>
           </div>
 
           <div className="kpi-cards-grid kpi-cards-grid--5">
             {/* KPI 1: Latency in Seconds */}
-            <div className="kpi-card">
+            {completed.length > 0 && <div className="kpi-card">
               <span className="kpi-label">Thời gian đợi trung bình</span>
               <span className="kpi-value kpi-value--highlight">
                 {avgLatency === null ? 'Chưa có' : `${(avgLatency / 1000).toFixed(2)} s`}
               </span>
-              <span className="kpi-subtext">Độ trễ P95: {p95 === null ? '-' : `${(p95 / 1000).toFixed(2)} s`}</span>
-            </div>
+              <span className="kpi-subtext">Thời gian của 95% lượt: {p95 === null ? '-' : `${(p95 / 1000).toFixed(2)} s`}</span>
+            </div>}
 
             {/* KPI 2: Usage velocity per Day / Week */}
             <div className="kpi-card kpi-card--success">
@@ -705,11 +706,11 @@ export function AuditPage() {
 
             {/* KPI 3: Sensitive actions. This is not an approval-rate metric. */}
             <div className="kpi-card">
-              <span className="kpi-label">Kiểm soát HiTL & Tác vụ ghi</span>
+              <span className="kpi-label">Thao tác thay đổi dữ liệu</span>
               <span className="kpi-value">
                 {sensitiveCount} <small style={{ fontSize: '13px', fontWeight: 500, color: 'var(--text-secondary)' }}>lệnh</small>
               </span>
-              <span className="kpi-subtext">{sensitivePct}% event có tên tác vụ nhạy cảm (không phải tỷ lệ phê duyệt)</span>
+              <span className="kpi-subtext">{sensitivePct}% thao tác có thể thay đổi dữ liệu (không phải tỷ lệ phê duyệt)</span>
             </div>
 
             {/* KPI 4: Primary Domain */}
@@ -720,13 +721,13 @@ export function AuditPage() {
             </div>
 
             {/* KPI 5: Success Rate */}
-            <div className="kpi-card">
+            {completed.length > 0 && <div className="kpi-card">
               <span className="kpi-label">Tỷ lệ thực thi thành công</span>
               <span className="kpi-value">
                 {completed.length ? `${Math.round((successCount / completed.length) * 100)}%` : 'N/A'}
               </span>
               <span className="kpi-subtext">{successCount}/{completed.length} sự kiện kết thúc suôn sẻ</span>
-            </div>
+            </div>}
           </div>
 
           <div className="status-distribution" aria-label="Phân bố trạng thái">
@@ -753,7 +754,7 @@ export function AuditPage() {
 
           <AuditPerformanceChart events={events} p95={p95} />
           <ul className="measurement-note">
-            <li><strong>P95:</strong> 95% lượt hoàn tất trong khoảng thời gian này hoặc nhanh hơn.</li>
+            <li><strong>Thời gian của 95% lượt:</strong> 95% lượt hoàn tất trong khoảng thời gian này hoặc nhanh hơn.</li>
             <li><strong>Thành công:</strong> công cụ không lỗi; chưa chứng minh nội dung đúng.</li>
           </ul>
         </section>
@@ -762,34 +763,34 @@ export function AuditPage() {
       <section className="release-benchmark" aria-labelledby="release-benchmark-title">
         <div className="evaluation-job-control">
           <Button onClick={() => void startEvaluation()} disabled={evaluationStarting || Boolean(evaluationJob && ['queued', 'running'].includes(evaluationJob.status))}>
-            {evaluationStarting ? 'Đang xếp hàng…' : 'Chạy regression offline'}
+            {evaluationStarting ? 'Đang xếp hàng…' : 'Chạy bộ kiểm thử'}
           </Button>
-          <p>Golden dataset → worker → checkpoint bền. Không dùng quota Gemini, không ghi Google. Không thay thế kiểm chứng câu trả lời thật.</p>
+          <p>Kiểm tra bằng bộ câu hỏi cố định. Tiến độ được lưu để tiếp tục khi ứng dụng khởi động lại. Không tiêu hao lượt Gemini.</p>
           {evaluationJob ? <div role="status" data-job-id={evaluationJob.id}>
-            <strong>{evaluationJob.status}</strong>
+            <strong>{{queued: 'Đang chờ', running: 'Đang kiểm tra', completed: 'Đã hoàn tất', failed: 'Kiểm tra gặp lỗi', cancelled: 'Đã dừng'}[evaluationJob.status] ?? 'Đã ghi nhận'}</strong>
             <div className="evaluation-suite-progress">{Object.entries(evaluationJob.checkpoint).map(([name, result]) => <div key={name}>
-              <label htmlFor={`suite-${name}`}>{name} <strong>{result.passed}/{result.total}</strong></label>
+              <label htmlFor={`suite-${name}`}>{{routing: 'Chọn công cụ', output: 'Nội dung đầu ra', contract: 'Định dạng', mutation: 'Đầu vào bất thường'}[name] ?? 'Bộ kiểm tra'} <strong>{result.passed}/{result.total}</strong></label>
               <progress id={`suite-${name}`} value={result.passed} max={Math.max(1, result.total)} />
             </div>)}</div>
-            <details><summary>Dữ liệu checkpoint thô</summary><pre>{JSON.stringify(evaluationJob.checkpoint, null, 2)}</pre></details>
+            <details><summary>Xem dữ liệu tiến độ</summary><pre>{JSON.stringify(evaluationJob.checkpoint, null, 2)}</pre></details>
           </div> : null}
         </div>
         <header className="release-benchmark__header">
           <div>
-            <span>Evaluation & Governance Harness</span>
+            <span>Kết quả kiểm chứng</span>
             <h3 id="release-benchmark-title">Các bộ đo và phạm vi kiểm chứng</h3>
             <p>Kết quả đo từ nhật ký thực thi và các bộ kiểm thử. Mỗi tiêu chí ghi rõ số mẫu và phạm vi đánh giá.</p>
           </div>
         </header>
         {benchmarkRows.length === 0 ? <p>Chưa có kết quả đo đủ dữ liệu. Kết quả sẽ xuất hiện sau khi thực thi tác vụ hoặc chạy bộ kiểm thử.</p> : <div className="release-benchmark__table-wrap">
           <table className="release-benchmark__table">
-            <thead><tr><th>Tiêu chí</th><th>Metric thật</th><th>Mẫu đo</th><th>Điểm /10</th><th>Phạm vi và giới hạn</th></tr></thead>
-            <tbody>{benchmarkRows.map((row) => <tr key={row.criterion}>
-              <th scope="row">{row.criterion}</th>
-              <td data-label="Metric thật">{row.metric}</td>
+            <thead><tr><th>Tiêu chí</th><th>Kết quả đo</th><th>Mẫu đo</th><th>Điểm /10</th><th>Phạm vi và giới hạn</th></tr></thead>
+            <tbody>{benchmarkRows.map((row, index) => <tr key={row.criterion} className={`measurement-row measurement-row--${index % 3}`}>
+              <th scope="row"><span className="measurement-criterion">{row.criterion}</span></th>
+              <td data-label="Kết quả đo"><span className="measurement-result">{row.metric}</span></td>
               <td data-label="Mẫu đo">{row.sample}</td>
-              <td data-label="Điểm /10"><strong>{row.score == null ? 'Chưa có dữ liệu đo' : row.score.toFixed(2)}</strong></td>
-              <td data-label="Phạm vi">{row.scope}</td>
+              <td data-label="Điểm /10"><strong className={`measurement-score ${row.score != null && row.score < 9 ? 'measurement-score--attention' : ''}`}>{row.score?.toFixed(2)}<small>/10</small></strong></td>
+              <td data-label="Phạm vi"><details className="measurement-explanation"><summary>Cách đo và giới hạn</summary><p>{row.scope}</p></details></td>
             </tr>)}</tbody>
           </table>
         </div>}
@@ -802,20 +803,20 @@ export function AuditPage() {
       {error ? <ErrorState message={error} retry={load} /> : null}
       {loading ? <LoadingState /> : null}
       {!loading && !error && events.length === 0 ? (
-        <EmptyState title="Chưa có sự kiện" description="Audit log sẽ xuất hiện sau lần gọi tool đầu tiên." />
+        <EmptyState title="Chưa có sự kiện" description="Nhật ký xuất hiện sau khi bạn sử dụng một công cụ." />
       ) : null}
 
       {!loading && events.length > 0 ? (
         <div className="table-scroll">
-          <Table aria-label="Nhật ký tool">
+          <Table aria-label="Nhật ký công cụ">
             <TableHeader>
               <TableRow>
                 <TableHeaderCell>Thời gian</TableHeaderCell>
-                <TableHeaderCell>Tool</TableHeaderCell>
-                <TableHeaderCell>User</TableHeaderCell>
+                <TableHeaderCell>Công cụ</TableHeaderCell>
+                <TableHeaderCell>Người dùng</TableHeaderCell>
                 <TableHeaderCell>Trạng thái</TableHeaderCell>
                 <TableHeaderCell>Độ trễ</TableHeaderCell>
-                <TableHeaderCell>Request ID</TableHeaderCell>
+                <TableHeaderCell>Mã yêu cầu</TableHeaderCell>
               </TableRow>
             </TableHeader>
             <TableBody>
