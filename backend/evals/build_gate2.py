@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 import openpyxl
@@ -136,6 +136,7 @@ def _case(
 def build() -> dict[str, Any]:
     _ensure_budget_fixture()
     pdf = _configured_pdf_path()
+    pdf_name = PurePosixPath(str(pdf).replace("\\", "/")).name
     pdf1 = _source("evaluation-harness", pdf, "pdf", "page 1")
     pdf2 = _source("evaluation-harness", pdf, "pdf", "page 2")
     pdf3 = _source("evaluation-harness", pdf, "pdf", "page 3")
@@ -453,13 +454,13 @@ def build() -> dict[str, Any]:
         "pdf-17": "trải nghiệm người dùng",
     }
     for case in cases:
-        case["question"] = f"Trong tệp Drive {pdf.name}: {case['question']}"
+        case["question"] = f"Trong tệp Drive {pdf_name}: {case['question']}"
         facts = case["answer_key"].get("facts") or []
         first_group = (case["answer_key"].get("fact_groups") or [[]])[0]
         fact = facts[0] if facts else first_group[0]
         binding = {
             "page_number": int(case["source_refs"][0]["location"].split()[-1]),
-            "file_name": pdf.name,
+            "file_name": pdf_name,
             "evidence_fact": pdf_evidence_anchors.get(case["id"], fact),
         }
         if facts:
