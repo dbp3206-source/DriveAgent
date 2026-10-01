@@ -11,7 +11,7 @@ tools/Docker Desktop Installer.exe
 tools/tesseract-*/
 tools/tesseract-ocr-*.exe
 # Downloaded observability runtimes are machine-local, not source artifacts.
-tools/
+/tools/
 *.db
 *.sqlite
 *.sqlite3
