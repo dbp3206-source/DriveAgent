@@ -1,0 +1,88 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Một yêu cầu đi qua 4 checkpoint",
+    "animation": "trace",
+    "visual_preset": "editorial",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "happy-path",
+        "label": "Luồng bình thường",
+        "focus": ["person", "request", "context", "route", "action", "proof", "reply"],
+        "note": "Từ câu hỏi của bạn đến câu trả lời có thể kiểm tra lại."
+      },
+      {
+        "id": "safety-stop",
+        "label": "Điểm chặn an toàn",
+        "focus": ["route", "approval", "blocked", "action"],
+        "note": "Thao tác ghi, gửi hoặc chia sẻ sẽ dừng để chờ bạn duyệt."
+      },
+      {
+        "id": "evidence-loop",
+        "label": "Đường bằng chứng",
+        "focus": ["context", "proof", "reply"],
+        "note": "Nguồn, citation và audit giúp bạn biết câu trả lời dựa vào đâu."
+      }
+    ],
+    "output": "frontend/public/harness-workflow.html"
+  },
+  "lanes": [
+    { "id": "you", "label": "Bạn" },
+    { "id": "agent", "label": "Agent" },
+    { "id": "safety", "label": "Cổng an toàn", "variant": "exception" },
+    { "id": "evidence", "label": "Nguồn & bằng chứng" }
+  ],
+  "phases": [
+    { "id": "understand", "label": "Hiểu yêu cầu", "fromCol": 0, "toCol": 1 },
+    { "id": "decide", "label": "Chọn đường đi", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "deliver", "label": "Làm và kiểm tra", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "context-group", "label": "Đủ ngữ cảnh để hiểu đúng", "lane": "agent", "fromCol": 1, "toCol": 2, "variant": "emphasis" },
+    { "id": "safety-group", "label": "Dừng trước hành động có rủi ro", "lane": "safety", "fromCol": 2, "toCol": 4, "variant": "security" },
+    { "id": "evidence-group", "label": "Luôn để lại dấu vết kiểm tra", "lane": "evidence", "fromCol": 1, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["person", "request", "context", "route", "approval", "action", "proof", "reply"],
+  "nodes": [
+    { "id": "person", "lane": "you", "col": 0, "type": "external", "label": "Bạn", "sublabel": "đặt mục tiêu", "width": 132 },
+    { "id": "request", "lane": "you", "col": 1, "type": "frontend", "label": "Câu hỏi", "sublabel": "chat + file", "width": 132 },
+    { "id": "context", "lane": "agent", "col": 2, "type": "backend", "label": "Ngữ cảnh", "sublabel": "session · memory · RAG", "tag": "hiểu đúng", "width": 148 },
+    { "id": "route", "lane": "agent", "col": 3, "type": "backend", "label": "Chọn năng lực", "sublabel": "agent · tool · skill", "width": 148 },
+    { "id": "approval", "lane": "safety", "col": 3, "type": "security", "label": "Xin duyệt?", "sublabel": "preview + quyền", "tag": "chặn rủi ro", "width": 148 },
+    { "id": "blocked", "lane": "safety", "col": 4, "type": "security", "label": "Tạm dừng", "sublabel": "thiếu quyền / consent", "width": 148 },
+    { "id": "action", "lane": "evidence", "col": 4, "type": "messagebus", "label": "Thực thi", "sublabel": "Drive · Gmail · Docs", "tag": "kết quả có cấu trúc", "width": 148 },
+    { "id": "proof", "lane": "evidence", "col": 5, "type": "database", "label": "Bằng chứng", "sublabel": "citation · audit · read-back", "width": 148 },
+    { "id": "reply", "lane": "you", "col": 5, "type": "frontend", "label": "Câu trả lời", "sublabel": "rõ việc tiếp theo", "width": 148 }
+  ],
+  "edges": [
+    { "id": "ask", "from": "person", "to": "request", "role": "main" },
+    { "id": "understand", "from": "request", "to": "context", "label": "đọc mục tiêu", "variant": "emphasis", "role": "main" },
+    { "id": "choose", "from": "context", "to": "route", "label": "đủ dữ kiện", "role": "main" },
+    { "id": "check", "from": "route", "to": "approval", "label": "cần quyền?", "variant": "security", "role": "main" },
+    { "id": "stop", "from": "approval", "to": "blocked", "label": "chưa duyệt", "variant": "security", "role": "error" },
+    { "id": "go", "from": "approval", "to": "action", "label": "đã duyệt", "variant": "emphasis", "role": "main" },
+    { "id": "record", "from": "action", "to": "proof", "label": "ghi dấu vết", "variant": "dashed", "role": "return" },
+    { "id": "answer", "from": "proof", "to": "reply", "label": "trả lời có căn cứ", "variant": "emphasis", "role": "return" },
+    { "id": "context-proof", "from": "context", "to": "proof", "label": "nguồn đã dùng", "variant": "dashed", "role": "async" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Điều bạn nhận được",
+      "items": [
+        "Biết Agent đang ở bước nào",
+        "Mở được nguồn và dấu vết khi cần"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Điểm Agent không tự quyết",
+      "items": [
+        "Không gửi hoặc ghi cloud nếu chưa được duyệt",
+        "Không bịa khi không có bằng chứng"
+      ]
+    }
+  ]
+}

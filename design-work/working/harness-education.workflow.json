@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Hỗ trợ học tập theo rubric",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {"id": "business", "label": "Việc giáo viên nhận", "focus": ["user", "chat", "adk", "context", "retrieval", "output"], "note": "Theo dõi từ bảng điểm đến kế hoạch hỗ trợ có căn cứ."},
+      {"id": "safety", "label": "Giữ quyền quyết định", "focus": ["registry", "approval", "blocked", "output"], "note": "Xem nơi hệ thống không tự đổi điểm hoặc gửi thư."},
+      {"id": "evidence", "label": "Rubric và bài nộp", "focus": ["context", "retrieval", "evaluation", "output"], "note": "Theo dõi cách nhận định được gắn với đúng tiêu chí và bài làm."}
+    ]
+  },
+  "lanes": [
+    {"id": "interface", "label": "Giáo viên"},
+    {"id": "agent", "label": "Điều phối"},
+    {"id": "controls", "label": "Cổng an toàn", "variant": "exception"},
+    {"id": "evidence", "label": "Nguồn và kết quả"}
+  ],
+  "phases": [
+    {"id": "intake", "label": "Nhận mục tiêu", "fromCol": 0, "toCol": 1},
+    {"id": "evidence_phase", "label": "Đọc và đối chiếu", "fromCol": 2, "toCol": 4, "variant": "emphasis"},
+    {"id": "handoff", "label": "Xem và quyết định", "fromCol": 5, "toCol": 5, "variant": "security"}
+  ],
+  "mainPath": ["user", "chat", "adk", "context", "retrieval", "output"],
+  "nodes": [
+    {"id": "user", "lane": "interface", "col": 0, "type": "external", "label": "Giáo viên", "sublabel": "nêu nhóm cần hỗ trợ", "width": 132},
+    {"id": "chat", "lane": "interface", "col": 1, "type": "frontend", "label": "Chat + Skill", "sublabel": "rubric_support", "width": 132},
+    {"id": "adk", "lane": "agent", "col": 2, "type": "backend", "label": "ADK điều phối", "sublabel": "nghiên cứu · học tập", "tag": "đúng mục tiêu", "width": 142},
+    {"id": "context", "lane": "agent", "col": 3, "type": "backend", "label": "Bối cảnh lớp học", "sublabel": "điểm · rubric · bài nộp · Memory", "width": 154},
+    {"id": "retrieval", "lane": "evidence", "col": 4, "type": "database", "label": "Tìm đúng căn cứ", "sublabel": "trang rubric · bài làm · citation", "tag": "không gắn nhãn", "width": 154},
+    {"id": "registry", "lane": "controls", "col": 4, "type": "security", "label": "Tool Registry", "sublabel": "quyền · phạm vi", "width": 142},
+    {"id": "approval", "lane": "controls", "col": 5, "type": "security", "label": "Giáo viên duyệt", "sublabel": "Docs · Sheets · Gmail Draft", "tag": "giữ quyền quyết định", "width": 154, "yOffset": -52},
+    {"id": "blocked", "lane": "controls", "col": 5, "type": "security", "label": "Dừng an toàn", "sublabel": "thiếu bài hoặc thiếu căn cứ", "width": 142, "yOffset": 52},
+    {"id": "evaluation", "lane": "evidence", "col": 5, "type": "backend", "label": "Kiểm tra kết quả", "sublabel": "rubric · citation · format", "width": 154, "yOffset": 116},
+    {"id": "output", "lane": "interface", "col": 5, "type": "frontend", "label": "Kế hoạch hỗ trợ", "sublabel": "Docs · Sheets · Draft · Skill", "tag": "giáo viên quyết định", "width": 160}
+  ],
+  "edges": [
+    {"id": "request-chat", "from": "user", "to": "chat", "label": "mục tiêu", "role": "main"},
+    {"id": "chat-adk", "from": "chat", "to": "adk", "label": "nguồn + Skill", "role": "main", "variant": "emphasis"},
+    {"id": "adk-context", "from": "adk", "to": "context", "label": "gom đúng lớp học", "role": "main"},
+    {"id": "context-retrieval", "from": "context", "to": "retrieval", "label": "đối chiếu tiêu chí", "role": "main", "variant": "emphasis"},
+    {"id": "retrieval-output", "from": "retrieval", "to": "output", "label": "khoảng trống + căn cứ", "role": "main", "variant": "emphasis"},
+    {"id": "context-registry", "from": "context", "to": "registry", "label": "chuẩn bị đầu ra", "role": "branch", "variant": "security", "route": "bottom-channel"},
+    {"id": "registry-approval", "from": "registry", "to": "approval", "label": "chờ giáo viên", "role": "branch", "variant": "security"},
+    {"id": "registry-blocked", "from": "registry", "to": "blocked", "label": "thiếu điều kiện", "role": "error", "variant": "security"},
+    {"id": "approval-output", "from": "approval", "to": "output", "label": "đã duyệt", "role": "branch", "variant": "security"},
+    {"id": "retrieval-evaluation", "from": "retrieval", "to": "evaluation", "label": "kiểm tra nhận định", "role": "branch", "variant": "dashed"},
+    {"id": "evaluation-output", "from": "evaluation", "to": "output", "label": "đủ căn cứ", "role": "return", "variant": "emphasis"}
+  ]
+}

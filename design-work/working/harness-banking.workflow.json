@@ -1,0 +1,52 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Đối soát giao dịch lệch",
+    "animation": "trace",
+    "visual_preset": "signal-flow",
+    "quality_profile": "showcase",
+    "views": [
+      {"id": "business", "label": "Việc người dùng nhận", "focus": ["user", "chat", "adk", "context", "retrieval", "output"], "note": "Theo dõi từ yêu cầu đối soát đến hồ sơ có thể kiểm tra."},
+      {"id": "safety", "label": "Cổng an toàn", "focus": ["registry", "approval", "blocked", "output"], "note": "Xem nơi quyền, revision và bước duyệt chặn thao tác sai."},
+      {"id": "evidence", "label": "Bằng chứng", "focus": ["context", "retrieval", "evaluation", "output"], "note": "Theo dõi nguồn, phép tính và kiểm tra trước khi bàn giao."}
+    ]
+  },
+  "lanes": [
+    {"id": "interface", "label": "Người dùng"},
+    {"id": "agent", "label": "Điều phối"},
+    {"id": "controls", "label": "Cổng an toàn", "variant": "exception"},
+    {"id": "evidence", "label": "Nguồn và kết quả"}
+  ],
+  "phases": [
+    {"id": "intake", "label": "Nhận việc", "fromCol": 0, "toCol": 1},
+    {"id": "evidence_phase", "label": "Tìm và đối chiếu", "fromCol": 2, "toCol": 4, "variant": "emphasis"},
+    {"id": "handoff", "label": "Duyệt và bàn giao", "fromCol": 5, "toCol": 5, "variant": "security"}
+  ],
+  "mainPath": ["user", "chat", "adk", "context", "retrieval", "output"],
+  "nodes": [
+    {"id": "user", "lane": "interface", "col": 0, "type": "external", "label": "Người đối soát", "sublabel": "nêu khoản lệch", "width": 132},
+    {"id": "chat", "lane": "interface", "col": 1, "type": "frontend", "label": "Chat + lệnh /", "sublabel": "chọn nguồn và đầu ra", "width": 132},
+    {"id": "adk", "lane": "agent", "col": 2, "type": "backend", "label": "ADK điều phối", "sublabel": "chọn nhóm đối soát", "tag": "đúng việc", "width": 142},
+    {"id": "context", "lane": "agent", "col": 3, "type": "backend", "label": "Bối cảnh đối soát", "sublabel": "CSV · Sheet · quy trình · Memory", "width": 154},
+    {"id": "retrieval", "lane": "evidence", "col": 4, "type": "database", "label": "Tìm bằng chứng", "sublabel": "RRF · Qdrant · revision", "tag": "không đoán", "width": 154},
+    {"id": "registry", "lane": "controls", "col": 4, "type": "security", "label": "Tool Registry", "sublabel": "quyền · schema · audit", "width": 142},
+    {"id": "approval", "lane": "controls", "col": 5, "type": "security", "label": "Duyệt trước khi ghi", "sublabel": "xem bảng và biên bản", "tag": "chờ người dùng", "width": 154, "yOffset": -52},
+    {"id": "blocked", "lane": "controls", "col": 5, "type": "security", "label": "Dừng an toàn", "sublabel": "thiếu quyền hoặc dữ liệu", "width": 142, "yOffset": 52},
+    {"id": "evaluation", "lane": "evidence", "col": 5, "type": "backend", "label": "Kiểm tra kết quả", "sublabel": "phép tính · citation · read-back", "width": 154, "yOffset": 116},
+    {"id": "output", "lane": "interface", "col": 5, "type": "frontend", "label": "Hồ sơ xử lý", "sublabel": "Sheet · Docs · Draft · Artifact", "tag": "dùng được", "width": 160}
+  ],
+  "edges": [
+    {"id": "request-chat", "from": "user", "to": "chat", "label": "yêu cầu", "role": "main"},
+    {"id": "chat-adk", "from": "chat", "to": "adk", "label": "mục tiêu + controls", "role": "main", "variant": "emphasis"},
+    {"id": "adk-context", "from": "adk", "to": "context", "label": "gom đúng nguồn", "role": "main"},
+    {"id": "context-retrieval", "from": "context", "to": "retrieval", "label": "tìm đoạn và dòng liên quan", "role": "main", "variant": "emphasis"},
+    {"id": "retrieval-output", "from": "retrieval", "to": "output", "label": "bằng chứng + kết luận", "role": "main", "variant": "emphasis"},
+    {"id": "context-registry", "from": "context", "to": "registry", "label": "gọi công cụ", "role": "branch", "variant": "security", "route": "bottom-channel"},
+    {"id": "registry-approval", "from": "registry", "to": "approval", "label": "có thao tác ghi", "role": "branch", "variant": "security"},
+    {"id": "registry-blocked", "from": "registry", "to": "blocked", "label": "thiếu điều kiện", "role": "error", "variant": "security"},
+    {"id": "approval-output", "from": "approval", "to": "output", "label": "đã duyệt", "role": "branch", "variant": "security"},
+    {"id": "retrieval-evaluation", "from": "retrieval", "to": "evaluation", "label": "đối chiếu", "role": "branch", "variant": "dashed"},
+    {"id": "evaluation-output", "from": "evaluation", "to": "output", "label": "đạt điều kiện", "role": "return", "variant": "emphasis"}
+  ]
+}
