@@ -7,6 +7,16 @@ from zoneinfo import ZoneInfo
 
 def needs_public_evidence(message: str) -> bool:
     text = message.casefold()
+    # An explicit exclusion is not a request to search private workspace data.
+    # Remove only standalone negative source clauses; other private references
+    # remain in the guard below, so their contents cannot become web queries.
+    text = re.sub(
+        r"(?:^|[.!?;])\s*không\s+(?:đọc|dùng|truy cập|tìm trong)\s+"
+        r"(?:gmail|drive|calendar|local)"
+        r"(?:\s+(?:hay|hoặc|và)\s+(?:gmail|drive|calendar|local))*\s*(?=[.!?;]|$)",
+        ".",
+        text,
+    )
     if re.search(
         r"\b(?:gmail|email|mail|drive|calendar|lịch của tôi|cuộc họp|local|"
         r"tài liệu|tệp|file|bộ nhớ|ghi nhớ|memory|skill)\b",

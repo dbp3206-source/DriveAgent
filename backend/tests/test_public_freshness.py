@@ -49,6 +49,14 @@ def test_private_or_static_content_is_not_searched(question):
     assert route_request(question).tool != "web_research"
 
 
+def test_public_question_with_explicit_private_source_exclusion_still_routes_web():
+    question = "Lịch thi đấu ASIAD hôm nay? Không đọc Gmail hay Drive."
+    assert route_request(question).tool == "web_research"
+    assert not needs_public_evidence(
+        "Đối chiếu nội dung Gmail hôm nay với tin web. Không đọc Drive."
+    )
+
+
 def test_web_input_general_and_company_are_compatible():
     assert WebResearchInput(question="Lịch thi đấu hôm nay").company_name is None
     assert WebResearchInput(company_name="Bosch").company_name == "Bosch"

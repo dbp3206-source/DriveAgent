@@ -22,7 +22,6 @@ import { api, formatDate } from '../api'
 import { EmptyState, ErrorState, LoadingState } from '../components/AsyncState'
 import type { HarnessOverviewData } from '../harnessScenarios'
 import type { AuditEvent } from '../types'
-import { ReleaseReadiness } from '../components/ReleaseReadiness'
 
 type AuditPagePayload = {
   items: AuditEvent[]
@@ -499,6 +498,7 @@ export function AuditPage() {
     return [
       {
         criterion: 'Định tuyến tác vụ',
+        sampleSize: evaluation?.routing_regression?.total ?? 0,
         metric: evaluation?.routing_regression?.pass_rate == null ? 'Chưa đo' : `${Math.round(evaluation.routing_regression.pass_rate * 100)}%`,
         sample: `${evaluation?.routing_regression?.passed ?? 0}/${evaluation?.routing_regression?.total ?? 0} ca hồi quy`,
         score: asScore(evaluation?.routing_regression?.pass_rate),
@@ -507,6 +507,7 @@ export function AuditPage() {
       },
       {
         criterion: 'Hợp đồng đầu ra',
+        sampleSize: evaluation?.answer_contract_benchmark?.total ?? 0,
         metric: evaluation?.answer_contract_benchmark?.pass_rate == null ? 'Chưa đo' : `${Math.round(evaluation.answer_contract_benchmark.pass_rate * 100)}%`,
         sample: `${evaluation?.answer_contract_benchmark?.passed ?? 0}/${evaluation?.answer_contract_benchmark?.total ?? 0} ca xác định`,
         score: asScore(evaluation?.answer_contract_benchmark?.pass_rate),
@@ -515,6 +516,7 @@ export function AuditPage() {
       },
       {
         criterion: 'Chất lượng output gần đây',
+        sampleSize: evaluation?.recent_output_quality?.measured ?? 0,
         metric: evaluation?.recent_output_quality?.average_score == null ? 'Chưa đo' : `${evaluation.recent_output_quality.average_score}/100`,
         sample: `${evaluation?.recent_output_quality?.measured ?? 0} câu trả lời`,
         score: evaluation?.recent_output_quality?.average_score == null ? null : evaluation.recent_output_quality.average_score / 10,
@@ -523,6 +525,7 @@ export function AuditPage() {
       },
       {
         criterion: 'Độ tin cậy tool',
+        sampleSize: evaluation?.audit_sample_size ?? 0,
         metric: evaluation?.tool_success_rate == null ? 'Chưa đo' : `${(evaluation.tool_success_rate * 100).toFixed(1)}%`,
         sample: `${evaluation?.audit_sample_size ?? 0} sự kiện audit`,
         score: asScore(evaluation?.tool_success_rate),
@@ -531,6 +534,7 @@ export function AuditPage() {
       },
       {
         criterion: 'Liên kết citation',
+        sampleSize: evaluation?.quality_audit?.grounded_responses ?? 0,
         metric: evaluation?.quality_audit?.grounded_citation_rate == null ? 'Chưa đo' : `${(evaluation.quality_audit.grounded_citation_rate * 100).toFixed(1)}%`,
         sample: `${evaluation?.quality_audit?.grounded_responses ?? 0} câu có citation`,
         score: asScore(evaluation?.quality_audit?.grounded_citation_rate),
@@ -539,6 +543,7 @@ export function AuditPage() {
       },
       {
         criterion: 'Chống mutation / guardrail',
+        sampleSize: evaluation?.adversarial_mutation_regression?.total ?? 0,
         metric: evaluation?.adversarial_mutation_regression?.pass_rate == null ? 'Chưa đo' : `${Math.round(evaluation.adversarial_mutation_regression.pass_rate * 100)}%`,
         sample: `${evaluation?.adversarial_mutation_regression?.passed ?? 0}/${evaluation?.adversarial_mutation_regression?.total ?? 0} ca`,
         score: asScore(evaluation?.adversarial_mutation_regression?.pass_rate),
@@ -547,23 +552,15 @@ export function AuditPage() {
       },
       {
         criterion: 'Benchmark nghiệp vụ có oracle',
-        metric: evaluation?.automated_business_benchmark?.pass_rate == null ? 'N/A' : `${(evaluation.automated_business_benchmark.pass_rate * 100).toFixed(1)}%`,
+        sampleSize: evaluation?.automated_business_benchmark?.sample_size ?? 0,
+        metric: evaluation?.automated_business_benchmark?.pass_rate == null ? 'Chưa có dữ liệu đo' : `${(evaluation.automated_business_benchmark.pass_rate * 100).toFixed(1)}%`,
         sample: evaluation?.automated_business_benchmark?.sample_size ? `${evaluation.automated_business_benchmark.sample_size} tác vụ giả lập` : 'Chưa có bộ oracle đã xuất bản',
         score: asScore(evaluation?.automated_business_benchmark?.pass_rate),
         scope: evaluation?.automated_business_benchmark?.scope ?? 'Hardgate: execution success không được dùng thay thế oracle.',
         required: true,
       },
-    ]
+    ].filter((row) => row.sampleSize > 0 && row.score != null && Number.isFinite(row.score))
   }, [benchmark])
-
-  const benchmarkVerdict = useMemo(() => {
-    const required = benchmarkRows.filter((row) => row.required)
-    if (!required.length || required.some((row) => row.score == null)) {
-      return { score: null as number | null, label: 'Chưa đủ bằng chứng - giữ phát hành', tone: 'hold' }
-    }
-    const score = required.reduce((sum, row) => sum + (row.score ?? 0), 0) / required.length
-    return { score, label: 'Trung bình các bộ đo bên dưới — không phải quyết định phát hành', tone: 'hold' }
-  }, [benchmarkRows])
 
   // Usage Velocity (Day / Week) computed honestly from events
   const { callsToday, callsThisWeek } = useMemo(() => {
@@ -762,7 +759,6 @@ export function AuditPage() {
         </section>
       ) : null}
 
-      <ReleaseReadiness />
       <section className="release-benchmark" aria-labelledby="release-benchmark-title">
         <div className="evaluation-job-control">
           <Button onClick={() => void startEvaluation()} disabled={evaluationStarting || Boolean(evaluationJob && ['queued', 'running'].includes(evaluationJob.status))}>
@@ -782,28 +778,23 @@ export function AuditPage() {
           <div>
             <span>Evaluation & Governance Harness</span>
             <h3 id="release-benchmark-title">Các bộ đo và phạm vi kiểm chứng</h3>
-            <p>Chỉ dùng dữ liệu runtime và bộ kiểm thử có nguồn. Ô N/A không được quy thành điểm 0 hoặc tự suy diễn là đạt.</p>
-          </div>
-          <div className={`release-verdict release-verdict--${benchmarkVerdict.tone}`}>
-            <strong>{benchmarkVerdict.score == null ? 'N/A' : benchmarkVerdict.score.toFixed(2)}</strong>
-            <span>{benchmarkVerdict.label}</span>
+            <p>Kết quả đo từ nhật ký thực thi và các bộ kiểm thử. Mỗi tiêu chí ghi rõ số mẫu và phạm vi đánh giá.</p>
           </div>
         </header>
-        <div className="release-benchmark__table-wrap">
+        {benchmarkRows.length === 0 ? <p>Chưa có kết quả đo đủ dữ liệu. Kết quả sẽ xuất hiện sau khi thực thi tác vụ hoặc chạy bộ kiểm thử.</p> : <div className="release-benchmark__table-wrap">
           <table className="release-benchmark__table">
             <thead><tr><th>Tiêu chí</th><th>Metric thật</th><th>Mẫu đo</th><th>Điểm /10</th><th>Phạm vi và giới hạn</th></tr></thead>
             <tbody>{benchmarkRows.map((row) => <tr key={row.criterion}>
               <th scope="row">{row.criterion}</th>
               <td data-label="Metric thật">{row.metric}</td>
               <td data-label="Mẫu đo">{row.sample}</td>
-              <td data-label="Điểm /10"><strong>{row.score == null ? 'N/A' : row.score.toFixed(2)}</strong></td>
+              <td data-label="Điểm /10"><strong>{row.score == null ? 'Chưa có dữ liệu đo' : row.score.toFixed(2)}</strong></td>
               <td data-label="Phạm vi">{row.scope}</td>
             </tr>)}</tbody>
           </table>
-        </div>
+        </div>}
         <footer>
-          <span><strong>Ngưỡng release:</strong> tổng ≥ 9,2/10, nhóm quan trọng ≥ 9; tất cả gate bắt buộc PASS cùng build.</span>
-          <span>Baseline/candidate chưa có bằng chứng cùng dataset: N/A. Các bộ đo này không tự cấp chứng nhận release.</span>
+          <span>Các điểm số chỉ áp dụng cho bộ đo và số mẫu tương ứng; không thay thế đối soát nội dung với nguồn.</span>
           <time dateTime={benchmark?.evaluation?.evaluated_at_utc}>{benchmark?.evaluation?.evaluated_at_utc ? `Đo lúc ${formatDate(benchmark.evaluation.evaluated_at_utc)}` : 'Chưa có thời điểm đo'}</time>
         </footer>
       </section>
