@@ -10,6 +10,16 @@ from app.core.config import (
 )
 
 
+def test_environment_free_tier_policy_accepts_true_and_rejects_false(monkeypatch):
+    from pydantic import ValidationError
+
+    monkeypatch.setenv("DRIVE_AGENT_NO_PAID_FALLBACK", "true")
+    assert Settings(_env_file=None).no_paid_fallback is True
+    monkeypatch.setenv("DRIVE_AGENT_NO_PAID_FALLBACK", "false")
+    with pytest.raises(ValidationError):
+        Settings(_env_file=None)
+
+
 def test_portable_state_url_requires_explicit_driver_and_tls():
     from pydantic import ValidationError
 

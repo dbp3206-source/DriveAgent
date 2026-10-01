@@ -21,6 +21,29 @@ def test_incomplete_or_conflicting_scenario_is_not_inferred():
     assert inventory_facts("Kho có 100 sản phẩm. Kho có 200 sản phẩm.") is None
 
 
+def test_safety_policy_breach_is_distinct_from_stockout_and_action_availability():
+    from decimal import Decimal
+
+    facts = inventory_facts(
+        "Kho có 1.600 sản phẩm; nhu cầu trung bình 420/tuần, ±100; "
+        "lead time 3 tuần; safety stock 250; đơn nhập 500 chiếc đến sau 2 tuần."
+    )
+    high = facts["scenarios"][2]
+    assert high["ending_without_delivery"] == "40"
+    assert high["risk_without_delivery_at_horizon"] == "below_safety_stock"
+    assert Decimal(high["weeks_until_safety_stock_without_receipts"]) < 3
+    assert Decimal(high["weeks_until_stockout_without_receipts"]) > 3
+    assert "conditional options" in facts["feasibility_constraints"][1]
+
+
+def test_zero_demand_has_no_invented_deadline():
+    facts = inventory_facts(
+        "Kho có 100 sản phẩm; nhu cầu trung bình 20/tuần, ±20; "
+        "lead time 3 tuần; safety stock 10; đơn nhập 5 chiếc đến sau 2 tuần."
+    )
+    assert facts["scenarios"][0]["weeks_until_stockout_without_receipts"] is None
+
+
 def test_adk_uses_verified_quantitative_execution_path():
     from app.agent.adk_orchestrator import AdkOrchestrator
     from app.agent.controls import ChatControls

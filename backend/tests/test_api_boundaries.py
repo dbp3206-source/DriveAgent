@@ -305,6 +305,12 @@ async def test_health_reports_vector_fallback_as_degraded():
         assert response.status_code == 200
         assert response.json()["status"] == "ok"
 
+        app.state.vector_store.backend_name = "postgres-pgvector"
+        response = await client.get("/api/health")
+        assert response.status_code == 200
+        assert response.json()["status"] == "ok"
+        assert response.json()["vector_store"] == "postgres-pgvector"
+
         app.state.vector_store.backend_name = "sqlite-fallback"
         response = await client.get("/api/health")
         assert response.status_code == 200

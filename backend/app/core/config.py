@@ -145,6 +145,15 @@ class Settings(BaseSettings):
     app_name: str = "Veridra"
     orchestrator_backend: Literal["langgraph", "adk", "compiler"] = "adk"
     no_paid_fallback: Literal[True] = True
+
+    @field_validator("no_paid_fallback", mode="before")
+    @classmethod
+    def parse_no_paid_fallback(cls, value: object) -> object:
+        # Environment variables are strings; retain the True-only policy.
+        if isinstance(value, str) and value.strip().casefold() == "true":
+            return True
+        return value
+
     environment: str = "development"
     local_timezone: str = "Asia/Bangkok"
     pdf_ocr_enabled: bool = False

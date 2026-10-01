@@ -28,6 +28,8 @@ def test_explicit_action_trigger_request_frontloads_the_business_deliverable():
     assert "Sau đó mới phân tích" in instruction
     assert "thời gian chờ" in instruction
     assert "không gọi tồn dương là thiếu hàng" in instruction
+    assert "không mặc định" in instruction.casefold()
+    assert "nếu có/được duyệt" in instruction
     assert proactive_action_instruction("Tính tồn kho cuối kỳ.") == ""
 
 

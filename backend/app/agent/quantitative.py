@@ -35,6 +35,18 @@ def inventory_facts(message: str) -> dict | None:
             "ending_stock": str(ending), "buffer_above_safety": str(ending - values["safety"]),
             "before_arrival_stock": str(values["initial"] - demand * values["arrival_week"]),
             "ending_without_delivery": str(values["initial"] - total),
+            "risk_without_delivery_at_horizon": (
+                "unmet_demand" if values["initial"] - total < 0
+                else "below_safety_stock" if values["initial"] - total < values["safety"]
+                else "at_or_above_safety_stock"
+            ),
+            "weeks_until_safety_stock_without_receipts": (
+                str((values["initial"] - values["safety"]) / demand)
+                if demand > 0 else None
+            ),
+            "weeks_until_stockout_without_receipts": (
+                str(values["initial"] / demand) if demand > 0 else None
+            ),
         })
     return {
         "method": "Decimal: initial + arrivals - weekly demand * weeks",
@@ -47,4 +59,15 @@ def inventory_facts(message: str) -> dict | None:
         "reorder_policy_note": "Compare reorder point with inventory position, including confirmed "
         "incoming orders and subtracting backorders; do not compare only on-hand stock when "
         "a purchase order is already outstanding. Backorders are not provided in this scenario.",
+        "feasibility_constraints": [
+            "A standard order placed now arrives after the stated lead time. If the no-receipt "
+            "safety-stock crossing occurs earlier, that order cannot prevent this earlier breach.",
+            "Expediting, auxiliary stock, transfers and alternative suppliers are not provided "
+            "resources. Mention them only as conditional options with availability, approval "
+            "and arrival time to verify, not as guaranteed executable actions.",
+            "Below safety stock is a policy breach, not automatically stockout. Negative balance "
+            "means unmet demand under assumptions, not physically negative inventory.",
+            "Thresholds derived from uniform demand are scenario calculations, not probabilities "
+            "or confirmed supplier service levels.",
+        ],
     }

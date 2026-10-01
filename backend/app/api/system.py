@@ -39,7 +39,8 @@ async def health(request: Request, db: DbSession):
         # Report that honestly so operators do not mistake fallback for full health.
         status=(
             "ok"
-            if database_ok and vector_backend in {"qdrant-embedded", "postgres-hybrid"}
+            if database_ok
+            and vector_backend in {"qdrant-embedded", "postgres-hybrid", "postgres-pgvector"}
             else "degraded"
         ),
         database=database_ok,

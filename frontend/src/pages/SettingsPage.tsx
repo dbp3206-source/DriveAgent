@@ -177,7 +177,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       setCredentialName('')
       setCredentialProject('')
       setCredentialSecret('')
-      setCredentialMessage({ intent: 'success', text: 'Key đã được kiểm tra và lưu mã hóa trên máy.' })
+      setCredentialMessage({ intent: 'success', text: 'Key đã được kiểm tra và lưu mã hóa cho tài khoản của bạn.' })
       await loadCredentials()
     } catch (error) {
       setCredentialMessage({ intent: 'error', text: error instanceof Error ? error.message : 'Không lưu được key.' })
@@ -262,10 +262,10 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
     <section id="settings-system" className="settings-group" aria-labelledby="settings-system-title">
       <header className="settings-group__heading">
         <div><span>Hệ thống</span><h3 id="settings-system-title">Trạng thái dịch vụ</h3></div>
-        <p>Health chỉ kiểm tra cấu hình local. Google và Gemini được xác nhận sau thao tác thật.</p>
+        <p>Health kiểm tra database và trạng thái hệ thống. Google và Gemini được xác nhận sau thao tác thật.</p>
       </header>
       <div className="status-board">
-        <StatusLine label="SQLite" ready={Boolean(health?.database)} detail="Lưu user, session, audit và bản sao RAG trên máy." />
+        <StatusLine label={health?.vector_store === 'postgres-pgvector' ? 'PostgreSQL' : 'Database'} ready={Boolean(health?.database)} detail="Lưu tài khoản, phiên làm việc, audit và dữ liệu RAG trên hệ thống đang chạy." />
         <StatusLine label="Vector store" ready={Boolean(health?.vector_store)} detail={health?.vector_store ?? 'Chưa khởi tạo'} />
         <StatusLine
           label="Gemini"
@@ -334,7 +334,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       <header className="gemini-credentials__header">
         <div>
           <h3 id="gemini-credentials-title">Gemini API & hạn mức</h3>
-          <p>Lưu tối đa 5 key trên máy. Key được mã hóa và không bao giờ được trả lại trình duyệt sau khi lưu.</p>
+          <p>Lưu tối đa 5 key riêng cho tài khoản. Key được mã hóa trên backend và không bao giờ được trả lại trình duyệt sau khi lưu.</p>
         </div>
         <Badge appearance="tint" color="informative">Free-tier · BYOK cô lập theo người dùng</Badge>
       </header>
@@ -381,11 +381,11 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
             </div>
           </article>)}
         </div>
-      ) : <p className="operation-ledger__empty">Chưa có key trong kho mã hóa. Veridra vẫn dùng key legacy từ cấu hình local.</p>}
+      ) : <p className="operation-ledger__empty">Chưa có key riêng trong kho mã hóa. Thêm Gemini API key của bạn để sử dụng AI.</p>}
       <form className="gemini-credential-form" onSubmit={addCredential} autoComplete="off">
         <Field label="Tên dễ nhớ" required><Input value={credentialName} maxLength={80} onChange={(_, data) => setCredentialName(data.value)} placeholder="Ví dụ: Gemini chính" /></Field>
         <Field label="Tên project"><Input value={credentialProject} maxLength={120} onChange={(_, data) => setCredentialProject(data.value)} placeholder="Chỉ là bí danh hiển thị" /></Field>
-        <Field label="API key" required hint="Key chỉ được gửi một lần tới backend local để kiểm tra và mã hóa.">
+        <Field label="API key" required hint="Key được gửi tới backend của Veridra để kiểm tra và lưu mã hóa cho tài khoản của bạn.">
           <Input type="password" value={credentialSecret} maxLength={512} onChange={(_, data) => setCredentialSecret(data.value)} placeholder="Dán Gemini API key" />
         </Field>
         <Button type="submit" appearance="primary" disabled={credentialBusy === 'create' || !credentialName.trim() || credentialSecret.trim().length < 20}>
@@ -453,7 +453,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
 
     <section id="settings-security" className="settings-security settings-group" aria-labelledby="settings-security-title">
       <h3 id="settings-security-title">Bảo mật và phiên làm việc</h3>
-      <MessageBar intent="info"><MessageBarBody>Veridra không lưu API key trên trình duyệt. OAuth token được mã hóa bằng APP_SECRET trước khi ghi SQLite.</MessageBarBody></MessageBar>
+      <MessageBar intent="info"><MessageBarBody>Veridra không lưu API key trên trình duyệt. OAuth token được mã hóa bằng APP_SECRET trước khi ghi database.</MessageBarBody></MessageBar>
       <div className="danger-zone"><div><h3>Rời phiên hiện tại</h3><p>Đăng xuất chỉ xóa cookie trên trình duyệt, không xóa dữ liệu hoặc quyền Google.</p></div><Button icon={<ArrowExit24Regular />} onClick={logout}>Đăng xuất</Button></div>
     </section>
   </section>

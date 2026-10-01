@@ -282,6 +282,10 @@ def proactive_action_instruction(user_message: str) -> str:
         "chờ, chỉ đề xuất nếu còn đủ thời gian tác động hoặc ghi rõ phụ thuộc và lựa chọn "
         "ứng phó ngắn hạn. Tránh khẳng định tuyệt đối về an toàn. "
         "Không bịa ngưỡng khi dữ liệu chưa đủ."
+        " Không mặc định có kho phụ trợ, nhà cung cấp thay thế, quyền duyệt hoặc ngân sách "
+        "khi nguồn chưa xác nhận. Mỗi lựa chọn phụ thuộc nguồn lực chưa biết phải ghi rõ "
+        "'nếu có/được duyệt' và điều kiện về thời gian đến; không biến phương án có điều kiện "
+        "thành hành động chắc chắn thực hiện được."
     )
 
 
@@ -396,6 +400,7 @@ async def enforce_presentation_contract(
             return compacted
 
     target_length = ""
+    measured_words = len(re.findall(r"\b\w+\b", answer, flags=re.UNICODE))
     if contract.min_words is not None and contract.max_words is not None:
         midpoint = (contract.min_words + contract.max_words) // 2
         # Aiming at the midpoint gives the rewrite room on both sides; asking
@@ -433,6 +438,17 @@ async def enforce_presentation_contract(
             "explicit_contract": contract.instruction(),
             "depth_requirements": list(contract.depth_guidance),
             "length_control": target_length,
+            "measured_draft_words": measured_words,
+            "words_needed_to_minimum": max(0, (contract.min_words or 0) - measured_words),
+            "revision_guidance": (
+                "The server measured the draft, not the model. If short, explain additional "
+                "supported mechanisms, assumptions, trade-offs and verification steps to reach "
+                "the midpoint, not merely the minimum. Allocate space to each requested section. "
+                "Do not repeat calculations as prose padding. Where resources or permissions "
+                "are not verified, retain or add explicit conditional qualifications; never "
+                "invent their availability. If evidence cannot support the requested depth, "
+                "state that limitation rather than inventing facts."
+            ),
             "user_request_untrusted": user_message,
             "draft_answer_untrusted": answer,
             "verified_calculations": verified_calculations,
