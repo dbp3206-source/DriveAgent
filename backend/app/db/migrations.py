@@ -149,8 +149,12 @@ def apply_postgres_migrations(connection: Connection) -> None:
 
     postgres_schema_migrations.create(connection, checkfirst=True)
     applied = set(connection.execute(select(postgres_schema_migrations.c.version)).scalars())
-    migrations: tuple[tuple[int, Migration], ...] = ((1, lambda _connection: None),
-                                                     (2, _scheduled_jobs), (3, _chat_tasks))
+    from app.services.pgvector import migrate_pgvector
+
+    migrations: tuple[tuple[int, Migration], ...] = (
+        (1, lambda _connection: None), (2, _scheduled_jobs), (3, _chat_tasks),
+        (4, migrate_pgvector),
+    )
     for version, migration in migrations:
         if version in applied:
             continue

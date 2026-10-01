@@ -10,9 +10,10 @@ lên cloud. Trạng thái chỉ được đổi từ **HOLD** sang **PASS** sau 
   image duy nhất và đẩy chính image đã kiểm tra lên GHCR theo commit SHA.
 - Render Free chạy image đó trên một HTTPS origin.
 - Supabase Free cung cấp PostgreSQL và bucket Storage riêng tư `veridra-private`.
-- Cloud không chạy Qdrant, Langfuse, Grafana, Redis hoặc OCR. Vector RAG dùng embedding
-  lưu trong PostgreSQL và cosine/RRF ở lớp dịch vụ. Đây là profile nhẹ cho closed beta,
-  không phải pgvector.
+- Cloud không chạy Qdrant, Langfuse, Grafana, Redis hoặc OCR. RAG dùng pgvector trong
+  PostgreSQL cho dense cosine ranking, kết hợp lexical/RRF ở lớp dịch vụ. Migration 4
+  tạo extension `vector` và cột vector generated từ embedding JSON, cùng transaction với
+  dữ liệu nguồn; không cần một vector sidecar hay thêm quyền truy cập public.
 - Langfuse/Grafana vẫn là bộ quan sát local của owner; lỗi exporter không làm Chat lỗi.
 
 ## 2. Supabase
@@ -28,6 +29,9 @@ lên cloud. Trạng thái chỉ được đổi từ **HOLD** sang **PASS** sau 
    Nếu tạo thủ công, chắc chắn **Public bucket** đang tắt.
 6. Không chạy SQL để mở schema `veridra_private` cho `anon`/`authenticated`; startup sẽ
    tạo schema và thu hồi các quyền đó. Truy cập dữ liệu đi qua backend đã xác thực.
+7. Extension `vector` phải có sẵn hoặc database role có quyền tạo extension. Nếu startup
+   báo thiếu quyền, owner vào Database → Extensions, bật `vector`, rồi deploy lại. Không
+   bỏ migration hay âm thầm thay bằng một backend vector khác để báo PASS.
 
 ## 3. Google OAuth closed beta
 

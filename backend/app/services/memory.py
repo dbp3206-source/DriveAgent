@@ -18,6 +18,7 @@ from app.services.embeddings import (
     scoped_embeddings,
     tokenize,
 )
+from app.services.pgvector import is_postgres_session, rank_vectors
 from app.services.vector_store import MEMORY_COLLECTION, VectorStore
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 
@@ -133,12 +134,19 @@ class MemoryService:
         vector_filters: dict[str, str | list[str]] = {"user_id": context.user.id}
         if payload.kinds:
             vector_filters["kind"] = [kind.value for kind in payload.kinds]
-        qdrant_hits = await self.vectors.search(
-            MEMORY_COLLECTION,
-            query_vector,
-            vector_filters,
-            max(payload.limit * 4, 24),
-        )
+        if is_postgres_session(context.db):
+            qdrant_hits = await rank_vectors(
+                context.db, table="long_term_memories", owner=context.user.id,
+                vector=query_vector, limit=min(max(len(rows), 1), 1000),
+                kinds=[kind.value for kind in payload.kinds],
+            )
+        else:
+            qdrant_hits = await self.vectors.search(
+                MEMORY_COLLECTION,
+                query_vector,
+                vector_filters,
+                max(payload.limit * 4, 24),
+            )
         dense_scores = dict(qdrant_hits)
         scored: list[tuple[LongTermMemory, float]] = []
         for row in rows:

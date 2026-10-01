@@ -247,12 +247,92 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 3
+            )).scalar_one() == 4
             assert db.execute(text(
                 "SELECT has_schema_privilege('public', 'veridra_private', 'USAGE')"
             )).scalar_one() is False
     finally:
         engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_postgres_native_vector_migration_ranking_and_atomic_update():
+    import json
+
+    from sqlalchemy import text
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from app.db.migrations import apply_postgres_migrations
+    from app.db.models import Base, DocumentChunk, DriveFileIndex, LongTermMemory, User
+    from app.services.embeddings import EMBEDDING_DIMENSION
+    from app.services.pgvector import rank_vectors
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated pgvector PostgreSQL service; cloud gate not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Vector contract only permits isolated veridra_ci database")
+    engine = create_async_engine(url, execution_options={
+        "schema_translate_map": {None: "veridra_private"}
+    })
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    owner, other = str(uuid4()), str(uuid4())
+    x = [1.0] + [0.0] * (EMBEDDING_DIMENSION - 1)
+    y = [0.0, 1.0] + [0.0] * (EMBEDDING_DIMENSION - 2)
+    try:
+        async with engine.begin() as db:
+            await db.execute(text("CREATE SCHEMA IF NOT EXISTS veridra_private"))
+            await db.run_sync(Base.metadata.create_all)
+            await db.run_sync(apply_postgres_migrations)
+            await db.run_sync(apply_postgres_migrations)
+        async with factory() as db:
+            db.add_all([User(id=owner, email=f"{owner}@example.test", display_name="Owner"),
+                        User(id=other, email=f"{other}@example.test", display_name="Other")])
+            await db.flush()
+            for user, file, version, embedding in (
+                (owner, "one", "current:1", x), (owner, "two", "current:2", y),
+                (owner, "stale", "old:1", x), (other, "one", "current:1", x),
+            ):
+                db.add(DriveFileIndex(user_id=user, drive_file_id=file, name=file,
+                                      mime_type="text/plain", content_hash=version,
+                                      chunk_count=1))
+                db.add(DocumentChunk(id=f"{user}-{file}", user_id=user,
+                                     drive_file_id=file, file_name=file,
+                                     mime_type="text/plain", chunk_index=0, content="sample",
+                                     embedding_json=json.dumps(embedding)))
+            db.add_all([
+                LongTermMemory(id=str(uuid4()), user_id=user, kind=kind, content="sample",
+                               normalized_hash=str(uuid4()), embedding_json=json.dumps(x),
+                               is_archived=archived)
+                for user, kind, archived in ((owner, "fact", False), (owner, "fact", True),
+                                             (owner, "preference", False), (other, "fact", False))
+            ])
+            await db.commit()
+            hits = await rank_vectors(db, table="document_chunks", owner=owner,
+                                      vector=x, limit=12, version_prefix="current:%")
+            assert [identifier for identifier, _ in hits] == [f"{owner}-one", f"{owner}-two"]
+            assert hits[0][1] == pytest.approx(1.0)
+            assert hits[1][1] == pytest.approx(0.0)
+            assert len(await rank_vectors(db, table="document_chunks", owner=owner,
+                                          vector=x, limit=12, version_prefix="current:%",
+                                          file_ids=["two"])) == 1
+            assert len(await rank_vectors(db, table="long_term_memories", owner=owner,
+                                          vector=x, limit=12, kinds=["fact"])) == 1
+            await db.execute(text("UPDATE veridra_private.document_chunks SET "
+                                  "embedding_json=:embedding WHERE id=:id"),
+                             {"embedding": json.dumps(y), "id": f"{owner}-one"})
+            changed = await rank_vectors(db, table="document_chunks", owner=owner,
+                                         vector=x, limit=12, version_prefix="current:%",
+                                         file_ids=["one"])
+            assert changed[0][1] == pytest.approx(0.0)
+            await db.rollback()
+            restored = await rank_vectors(db, table="document_chunks", owner=owner,
+                                          vector=x, limit=12, version_prefix="current:%",
+                                          file_ids=["one"])
+            assert restored[0][1] == pytest.approx(1.0)
+    finally:
+        await engine.dispose()
 
 
 @pytest.mark.asyncio

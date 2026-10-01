@@ -24,6 +24,7 @@ from app.services.embeddings import (
     tokenize,
 )
 from app.services.local_sources import excluded_ocr_source
+from app.services.pgvector import is_postgres_session, rank_vectors
 from app.services.vector_store import DRIVE_COLLECTION, VectorStore
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 from app.tools.drive import ReadDriveFileInput
@@ -393,13 +394,20 @@ class RagService:
         # A nonempty Qdrant response can still come from a partial/stale index.
         # Score this authorized SQL snapshot to preserve semantic recall even
         # after an interrupted dual-store write. Never fuse unknown point IDs.
-        dense_rank = sorted(
-            (
-                (chunk.id, cosine_similarity(query_vector, json.loads(chunk.embedding_json)))
-                for chunk in chunks
-            ),
-            key=lambda item: (-item[1], item[0]),
-        )[: max(payload.limit * 3, 12)]
+        if is_postgres_session(context.db):
+            dense_rank = await rank_vectors(
+                context.db, table="document_chunks", owner=context.user.id,
+                vector=query_vector, limit=max(payload.limit * 3, 12),
+                file_ids=payload.file_ids, version_prefix=version_prefix,
+            )
+        else:
+            dense_rank = sorted(
+                (
+                    (chunk.id, cosine_similarity(query_vector, json.loads(chunk.embedding_json)))
+                    for chunk in chunks
+                ),
+                key=lambda item: (-item[1], item[0]),
+            )[: max(payload.limit * 3, 12)]
 
         # Query expansion: original + entity terms
         expanded_queries = [payload.query]

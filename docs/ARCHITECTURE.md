@@ -26,9 +26,10 @@ React UI
 - Closed beta cloud: một Supabase PostgreSQL project giữ dữ liệu ứng dụng, Skill, quota,
   circuit, approval ledger, evaluation queue/checkpoint và ADK session trong schema riêng.
   PDF gốc nằm trong bucket Supabase Storage private, owner được kiểm tra ở backend.
-- Cloud không phụ thuộc Qdrant/Redis/Kafka. Embedding JSON bền trong PostgreSQL được truy
-  hồi bằng SQL + cosine/RRF ở dịch vụ. Đây không phải pgvector và được giới hạn cho tối đa
-  bốn user; hiệu năng phải được đo trên Render Free trước khi phát hành.
+- Cloud không phụ thuộc Qdrant/Redis/Kafka. PostgreSQL pgvector xếp hạng dense theo cosine;
+  lexical/RRF hợp nhất ở dịch vụ. Cột vector được sinh từ embedding JSON trong cùng
+  transaction, lọc owner và phiên bản chỉ mục trước khi xếp hạng. Beta tối đa bốn user;
+  hiệu năng vẫn phải được đo trên Render Free trước khi phát hành.
 - LangGraph SQLite checkpointer chỉ là backend so sánh local. Profile cloud bắt buộc ADK.
 
 ## Multi-user

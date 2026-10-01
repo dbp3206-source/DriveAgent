@@ -24,7 +24,7 @@ Kiểm tra lại sau yêu cầu giảm tài nguyên: `docker stats --no-stream` 
 - Không build thêm image lớn khi ổ C còn ít dung lượng.
 - Giữ Docker packaging là bước tùy chọn theo tài nguyên; chưa được đánh dấu PASS cho build mới.
 - Cloud app nhẹ dùng PostgreSQL + private Supabase Storage; không đưa SQLite/Qdrant lên filesystem tạm để đổi lấy một URL.
-- Cloud không chạy Qdrant, OCR, Langfuse, Grafana, Redis hay Kafka. Embedding được lưu trong PostgreSQL và truy hồi bằng SQL + cosine/RRF trong tiến trình, phù hợp beta tối đa bốn user nhưng không được gọi là pgvector.
+- Cloud không chạy Qdrant, OCR, Langfuse, Grafana, Redis hay Kafka. PostgreSQL pgvector xử lý dense cosine ranking; lexical/RRF vẫn ở dịch vụ. Chưa thêm HNSW index tiêu tốn bộ nhớ: dùng exact owner-filtered ranking cho beta bốn user, phải đo tài nguyên/latency thực tế trước phát hành.
 - Các yêu cầu ProtonX về observability vẫn phải có bằng chứng; loại stack nặng không tự biến yêu cầu chưa kiểm chứng thành PASS.
 - Docker Desktop không phải dependency để dùng Veridra local. CI chịu trách nhiệm build/test image phát hành; máy owner chỉ chạy packaging QA khi có đủ tài nguyên. Không để stack observability nặng là điều kiện bắt buộc cho Chat, ingestion hay UI.
 
