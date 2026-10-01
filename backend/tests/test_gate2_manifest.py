@@ -9,6 +9,8 @@ import pytest
 
 from evals import build_gate2
 from evals.source_paths import source_name, source_path
+from scripts import evaluate_gate2_live, validate_gate2
+from scripts.evaluate_gate2_live import _case_checks, _grade, _tool_names
 
 
 def test_manifest_source_names_and_checked_in_fixtures_are_portable():
@@ -22,8 +24,6 @@ def test_private_pdf_location_does_not_fabricate_source(monkeypatch):
     missing = source_path({"source_id": "evaluation-harness",
                            "path": "missing-owner-pdf-fixture.pdf"})
     assert not missing.is_file()
-from scripts import evaluate_gate2_live, validate_gate2
-from scripts.evaluate_gate2_live import _case_checks, _grade, _tool_names
 
 
 def test_requested_model_benchmark_rejects_fallback_even_with_quality_pass() -> None:
