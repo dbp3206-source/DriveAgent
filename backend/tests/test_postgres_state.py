@@ -349,21 +349,27 @@ async def test_adk_sessions_persist_in_private_postgres_schema():
     parsed = make_url(url)
     if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
         pytest.fail("PostgreSQL contract only permits the isolated veridra_ci database")
-    settings = Settings(_env_file=None, database_url=url)
+    # Production config must retain TLS validation. The disposable CI service
+    # has no TLS certificate: exercise ADK persistence/schema isolation there,
+    # not cloud transport security (covered by config tests and staging smoke).
+    settings = Settings(_env_file=None, database_url=parsed.update_query_dict(
+        {"sslmode": "require"}).render_as_string(hide_password=False))
+    session_url = make_url(settings.framework_session_database_url).difference_update_query(
+        ["sslmode"]).render_as_string(hide_password=False)
     sync_engine = create_engine(url)
     try:
         prepare_state_schema(sync_engine)
     finally:
         sync_engine.dispose()
     session_id = f"adk-{uuid4()}"
-    service = DatabaseSessionService(db_url=settings.framework_session_database_url)
+    service = DatabaseSessionService(db_url=session_url)
     try:
         await service.create_session(
             app_name="drive_agent", user_id="owner-a", session_id=session_id
         )
     finally:
         await service.close()
-    reopened = DatabaseSessionService(db_url=settings.framework_session_database_url)
+    reopened = DatabaseSessionService(db_url=session_url)
     try:
         assert await reopened.get_session(
             app_name="drive_agent", user_id="owner-a", session_id=session_id
