@@ -1,3 +1,6 @@
+import json
+from types import SimpleNamespace
+
 from app.agent.evidence import retain_referenced_citations, source_references
 
 
@@ -130,3 +133,21 @@ def test_explicit_page_alignment_fails_closed_when_page_is_ambiguous() -> None:
 
     assert answer == "Đối chiếu Trang 3 [1]."
     assert selected == [citations[0]]
+def test_context_only_followup_keeps_exact_prior_source_mapping():
+    from app.agent.evidence import prior_turn_sources
+
+    sources = [{"file_id": "local:1", "file_name": "mau.md", "chunk_index": 0,
+                "snippet": "24 người", "score": 1.0}]
+    rows = [SimpleNamespace(role="user", citations_json="[]"),
+            SimpleNamespace(role="assistant", citations_json="[]"),
+            SimpleNamespace(role="assistant", citations_json=json.dumps(sources))]
+    assert prior_turn_sources(rows, "Sửa thành 25%. Không đọc thêm nguồn.") == sources
+    assert prior_turn_sources(rows, "Tìm tin mới nhất") == []
+
+
+def test_corrupt_or_unbounded_prior_sources_are_not_reused():
+    from app.agent.evidence import prior_turn_sources
+
+    for raw in ['{"bad":1}', '[{"file_id":"x"}]', 'not-json']:
+        rows = [SimpleNamespace(role="assistant", citations_json=raw)]
+        assert prior_turn_sources(rows, "Chỉ dùng ngữ cảnh cuộc trò chuyện") == []

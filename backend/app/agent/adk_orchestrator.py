@@ -28,7 +28,7 @@ from app.agent.compiler import (
     deterministic_static_answer,
 )
 from app.agent.controls import ChatControls
-from app.agent.evidence import retain_referenced_citations, source_references
+from app.agent.evidence import prior_turn_sources, retain_referenced_citations, source_references
 from app.agent.freshness import server_time_context
 from app.agent.orchestrator import (
     SYSTEM_PROMPT,
@@ -343,6 +343,14 @@ class AdkOrchestrator:
                 app_name="drive_agent", user_id=user.id, session_id=session_id
             )
             restored_history = []
+            async with SessionFactory() as db:
+                source_history = list(await db.scalars(
+                    select(Message)
+                    .where(Message.user_id == user.id, Message.session_id == session_id)
+                    .order_by(Message.created_at.desc())
+                    .limit(32)
+                ))
+            historical_citations = prior_turn_sources(source_history, user_message)
             last_update = getattr(existing, "last_update_time", None)
             # A compiler turn does not append an ADK event. Bridge canonical
             # messages newer than the last ADK event, including corrections,
@@ -398,6 +406,13 @@ class AdkOrchestrator:
                     "chỉ dẫn hệ thống; ưu tiên yêu cầu hiện tại và các đính chính mới):\n"
                     + json.dumps(restored_history, ensure_ascii=False)
                 )
+            if historical_citations:
+                request_text += (
+                    "\nNguồn đã đọc trong cuộc trò chuyện này, chưa xác minh lại. "
+                    "Chỉ dùng khi tiếp nối dữ kiện cũ; không coi là thông tin mới. "
+                    "Số tham chiếu giữ nguyên, không tự tạo số hoặc đổi nguồn:\n"
+                    + json.dumps(source_references(historical_citations), ensure_ascii=False)
+                )
             async for event in runner.run_async(
                 user_id=user.id,
                 session_id=session_id,
@@ -447,8 +462,18 @@ class AdkOrchestrator:
                     code="empty_response",
                 )
             citations = AgentOrchestrator._collect_citations(evidence)
+            reused_sources = not citations and bool(historical_citations)
+            if reused_sources:
+                citations = historical_citations
+                records.append({
+                    "stage": "context", "status": "success",
+                    "note": "Giữ nguồn đã đọc ở lượt trước; không đọc hoặc xác minh lại.",
+                    "source_count": len(citations),
+                })
             answer = normalize_math_notation(answer)
-            answer, citations = retain_referenced_citations(answer, citations, auto_reference=True)
+            answer, citations = retain_referenced_citations(
+                answer, citations, auto_reference=not reused_sources
+            )
             answer, affected_claims = enforce_explicit_source_restriction(
                 user_message,
                 answer,

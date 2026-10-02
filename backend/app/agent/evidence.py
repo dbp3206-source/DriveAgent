@@ -1,7 +1,36 @@
 """Stable per-turn source numbers, independent from a document's chunk index."""
 
+import json
 import re
 from typing import Any
+
+
+def prior_turn_sources(rows: list[Any], request: str) -> list[dict[str, Any]]:
+    """Reuse a bounded source snapshot only for an explicit context-only follow-up.
+
+    The caller must load owner/session-scoped rows newest first. This does not
+    fetch a document or establish freshness; it preserves the exact prior mapping.
+    """
+    if not re.search(r"không\s+đọc\s+thêm\s+nguồn|chỉ\s+dùng\s+ngữ\s+cảnh", request, re.I):
+        return []
+    for row in rows:
+        if row.role != "assistant":
+            continue
+        try:
+            sources = json.loads(row.citations_json or "[]")
+        except (TypeError, ValueError):
+            continue
+        if not sources:
+            continue
+        if not isinstance(sources, list) or len(sources) > 12:
+            return []
+        required = {"file_id", "file_name", "chunk_index", "snippet", "score"}
+        if any(not isinstance(item, dict) or not required <= item.keys()
+               or not isinstance(item["snippet"], str) or len(item["snippet"]) > 10000
+               for item in sources):
+            return []
+        return sources
+    return []
 
 
 def source_references(citations: list[dict[str, Any]]) -> list[dict[str, Any]]:

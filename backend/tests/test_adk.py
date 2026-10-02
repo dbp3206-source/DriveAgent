@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -569,8 +570,11 @@ async def test_adk_open_ended_run_records_session_handoff_usage_and_final_answer
 
 
 @pytest.mark.parametrize("existing", [False, True])
-async def test_adk_restores_owner_scoped_canonical_history(existing):
+@pytest.mark.parametrize("with_sources", [False, True])
+async def test_adk_restores_owner_scoped_canonical_history(existing, with_sources):
     captured = {}
+    sources = [{"file_id": "local:sample", "file_name": "mau.md", "chunk_index": 0,
+                "snippet": "42 nhân viên", "score": 1.0}]
 
     class FakeSessions:
         async def get_session(self, **kwargs):
@@ -588,7 +592,11 @@ async def test_adk_restores_owner_scoped_canonical_history(existing):
 
         async def scalars(self, query):
             captured["query"] = query.compile().params
-            return [SimpleNamespace(role="user", content="Khách hàng Mẫu có 42 nhân viên.")]
+            rows = [SimpleNamespace(role="user", content="Khách hàng Mẫu có 42 nhân viên.")]
+            if with_sources:
+                rows.append(SimpleNamespace(role="assistant", content="42 nhân viên [1].",
+                                            citations_json=json.dumps(sources)))
+            return rows
 
     class FakeRunner:
         def __init__(self, **kwargs):
@@ -599,7 +607,10 @@ async def test_adk_restores_owner_scoped_canonical_history(existing):
             yield SimpleNamespace(
                 author="report_agent", usage_metadata=None,
                 is_final_response=lambda: True,
-                content=types.Content(parts=[types.Part(text="Khách hàng có 42 nhân viên.")]),
+                content=types.Content(parts=[types.Part(
+                    text="Khách hàng có 42 nhân viên [1]." if with_sources
+                    else "Khách hàng có 42 nhân viên."
+                )]),
             )
 
     orchestrator = AdkOrchestrator(Settings(_env_file=None, gemini_api_key="test-key"),
@@ -614,7 +625,10 @@ async def test_adk_restores_owner_scoped_canonical_history(existing):
     ):
         result = await orchestrator.run(
             user=SimpleNamespace(id="owner-a", role="editor"), session_id="session-a",
-            request_id="request-a", user_message="Nhắc lại thông tin đã trao đổi.",
+            request_id="request-a", user_message=(
+                "Nhắc lại thông tin đã trao đổi. Chỉ dùng ngữ cảnh cuộc trò chuyện."
+                if with_sources else "Nhắc lại thông tin đã trao đổi."
+            ),
         )
     assert "42 nhân viên" in captured["request"]
     assert "owner-a" in captured["query"].values()
@@ -625,4 +639,10 @@ async def test_adk_restores_owner_scoped_canonical_history(existing):
         assert any(hasattr(value, "year") for value in captured["query"].values())
     else:
         assert captured["session"]["user_id"] == "owner-a"
-    assert any(item.get("restored_messages") == 1 for item in result.trace)
+    assert any(item.get("restored_messages") == (2 if with_sources else 1)
+               for item in result.trace)
+    if with_sources:
+        assert result.citations == sources
+        assert "[1]" in result.answer
+        assert "chưa xác minh lại" in captured["request"]
+        assert any(item.get("source_count") == 1 for item in result.trace)
