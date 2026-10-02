@@ -7,18 +7,31 @@ import {
 import { ArrowRight24Regular, CheckmarkCircle20Regular } from '@fluentui/react-icons'
 import type { AuthStatus } from '../types'
 import { VeridraMark } from './VeridraMark'
+import { useState } from 'react'
+import { api } from '../api'
 
 export function SetupGate({ status }: { status: AuthStatus }) {
   const oauthReady = status.oauth_configured
   const sharedGeminiReady = status.gemini_configured
+  const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
   async function enterDemo() {
-    await fetch('/api/auth/demo', { method: 'POST', credentials: 'include' })
-    window.location.reload()
+    setError('')
+    setBusy(true)
+    try {
+      await api('/api/auth/demo', { method: 'POST' })
+      window.location.reload()
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Chưa mở được chế độ thử.')
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
     <main className="setup-page">
+      {error && <MessageBar intent="error"><MessageBarBody>{error}</MessageBarBody></MessageBar>}
       <section className="setup-intro" aria-labelledby="setup-title">
         <div className="brand-lockup">
           <VeridraMark />
@@ -89,7 +102,7 @@ export function SetupGate({ status }: { status: AuthStatus }) {
           </div>
         )}
         {status.demo_login_enabled ? (
-          <Button appearance="secondary" onClick={enterDemo}>
+          <Button appearance="secondary" onClick={enterDemo} disabled={busy}>
             Mở dữ liệu demo cho QA
           </Button>
         ) : null}

@@ -1,7 +1,26 @@
 import json
 from types import SimpleNamespace
 
+import pytest
+
 from app.api.chat import _gmail_followup_route
+
+
+@pytest.mark.parametrize(
+    "message",
+    [
+        "Phân tích 5 email gần nhất trong Gmail của tôi",
+        "Phân tích 2 thư mới nhất",
+        "Đào sâu email từ Khách Hàng B",
+        "Phân tích email hôm nay",
+        "Phân tích mail ngày 02/10/2026",
+        "Phân tích thư trong 7 ngày qua",
+        "Phân tích email, bỏ giới hạn người gửi cũ",
+        'Phân tích thư tiêu đề "Cuộc hẹn mới"',
+    ],
+)
+def test_new_explicit_scope_is_not_pinned_to_previous_thread(message):
+    assert _gmail_followup_route(message, [assistant_with_thread("thread-123456")]) is None
 
 
 def assistant_with_thread(thread_id: str):
@@ -18,10 +37,12 @@ def assistant_with_threads(*thread_ids: str):
     return SimpleNamespace(
         role="assistant",
         content="",
-        citations_json=json.dumps([
-            {"web_view_link": f"https://mail.google.com/mail/u/0/#all/{thread_id}"}
-            for thread_id in thread_ids
-        ]),
+        citations_json=json.dumps(
+            [
+                {"web_view_link": f"https://mail.google.com/mail/u/0/#all/{thread_id}"}
+                for thread_id in thread_ids
+            ]
+        ),
     )
 
 
@@ -130,10 +151,14 @@ def test_gmail_followup_rejects_lookalike_hosts_and_wrong_paths():
             role="assistant",
             content="",
             status="completed",
-            citations_json=json.dumps([
-                {"web_view_link": "https://mail.google.com.evil.example/mail/u/0/#all/thread-123456"},
-                {"web_view_link": "https://mail.google.com/evil/#all/thread-abcdef"},
-            ]),
+            citations_json=json.dumps(
+                [
+                    {
+                        "web_view_link": "https://mail.google.com.evil.example/mail/u/0/#all/thread-123456"
+                    },
+                    {"web_view_link": "https://mail.google.com/evil/#all/thread-abcdef"},
+                ]
+            ),
         )
     ]
 

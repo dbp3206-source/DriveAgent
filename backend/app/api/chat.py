@@ -17,7 +17,7 @@ from sqlalchemy import and_, or_, select
 
 from app.agent.creation import CreationAnswer, preserve_explicit_literals
 from app.agent.orchestrator import AgentNotConfiguredError, AgentOrchestrator
-from app.agent.routing import Route
+from app.agent.routing import Route, extract_explicit_file_id
 from app.api.dependencies import CurrentUser, DbSession
 from app.api.schemas import (
     ChatRequest,
@@ -62,6 +62,17 @@ _GMAIL_FOLLOWUP_REFERENCE = re.compile(
     r"(?:email|mail|thư|bài viết|chủ đề)\s+(?:gần nhất|mới nhất|đó|này|vừa rồi)|"
     r"(?:tài liệu|nguồn)\s+(?:là|chính là)\s+(?:email|mail|thư)|"
     r"email\s+gần nhất\s+đó)",
+    re.I,
+)
+_NEW_GMAIL_SCOPE = re.compile(
+    r"\b\d{1,2}\s+(?:email|mail|thư)\b|"
+    r"\b(?:không|bỏ|gỡ)\s+(?:giới hạn|lọc(?:\s+theo)?)\b|"
+    r"\b(?:hôm nay|hôm qua|ngày\s+\d{1,2}[/-]\d{1,2}|"
+    r"(?:trong|qua)\s+\d{1,2}\s+(?:ngày|tuần|tháng))\b|"
+    r"\b(?:người gửi(?:\s+là)?|from)\s+\S+|"
+    r"\b(?:email|mail|thư)\s+(?:từ|của)\s+"
+    r"(?!(?:tôi|mình|họ|người\s+đó)\b)\S+|"
+    r"\b(?:tiêu đề|chủ đề|subject)\s+[\"'“]",
     re.I,
 )
 _DRIVE_FOLLOWUP_INTENT = re.compile(
@@ -163,6 +174,10 @@ def _gmail_followup_route(message: str, prior_messages: list[Message]) -> Route 
     request so an old email is never silently reused for a new topic.
     """
 
+    # An explicit new filter/count is a new source request, even when it uses
+    # "phân tích". Never let a prior thread citation override the current scope.
+    if _NEW_GMAIL_SCOPE.search(message):
+        return None
     latest_assistant_index = next(
         (index for index, row in enumerate(prior_messages) if row.role == "assistant"),
         None,
@@ -273,6 +288,8 @@ def _drive_file_ids_from_citations(citations_json: str) -> list[str]:
 def _drive_followup_route(message: str, prior_messages: list[Message]) -> Route | None:
     """Re-read the same cited Drive file on a contextual deepening request."""
 
+    if extract_explicit_file_id(message):
+        return None
     if not _DRIVE_FOLLOWUP_INTENT.search(message):
         return None
     if not (

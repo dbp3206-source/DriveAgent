@@ -2,6 +2,7 @@
 
 import asyncio
 import os
+from time import monotonic
 
 from fastapi import APIRouter, HTTPException, Query, Request
 from sqlalchemy import text
@@ -10,6 +11,7 @@ from app.api.dependencies import CurrentUser, DbSession, is_trusted_ui_origin
 from app.api.schemas import HealthResponse
 from app.core.config import get_settings
 from app.services.embeddings import EMBEDDING_DIMENSION
+from app.services.object_storage import probe_object_storage
 from app.services.operations import OperationStore  # noqa: F401 - compatibility seam for tests
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import ToolContext, ToolError
@@ -29,11 +31,20 @@ async def health(request: Request, db: DbSession):
     settings = get_settings()
     database_ok = True
     try:
-        await db.execute(text("SELECT 1"))
+        await asyncio.wait_for(db.execute(text("SELECT 1")), timeout=5)
     except Exception:
         database_ok = False
     vector_backend = request.app.state.vector_store.backend_name
-    storage_ok = getattr(request.app.state, "object_storage_healthy", True)
+    storage_ok = getattr(request.app.state, "object_storage_healthy", False)
+    now = monotonic()
+    if now - getattr(request.app.state, "storage_probe_at", 0) >= 30:
+        # Cache the bounded read-only probe to avoid an outbound call per poll.
+        request.app.state.storage_probe_at = now
+        try:
+            storage_ok = await asyncio.wait_for(probe_object_storage(settings), timeout=5)
+        except Exception:
+            storage_ok = False
+        request.app.state.object_storage_healthy = storage_ok
     return HealthResponse(
         # SQLite keeps retrieval available, but a silent fallback usually means
         # Qdrant could not acquire its local storage (often another process).

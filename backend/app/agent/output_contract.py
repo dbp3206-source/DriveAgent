@@ -170,6 +170,9 @@ def _compact_markdown_sections(text: str, max_words: int) -> str:
 def _numeric_literals(text: str) -> set[str]:
     """Numbers in a format-only rewrite must already exist in the draft."""
 
+    # List/section ordinals describe presentation, not new factual quantities.
+    # Keep numbers inside the item, table cells and decimal quantities intact.
+    text = re.sub(r"(?m)^\s*(?:#{1,6}\s+)?\d+[.)]\s+", "", text)
     literals = re.findall(r"(?<!\w)\d+(?:[.,]\d+)*(?!\w)", text)
     normalized = set()
     for literal in literals:
@@ -632,8 +635,14 @@ async def enforce_presentation_contract(
             "numeric_comparison_inconsistent",
             "missing_action_section",
         }
-        best_draft = answer if unsafe_rewrite.intersection(remaining) else candidate or answer
-        return _best_effort_answer(best_draft, remaining)
+        if unsafe_rewrite.intersection(remaining):
+            # The user sees the original, not the rejected rewrite. Do not
+            # describe the rewrite's length as the original's length.
+            visible_violations = list(dict.fromkeys(
+                initial + [item for item in remaining if item in unsafe_rewrite]
+            ))
+            return _best_effort_answer(answer, visible_violations)
+        return _best_effort_answer(candidate or answer, remaining)
     records.append(
         {
             "stage": "output_contract",

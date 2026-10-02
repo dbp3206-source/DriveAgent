@@ -128,3 +128,22 @@
 
 .usage-budget-grid { display: grid; gap: 6px; margin-block: 12px; }
 .usage-budget-grid p { margin: 0; }
+
+/* On narrow Chat screens the composer owns the bottom edge. Keep the
+   companion reachable above the conversation instead of covering Send. */
+@media (max-width: 700px) {
+  .app-shell--chat .mascot-companion {
+    top: calc(96px + env(safe-area-inset-top, 0px));
+    bottom: auto;
+    right: 12px;
+  }
+  .app-shell--chat .mascot-companion--minimized {
+    top: calc(8px + env(safe-area-inset-top, 0px));
+  }
+  .app-shell--chat .mascot-speech,
+  .app-shell--chat .mascot-picker {
+    top: 100%;
+    bottom: auto;
+    margin-top: 8px;
+  }
+}

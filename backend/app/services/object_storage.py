@@ -134,6 +134,17 @@ class SupabasePdfObjectStorage(PdfObjectStorage):
             response = await client.post(
                 f"{self.base_url}/bucket", headers=self._headers(), json=payload
             )
+            if response.status_code == 409:
+                # Another creator won the race; conflict alone proves neither
+                # availability nor privacy. Read the winning bucket before use.
+                verified = await client.get(
+                    f"{self.base_url}/bucket/{quote(self.bucket, safe='')}",
+                    headers=self._headers(),
+                )
+                if verified.status_code != 200:
+                    raise ObjectStorageError("storage_bucket_unavailable")
+                if verified.json().get("public") is not False:
+                    raise ObjectStorageError("storage_bucket_not_private")
         if response.status_code not in {200, 201, 409}:
             raise ObjectStorageError("storage_bucket_unavailable")
 
@@ -183,3 +194,16 @@ def object_storage_for(settings: Settings) -> PdfObjectStorage:
 
 async def initialize_object_storage(settings: Settings) -> None:
     await object_storage_for(settings).initialize()
+
+
+async def probe_object_storage(settings: Settings) -> bool:
+    """Read-only readiness check: never create a bucket during health probes."""
+    storage = object_storage_for(settings)
+    if isinstance(storage, LocalPdfObjectStorage):
+        return await asyncio.to_thread(storage.root.is_dir)
+    async with httpx.AsyncClient(timeout=4) as client:
+        response = await client.get(
+            f"{storage.base_url}/bucket/{quote(storage.bucket, safe='')}",
+            headers=storage._headers(),
+        )
+    return response.status_code == 200 and response.json().get("public") is False

@@ -24,7 +24,7 @@ const journeys: Array<{
     icon: <Chat24Regular />,
   },
   {
-    title: 'Chuẩn bị tài liệu học',
+    title: 'Chuẩn bị hồ sơ khách hàng',
     description: 'Chọn tệp, kiểm tra nội dung và lập chỉ mục để dùng lại lâu dài.',
     target: 'drive',
     icon: <Folder24Regular />,
@@ -49,17 +49,16 @@ const journeys: Array<{
   },
   {
     title: 'Hiểu cách Agent làm việc',
-    description: 'Theo dõi Context, RAG, Tool, Orchestration và Evaluation bằng dữ liệu thật.',
+    description: 'Hiểu cách chọn nguồn, phân công, kiểm chứng và duyệt hành động.',
     target: 'harness',
     icon: <BookOpen24Regular />,
   },
 ]
 
 const quickStarts: Array<{label: string; detail: string; prompt: string; controls: ChatControls}> = [
-  {label: 'Dọn hộp thư hôm nay', detail: 'Gmail · ưu tiên việc cần phản hồi', prompt: 'Tổng hợp email chưa đọc từ hôm nay. Nhóm thành cần trả lời, cần theo dõi và chỉ để biết; chỉ nêu deadline khi email ghi rõ.', controls: {source: 'gmail', agent: 'communication', output: 'chat', workflow: 'email_digest'}},
-  {label: 'Ôn một chủ đề từ tài liệu', detail: 'RAG · cheatsheet và câu tự kiểm tra', prompt: 'Từ các tài liệu đã lập chỉ mục, hãy tạo cheatsheet dễ hiểu về chủ đề tôi sẽ cung cấp, kèm ví dụ và 5 câu tự kiểm tra.', controls: {source: 'rag', agent: 'research', output: 'chat', workflow: 'source_summary'}},
-  {label: 'Soạn báo cáo có nguồn', detail: 'RAG → bản xem trước Google Docs', prompt: 'Tổng hợp các nguồn liên quan thành báo cáo có mục tiêu, bằng chứng, bảng đối chiếu, kết luận và việc cần làm. Tạo bản xem trước Google Docs để tôi duyệt.', controls: {source: 'rag', agent: 'research', output: 'document', workflow: 'compare_sources'}},
-  {label: 'Tạo bảng theo dõi ngân sách', detail: 'Google Sheets · công thức an toàn', prompt: 'Tạo bản xem trước bảng theo dõi ngân sách tháng với nhóm chi phí, ngân sách, thực chi, chênh lệch và tổng. Dùng dữ liệu mẫu và ghi rõ đó là dữ liệu mẫu.', controls: {source: 'general', agent: 'workspace', output: 'spreadsheet', workflow: 'budget_tracker'}},
+  {label: 'Chuẩn bị đầu ngày', detail: 'Đọc thư · làm rõ yêu cầu tư vấn', prompt: 'Tổng hợp email chưa đọc hôm nay liên quan tới yêu cầu tư vấn. Nêu yêu cầu đã xác nhận, thông tin còn thiếu và việc cần phản hồi. Chỉ ghi thời hạn khi thư nêu rõ; không tự suy ra ngân sách.', controls: {source: 'gmail', agent: 'communication', output: 'chat', workflow: 'email_digest'}},
+  {label: 'Chuẩn bị trước cuộc hẹn', detail: 'Lịch · thư · hồ sơ liên quan', prompt: 'Chuẩn bị cho cuộc hẹn tư vấn tôi sẽ chỉ định. Hỏi tôi tên hoặc thời điểm cuộc hẹn và tài liệu liên quan nếu chưa đủ để chọn đúng nguồn. Sau đó lập báo cáo gồm mục tiêu, dữ kiện có nguồn, điều chưa biết và câu hỏi cần xác nhận. Không tạo hoặc sửa lịch.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
+  {label: 'Tiếp nối cuộc trao đổi', detail: 'Ghi chú · bản phản hồi chờ duyệt', prompt: 'Từ ghi chú cuộc trao đổi tôi sẽ cung cấp, tách quyết định, việc cần làm, người phụ trách và thời hạn. Thiếu thông tin thì ghi chưa xác nhận. Soạn phản hồi để tôi xem trước, hỏi rõ người nhận và nơi lưu; không gửi hoặc ghi Google khi chưa được duyệt.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
 ]
 
 export function HomePage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
@@ -72,11 +71,11 @@ export function HomePage({ onNavigate }: { onNavigate: (page: PageKey) => void }
   return (
     <section className="home-page">
       <header className="home-hero">
-        <p className="home-kicker">Study & Work Command Center</p>
-        <h2>Từ một tài liệu,<br />đi đến việc cần làm.</h2>
+        <p className="home-kicker">Chuẩn bị tư vấn khách hàng doanh nghiệp</p>
+        <h2>Từ yêu cầu khách hàng,<br />chuẩn bị cuộc hẹn rõ ràng.</h2>
         <ul className="home-hero-points">
-          <li>Tìm nguồn và hiểu nội dung từ Drive, Gmail hoặc tài liệu bạn chọn.</li>
-          <li>Tạo kết quả; bạn xem lại trước khi ghi vào Google Workspace.</li>
+          <li>Đối chiếu thư, lịch và tài liệu; làm rõ dữ kiện và điều còn thiếu.</li>
+          <li>Chuẩn bị báo cáo và phản hồi; bạn duyệt trước khi ghi hoặc gửi.</li>
         </ul>
         <button className="home-primary-action" type="button" onClick={() => onNavigate('chat')}>
           Bắt đầu một câu hỏi <ArrowRight20Regular />

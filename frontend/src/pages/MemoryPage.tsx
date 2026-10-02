@@ -71,22 +71,22 @@ const STARTER_PRESETS = [
   {
     kind: 'preference' as MemoryKind,
     icon: '🎯',
-    title: 'Phong cách trả lời Antigravity',
+    title: 'Trả lời ngắn gọn và có nguồn',
     content: 'Tôi muốn các câu trả lời ngắn gọn, có cấu trúc phân tích chuyên sâu, kèm trích dẫn số liệu rõ ràng và không dùng lời chào rườm rà.',
-    tags: ['phong_cach', 'antigravity'],
+    tags: ['phong_cach', 'nguon'],
   },
   {
-    kind: 'context' as MemoryKind,
+    kind: 'preference' as MemoryKind,
     icon: '📌',
-    title: 'Dự án Veridra Local Production',
-    content: 'Tôi đang vận hành Veridra phiên bản local single-admin, kết nối Google Drive & Gmail thật, sử dụng gemini-3.5-flash-lite và Qdrant RAG.',
-    tags: ['du_an', 'veridra', 'local'],
+    title: 'Chuẩn bị tư vấn khách hàng',
+    content: 'Khi chuẩn bị tư vấn khách hàng, tôi muốn tách dữ kiện đã xác nhận, điều chưa biết, câu hỏi cần làm rõ và việc cần làm tiếp. Không tự giả định ngân sách hoặc người ra quyết định.',
+    tags: ['tu_van', 'khach_hang'],
   },
   {
     kind: 'procedural' as MemoryKind,
     icon: '💡',
     title: 'Quy trình xử lý thư quan trọng',
-    content: 'Khi đọc email từ các hệ thống bảo mật hoặc đối tác, luôn trích xuất tóm tắt các action items chính, deadline và người liên quan lên đầu.',
+    content: 'Khi đọc email từ khách hàng hoặc đối tác, luôn nêu việc cần làm, thời hạn và người liên quan lên đầu. Nếu nguồn không nêu rõ thì ghi là chưa xác nhận.',
     tags: ['quy_trinh', 'gmail'],
   },
   {
@@ -396,9 +396,9 @@ export function MemoryPage() {
             <BrainCircuit20Regular style={{ fontSize: '24px', color: '#a78bfa' }} />
           </div>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <p className="home-kicker">Long-term Memory</p>
-              <Badge appearance="filled" color="brand">Persistent Knowledge</Badge>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+              <p className="home-kicker">Ghi nhớ cho những lần sau</p>
+              <Badge appearance="filled" color="brand" style={{ flexShrink: 0, whiteSpace: 'nowrap' }}>Lưu lâu dài</Badge>
             </div>
             <h2>Bộ nhớ dài hạn & Phong cách cá nhân</h2>
             <ul className="page-summary-points">
@@ -426,10 +426,10 @@ export function MemoryPage() {
         <div className="starters-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <Sparkle20Regular style={{ color: '#fbbf24' }} />
-            <strong>Khởi tạo bộ nhớ 1-Click (Quick Starters)</strong>
+            <strong>Gợi ý bộ nhớ khởi đầu</strong>
           </div>
           <span style={{ fontSize: '12px', color: '#94a3b8' }}>
-            Nhấn thêm để nạp ngay các quy chuẩn phản hồi & ngữ cảnh dự án vào Agent
+            Chỉ thêm gợi ý phù hợp với cách bạn muốn trợ lý làm việc.
           </span>
         </div>
 

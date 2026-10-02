@@ -16,8 +16,6 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.agent.adk_orchestrator import AdkOrchestrator
-from app.agent.compiler import CompilerOrchestrator
 from app.api import (
     admin,
     artifacts,
@@ -86,8 +84,12 @@ async def _new_orchestrator(runtime_settings, registry):
 
         orchestrator = AgentOrchestrator(runtime_settings, registry)
     elif runtime_settings.orchestrator_backend == "adk":
+        from app.agent.adk_orchestrator import AdkOrchestrator
+
         orchestrator = AdkOrchestrator(runtime_settings, registry)
     else:
+        from app.agent.compiler import CompilerOrchestrator
+
         orchestrator = CompilerOrchestrator(runtime_settings, registry)
     await orchestrator.initialize()
     return orchestrator

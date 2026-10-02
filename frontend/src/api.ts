@@ -27,10 +27,64 @@ function publishIntegrationStatus(path: string, status: IntegrationStatus) {
   window.dispatchEvent(new CustomEvent('driveagent:integration-status', { detail: { service, status } }))
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
+type ApiRequestInit = RequestInit & { timeoutMs?: number }
+type ResponseMode = 'json' | 'text' | 'blob'
+
+export function api<T>(path: string, init: ApiRequestInit = {}): Promise<T> {
+  return requestBounded<T>(path, init, 'json')
+}
+
+export function apiText(path: string, init: ApiRequestInit = {}): Promise<string> {
+  return requestBounded<string>(path, init, 'text')
+}
+
+export function apiBlob(path: string, init: ApiRequestInit = {}): Promise<Blob> {
+  return requestBounded<Blob>(path, init, 'blob')
+}
+
+/** Giới hạn cả lấy phản hồi lẫn đọc nội dung; không tự phát lại thao tác ghi. */
+async function requestBounded<T>(path: string, init: ApiRequestInit, mode: ResponseMode): Promise<T> {
+  const { timeoutMs, signal: callerSignal, ...requestInit } = init
+  const defaultTimeout = path.startsWith('/api/auth/') || init.body instanceof FormData || init.body instanceof Blob
+    ? 120_000 : 30_000
+  const duration = timeoutMs ?? defaultTimeout
+  if (!Number.isFinite(duration) || duration <= 0) {
+    throw new RangeError('Thời hạn chờ phải là số dương hữu hạn.')
+  }
+  const controller = new AbortController()
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let cancel: (() => void) | undefined
+  const interrupted = new Promise<never>((_resolve, reject) => {
+    cancel = () => {
+      controller.abort()
+      reject(new DOMException('Yêu cầu đã được hủy.', 'AbortError'))
+    }
+    if (callerSignal?.aborted) cancel()
+    else callerSignal?.addEventListener('abort', cancel, { once: true })
+    timer = setTimeout(() => {
+      controller.abort()
+      reject(new ApiError(
+        'Ứng dụng chưa phản hồi kịp. Hãy kiểm tra trạng thái tác vụ trước khi thử lại; thao tác vừa rồi có thể vẫn đang xử lý.',
+        0, 'request_timeout',
+      ))
+    }, duration)
+  })
+  try {
+    if (callerSignal?.aborted) return await interrupted
+    return await Promise.race([
+      interrupted,
+      executeApi<T>(path, { ...requestInit, signal: controller.signal }, mode),
+    ])
+  } finally {
+    clearTimeout(timer)
+    if (cancel) callerSignal?.removeEventListener('abort', cancel)
+  }
+}
+
+async function executeApi<T>(path: string, init: RequestInit, mode: ResponseMode): Promise<T> {
   const headers = new Headers(init.headers)
   headers.set('X-Requested-With', 'XMLHttpRequest')
-  if (init.body && !(init.body instanceof FormData)) {
+  if (init.body && !(init.body instanceof FormData) && !(init.body instanceof Blob) && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json')
   }
   let response: Response
@@ -69,6 +123,8 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   publishIntegrationStatus(path, 'healthy')
   if (response.status === 204) return undefined as T
+  if (mode === 'text') return response.text() as Promise<T>
+  if (mode === 'blob') return response.blob() as Promise<T>
   return response.json() as Promise<T>
 }
 

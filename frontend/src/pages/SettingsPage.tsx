@@ -241,8 +241,12 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
   }
 
   async function logout() {
-    await fetch('/api/auth/logout', { method: 'POST', credentials: 'include' })
-    window.location.reload()
+    try {
+      await api('/api/auth/logout', { method: 'POST' })
+      window.location.reload()
+    } catch (caught) {
+      setOperationError(caught instanceof Error ? caught.message : 'Chưa đăng xuất được. Hãy thử lại.')
+    }
   }
 
   function scrollToSetting(id: string) {

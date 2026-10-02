@@ -155,7 +155,10 @@ export function AppShell({
     const main = document.getElementById('main-content')
     window.requestAnimationFrame(() => {
       main?.focus({ preventScroll: true })
-      main?.scrollIntoView({ block: 'start' })
+      if (main) {
+        const headerHeight = document.querySelector('.topbar')?.getBoundingClientRect().height ?? 0
+        window.scrollTo({ top: Math.max(0, main.getBoundingClientRect().top + window.scrollY - headerHeight), behavior: 'instant' })
+      }
     })
   }
 
@@ -240,7 +243,7 @@ export function AppShell({
             onClick={() => setMobileOpen(true)}
           />
           <div>
-            <p className="topbar__context">Không gian học tập & công việc</p>
+            <p className="topbar__context">Chuẩn bị tư vấn khách hàng</p>
             <h1>{current.label}</h1>
           </div>
           <div className="topbar__actions">

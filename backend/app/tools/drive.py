@@ -11,7 +11,6 @@ from typing import Any
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 from googleapiclient.http import MediaIoBaseDownload
-from markitdown import MarkItDown
 from pydantic import BaseModel, Field
 
 from app.api.schemas import DriveFileListResponse, DriveFileResponse, FileContentResponse
@@ -256,6 +255,8 @@ def _parse_spreadsheet_to_dossier(file_path: Path, file_name: str) -> str:
     try:
         wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
     except Exception:
+        from markitdown import MarkItDown
+
         return MarkItDown().convert(str(file_path)).text_content
 
     try:
@@ -462,6 +463,8 @@ def _convert_bytes(
             )
         if suffix in {".xlsx", ".xlsm", ".xltx"}:
             return _parse_spreadsheet_to_dossier(temp_path, file_name or "Bảng tính Excel")
+        from markitdown import MarkItDown
+
         result = MarkItDown().convert(str(temp_path))
         return result.text_content
     except Exception as exc:

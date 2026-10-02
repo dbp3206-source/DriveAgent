@@ -1,6 +1,8 @@
 """Bounded live check: each explicitly named PDF must supply page evidence."""
 
 import json
+from datetime import UTC, datetime
+from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
@@ -27,6 +29,7 @@ except HTTPError as error:
 citations = result.get("citations", [])
 files = {item.get("file_name") for item in citations}
 report = {
+    "run_at": datetime.now(UTC).isoformat(),
     "status": result.get("status"),
     "source_count": len(files),
     "citation_count": len(citations),
@@ -34,6 +37,12 @@ report = {
     "answer_chars": len(result.get("answer", "")),
     "semantic_truth": "NOT VERIFIED",
 }
+folder = Path(__file__).resolve().parents[1] / "design-work/qa/private"
+folder.mkdir(parents=True, exist_ok=True)
+path = folder / f"multi-local-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}.json"
+path.write_text(json.dumps({"measurement": report, "response": result},
+                           ensure_ascii=False, indent=2), encoding="utf-8")
+report["private_report"] = path.name
 print(json.dumps(report))
 assert report["status"] == "completed", report
 assert files == {"Ngan-hang_20260330.pdf", "DubaoKQKD_Nganhdien_20260408.pdf"}, report

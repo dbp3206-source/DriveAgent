@@ -412,6 +412,32 @@ def test_numeric_rewrite_guard_normalizes_vietnamese_number_formatting():
     assert _numeric_literals("1.260") != _numeric_literals("1.260,5")
 
 
+def test_numeric_guard_ignores_only_markdown_ordinals_not_item_quantities():
+    from app.agent.output_contract import _numeric_literals
+
+    assert _numeric_literals("## 1. Dữ kiện\n2) Kho có 840 chiếc.") == {"8.4E+2"}
+    assert _numeric_literals("1.600 sản phẩm\n| 2 | 550 |") == {"1.6E+3", "2", "5.5E+2"}
+
+
+async def test_rejected_rewrite_warning_describes_retained_original_length():
+    class Models:
+        async def generate_content(self, **kwargs):
+            return SimpleNamespace(text="Chi phí mới 999 đồng. " + "từ " * 120)
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *args: None),
+        user_message="Phân tích trong 50–70 từ.", answer="Chưa biết chi phí.",
+        model_name="gemini-3.5-flash-lite", fallback_model="gemini-3.5-flash-lite",
+        records=records,
+    )
+    assert result.startswith("Chưa biết chi phí.")
+    assert "ngắn hơn độ dài" in result
+    assert "dài hơn độ dài" not in result
+    assert "999" not in result
+
+
 @pytest.mark.parametrize(("value", "accepted"), [("840", True), ("940", False)])
 async def test_rewrite_only_allows_calculator_verified_new_numbers(value, accepted):
     original = "Kho có 100 sản phẩm. " + "Lập báo cáo kiểm tra tồn kho. " * 40

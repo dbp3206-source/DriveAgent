@@ -270,9 +270,9 @@ async def test_langgraph_run_builds_plan_and_final_response_through_real_nodes()
     model = FakeModel()
     user = type("User", (), {"id": "u", "role": "editor"})()
     with (
-        patch("app.agent.orchestrator.ChatGoogleGenerativeAI", return_value=model),
-        patch("app.agent.orchestrator.StateGraph", FakeStateGraph),
-        patch("app.agent.orchestrator.ToolNode", lambda *_args, **_kwargs: object()),
+        patch("langchain_google_genai.ChatGoogleGenerativeAI", return_value=model),
+        patch("langgraph.graph.StateGraph", FakeStateGraph),
+        patch("langgraph.prebuilt.ToolNode", lambda *_args, **_kwargs: object()),
     ):
         result = await orchestrator.run(
             user=user,

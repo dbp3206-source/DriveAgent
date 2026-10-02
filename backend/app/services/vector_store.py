@@ -4,13 +4,16 @@ Qdrant chạy trực tiếp trên thư mục local, vì vậy người dùng kh�
 giữ bản sao embedding để dữ liệu có thể phục hồi và test không phụ thuộc engine vector.
 """
 
-import asyncio
-from typing import Any
+from __future__ import annotations
 
-from qdrant_client import QdrantClient, models
+import asyncio
+from typing import TYPE_CHECKING, Any
 
 from app.core.config import Settings
 from app.services.embeddings import EMBEDDING_DIMENSION
+
+if TYPE_CHECKING:
+    from qdrant_client import QdrantClient, models
 
 DRIVE_COLLECTION = "drive_chunks"
 MEMORY_COLLECTION = "agent_memories"
@@ -30,6 +33,8 @@ class VectorStore:
             self.backend_name = "postgres-pgvector"
             return
         try:
+            from qdrant_client import QdrantClient, models
+
             path = self.settings.resolved_qdrant_path
             path.mkdir(parents=True, exist_ok=True)
             self.client = await asyncio.to_thread(QdrantClient, path=str(path))
@@ -54,6 +59,8 @@ class VectorStore:
     ) -> None:
         if not self.client:
             return
+        from qdrant_client import models
+
         try:
             await asyncio.to_thread(
                 self.client.upsert,
@@ -68,6 +75,8 @@ class VectorStore:
     async def delete_by_filter(self, collection: str, filters: dict[str, str | list[str]]) -> None:
         if not self.client:
             return
+        from qdrant_client import models
+
         qfilter = self._filter(filters)
         try:
             await asyncio.to_thread(
@@ -85,6 +94,8 @@ class VectorStore:
 
         if not self.client or not point_ids:
             return
+        from qdrant_client import models
+
         try:
             await asyncio.to_thread(
                 self.client.delete,
@@ -122,6 +133,8 @@ class VectorStore:
 
     @staticmethod
     def _filter(filters: dict[str, str | list[str]]) -> models.Filter:
+        from qdrant_client import models
+
         return models.Filter(
             must=[
                 models.FieldCondition(

@@ -182,7 +182,7 @@ interface ChatResult {
 }
 
 const prompts = [
-  'Tìm tài liệu học tập trong Drive của tôi',
+  'Tìm hồ sơ khách hàng trong Drive; hỏi tên khách hàng nếu chưa đủ thông tin',
   'Tóm tắt tệp mới chỉnh sửa gần đây nhất',
   'Quét thư Gmail chưa đọc từ tối qua và tóm tắt',
   'Tôi đã lưu sở thích trình bày nào?',
@@ -298,8 +298,17 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
   const timerRef = useRef<number | null>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
   const activeTaskRef = useRef<string | null>(null)
+  const submissionInFlightRef = useRef(false)
+  const stopRequestedRef = useRef(false)
 
   async function stopGeneration() {
+    if (!activeTaskRef.current && submissionInFlightRef.current) {
+      // Do not abort creation and falsely claim the persisted task stopped.
+      // Once its identifier arrives, cancel that exact task before polling.
+      stopRequestedRef.current = true
+      setError('Đang chờ máy chủ xác nhận yêu cầu để dừng an toàn.')
+      return
+    }
     if (activeTaskRef.current) {
       try {
         const task = await api<{status: string}>(
@@ -319,7 +328,9 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
       clearInterval(timerRef.current)
       timerRef.current = null
     }
-    setBusy(false)
+    // An active submit releases its guard in finally. Allowing a new submit
+    // before its cancellation settles lets the old cleanup clear the new run.
+    if (!submissionInFlightRef.current) setBusy(false)
   }
 
   useEffect(() => {
@@ -637,7 +648,9 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
   async function submit(event?: FormEvent, customText?: string) {
     if (event) event.preventDefault()
     const content = (customText !== undefined ? customText : input).trim()
-    if (!content || busy) return
+    if (!content || busy || submissionInFlightRef.current) return
+    submissionInFlightRef.current = true
+    stopRequestedRef.current = false
     setLastUserPrompt(content)
     setInput('')
     setError('')
@@ -690,6 +703,15 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
       activeTaskRef.current = task.id
       if (!sessionId) freshlyCreatedSession.current = task.session_id
       setSessionId(task.session_id)
+      if (stopRequestedRef.current) {
+        const stopped = await api<{status: string}>(
+          `/api/chat/tasks/${task.id}/cancel`, {method: 'POST'},
+        )
+        if (stopped.status !== 'completed') {
+          controller.abort()
+          throw new DOMException('Yêu cầu đã được dừng.', 'AbortError')
+        }
+      }
       const result = await waitForChatTask<ChatResult>(
         () => api(`/api/chat/tasks/${task.id}`, {signal: controller.signal}), controller.signal,
       )
@@ -734,6 +756,8 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
       controller.abort()
       abortControllerRef.current = null
       activeTaskRef.current = null
+      submissionInFlightRef.current = false
+      stopRequestedRef.current = false
       if (timerRef.current) {
         clearInterval(timerRef.current)
         timerRef.current = null

@@ -1,11 +1,16 @@
 # Veridra
 
-Veridra là trợ lý học tập và công việc chạy local, dùng Gemini để biến Drive, Gmail và tài liệu riêng thành câu trả lời có nguồn, Google Docs/Sheets có thể duyệt và các quy trình dùng lại được. Mọi tool đều đi qua Tool Registry có schema, xác thực, phân quyền, giới hạn, audit và retry có chọn lọc.
+**Veridra — Trợ lý chuẩn bị tư vấn khách hàng doanh nghiệp.**
 
-**Trạng thái phát hành: HOLD.** Bản local đang được hoàn thiện; chưa có URL closed beta
-đã kiểm chứng. Kết quả unit/regression không chứng nhận toàn bộ chất lượng câu trả lời,
-OAuth/BYOK cloud hay khả năng phục vụ nhiều người dùng thật. Theo dõi gate tại Nhật ký
-và các báo cáo trong `design-work/qa/`; không dùng điểm trung bình suite làm nhãn ready.
+Đối tượng chính là chuyên viên tư vấn giải pháp AI/phần mềm trước bán hàng. Sản phẩm đang được chuẩn hóa theo ba quy trình: đọc yêu cầu khách hàng, chuẩn bị báo cáo trước cuộc hẹn, phản hồi và lưu kết quả sau khi duyệt. Gmail, Drive/tài liệu riêng, thông tin doanh nghiệp và Calendar là nguồn; Gemini hỗ trợ phân tích và tổng hợp. Mọi công cụ đi qua kiểm tra đầu vào, xác thực, phân quyền, hạn mức và nhật ký.
+
+Định vị và phương pháp đã chốt tại [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md); các hành vi chưa được triển khai/kiểm chứng không được coi là đã hoàn thiện chỉ vì có trong tài liệu. Dùng [checklist nghiệm thu hiện hành](docs/ACCEPTANCE-CHECKLIST.md) thay cho quản lý 90 đầu việc riêng lẻ.
+
+**Trạng thái phát hành: chưa nghiệm thu toàn bộ.** Đã có URL thử nghiệm
+[Veridra trên Render](https://veridra-closed-beta.onrender.com), nhưng chưa đủ bằng chứng
+cho toàn bộ nghiệp vụ, bốn người dùng thật và cùng bản phát hành. Kết quả kiểm thử mẫu
+không thay thế nghiệm thu thực tế. Theo dõi bằng chứng ở checklist và `design-work/qa/`,
+không đưa danh sách công việc nội bộ lên giao diện hoặc dùng điểm trung bình mẫu làm nhãn sẵn sàng.
 
 Chạy local không cần Docker. Stack quan sát nặng là tùy chọn; xem
 [phạm vi tài nguyên](docs/RESOURCE-PROFILE.md). PDF có lớp text tối đa 25 MiB được xử lý nền

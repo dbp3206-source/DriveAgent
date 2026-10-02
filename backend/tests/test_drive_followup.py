@@ -43,6 +43,17 @@ def test_drive_followup_rereads_the_unique_cited_source():
     assert route == Route("drive_read_file", {"file_id": source_id, "max_characters": 20_000})
 
 
+def test_explicit_new_file_id_overrides_old_followup_source():
+    prior = [assistant_with_drive("drive-file-0123456789")]
+    assert (
+        _drive_followup_route(
+            "Phân tích sâu hơn file đó, nhưng dùng file_id: new-file-9876543210",
+            prior,
+        )
+        is None
+    )
+
+
 def test_drive_followup_resolves_implicit_deepening_from_immediate_context():
     source_id = "drive-file-0123456789"
     prior = [

@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
+from qa_google_read_smoke import _connected_owner_id
 from sqlalchemy import select
 
 from app.core.config import Settings
@@ -20,11 +21,11 @@ from app.tools.calendar import CalendarUpcomingInput, calendar_list_upcoming
 from app.tools.contracts import ToolContext, ToolError
 
 
-async def main() -> None:
+async def main() -> int:
     settings = Settings()
     async with SessionFactory() as db:
         user = await db.scalar(
-            select(User).where(User.email == "dbp3206@gmail.com", User.is_active.is_(True))
+            select(User).where(User.id == _connected_owner_id(), User.is_active.is_(True))
         )
         if user is None:
             raise RuntimeError("Connected owner not found")
@@ -44,7 +45,7 @@ async def main() -> None:
                     }
                 )
             )
-            return
+            return 1
     print(
         json.dumps(
             {
@@ -57,7 +58,8 @@ async def main() -> None:
             ensure_ascii=False,
         )
     )
+    return 0
 
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    raise SystemExit(asyncio.run(main()))

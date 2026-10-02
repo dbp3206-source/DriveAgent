@@ -11,6 +11,7 @@ import hashlib
 import json
 import sys
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 
 import httpx
@@ -90,7 +91,9 @@ async def run(*, reextract=False):
             print(json.dumps({"name": name, "status": job["status"], "pages": job["pages"],
                               "processed": job["processed_pages"], "characters": len(text)},
                              ensure_ascii=True), flush=True)
-    output = ROOT / "design-work/qa/pdf-ingestion-live-20260930.json"
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    output = ROOT / f"design-work/qa/RELEASE-20261002/pdf-ingestion-live-{stamp}.json"
+    output.parent.mkdir(parents=True, exist_ok=True)
     serialized = json.dumps({"model_calls": 0, "samples": results}, ensure_ascii=False, indent=2)
     output.write_text(serialized, encoding="utf-8")
     print(json.dumps({"report": str(output), "samples": len(results), "model_calls": 0}))

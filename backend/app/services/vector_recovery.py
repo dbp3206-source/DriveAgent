@@ -3,7 +3,6 @@
 import asyncio
 import json
 
-from qdrant_client import models
 from sqlalchemy import select
 
 from app.db.models import DocumentChunk
@@ -13,6 +12,8 @@ from app.services.vector_store import DRIVE_COLLECTION
 async def reconcile_document_vectors(db, store) -> int:
     if store.client is None:
         return 0
+    from qdrant_client import models
+
     rows = (await db.scalars(select(DocumentChunk))).all()
     repaired = 0
     for start in range(0, len(rows), 100):

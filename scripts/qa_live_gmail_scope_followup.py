@@ -3,10 +3,12 @@
 import asyncio
 import json
 import sqlite3
+from datetime import UTC, datetime
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
+from evaluate_gate2_live import _tool_names
 from qa_google_read_smoke import DB, _connected_owner_id, _cookie
 from qa_live_chat_depth import _reservation_count, _runtime_credential, settings
 
@@ -25,7 +27,7 @@ with sqlite3.connect(f"file:{DB.as_posix()}?mode=ro", uri=True) as db:
 if not session:
     raise SystemExit("Daily skill session missing")
 body = {
-    "message": "Bây giờ đổi phạm vi: tóm tắt 5 email gần nhất trong Gmail của tôi, "
+    "message": "Phân tích 5 email gần nhất trong Gmail của tôi, "
     "không giới hạn người gửi hay ngày hôm nay và không chỉ lấy ba thư Bản chi tiết trước đó. "
     "Nêu số thư thực đọc, tóm tắt từng thư với nguồn riêng. Không thay đổi Gmail.",
     "session_id": session[0],
@@ -49,11 +51,17 @@ try:
         payload = json.loads(response.read())
 except HTTPError as exc:
     payload = {"status": "http_error", "http_status": exc.code}
-evidence = root / "design-work/qa/private/gmail-scope-followup-native-20260930.json"
+stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+evidence = root / f"design-work/qa/private/gmail-scope-followup-{stamp}.json"
 evidence.parent.mkdir(parents=True, exist_ok=True)
 evidence.write_text(
     json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
 )
+tools = _tool_names(payload)
+passed = (payload.get("status") == "completed"
+          and "gmail_read_matching_messages" in tools
+          and len(payload.get("citations", [])) >= 5
+          and payload.get("session_id") == session[0])
 print(
     json.dumps(
         {
@@ -62,7 +70,9 @@ print(
             "citation_count": len(payload.get("citations", [])),
             "answer_chars": len(payload.get("answer", "")),
             "session_reused": payload.get("session_id") == session[0],
+            "fresh_scope_tool": "gmail_read_matching_messages" in tools,
+            "passed": passed,
         }
     )
 )
-raise SystemExit(0 if payload.get("status") == "completed" else 1)
+raise SystemExit(0 if passed else 1)

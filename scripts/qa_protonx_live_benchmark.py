@@ -13,6 +13,7 @@ from types import SimpleNamespace
 
 from google import genai
 from google.genai import types
+from protonx_scoring import score_report_structure, summarize_structure
 from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -43,24 +44,6 @@ class CompanyReport(BaseModel):
 
 class BenchmarkResponse(BaseModel):
     reports: list[CompanyReport]
-
-
-def _citation_ids(text: str, case_id: str) -> list[int]:
-    return [int(value) for value in re.findall(rf"\[{re.escape(case_id)}:S(\d{{1,2}})\]", text)]
-
-
-def _report_text(report: CompanyReport) -> str:
-    return "\n".join(
-        [
-            report.company_overview,
-            report.industry,
-            *report.products,
-            report.company_scale,
-            *report.recent_news,
-            report.contact_context,
-            report.meeting_notes,
-        ]
-    )
 
 
 async def main() -> None:
@@ -162,59 +145,25 @@ async def main() -> None:
         case_id = case["id"]
         report = reports[case_id]
         sources = source_map[case_id]
-        report_text = _report_text(report)
-        citations = _citation_ids(report_text, case_id)
-        valid_citations = bool(citations) and all(1 <= item <= len(sources) for item in citations)
-        official_marker = f"[{case_id}:S1]"
-        official_grounding = all(
-            official_marker in value
-            for value in [
-                report.company_overview,
-                report.industry,
-                "\n".join(report.products),
-            ]
+        score = score_report_structure(
+            case_id, report.model_dump(), sources, required_fields,
+            benchmark["release_thresholds"]["report_completeness"],
         )
-        values = report.model_dump()
-        completeness = sum(
-            1
-            for field in required_fields
-            if field == "sources"
-            or (field in values and values[field] not in (None, "", []))
-        ) / len(required_fields)
-        scores.append(
-            {
-                "case_id": case_id,
-                "company": case["company"],
-                "source_count": len(sources),
-                "completeness": round(completeness, 4),
-                "valid_citations": valid_citations,
-                "official_grounding": official_grounding,
-                "contradictions_reported": report.contradictions,
-                "approval_pending": report.human_approval_status.startswith("pending"),
-                "pass": (
-                    completeness >= benchmark["release_thresholds"]["report_completeness"]
-                    and len(sources)
-                    >= benchmark["release_thresholds"]["target_sources_per_report"]
-                    and valid_citations
-                    and official_grounding
-                    and not report.contradictions
-                    and report.human_approval_status.startswith("pending")
-                ),
-            }
-        )
+        score["company"] = case["company"]
+        scores.append(score)
     elapsed = time.perf_counter() - started
-    passed = sum(1 for score in scores if score["pass"])
+    passed = sum(score["structural_pass"] for score in scores)
     result = {
         "run_at": datetime.now(UTC).isoformat(),
         "source_dataset": str(source_path),
         "model": settings.gemini_chat_model,
         "mode": "one_budgeted_model_call_after_six_live_source_bundles",
         "case_count": len(scores),
-        "passed_cases": passed,
-        "task_success": round(passed / len(scores), 4),
+        "structurally_passed_cases": passed,
+        "task_success": None,
         "latency_seconds": round(elapsed, 3),
         "target_latency_seconds": benchmark["release_thresholds"]["target_latency_seconds"],
-        "unauthorized_side_effects": 0,
+        "unauthorized_side_effects": None,
         "freshness_window_days": 30,
         "scores": scores,
         "sources": {
@@ -223,39 +172,37 @@ async def main() -> None:
         },
         "reports": {case_id: report.model_dump(mode="json") for case_id, report in reports.items()},
     }
-    result["gate_pass"] = (
-        result["task_success"] >= benchmark["release_thresholds"]["task_success"]
-        and result["unauthorized_side_effects"] == 0
-        and elapsed <= benchmark["release_thresholds"]["target_latency_seconds"]
-    )
-    output_json = ROOT / "design-work" / "qa" / "protonx-live-benchmark-20260925.json"
+    result.update(summarize_structure(scores))
+    stamp = datetime.now(UTC).strftime("%Y%m%dT%H%M%S%fZ")
+    output_json = ROOT / "design-work" / "qa" / f"protonx-live-benchmark-{stamp}.json"
+    output_json.parent.mkdir(parents=True, exist_ok=True)
     output_json.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
     lines = [
         "# ProtonX six-company live benchmark",
         "",
         f"- Model: `{settings.gemini_chat_model}`",
-        f"- Kết quả: **{passed}/{len(scores)}**",
-        f"- Task success: **{result['task_success']:.0%}**",
-        f"- Latency toàn batch: **{elapsed:.2f}s** (mục tiêu ≤42s)",
-        "- Side effect không được phép: **0**",
-        f"- Gate: **{'PASS' if result['gate_pass'] else 'FAIL'}**",
+        f"- Cấu trúc đạt: **{passed}/{len(scores)}**",
+        "- Chưa đo tỷ lệ hoàn thành nghiệp vụ; cần chạy quy trình đầy đủ.",
+        f"- Latency toàn batch: **{elapsed:.2f}s** (số đo toàn đợt, không phải mỗi yêu cầu)",
+        "- Chưa có bằng chứng đo hành động ngoài ý muốn.",
+        "- Nghiệm thu toàn sản phẩm: chưa kiểm chứng.",
         "",
-        "| Case | Công ty | Nguồn | Completeness | Official | Citation | Kết quả |",
+        "| Mẫu | Công ty | Nguồn | Đủ trường | Có nhãn nguồn chính | Nhãn nguồn hợp lệ | Cấu trúc |",
         "|---|---|---:|---:|---|---|---|",
     ]
     for score in scores:
         lines.append(
             f"| {score['case_id']} | {score['company']} | {score['source_count']} | "
-            f"{score['completeness']:.0%} | {'PASS' if score['official_grounding'] else 'FAIL'} | "
+            f"{score['completeness']:.0%} | {'PASS' if score['official_reference_present'] else 'FAIL'} | "
             f"{'PASS' if score['valid_citations'] else 'FAIL'} | "
-            f"{'PASS' if score['pass'] else 'FAIL'} |"
+            f"{'PASS' if score['structural_pass'] else 'FAIL'} |"
         )
-    output_md = ROOT / "design-work" / "qa" / "PROTONX-LIVE-BENCHMARK-20260925.md"
+    output_md = output_json.with_suffix(".md")
     output_md.write_text("\n".join(lines) + "\n", encoding="utf-8")
     summary_keys = [
         "gate_pass",
         "case_count",
-        "passed_cases",
+        "structurally_passed_cases",
         "task_success",
         "latency_seconds",
     ]

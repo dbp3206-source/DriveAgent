@@ -64,6 +64,20 @@ def retain_referenced_citations(
     Direct tool responses may still return their source without using this filter.
     """
 
+    # Models frequently put the page label inside the reference. Normalize
+    # only when the stated page matches that exact source; never invent support.
+    invalid_page_reference = False
+
+    def normalize_page_reference(match: re.Match[str]) -> str:
+        nonlocal invalid_page_reference
+        number, page = int(match.group(1)), int(match.group(2))
+        if 1 <= number <= len(citations) and citations[number - 1].get("page_number") == page:
+            return f"[{number}] (trang {page})"
+        invalid_page_reference = True
+        return ""
+
+    answer = re.sub(r"\[(\d+)\s*,\s*(?:trang|page)\s+(\d+)\]",
+                    normalize_page_reference, answer, flags=re.I)
     answer = _align_explicit_page_markers(answer, citations)
     valid_order: list[int] = []
     citation_pattern = re.compile(r"(?<!\!)\[(\s*\d+(?:\s*[,;]\s*\d+)*\s*)\](?!\()")
@@ -73,7 +87,7 @@ def retain_referenced_citations(
             if 1 <= number <= len(citations) and number not in valid_order:
                 valid_order.append(number)
     if not valid_order:
-        if auto_reference and citations:
+        if auto_reference and citations and not invalid_page_reference:
             # A model can answer correctly from a tool result yet omit the
             # server-provided marker. Do not silently discard verified evidence:
             # append a neutral source line instead of pretending every sentence

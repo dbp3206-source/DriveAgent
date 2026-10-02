@@ -1,6 +1,34 @@
 # Veridra: hướng dẫn sử dụng, phối hợp tính năng và kịch bản demo
 
-Phiên bản hướng dẫn: 30/09/2026. Dành cho người dùng và tester. Các thao tác dưới đây là kịch bản để kiểm chứng; không được hiểu là mọi kịch bản đã đạt nghiệm thu. Bản chạy hiện tại là local tại http://localhost:8000.
+Phiên bản hướng dẫn: 02/10/2026. Dành cho chuyên viên chuẩn bị tư vấn giải pháp AI/phần mềm. Các thao tác dưới đây là kịch bản để kiểm chứng; không được hiểu là mọi kịch bản đã đạt nghiệm thu. Bản trên máy: http://localhost:8000. Bản thử có lời mời: https://veridra-closed-beta.onrender.com; trạng thái triển khai thành công không thay nghiệm thu từng chức năng.
+
+## Ba công việc chính cần trình diễn
+
+### 1. Chuẩn bị đầu ngày
+
+1. Trong Gmail, chọn một thư thử có yêu cầu tư vấn và ghi lại người gửi, ngày nhận, chủ đề. Mở thư để biết nội dung gốc trước khi hỏi.
+2. Tạo cuộc trò chuyện mới. Gửi: “Đọc thư từ [người gửi] ngày [ngày], chủ đề [chủ đề]. Nêu yêu cầu đã xác nhận, thông tin còn thiếu và câu hỏi cần trao đổi. Chỉ dùng thư này, không tự suy ra ngân sách.”
+3. Mở từng nguồn trong câu trả lời. Kiểm tra người gửi/ngày, nội dung và tệp đính kèm có được sử dụng đúng không. Không coi câu trả lời hay là bằng chứng đã đọc đủ.
+4. Hỏi tiếp: “Đổi phạm vi: phân tích năm thư gần nhất, không giữ bộ lọc người gửi trước.” Kết quả phải lấy danh sách mới; không lặp lại một thư cũ.
+5. Nếu cần hồ sơ công ty, yêu cầu nghiên cứu nguồn công khai riêng; không đưa nguyên văn thư riêng vào truy vấn Internet. Lưu báo cáo sau khi kiểm nguồn.
+
+### 2. Chuẩn bị trước cuộc hẹn
+
+1. Chuẩn bị sẵn một sự kiện thử trong Google Calendar bằng giao diện Google. Veridra chỉ đọc lịch, không tạo hoặc sửa sự kiện.
+2. Trong cùng cuộc trò chuyện, chỉ rõ sự kiện, ngày và múi giờ; chỉ định thư cùng tài liệu Drive/local liên quan. Không có sự kiện phù hợp thì kết quả đúng là báo chưa tìm thấy, không tự tạo lịch.
+3. Gửi: “Chuẩn bị cuộc hẹn [tên] ngày [ngày giờ]. Dùng [thư/tài liệu]. Viết mục tiêu trao đổi, dữ kiện có nguồn, điều chưa biết, câu hỏi cần xác nhận và việc cần chuẩn bị. Phân biệt nhận định với dữ kiện.”
+4. Đối soát giờ, người tham dự, số liệu và câu hỏi với nguồn. Thông tin doanh nghiệp hiện tại phải có nguồn mới và thời điểm kiểm tra.
+5. Hỏi tiếp một sửa đổi cụ thể, chẳng hạn đổi quy mô từ 27 thành 42 người. Câu trả lời sau phải dùng 42, giữ phần khác chưa đổi và không biến con số thử thành thông tin đã xác minh từ nguồn.
+
+### 3. Tiếp nối cuộc trao đổi
+
+1. Cung cấp ghi chú cuộc họp thử, nêu rõ là ghi chú do bạn cung cấp. Yêu cầu tách quyết định, việc cần làm, người phụ trách và mốc thời gian; thiếu dữ liệu phải để rõ chưa xác nhận.
+2. Yêu cầu soạn bản phản hồi hoặc tài liệu, chỉ rõ người nhận/thư mục. Kiểm nội dung ở bản xem trước trước khi duyệt.
+3. Chỉ duyệt hành động có đúng nội dung và nơi nhận. Sau thực hiện, mở lại thư nháp/tài liệu để kiểm tra; dòng “đã chuẩn bị” không có nghĩa đã lưu hoặc gửi.
+4. Lưu kết quả trong sản phẩm. Mở lại, chỉnh sửa và xuất; kiểm tiếng Việt, bảng và nguồn trong tệp xuất.
+5. Nếu cần ghi nhớ, dùng yêu cầu rõ: “Hãy nhớ tôi muốn báo cáo có mục thông tin chưa xác nhận.” Mở Bộ nhớ để kiểm, sửa hoặc xóa. Tạo phiên mới để kiểm nhớ dài hạn; sau xóa không được tiếp tục lấy mục đó làm sở thích còn hiệu lực.
+
+Ba quy trình trên là trục demo; các màn hình Skills, Bộ nhớ, Nhật ký và nguồn tài liệu hỗ trợ chúng, không phải các sản phẩm nghiệp vụ độc lập. PDF có lớp văn bản vẫn có thể dùng; PDF scan cần OCR không nằm trong phạm vi. Mỗi kết quả cần được đối soát, không cam kết mọi lần chạy đều thành công khi dịch vụ bên ngoài lỗi hoặc hết hạn mức.
 
 ## 1. Chuẩn bị trước khi demo
 

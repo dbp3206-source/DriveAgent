@@ -12,6 +12,10 @@ _engines: set[Engine] = set()
 @lru_cache(maxsize=4)
 def state_engine(url: str) -> Engine:
     options = {"pool_size": 2, "max_overflow": 0, "pool_timeout": 10}
+    if url.startswith(("postgresql:", "postgresql+psycopg:")):
+        # A pool timeout does not bound opening a TCP connection. Keep a lost
+        # database from leaving startup or a worker blocked indefinitely.
+        options["connect_args"] = {"connect_timeout": 10}
     if url.startswith("sqlite:"):
         options = {}
     engine = create_engine(url, pool_pre_ping=True, **options)

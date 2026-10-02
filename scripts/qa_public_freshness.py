@@ -4,6 +4,7 @@ import asyncio
 import json
 import sys
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -67,11 +68,17 @@ async def run() -> dict:
                     ),
                 )
                 return {
-                    "status": "grounded_response_received",
+                    "status": "public_response_received",
                     "request_id": request_id,
                     "model": output.model,
                     "sources": len(output.sources),
                     "answer_characters": len(output.summary),
+                    "answer": output.summary,
+                    "source_details": [source.model_dump(mode="json") for source in output.sources],
+                    "collection_method": (
+                        "public_source_bundle" if output.model.endswith("+source-bundle")
+                        else "google_search_grounding"
+                    ),
                     "elapsed_seconds": round(time.monotonic() - started, 2),
                     "claim_truth_review": "NOT VERIFIED",
                     "observed_at": output.observed_at.isoformat(),
@@ -94,5 +101,11 @@ async def run() -> dict:
 
 if __name__ == "__main__":
     result = asyncio.run(run())
-    print(json.dumps(result, ensure_ascii=False))
-    raise SystemExit(0 if result["status"] == "grounded_response_received" else 1)
+    directory = ROOT / "design-work/qa/RELEASE-20261002"
+    directory.mkdir(parents=True, exist_ok=True)
+    path = directory / f"public-freshness-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}.json"
+    path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(json.dumps({key: value for key, value in result.items()
+                      if key not in {"answer", "source_details"}}, ensure_ascii=False))
+    print(json.dumps({"report": path.name}))
+    raise SystemExit(0 if result["status"] == "public_response_received" else 1)

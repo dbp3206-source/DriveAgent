@@ -566,3 +566,63 @@ async def test_adk_open_ended_run_records_session_handoff_usage_and_final_answer
     assert len(runner_models) == 1
     assert runner_models[0].reserve_primary is True
     assert runner_models[0].quota is orchestrator.compiler.quota
+
+
+@pytest.mark.parametrize("existing", [False, True])
+async def test_adk_restores_owner_scoped_canonical_history(existing):
+    captured = {}
+
+    class FakeSessions:
+        async def get_session(self, **kwargs):
+            return SimpleNamespace(last_update_time=1.0) if existing else None
+
+        async def create_session(self, **kwargs):
+            captured["session"] = kwargs
+
+    class FakeDb:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def scalars(self, query):
+            captured["query"] = query.compile().params
+            return [SimpleNamespace(role="user", content="Khách hàng Mẫu có 42 nhân viên.")]
+
+    class FakeRunner:
+        def __init__(self, **kwargs):
+            pass
+
+        async def run_async(self, **kwargs):
+            captured["request"] = kwargs["new_message"].parts[0].text
+            yield SimpleNamespace(
+                author="report_agent", usage_metadata=None,
+                is_final_response=lambda: True,
+                content=types.Content(parts=[types.Part(text="Khách hàng có 42 nhân viên.")]),
+            )
+
+    orchestrator = AdkOrchestrator(Settings(_env_file=None, gemini_api_key="test-key"),
+                                 ToolRegistry())
+    orchestrator.client = genai.Client(api_key="test-key")
+    orchestrator.sessions = FakeSessions()
+    with (
+        patch("app.agent.adk_orchestrator.SessionFactory", return_value=FakeDb()),
+        patch("app.agent.adk_orchestrator.Runner", FakeRunner),
+        patch("app.agent.adk_orchestrator.enforce_presentation_contract",
+              AsyncMock(side_effect=lambda **kwargs: kwargs["answer"])),
+    ):
+        result = await orchestrator.run(
+            user=SimpleNamespace(id="owner-a", role="editor"), session_id="session-a",
+            request_id="request-a", user_message="Nhắc lại thông tin đã trao đổi.",
+        )
+    assert "42 nhân viên" in captured["request"]
+    assert "owner-a" in captured["query"].values()
+    assert "session-a" in captured["query"].values()
+    assert "Asia/Bangkok" in captured["request"]
+    if existing:
+        assert "session" not in captured
+        assert any(hasattr(value, "year") for value in captured["query"].values())
+    else:
+        assert captured["session"]["user_id"] == "owner-a"
+    assert any(item.get("restored_messages") == 1 for item in result.trace)

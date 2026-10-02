@@ -58,6 +58,7 @@ export function MascotAssistant({
   })
   const [minimized, setMinimized] = useState(() => {
     return localStorage.getItem('driveagent_mascot_minimized') === 'true'
+      || window.matchMedia('(max-width: 700px)').matches
   })
   const [speech, setSpeech] = useState<string | null>(null)
   const [selectedMascotId, setSelectedMascotId] = useState(() => localStorage.getItem('driveagent_mascot_id') || 'fox')

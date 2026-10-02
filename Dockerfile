@@ -11,7 +11,7 @@ COPY --from=ghcr.io/astral-sh/uv:0.12.19 /uv /usr/local/bin/uv
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 ENV PATH="/app/backend/.venv/bin:$PATH"
 WORKDIR /app
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless \
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless fonts-dejavu-core \
     && rm -rf /var/lib/apt/lists/* \
     && useradd --create-home --uid 10001 veridra
 COPY backend/pyproject.toml backend/README.md backend/uv.lock /app/backend/

@@ -66,6 +66,38 @@ from app.tools.registry import ToolRegistry
 _logger = logging.getLogger(__name__)
 
 
+def conversation_context(history: list[Message], current_request: str) -> list[dict[str, str]]:
+    """Bound context without silently discarding the end of long instructions.
+
+    Rows arrive newest first. Keep recent turns within a total character budget;
+    an explicit marker tells the model when older text is unavailable.
+    """
+    rows = list(history)
+    if rows and rows[0].role == "user" and rows[0].content == current_request:
+        rows.pop(0)
+    remaining = 64000
+    retained: list[dict[str, str]] = []
+    for row in rows:
+        if remaining < 512:
+            break
+        text = row.content
+        allowance = min(16000, remaining)
+        if len(text) > allowance:
+            marker = "\n[Phần giữa đã được lược bớt; không suy đoán nội dung thiếu.]\n"
+            available = allowance - len(marker)
+            head = available // 2
+            text = text[:head] + marker + text[-(available - head):]
+        retained.append({"role": row.role, "text": text})
+        remaining -= len(text)
+    retained.reverse()
+    if len(retained) < len(rows):
+        retained.insert(0, {"role": "system", "text": (
+            "Một phần lịch sử cũ không còn trong ngữ cảnh. "
+            "Nếu thiếu dữ kiện cần thiết, hỏi lại người dùng; không tự dựng lại."
+        )})
+    return retained
+
+
 def _schema_failure_code(exc: ValidationError | ValueError) -> str:
     """Report bounded schema types/locations, never model-generated values."""
 
@@ -1036,7 +1068,7 @@ class CompilerOrchestrator:
                     select(Message)
                     .where(Message.user_id == user.id, Message.session_id == session_id)
                     .order_by(Message.created_at.desc())
-                    .limit(8)
+                    .limit(32)
                 )
             )
         citations = AgentOrchestrator._collect_citations(evidence)
@@ -1136,9 +1168,7 @@ class CompilerOrchestrator:
         if resolved_model not in APPROVED_GEMINI_MODELS:
             raise ToolError("Model không nằm trong danh sách đã duyệt.", code="model_not_allowed")
         # Canonical history survives both ADK and LangGraph. No framework checkpoint replay.
-        history_data = [{"role": row.role, "text": row.content[:4000]} for row in reversed(history)]
-        if history_data and history_data[-1] == {"role": "user", "text": user_message[:4000]}:
-            history_data.pop()
+        history_data = conversation_context(history, user_message)
         verified_calculations = inventory_facts(user_message)
         if verified_calculations:
             trace.append({"stage": "deterministic_analysis", "status": "success",

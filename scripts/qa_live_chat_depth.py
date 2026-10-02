@@ -13,12 +13,14 @@ import re
 import sys
 import urllib.error
 import urllib.request
-from datetime import datetime
+from datetime import UTC, datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from evaluate_gate2_live import _session_cookie, _tool_names
 from qa_google_read_smoke import _connected_owner_id
 
+from app.agent.presentation import explicit_presentation_contract, presentation_contract_violations
 from app.db.session import SessionFactory, settings
 from app.services.provider_credentials import active_gemini_key
 from app.services.quota import QuotaGuard
@@ -169,6 +171,10 @@ def main(*, resume_followup: str | None = None, selected_case: str | None = None
                 "session_reused": bool(followup_of and actual_session == session_id),
                 "answer_chars": len(answer),
                 "answer_words": len(answer.split()),
+                "measured_contract_words": len(re.findall(r"\b\w+\b", answer)),
+                "presentation_violations": presentation_contract_violations(
+                    answer, explicit_presentation_contract(prompt)
+                ),
                 "citation_count": len(result.get("citations") or []),
                 "tool_calls": _tool_names(result),
                 "answer": answer,
@@ -181,18 +187,26 @@ def main(*, resume_followup: str | None = None, selected_case: str | None = None
         if result.get("status") != "completed" or not actual_session:
             break
     _, final_used = _reservation_count(credential)
-    print(
-        json.dumps(
-            {
+    report = {
                 "status": "completed" if len(outputs) == len(selected_cases) and all(
                     item.get("status") == "completed" and item.get("numeric_oracle_passed", True)
+                    and not item.get("presentation_violations")
                     for item in outputs
                 ) else "incomplete",
                 "model_requested": MODEL,
                 "pacific_day": _reservation_count(credential)[0],
                 "reservations_used_after": final_used,
                 "results": outputs,
-            },
+                "run_at": datetime.now(UTC).isoformat(),
+                "scope": "synthetic_live_chat_not_full_business_acceptance",
+            }
+    folder = Path(__file__).resolve().parents[1] / "design-work/qa/RELEASE-20261002"
+    folder.mkdir(parents=True, exist_ok=True)
+    output_path = folder / f"chat-depth-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}.json"
+    output_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(
+        json.dumps(
+            {**report, "report_file": output_path.name},
             ensure_ascii=False,
             indent=2,
         )
@@ -201,6 +215,7 @@ def main(*, resume_followup: str | None = None, selected_case: str | None = None
     return 0 if len(outputs) == len(selected_cases) and all(
         item.get("status") == "completed"
         and item.get("numeric_oracle_passed", True)
+        and not item.get("presentation_violations")
         and not any(
             name.startswith(cloud_tool_names) for name in item.get("tool_calls", [])
         )

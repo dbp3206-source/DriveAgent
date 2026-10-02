@@ -1,4 +1,5 @@
 import DOMPurify from 'dompurify'
+import { apiBlob } from '../api'
 import { Button, Tooltip } from '@fluentui/react-components'
 import { Checkmark16Regular, Copy16Regular, Open16Regular } from '@fluentui/react-icons'
 import { useEffect, useMemo, useState } from 'react'
@@ -170,13 +171,11 @@ export function MailBodyViewer({ body, plainBody = '', htmlBody = '', mode = 're
         // Fetch from the authenticated parent page. A sandboxed srcDoc has an
         // opaque origin, so SameSite=Lax session cookies may not accompany its
         // own subresource requests to the otherwise same-origin attachment API.
-        const response = await fetch(attachmentUrl(messageId, attachmentId, true), {
+        const blob = await apiBlob(attachmentUrl(messageId, attachmentId, true), {
           credentials: 'same-origin',
           signal: controller.signal,
         })
-        const mime = response.headers.get('content-type')?.split(';', 1)[0]?.trim() || ''
-        if (!response.ok || !/^image\/(png|jpeg|gif|webp|avif|bmp)$/i.test(mime)) return null
-        const blob = await response.blob()
+        if (!/^image\/(png|jpeg|gif|webp|avif|bmp)$/i.test(blob.type)) return null
         const dataUrl = await new Promise<string>((resolve, reject) => {
           const reader = new FileReader()
           reader.onload = () => resolve(String(reader.result || ''))

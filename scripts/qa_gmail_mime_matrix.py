@@ -12,6 +12,8 @@ import time
 import urllib.error
 import urllib.parse
 from collections import Counter
+from datetime import UTC, datetime
+from pathlib import Path
 
 from qa_google_read_smoke import _cookie, _read
 
@@ -150,6 +152,8 @@ def main() -> None:
             except (urllib.error.HTTPError, urllib.error.URLError, ValueError, KeyError) as exc:
                 failures.append({"cohort": label, "stage": "read", **safe_error(exc)})
     result = {
+        "run_at": datetime.now(UTC).isoformat(),
+        "scope": "bounded_real_mail_format_reads_not_semantic_summary_acceptance",
         "cloud_writes": 0,
         "min_request_interval_seconds": MIN_REQUEST_INTERVAL_SECONDS,
         "cohorts": cohort_results,
@@ -159,6 +163,11 @@ def main() -> None:
         "failures": failures,
         "passed": not failures and bool(rows),
     }
+    folder = Path(__file__).resolve().parents[1] / "design-work/qa/RELEASE-20261002"
+    folder.mkdir(parents=True, exist_ok=True)
+    path = folder / f"gmail-mime-{datetime.now(UTC):%Y%m%dT%H%M%S%fZ}.json"
+    path.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
+    result["report_file"] = path.name
     print(json.dumps(result, ensure_ascii=False, indent=2))
     if not result["passed"]:
         raise SystemExit(1)

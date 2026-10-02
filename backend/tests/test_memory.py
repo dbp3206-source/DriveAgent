@@ -1,10 +1,15 @@
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 import pytest
+from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
+from app.api import memory as memory_api
+from app.api.schemas import MemoryUpdateRequest
 from app.core.config import Settings
-from app.db.models import Base, User, UserRole
+from app.db.models import Base, ChatSession, User, UserRole
 from app.services.embeddings import EmbeddingService
 from app.services.memory import MemoryService, SaveMemoryInput, SearchMemoryInput
 from app.services.vector_store import VectorStore
@@ -19,6 +24,136 @@ class SameVectorEmbeddings:
 
     async def embed(self, _text, _task):
         return [1.0] + [0.0] * 767
+
+
+@pytest.mark.asyncio
+async def test_memory_source_session_requires_owner(tmp_path):
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'source.db'}")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    settings = Settings(
+        _env_file=None, gemini_api_key="", qdrant_path=str(tmp_path / "source-vectors")
+    )
+    vectors = VectorStore(settings)
+    service = MemoryService(SameVectorEmbeddings(settings), vectors)
+    async with async_sessionmaker(engine, expire_on_commit=False)() as db:
+        owner = User(email="source-owner@example.com", display_name="Owner")
+        other = User(email="source-other@example.com", display_name="Other")
+        db.add_all([owner, other])
+        await db.flush()
+        own_session = ChatSession(user_id=owner.id)
+        other_session = ChatSession(user_id=other.id)
+        db.add_all([own_session, other_session])
+        await db.commit()
+        context = ToolContext(request_id="memory-source", user=owner, db=db, settings=settings)
+        for source_id in (other_session.id, "missing-session"):
+            with pytest.raises(ToolError) as denied:
+                await service.save(
+                    SaveMemoryInput(
+                        kind="fact", content="Bối cảnh khách hàng", source_session_id=source_id
+                    ),
+                    context,
+                )
+            assert denied.value.code == "memory_source_not_found"
+        saved = await service.save(
+            SaveMemoryInput(
+                kind="fact", content="Bối cảnh khách hàng", source_session_id=own_session.id
+            ),
+            context,
+        )
+        assert saved.content == "Bối cảnh khách hàng"
+        # A matching saved value must not bypass provenance ownership checks.
+        with pytest.raises(ToolError) as duplicate_denied:
+            await service.save(
+                SaveMemoryInput(
+                    kind="fact",
+                    content="Bối cảnh khách hàng",
+                    source_session_id=other_session.id,
+                ),
+                context,
+            )
+        assert duplicate_denied.value.code == "memory_source_not_found"
+    await vectors.close()
+    await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_memory_edit_archive_restart_delete_and_cross_owner(tmp_path, monkeypatch):
+    database_url = f"sqlite+aiosqlite:///{tmp_path / 'lifecycle.db'}"
+    engine = create_async_engine(database_url)
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    settings = Settings(_env_file=None, gemini_api_key="", qdrant_path=str(tmp_path / "vectors"))
+    vectors = VectorStore(settings)
+    await vectors.initialize()
+    embeddings = SameVectorEmbeddings(settings)
+    service = MemoryService(embeddings, vectors)
+    request = SimpleNamespace(
+        app=SimpleNamespace(
+            state=SimpleNamespace(
+                embeddings=embeddings,
+                vector_store=vectors,
+            )
+        )
+    )
+    monkeypatch.setattr(memory_api, "user_runtime_settings", AsyncMock(return_value=settings))
+    async with factory() as db:
+        owner = User(email="owner@example.com", display_name="Owner", role=UserRole.EDITOR.value)
+        other = User(email="other@example.com", display_name="Other", role=UserRole.EDITOR.value)
+        db.add_all([owner, other])
+        await db.commit()
+        context = ToolContext(request_id="memory-lifecycle", user=owner, db=db, settings=settings)
+        saved = await service.save(
+            SaveMemoryInput(kind="preference", content="Báo cáo ngắn gọn"), context
+        )
+        for action in ("edit", "delete"):
+            with pytest.raises(HTTPException) as denied:
+                if action == "edit":
+                    await memory_api.update_memory(
+                        saved.id, MemoryUpdateRequest(content="Nội dung khác"), request, other, db
+                    )
+                else:
+                    await memory_api.delete_memory(saved.id, request, other, db)
+            assert denied.value.status_code == 404
+        updated = await memory_api.update_memory(
+            saved.id, MemoryUpdateRequest(content="Báo cáo chi tiết"), request, owner, db
+        )
+        assert updated.content == "Báo cáo chi tiết"
+        assert not (await service.search(SearchMemoryInput(query="ngắn gọn"), context)).memories
+        assert (await service.search(SearchMemoryInput(query="chi tiết"), context)).memories[
+            0
+        ].id == saved.id
+        await memory_api.update_memory(
+            saved.id, MemoryUpdateRequest(is_archived=True), request, owner, db
+        )
+        assert not (await service.search(SearchMemoryInput(query="chi tiết"), context)).memories
+        owner_id, saved_id = owner.id, saved.id
+    await vectors.close()
+    await engine.dispose()
+
+    reopened = create_async_engine(database_url)
+    vectors = VectorStore(settings)
+    await vectors.initialize()
+    request.app.state.vector_store = vectors
+    service = MemoryService(embeddings, vectors)
+    async with async_sessionmaker(reopened, expire_on_commit=False)() as db:
+        owner = await db.get(User, owner_id)
+        context = ToolContext(request_id="memory-reopened", user=owner, db=db, settings=settings)
+        assert not (await service.search(SearchMemoryInput(query="chi tiết"), context)).memories
+        await memory_api.update_memory(
+            saved_id, MemoryUpdateRequest(is_archived=False), request, owner, db
+        )
+        assert (await service.search(SearchMemoryInput(query="chi tiết"), context)).memories[
+            0
+        ].id == saved_id
+        await memory_api.delete_memory(saved_id, request, owner, db)
+        assert not (await service.search(SearchMemoryInput(query="chi tiết"), context)).memories
+        assert not (
+            await memory_api.list_memories(user=owner, db=db, include_archived=True)
+        ).memories
+    await vectors.close()
+    await reopened.dispose()
 
 
 @pytest.mark.asyncio

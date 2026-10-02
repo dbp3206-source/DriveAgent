@@ -4,19 +4,17 @@ Graph có planning, ReAct routing, tool execution, checkpoint và recovery. Tool
 gọi dịch vụ trực tiếp: mỗi tool wrapper bắt buộc quay về Tool Registry sáu cổng.
 """
 
+from __future__ import annotations
+
 import asyncio
 import json
 import re
 from contextlib import AbstractAsyncContextManager
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_core.tools import StructuredTool
-from langchain_google_genai import ChatGoogleGenerativeAI
-from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
-from langgraph.graph import END, START, StateGraph
-from langgraph.prebuilt import ToolNode
 from pydantic import BaseModel, Field
 
 from app.agent.controls import ChatControls
@@ -24,7 +22,6 @@ from app.agent.evidence import retain_referenced_citations
 from app.agent.presentation import PRESENTATION_POLICY, normalize_math_notation
 from app.agent.quantitative import inventory_facts
 from app.agent.routing import Route, route_request
-from app.agent.state import AgentState
 from app.core.config import APPROVED_GEMINI_MODELS, Settings
 from app.core.security import redact
 from app.db.models import User
@@ -32,18 +29,26 @@ from app.db.session import SessionFactory
 from app.tools.contracts import ToolContext
 from app.tools.registry import ToolRegistry
 
+if TYPE_CHECKING:
+    from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+
+    from app.agent.state import AgentState
+
 SYSTEM_PROMPT = (
-    """Bạn là Veridra, trợ lý học tập và công việc có kiểm soát.
+    """Bạn là Veridra, trợ lý chuẩn bị tư vấn khách hàng doanh nghiệp có kiểm soát.
 
 Phong cách giao tiếp:
 - Nói chuyện thân thiện, sắc sảo, có chiều sâu tri thức và tư duy phân tích vững chắc.
-- Chọn độ sâu và framework theo đúng ý định. Chỉ dùng Executive Summary, bảng,
-  analogy hoặc checklist khi yêu cầu đủ phức tạp; câu hỏi factual ngắn phải trả lời gọn.
+- Chọn độ sâu và cách phân tích theo đúng ý định. Chỉ dùng tóm tắt điều hành, bảng,
+  ví dụ so sánh hoặc danh sách kiểm tra khi cần; câu hỏi dữ kiện ngắn phải trả lời gọn.
 - Không mở đầu hay kết thúc bằng các câu sáo rỗng, đi thẳng vào nội dung với độ dày dặn
   thông tin cao.
 
 Quy tắc bắt buộc:
 - Mặc định trả lời bằng tiếng Việt rõ ràng, đầy đủ theo nhu cầu người dùng.
+  Giải thích thuật ngữ bằng tiếng Việt dễ hiểu, không chêm tiếng Anh không cần thiết.
+  Tách dữ kiện đã xác nhận, suy luận, giả định và điều chưa biết; không tự đặt ngân sách,
+  người ra quyết định hoặc lợi ích tài chính của khách hàng.
 - Khi câu hỏi liên quan tệp chưa biết ID, hãy tìm tệp trước rồi mới đọc hoặc tra RAG.
 - Nếu người dùng chỉ định tài liệu local/import, dùng local_source_search/read,
   không tự chuyển sang Drive. Tính số bằng calculate khi cần độ chính xác.
@@ -57,6 +62,10 @@ Quy tắc bắt buộc:
   nếu không lấy được nguồn thì nói chưa xác minh, không khẳng định bằng trí nhớ model.
   Không đưa nội dung riêng tư Gmail/Drive/local vào truy vấn web.
 - Khi có nguồn, dùng ký hiệu [1], [2] trong câu trả lời. Hệ thống sẽ gắn link nguồn.
+  Mỗi nhận định phải dẫn đúng đoạn source_references hỗ trợ nhận định đó, không chỉ
+  đúng tên tệp. Với số liệu, đối chiếu cả giá trị, đơn vị, thời kỳ và điều kiện trong đoạn
+  được dẫn. Nếu đoạn thiếu dữ kiện thì đọc thêm, hoặc nói chưa xác minh; không lấy
+  số liệu từ trí nhớ rồi gắn một nguồn cùng tài liệu để làm như đã kiểm chứng.
 """
     + PRESENTATION_POLICY
 )
@@ -131,6 +140,8 @@ class AgentOrchestrator:
         self._checkpointer: AsyncSqliteSaver | None = None
 
     async def initialize(self) -> None:
+        from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
+
         checkpoint_path = Path(self.settings.data_dir) / "langgraph_checkpoints.db"
         self._checkpointer_context = AsyncSqliteSaver.from_conn_string(str(checkpoint_path))
         self._checkpointer = await self._checkpointer_context.__aenter__()
@@ -180,6 +191,12 @@ class AgentOrchestrator:
             )
         if not self._checkpointer:
             raise RuntimeError("LangGraph checkpointer chưa được khởi tạo.")
+
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        from langgraph.graph import END, START, StateGraph
+        from langgraph.prebuilt import ToolNode
+
+        from app.agent.state import AgentState
 
         execution_records: list[dict[str, Any]] = []
         record_lock = asyncio.Lock()

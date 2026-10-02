@@ -10,7 +10,7 @@ from sqlalchemy import select
 from app.api.schemas import MemoryResponse
 from app.auth.permissions import MEMORY_READ, MEMORY_WRITE
 from app.core.security import SENSITIVE_CONTENT
-from app.db.models import LongTermMemory, MemoryKind
+from app.db.models import ChatSession, LongTermMemory, MemoryKind
 from app.services.embeddings import (
     EmbeddingService,
     EmbeddingTask,
@@ -69,6 +69,18 @@ class MemoryService:
         self.vectors = vectors
 
     async def save(self, payload: SaveMemoryInput, context: ToolContext) -> MemoryResponse:
+        if payload.source_session_id is not None:
+            source = await context.db.scalar(
+                select(ChatSession.id).where(
+                    ChatSession.id == payload.source_session_id,
+                    ChatSession.user_id == context.user.id,
+                )
+            )
+            if source is None:
+                raise ToolError(
+                    "Không tìm thấy cuộc trò chuyện nguồn của bạn.",
+                    code="memory_source_not_found",
+                )
         if SENSITIVE_CONTENT.search(payload.content):
             raise ToolError(
                 "Bộ nhớ có vẻ chứa secret. Hãy bỏ API key, token hoặc mật khẩu.",

@@ -194,17 +194,17 @@ const OUTPUT_FORMAT_OPTIONS = [
 
 const PRESET_TEMPLATES: Array<Omit<Skill, 'id' | 'revision' | 'active'>> = [
   {
-    name: 'weekly_study_plan',
-    title: 'Kế hoạch học tập tuần',
-    description: 'Lên lịch học, bài tập và ôn tập theo từng môn cho cả tuần',
-    goal: 'Tạo thời khóa biểu học tập chi tiết 7 ngày cho môn {subject}, tối ưu thời gian ôn thi',
+    name: 'consultation_meeting_brief',
+    title: 'Chuẩn bị cuộc hẹn tư vấn',
+    description: 'Đối chiếu hồ sơ khách hàng để chuẩn bị báo cáo và câu hỏi trao đổi',
+    goal: 'Chuẩn bị cuộc hẹn với khách hàng {customer} từ các nguồn được chỉ định',
     procedure: [
-      'Thu thập danh sách môn học và đề cương từ Drive',
-      'Phân bổ thời gian học mỗi ngày từ 2 đến 3 tiếng',
-      'Đánh dấu các mốc nộp bài tập và deadline quan trọng',
-      'Lập bảng theo dõi tiến độ từng môn học',
+      'Xác nhận khách hàng, cuộc hẹn và tài liệu được phép dùng; hỏi lại nếu chưa đủ',
+      'Đọc nguồn liên quan và ghi vị trí bằng chứng cho từng dữ kiện quan trọng',
+      'Tách hiện trạng, vấn đề đã nêu, ảnh hưởng cần xác nhận và kết quả mong muốn',
+      'Lập báo cáo ngắn với điều chưa biết và câu hỏi cần trao đổi',
     ],
-    constraints: ['Không xếp lịch học quá 4 tiếng/ngày', 'Dành sáng Chủ nhật để nghỉ ngơi'],
+    constraints: ['Không suy đoán ngân sách hoặc lợi ích tài chính', 'Không ghi hoặc gửi Google khi chưa duyệt'],
     preferred_capabilities: ['drive', 'docs'],
     output_format: 'markdown',
   },
@@ -700,7 +700,7 @@ export function SkillsPage() {
                 <Input
                   id="skill-title"
                   value={selected.title}
-                  placeholder="ví dụ: Kế hoạch học tập tuần"
+                  placeholder="Ví dụ: Chuẩn bị cuộc hẹn tư vấn"
                   onChange={(_, d) => setSelected({ ...selected, title: d.value })}
                 />
                 <small className="skills-field-hint">Tên hiển thị trực quan (3–120 ký tự)</small>
@@ -729,7 +729,7 @@ export function SkillsPage() {
                 id="skill-goal"
                 rows={2}
                 value={selected.goal}
-                placeholder="Ví dụ: Tạo bảng kế hoạch học tập 7 ngày cho môn {subject}..."
+                placeholder="Ví dụ: Chuẩn bị báo cáo tư vấn cho khách hàng {customer}..."
                 onChange={(_, d) => setSelected({ ...selected, goal: d.value })}
               />
               <small className="skills-field-hint">Dùng cú pháp {'{tên_biến}'} để tạo tham số đầu vào động</small>

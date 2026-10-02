@@ -110,6 +110,13 @@
   .measurement-result { white-space: normal; }
 }
 /* Small devices must not overflow when the browser reserves a scrollbar. */
+.procedure-step__input, .constraint-add-input { min-width: 0; }
+:root[data-theme="light"] .starter-card__title { color: var(--text); }
+@media (max-width: 480px) {
+  .memory-cards-grid, .starters-grid { grid-template-columns: minmax(0, 1fr); }
+  .memory-card-v2 { min-width: 0; }
+  .starter-card__bottom, .memory-card-v2__bottom { flex-wrap: wrap; }
+}
 @media (max-width: 360px) {
   body { min-width: 0; }
 }

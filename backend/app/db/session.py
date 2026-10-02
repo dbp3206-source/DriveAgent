@@ -9,13 +9,18 @@ from app.core.config import get_settings
 from app.db.migrations import apply_postgres_migrations, apply_sqlite_migrations
 from app.db.models import Base
 
+
+def database_engine_options(url: str) -> dict:
+    options: dict = {"future": True}
+    if url.startswith("postgresql+psycopg"):
+        options.update(pool_size=2, max_overflow=0, pool_timeout=10, pool_pre_ping=True)
+        options["connect_args"] = {"connect_timeout": 10}
+        options["execution_options"] = {"schema_translate_map": {None: "veridra_private"}}
+    return options
+
+
 settings = get_settings()
-engine_options: dict = {"future": True}
-if settings.resolved_database_url.startswith("postgresql+psycopg"):
-    engine_options.update(pool_size=2, max_overflow=0, pool_timeout=10, pool_pre_ping=True)
-    engine_options["execution_options"] = {
-        "schema_translate_map": {None: "veridra_private"}
-    }
+engine_options = database_engine_options(settings.resolved_database_url)
 engine = create_async_engine(settings.resolved_database_url, **engine_options)
 SessionFactory = async_sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 

@@ -28,18 +28,26 @@ const labels = {
   harness: 'Cách Agent hoạt động', audit: 'Nhật ký', access: 'Phân quyền',
   settings: 'Cài đặt', skills: 'Skills của tôi',
 }
-const outDir = path.join(rootDir, 'design-work', 'qa', 'screenshots', 'browser-smoke-20260929')
+const runId = new Date().toISOString().replace(/[:.]/g, '-')
+const outDir = path.join(rootDir, 'design-work', 'qa', 'screenshots', `browser-smoke-${runId}`)
 await mkdir(outDir, { recursive: true })
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 const results = []
 const interactions = []
+const viewportCases = process.env.QA_EXTENDED === '1'
+  ? [320, 375, 414, 768, 1440].flatMap(width => ['light', 'dark'].map(theme => [
+    `${width}-${theme}`, { width, height: width < 768 ? 844 : 900 }, theme,
+  ]))
+  : [['desktop', { width: 1440, height: 900 }, 'dark'],
+    ['mobile', { width: 390, height: 844 }, 'dark']]
 
 try {
-  for (const [viewportName, viewport] of [
-    ['desktop', { width: 1440, height: 900 }],
-    ['mobile', { width: 390, height: 844 }],
-  ]) {
+  for (const [viewportName, viewport, theme] of viewportCases) {
     const context = await browser.newContext({ viewport, reducedMotion: 'reduce' })
+    await context.addInitScript(value => {
+      if (window.top !== window) return
+      try { localStorage.setItem('drive-agent-theme', value) } catch { /* about:blank has no storage. */ }
+    }, theme)
     await context.addCookies([{ name: 'drive_agent_session', value: cookie, url: base }])
     const page = await context.newPage()
     const events = []
@@ -89,6 +97,24 @@ try {
         await page.locator('.mail-row').first().waitFor({ timeout: 45000 }).catch(() => {})
       }
       await page.waitForTimeout(450)
+      const hashBeforeKeyboard = new URL(page.url()).hash
+      let skipFocused = false
+      for (let tab = 0; tab < 80 && !skipFocused; tab++) {
+        await page.keyboard.press('Shift+Tab')
+        skipFocused = await page.locator('.skip-link').evaluate(el => el === document.activeElement)
+      }
+      if (skipFocused) {
+        await page.keyboard.press('Enter')
+        await page.waitForFunction(() => document.activeElement?.id === 'main-content', undefined, { timeout: 2000 })
+      }
+      const keyboard = await page.evaluate(() => ({
+        mainFocused: document.activeElement?.id === 'main-content',
+        mainNotCovered: (document.querySelector('main')?.getBoundingClientRect().top ?? -1) >=
+          (document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0) - 1,
+        motionDisabled: getComputedStyle(document.querySelector('.workspace-canvas'), '::after').animationName === 'none',
+      }))
+      const keyboardPassed = skipFocused && keyboard.mainFocused && keyboard.mainNotCovered &&
+        new URL(page.url()).hash === hashBeforeKeyboard && keyboard.motionDisabled
       const state = await page.evaluate(() => ({
         width: window.innerWidth,
         documentWidth: document.documentElement.scrollWidth,
@@ -115,6 +141,7 @@ try {
         loadMs: Date.now() - routeStarted,
         httpStatus: response?.status() ?? (page.url().startsWith(base) ? 200 : null),
         ...state,
+        keyboardPassed,
         horizontalOverflow: state.documentWidth > state.width + 1,
         events: events.slice(eventStart),
         externalWarnings: externalWarnings.slice(externalStart),
@@ -146,6 +173,40 @@ try {
         }
       }
     }
+    let submittedChats = 0
+    page.on('request', request => {
+      if (request.method() === 'POST' && new URL(request.url()).pathname.startsWith('/api/chat')) submittedChats++
+    })
+    for (const label of ['Chuẩn bị đầu ngày', 'Chuẩn bị trước cuộc hẹn', 'Tiếp nối cuộc trao đổi']) {
+      await page.goto(`${base}/#/home`, { waitUntil: 'domcontentloaded' })
+      await page.locator('.home-quick-starts').getByRole('button', { name: new RegExp(label) }).click()
+      const composer = page.locator('.composer-textarea textarea, textarea.composer-textarea')
+      await composer.waitFor({ timeout: 15000 })
+      const draft = await composer.inputValue()
+      interactions.push({
+        viewport: viewportName,
+        action: 'consultation_quick_start',
+        label,
+        draftReady: draft.length > 60,
+        chatRoute: new URL(page.url()).hash === '#/chat',
+        noAutomaticSubmit: submittedChats === 0,
+      })
+    }
+    let skillWrites = 0
+    page.on('request', request => {
+      if (['POST', 'PATCH', 'DELETE'].includes(request.method()) && new URL(request.url()).pathname.startsWith('/api/skills')) skillWrites++
+    })
+    await page.goto(`${base}/#/skills`, { waitUntil: 'domcontentloaded' })
+    await page.getByRole('button', { name: '+ Thêm skill', exact: true }).click()
+    await page.locator('.skills-preset-bar').getByRole('button', { name: 'Chuẩn bị cuộc hẹn tư vấn', exact: true }).click()
+    interactions.push({
+      viewport: viewportName,
+      action: 'consultation_skill_preview',
+      correctName: await page.locator('#skill-name').inputValue() === 'consultation_meeting_brief',
+      correctTitle: await page.locator('#skill-title').inputValue() === 'Chuẩn bị cuộc hẹn tư vấn',
+      hasCustomerInput: (await page.locator('#skill-goal').inputValue()).includes('{customer}'),
+      noAutomaticWrite: skillWrites === 0,
+    })
     await context.close()
   }
   // Deterministic loading-state check; the intercepted request never reaches Google.
@@ -177,6 +238,7 @@ try {
 
 const summary = {
   pages: results.length,
+  keyboardFailures: results.filter(row => !row.keyboardPassed).map(row => `${row.viewport}:${row.route}`),
   horizontalOverflow: results.filter(row => row.horizontalOverflow).map(row => `${row.viewport}:${row.route}`),
   failingRoutes: results.filter(row => row.httpStatus !== 200 || row.events.length)
     .map(row => ({ viewport: row.viewport, route: row.route, httpStatus: row.httpStatus, events: row.events })),
@@ -189,6 +251,7 @@ const reportPath = path.join(outDir, 'report.json')
 await writeFile(reportPath, JSON.stringify(summary, null, 2))
 console.log(JSON.stringify({
   pages: summary.pages,
+  keyboardFailures: summary.keyboardFailures,
   horizontalOverflow: summary.horizontalOverflow,
   failingRoutes: summary.failingRoutes,
   missingHeading: summary.missingHeading,
@@ -196,7 +259,12 @@ console.log(JSON.stringify({
   interactions: summary.interactions,
   reportPath,
 }, null, 2))
-if (summary.horizontalOverflow.length || summary.failingRoutes.length ||
+if (summary.keyboardFailures.length || summary.horizontalOverflow.length || summary.failingRoutes.length ||
+  summary.missingHeading.length || summary.loadingRoutes.length ||
   summary.interactions.some(row => row.action === 'slow_gmail_loading_notice'
     ? !row.slowNoticeVisible || !row.resolvedAfterDelay
-    : !row.listed || !row.textRendered || (row.htmlAvailable && !row.htmlRendered))) process.exitCode = 1
+    : row.action === 'consultation_quick_start'
+      ? !row.draftReady || !row.chatRoute || !row.noAutomaticSubmit
+      : row.action === 'consultation_skill_preview'
+        ? !row.correctName || !row.correctTitle || !row.hasCustomerInput || !row.noAutomaticWrite
+        : !row.listed || !row.textRendered || (row.htmlAvailable && !row.htmlRendered))) process.exitCode = 1

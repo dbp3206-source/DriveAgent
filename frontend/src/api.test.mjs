@@ -1,6 +1,71 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { ApiError, api, formatDate } from './api.ts'
+import { ApiError, api, apiBlob, apiText, formatDate } from './api.ts'
+
+test('bounded upload preserves binary body and explicit content type', async (t) => {
+  const body = new Blob(['sample'])
+  stubApi(t, async (_path, init) => {
+    assert.equal(init.body, body)
+    assert.equal(init.headers.get('Content-Type'), 'application/octet-stream')
+    return Response.json({ id: 'saved' })
+  })
+  assert.deepEqual(await api('/api/local-sources', {
+    method: 'POST', body, headers: { 'Content-Type': 'application/octet-stream' },
+  }), { id: 'saved' })
+})
+
+test('bounded readers preserve text and binary responses', async (t) => {
+  stubApi(t, async () => new Response('xin chào', { headers: { 'Content-Type': 'text/plain' } }))
+  assert.equal(await apiText('/api/local-sources/a/text'), 'xin chào')
+  assert.equal(await (await apiBlob('/api/gmail/attachment')).text(), 'xin chào')
+})
+
+test('deadline bounds a stalled request without retrying a write', async (t) => {
+  let calls = 0
+  let signal
+  const events = stubApi(t, async (_path, init) => {
+    calls++
+    signal = init.signal
+    return new Promise(() => {})
+  })
+  await assert.rejects(api('/api/artifacts', {
+    method: 'POST', body: '{}', timeoutMs: 10,
+  }), (error) => error instanceof ApiError && error.code === 'request_timeout')
+  assert.equal(calls, 1)
+  assert.equal(signal.aborted, true)
+  assert.deepEqual(events, [])
+})
+
+test('deadline also bounds a stalled response body', async (t) => {
+  stubApi(t, async () => ({
+    ok: true, status: 200, json: () => new Promise(() => {}),
+  }))
+  await assert.rejects(api('/api/system/status', { timeoutMs: 10 }),
+    (error) => error.code === 'request_timeout')
+})
+
+test('caller cancellation remains an AbortError and cancels the request', async (t) => {
+  let signal
+  stubApi(t, async (_path, init) => {
+    signal = init.signal
+    return new Promise(() => {})
+  })
+  const caller = new AbortController()
+  const pending = api('/api/chat/tasks', { signal: caller.signal, timeoutMs: 500 })
+  caller.abort()
+  await assert.rejects(pending, (error) => error.name === 'AbortError')
+  assert.equal(signal.aborted, true)
+})
+
+test('an already cancelled request never reaches fetch', async (t) => {
+  let calls = 0
+  stubApi(t, async () => { calls++; return Response.json({}) })
+  const caller = new AbortController()
+  caller.abort()
+  await assert.rejects(api('/api/auth/me', { signal: caller.signal }),
+    (error) => error.name === 'AbortError')
+  assert.equal(calls, 0)
+})
 
 function stubApi(t, fetchImpl) {
   const previousFetch = globalThis.fetch

@@ -24,7 +24,7 @@ import {
   Sparkle20Regular,
 } from '@fluentui/react-icons'
 import { DragEvent, useEffect, useRef, useState } from 'react'
-import { api } from '../api'
+import { api, apiText } from '../api'
 import { EmptyState, ErrorState } from '../components/AsyncState'
 
 interface Source {
@@ -151,16 +151,12 @@ export function LocalSourcesPage() {
     setError('')
     setNotice('')
     try {
-      const response = await fetch(`/api/local-sources?name=${encodeURIComponent(file.name)}`, {
+      const result = await api<(PdfJob & { kind: 'pdf_job' }) | (Source & { kind?: never })>(`/api/local-sources?name=${encodeURIComponent(file.name)}`, {
         method: 'POST',
         body: file,
         credentials: 'include',
         headers: { 'Content-Type': 'application/octet-stream' },
       })
-      const result = await response.json()
-      if (!response.ok) {
-        throw new Error(typeof result.detail === 'string' ? result.detail : 'Không import được tệp.')
-      }
       if (result.kind === 'pdf_job') {
         setPdfJobs(current => [result, ...current.filter(job => job.id !== result.id)])
         setNotice(`Đã nhận “${result.name}”. PDF được xử lý nền theo trang; kiểm tra tiến độ và cảnh báo trước khi hỏi.`)
@@ -201,11 +197,7 @@ export function LocalSourcesPage() {
     setPreviewCopied(false)
     setPreviewText('')
     try {
-      const res = await fetch(`/api/local-sources/${source.id}/text`, {
-        credentials: 'include',
-      })
-      if (!res.ok) throw new Error('Không thể tải nội dung tệp.')
-      const text = await res.text()
+      const text = await apiText(`/api/local-sources/${source.id}/text`)
       setPreviewText(text)
     } catch (err) {
       setPreviewError(err instanceof Error ? err.message : 'Lỗi tải tệp.')
