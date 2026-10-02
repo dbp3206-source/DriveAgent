@@ -53,6 +53,12 @@ from app.agent.response_guard import (
     source_restriction_instruction,
 )
 from app.agent.routing import Route, _rag_arguments, route_request
+from app.agent.source_calculations import (
+    CalculatedWireAnswer,
+    needs_source_calculation,
+    resolve_calculations,
+    validate_calculation_payload,
+)
 from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Settings
 from app.db.models import Message, User
 from app.db.session import SessionFactory
@@ -1169,6 +1175,13 @@ class CompilerOrchestrator:
             raise ToolError("Model không nằm trong danh sách đã duyệt.", code="model_not_allowed")
         # Canonical history survives both ADK and LangGraph. No framework checkpoint replay.
         history_data = conversation_context(history, user_message)
+        source_calculation = needs_source_calculation(
+            user_message, has_evidence=context_data is not None, output=controls.output
+        )
+        wire_schema = (
+            CalculatedWireAnswer.provider_schema() if source_calculation
+            else WireAnswer.provider_schema()
+        )
         verified_calculations = inventory_facts(user_message)
         if verified_calculations:
             trace.append({"stage": "deterministic_analysis", "status": "success",
@@ -1215,12 +1228,20 @@ class CompilerOrchestrator:
                 "tên capability bên trong. Kiểm tra dữ liệu trước khi trả."
             )
         )
+        if source_calculation:
+            instruction += (
+                "\nYêu cầu tính bằng công cụ: trả expressions gồm tối đa 12 biểu thức số "
+                "chỉ dùng + - * / và ngoặc, mỗi biểu thức tối đa 300 ký tự. "
+                "Chọn số từ dữ kiện đã đọc và thay đổi người dùng, tôn trọng bản sửa mới nhất. "
+                "Nêu căn cứ, đơn vị, giả thuyết; không tự tạo đầu vào. "
+                "Trong answer thay mọi kết quả tính bằng {{calc:0}}, {{calc:1}}, ... "
+                "theo chỉ số expressions. Mỗi biểu thức phải được tham chiếu. "
+                "Không tự điền kết quả, không tuyên bố công cụ đã chạy; máy chủ sẽ tính "
+                "và thay kết quả trước khi trả lời. proposals phải rỗng."
+            )
         await asyncio.to_thread(
-            self.quota.reserve,
-            "flash",
-            conservative_tokens(
-                prompt + instruction + json.dumps(WireAnswer.provider_schema()), 8192
-            ),
+            self.quota.reserve, "flash",
+            conservative_tokens(prompt + instruction + json.dumps(wire_schema), 8192),
         )
         model_attempts: list[dict[str, Any]] = []
         sessions = InMemorySessionService()
@@ -1250,7 +1271,7 @@ class CompilerOrchestrator:
                 # ADK output_schema targets the legacy responseSchema dialect.
                 # Pydantic extra='forbid' needs JSON Schema's additionalProperties.
                 response_mime_type="application/json",
-                response_json_schema=WireAnswer.provider_schema(),
+                response_json_schema=wire_schema,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             ),
         )
@@ -1283,11 +1304,22 @@ class CompilerOrchestrator:
                     if not raw:
                         raw = next((p.text for p in reversed(parts) if p.text), "")
                     try:
+                        wire = (
+                            validate_calculation_payload(raw) if source_calculation
+                            else WireAnswer.model_validate_json(raw)
+                        )
+                        if source_calculation:
+                            wire = await resolve_calculations(
+                                wire, self.registry,
+                                ToolContext(request_id=request_id, user=user, db=db,
+                                            settings=self.settings, source="compiler_calculation"),
+                                trace,
+                            )
                         compiled = ground_unsourced_spreadsheet_preview(
                             user_message,
                             preserve_explicit_literals(
                                 user_message,
-                                WireAnswer.model_validate_json(raw).validate_artifacts(
+                                wire.validate_artifacts(
                                     blank_unsourced_sheet=blank_unsourced_sheet_requested(
                                         user_message,
                                         has_source_data=context_data is not None or bool(citations),
@@ -1341,7 +1373,7 @@ class CompilerOrchestrator:
                     temperature=0,
                     max_output_tokens=8192,
                     response_mime_type="application/json",
-                    response_json_schema=WireAnswer.provider_schema(),
+                    response_json_schema=wire_schema,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                 ),
             )
@@ -1355,6 +1387,8 @@ class CompilerOrchestrator:
                     "current_user_request": user_message,
                     "invalid_payload_to_repair": invalid_raw,
                     "artifact_contract": CreationAnswer.model_json_schema(),
+                    "evidence_untrusted": context_data,
+                    "source_references": source_references(citations),
                 },
                 ensure_ascii=False,
             )
@@ -1380,11 +1414,22 @@ class CompilerOrchestrator:
                         if not raw:
                             raw = next((p.text for p in reversed(parts) if p.text), "")
                         try:
+                            wire = (
+                                validate_calculation_payload(raw) if source_calculation
+                                else WireAnswer.model_validate_json(raw)
+                            )
+                            if source_calculation:
+                                wire = await resolve_calculations(
+                                    wire, self.registry,
+                                    ToolContext(request_id=request_id, user=user, db=db,
+                                                settings=self.settings,
+                                                source="compiler_calculation"), trace,
+                                )
                             compiled = ground_unsourced_spreadsheet_preview(
                                 user_message,
                                 preserve_explicit_literals(
                                     user_message,
-                                    WireAnswer.model_validate_json(raw).validate_artifacts(
+                                    wire.validate_artifacts(
                                         blank_unsourced_sheet=blank_unsourced_sheet_requested(
                                             user_message,
                                             has_source_data=(

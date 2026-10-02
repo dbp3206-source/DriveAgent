@@ -281,6 +281,42 @@ async def test_document_question_uses_live_source_synthesis_not_golden_answer(
     assert not any(event.get("kind") == "document_facts" for event in result.trace)
 
 
+async def test_source_synthesis_executes_requested_arithmetic_before_publication(
+    runtime, monkeypatch
+):
+    calls = []
+
+    async def execute(name, arguments, _context):
+        calls.append(name)
+        if name == "calculate":
+            return compiler.calculate(compiler.CalculateInput.model_validate(arguments))
+        assert name == "drive_read_file"
+        return SimpleNamespace(model_dump=lambda **_: {
+            "file": {"id": "qa-source-id", "name": "source.md"},
+            "text": "Nhóm có 24 người, mỗi ngày12 phút,20 ngày/tháng; giảm20% là giả thuyết.",
+        })
+
+    async def generate(self, request, stream=False):
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=(
+            '{"answer":"Tổng {{calc:0}} giờ; giả thuyết {{calc:1}} giờ [1].",'
+            '"expressions":["24*12*20/60","24*12*20/60*20/100"]}'
+        ))]))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    runner, user, session_id = runtime
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="source-arithmetic",
+        user_message="Đọc nguồn và tính bằng công cụ tổng giờ và giả thuyết tiết kiệm.",
+        controls=ChatControls(source="drive", agent="research"),
+        route_override=compiler.Route("drive_read_file", {"file_id": "qa-source-id"}),
+    )
+    assert calls == ["drive_read_file", "calculate"]
+    assert "96" in result.answer and "19.2" in result.answer
+    assert "{{calc:" not in result.answer
+    assert any(item.get("tool") == "calculate" for item in result.trace)
+
+
 async def test_sheet_question_uses_current_table_not_golden_answer(runtime, monkeypatch):
     seen = []
 
