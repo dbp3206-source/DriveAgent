@@ -13,6 +13,29 @@ export const DEFAULT_CHAT_CONTROLS: ChatControls = {
   workflow: 'auto',
 }
 
+/** Stored launch data can outlive a release; send only the current API contract. */
+export function normalizeChatControls(value: unknown): ChatControls {
+  const row = value && typeof value === 'object' ? value as Record<string, unknown> : {}
+  const next = {...DEFAULT_CHAT_CONTROLS}
+  const allowed = {
+    source: ['auto', 'drive', 'rag', 'gmail', 'local', 'memory', 'general'],
+    agent: ['auto', 'research', 'communication', 'study', 'workspace'],
+    output: ['chat', 'document', 'spreadsheet'],
+    workflow: ['auto', 'source_summary', 'email_digest', 'meeting_notes', 'study_plan', 'budget_tracker', 'compare_sources'],
+  }
+  for (const key of Object.keys(allowed) as Array<keyof typeof allowed>) {
+    if (typeof row[key] === 'string' && allowed[key].includes(row[key] as string)) {
+      Object.assign(next, {[key]: row[key]})
+    }
+  }
+  if (typeof row.skill_name === 'string' && row.skill_name.trim()) next.skill_name = row.skill_name
+  return next
+}
+
+export function localChatLaunch(fileName: string) {
+  return {prompt: `/local ${fileName} `, controls: {...DEFAULT_CHAT_CONTROLS, source: 'local' as const, agent: 'research' as const}}
+}
+
 export type SlashOption = {
   id: string
   command: string
@@ -27,7 +50,7 @@ const builtInOptions: SlashOption[] = [
   {id: 'source-drive', command: '/drive', group: 'Nguồn', label: 'Google Drive', description: 'Chỉ tìm và đọc tệp trực tiếp trong Drive.', patch: {source: 'drive', agent: 'research'}},
   {id: 'source-rag', command: '/rag', group: 'Nguồn', label: 'Kho tri thức RAG', description: 'Chỉ dùng các tài liệu đã lập chỉ mục.', patch: {source: 'rag', agent: 'research'}},
   {id: 'source-gmail', command: '/gmail', group: 'Nguồn', label: 'Gmail', description: 'Chỉ dùng email của tài khoản đang kết nối.', patch: {source: 'gmail', agent: 'communication'}},
-  {id: 'source-local', command: '/local', group: 'Nguồn', label: 'Tài liệu trên máy', description: 'Chỉ dùng nguồn đã import từ máy này.', patch: {source: 'local', agent: 'research'}},
+  {id: 'source-local', command: '/local', group: 'Nguồn', label: 'Tài liệu tải lên', description: 'Chỉ dùng tài liệu đã tải lên của bạn.', patch: {source: 'local', agent: 'research'}},
   {id: 'source-memory', command: '/memory', group: 'Nguồn', label: 'Bộ nhớ cá nhân', description: 'Chỉ tra thông tin bạn đã cho phép lưu.', patch: {source: 'memory', agent: 'study'}},
   {id: 'source-general', command: '/general', group: 'Nguồn', label: 'Không dùng dữ liệu riêng', description: 'Trả lời mà không mở Drive, Gmail, RAG hay Memory.', patch: {source: 'general'}},
   {id: 'agent-research', command: '/research', group: 'Agent', label: 'Research Agent', description: 'Tìm, đọc, đối chiếu và dẫn nguồn.', patch: {agent: 'research', output: 'chat'}},

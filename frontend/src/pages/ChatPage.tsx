@@ -57,6 +57,7 @@ import {
   displaySessionTitle,
   filterSlashOptions,
   mergeChatControls,
+  normalizeChatControls,
   slashOptions,
   type ChatControls,
   type SlashOption,
@@ -389,7 +390,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
     const applyLaunch = (detail: ChatLaunch) => {
       if (!detail?.prompt || !detail?.controls) return
       setInputState(detail.prompt)
-      setControls(detail.controls)
+      setControls(normalizeChatControls(detail.controls))
       setSlashMenuOpen(false)
       try {
         sessionStorage.setItem('drive_agent_draft_input', detail.prompt)

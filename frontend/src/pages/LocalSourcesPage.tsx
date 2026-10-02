@@ -25,6 +25,7 @@ import {
 } from '@fluentui/react-icons'
 import { DragEvent, useEffect, useRef, useState } from 'react'
 import { api, apiText } from '../api'
+import {localChatLaunch} from '../chatControls'
 import { EmptyState, ErrorState } from '../components/AsyncState'
 
 interface Source {
@@ -160,7 +161,7 @@ export function LocalSourcesPage() {
       if (result.kind === 'pdf_job') {
         setPdfJobs(current => [result, ...current.filter(job => job.id !== result.id)])
         setNotice(`Đã nhận “${result.name}”. PDF được xử lý nền theo trang; kiểm tra tiến độ và cảnh báo trước khi hỏi.`)
-      } else setNotice(`Đã lưu “${result.name}”. Trong Chat, gõ /local để chỉ tìm trong tài liệu trên máy.`)
+      } else setNotice(`Đã lưu “${result.name}”. Trong Chat, gõ /local để chỉ tìm trong tài liệu đã tải lên.`)
       setFile(null)
       if (picker.current) picker.current.value = ''
       await load()
@@ -172,16 +173,17 @@ export function LocalSourcesPage() {
   }
 
   function handleChatNow(fileName: string) {
-    const prompt = `/local ${fileName} `
+    const launch = localChatLaunch(fileName)
+    const {prompt} = launch
     try {
       sessionStorage.setItem('drive_agent_draft_input', prompt)
       sessionStorage.setItem(
         'drive_agent_chat_launch',
-        JSON.stringify({ prompt, controls: { domain: 'all', skill: 'general' } })
+        JSON.stringify(launch)
       )
       window.dispatchEvent(
         new CustomEvent('driveagent:chat-launch', {
-          detail: { prompt, controls: { domain: 'all', skill: 'general' } },
+          detail: launch,
         })
       )
     } catch {
@@ -223,11 +225,11 @@ export function LocalSourcesPage() {
         <div>
           <div className="local-vault-kicker">
             <span className="kicker-pulse-dot" />
-            <span>🔒 LƯU TRÊN MÁY · NỘI DUNG GỬI GEMINI KHI HỎI</span>
+            <span>🔒 RIÊNG THEO TÀI KHOẢN · NỘI DUNG GỬI GEMINI KHI HỎI</span>
           </div>
-          <h2>Kho Tri Thức Cục Bộ (Private Knowledge Vault)</h2>
+          <h2>Kho tài liệu riêng</h2>
           <p className="local-vault-subtitle">
-            Tài liệu được lưu cục bộ trên máy. Khi bạn yêu cầu phân tích tài liệu, nội dung liên quan và câu hỏi được gửi tới Google Gemini để tạo câu trả lời.
+            Tệp được tải từ thiết bị của bạn và lưu riêng theo tài khoản tại nơi Veridra chạy. Khi dùng URL công khai, tệp được lưu trên máy chủ, không chỉ trên thiết bị của bạn. Khi hỏi, nội dung liên quan và câu hỏi được gửi tới Google Gemini.
           </p>
         </div>
 
@@ -239,7 +241,7 @@ export function LocalSourcesPage() {
               <span className="metric-card__label">Tài liệu đã lưu</span>
             </div>
             <strong className="metric-card__value">{sources.length.toLocaleString('vi-VN')}</strong>
-            <span className="metric-card__caption">Tệp khả dụng trên máy</span>
+            <span className="metric-card__caption">Tệp đã tải lên của bạn</span>
           </div>
 
           <div className="metric-card">
@@ -291,7 +293,7 @@ export function LocalSourcesPage() {
         <section className="local-vault-uploader" aria-labelledby="local-import-title">
           <h3 id="local-import-title">Nạp tài liệu mới</h3>
           <ul className="local-library__privacy">
-            <li><strong>Lưu:</strong> riêng theo tài khoản trên máy này.</li>
+            <li><strong>Lưu:</strong> riêng theo tài khoản; bản chạy công khai lưu trên máy chủ.</li>
             <li><strong>Khi hỏi:</strong> đoạn liên quan được gửi tới Gemini; đây không phải AI offline.</li>
           </ul>
 
@@ -315,7 +317,7 @@ export function LocalSourcesPage() {
                 ref={picker}
                 className="visually-hidden"
                 type="file"
-                aria-label="Chọn tài liệu local để import"
+                aria-label="Chọn tài liệu từ thiết bị để tải lên"
                 accept=".txt,.md,.csv,.ipynb,.pdf"
                 disabled={busy}
                 onChange={(event) => choose(event.target.files?.[0] ?? null)}
@@ -372,7 +374,7 @@ export function LocalSourcesPage() {
                 ref={picker}
                 className="visually-hidden"
                 type="file"
-                aria-label="Chọn tài liệu local để import"
+                aria-label="Chọn tài liệu từ thiết bị để tải lên"
                 accept=".txt,.md,.csv,.ipynb,.pdf"
                 disabled={busy}
                 onChange={(event) => choose(event.target.files?.[0] ?? null)}
@@ -402,7 +404,7 @@ export function LocalSourcesPage() {
 
           {!sources.length ? (
             <EmptyState
-              title="Chưa có tài liệu local"
+              title="Chưa có tài liệu tải lên"
               description="Kéo thả hoặc chọn một tệp văn bản nhỏ để bắt đầu khám phá."
             />
           ) : (
@@ -461,14 +463,14 @@ export function LocalSourcesPage() {
       </div>
 
       {/* Mini Workflow Diagram Footer */}
-      <footer className="local-workflow-footer" aria-label="Quy trình xử lý Private Knowledge Vault">
-        <div className="workflow-title">Quy trình xử lý Private Knowledge Vault</div>
+      <footer className="local-workflow-footer" aria-label="Quy trình xử lý tài liệu riêng">
+        <div className="workflow-title">Quy trình xử lý tài liệu riêng</div>
         <div className="workflow-steps">
           <div className="workflow-step">
             <div className="workflow-step__badge">1</div>
             <Laptop20Regular className="workflow-step__icon" />
             <div className="workflow-step__info">
-              <strong>Tệp máy</strong>
+              <strong>Tệp từ thiết bị</strong>
               <span>PDF có văn bản ≤ 25 MiB; TXT, MD, CSV, IPYNB ≤ 2 MB</span>
             </div>
           </div>
@@ -479,8 +481,8 @@ export function LocalSourcesPage() {
             <div className="workflow-step__badge">2</div>
             <BrainCircuit20Regular className="workflow-step__icon" />
             <div className="workflow-step__info">
-              <strong>Trích xuất Text</strong>
-              <span>Bóc tách text thô & notebook cells</span>
+              <strong>Trích xuất văn bản</strong>
+              <span>Đọc văn bản và nội dung sổ tay</span>
             </div>
           </div>
 
@@ -491,7 +493,7 @@ export function LocalSourcesPage() {
             <Database20Regular className="workflow-step__icon" />
             <div className="workflow-step__info">
               <strong>Bộ nhớ tạm</strong>
-              <span>Lưu chỉ mục riêng tư, Zero-Cloud</span>
+              <span>Chỉ mục riêng theo tài khoản tại nơi Veridra chạy</span>
             </div>
           </div>
 
