@@ -40,7 +40,7 @@ interface Artifact {
 
 const kindMeta: Record<string, { label: string; icon: string; color: string; bg: string }> = {
   note: { label: 'Ghi chú', icon: '📝', color: '#60a5fa', bg: 'rgba(37, 99, 235, 0.12)' },
-  checklist: { label: 'Checklist', icon: '✅', color: '#34d399', bg: 'rgba(16, 185, 129, 0.12)' },
+  checklist: { label: 'Việc cần kiểm tra', icon: '✅', color: '#34d399', bg: 'rgba(16, 185, 129, 0.12)' },
   quiz: { label: 'Ôn tập', icon: '💡', color: '#f472b6', bg: 'rgba(236, 72, 153, 0.12)' },
   plan: { label: 'Kế hoạch', icon: '🎯', color: '#fbbf24', bg: 'rgba(245, 158, 11, 0.12)' },
   report: { label: 'Báo cáo', icon: '📑', color: '#a78bfa', bg: 'rgba(139, 92, 246, 0.12)' },
@@ -50,22 +50,22 @@ const TEMPLATES: Record<string, { title: string; kind: string; content: string }
   note: {
     title: 'Ghi chú cuộc họp & Điểm cốt lõi',
     kind: 'note',
-    content: `# Ghi chú cuộc họp / Điểm cốt lõi\n\n**Ngày thực hiện**: \${new Date().toLocaleDateString('vi-VN')}\n**Tham gia**: Admin, Team\n\n## 1. Mục tiêu cuộc họp\n- Điểm trọng tâm 1\n- Điểm trọng tâm 2\n\n## 2. Thảo luận chi tiết\n- Ghi nhận ý kiến đóng góp...\n\n## 3. Hành động tiếp theo (Action Items)\n- [ ] Nhiệm vụ 1 (Phụ trách: Nam)\n- [ ] Nhiệm vụ 2 (Hạn: Cuối tuần)\n`,
+    content: `# Ghi chú cuộc trao đổi\n\n> Mẫu trống: điền từ cuộc trao đổi thực tế, không tự suy ra quyết định.\n\n**Ngày**: [Điền ngày]\n**Người tham gia**: [Điền tên]\n\n## Mục tiêu\n[Điền mục tiêu đã xác nhận]\n\n## Dữ kiện và điều còn thiếu\n[Đính kèm nguồn nếu có]\n\n## Quyết định đã xác nhận\n[Chưa có thì ghi chưa xác nhận]\n\n## Việc tiếp theo\n- [ ] [Việc cần làm — người phụ trách — thời hạn đã thống nhất]\n`,
   },
   checklist: {
-    title: 'Checklist nghiệm thu & Kiểm định',
+    title: 'Kiểm tra trước cuộc hẹn',
     kind: 'checklist',
-    content: `# Checklist kiểm thử & Nghiệm thu\n\n- [ ] Kiểm tra kết nối Google Drive & OAuth token\n- [ ] Kiểm tra tính năng tìm kiếm văn bản RAG\n- [ ] Kiểm tra bộ đọc Gmail & xử lý liên kết\n- [ ] Đánh giá độ trễ và độ sâu câu trả lời\n- [ ] Sao lưu cơ sở dữ liệu local\n`,
+    content: `# Kiểm tra trước cuộc hẹn\n\n> Mẫu để tự kiểm tra, chưa chứng nhận việc nào đã hoàn thành.\n\n- [ ] Xác nhận đúng khách hàng, người tham gia và giờ hẹn\n- [ ] Đọc thư yêu cầu và hồ sơ liên quan\n- [ ] Tách dữ kiện có nguồn khỏi giả định\n- [ ] Ghi rõ thông tin còn thiếu và câu hỏi cần xác nhận\n- [ ] Xem lại báo cáo trước khi lưu hoặc gửi\n`,
   },
   plan: {
     title: 'Kế hoạch hành động tuần',
     kind: 'plan',
-    content: `# Kế hoạch hành động tuần\n\n| Ngày | Hạng mục chính | Kết quả mong đợi | Trạng thái |\n|---|---|---|---|\n| Thứ 2 | Rà soát chỉ số RAG | Đạt độ chính xác > 90% | Hoàn thành |\n| Thứ 3 | Nâng cấp giao diện Note | Editor Antigravity style | Đang làm |\n| Thứ 4 | Tinh chỉnh Visual Skills | Flowchart timeline sống động | Chuẩn bị |\n| Thứ 5 | Đánh giá tổng thể | Báo cáo nghiệm thu bàn giao | Kế hoạch |\n`,
+    content: `# Kế hoạch hành động\n\n> Mẫu trống: chỉ điền người phụ trách và thời hạn đã được xác nhận.\n\n| Việc cần làm | Người phụ trách | Thời hạn | Kết quả cần có | Trạng thái |\n|---|---|---|---|---|\n| [Điền công việc] | [Chưa xác nhận] | [Chưa xác nhận] | [Điền kết quả] | Chưa bắt đầu |\n`,
   },
   report: {
-    title: 'Báo cáo phân tích dữ liệu',
+    title: 'Báo cáo chuẩn bị tư vấn',
     kind: 'report',
-    content: `# Báo cáo phân tích dữ liệu chuyên sâu\n\n> **Tóm lược quản trị**: Tài liệu phân tích hiệu suất và chất lượng hệ thống.\n\n## 1. Bối cảnh & Hiện trạng\nPhân tích dữ liệu thực tế thu thập từ nguồn dữ liệu lưu trữ.\n\n## 2. Bảng chỉ số trọng yếu\n| Chỉ số | Hiện tại | Mục tiêu | Đánh giá |\n|---|---|---|---|\n| Độ chuẩn xác RAG | 92% | > 90% | Đạt |\n| Tốc độ sinh câu | 1.8s | < 2.5s | Tốt |\n\n## 3. Kết luận & Đề xuất\nTiếp tục duy trì tính kỷ luật trong kiểm định và triển khai liên tục.\n`,
+    content: `# Báo cáo chuẩn bị tư vấn\n\n> Mẫu trống, không phải kết quả đo hoặc báo cáo đã kiểm chứng.\n\n## Mục tiêu cuộc hẹn\n[Điền mục tiêu]\n\n## Hiện trạng có nguồn\n| Dữ kiện | Nguồn và thời điểm | Điều cần đối chiếu |\n|---|---|---|\n| [Điền dữ kiện] | [Điền nguồn] | [Điền điểm chưa rõ] |\n\n## Vấn đề và ảnh hưởng\n[Phân biệt điều khách hàng xác nhận với suy luận]\n\n## Câu hỏi cần xác nhận\n[Không tự điền ngân sách hoặc lợi ích định lượng]\n\n## Đề xuất bước tiếp theo\n[Đề xuất để người dùng xem lại, chưa tự thực hiện]\n`,
   },
 }
 
@@ -215,9 +215,9 @@ export function ArtifactsPage() {
             <DocumentBulletList24Regular style={{ color: 'var(--accent, #3b82f6)' }} />
           </div>
           <div>
-            <h2>Không gian Ghi chú & Tài liệu (Artifacts)</h2>
+            <h2>Ghi chú và báo cáo đã lưu</h2>
             <p>
-              Soạn thảo Markdown chuyên nghiệp với Live Preview, tổ chức ghi chú, checklist, bộ câu hỏi và kế hoạch học tập/làm việc.
+              Xem lại, chỉnh sửa và xuất ghi chú, báo cáo hoặc việc cần chuẩn bị cho khách hàng. Bản xem trước cập nhật khi bạn soạn.
             </p>
           </div>
         </div>
@@ -248,7 +248,7 @@ export function ArtifactsPage() {
               <span className="quick-templates-label">Mẫu gợi ý:</span>
               <div className="quick-template-chips">
                 <button type="button" onClick={() => applyTemplate('note')} className="quick-template-btn" title="Mẫu ghi chú cuộc họp">📝 Họp</button>
-                <button type="button" onClick={() => applyTemplate('checklist')} className="quick-template-btn" title="Mẫu checklist nghiệm thu">✅ Checklist</button>
+                <button type="button" onClick={() => applyTemplate('checklist')} className="quick-template-btn" title="Mẫu kiểm tra trước cuộc hẹn">✅ Kiểm tra</button>
                 <button type="button" onClick={() => applyTemplate('plan')} className="quick-template-btn" title="Mẫu kế hoạch tuần">🎯 Kế hoạch</button>
                 <button type="button" onClick={() => applyTemplate('report')} className="quick-template-btn" title="Mẫu báo cáo phân tích">📑 Báo cáo</button>
               </div>
@@ -345,7 +345,7 @@ export function ArtifactsPage() {
           </aside>
 
           {/* Right Area: Antigravity-Level Editor & Preview Workbench */}
-          <main className="artifact-editor-container">
+          <section className="artifact-editor-container" aria-label="Chỉnh sửa kết quả đã lưu">
             <form
               className="artifact-editor-form"
               onSubmit={(event) => {
@@ -379,7 +379,7 @@ export function ArtifactsPage() {
                       className="artifact-kind-glass-select"
                     >
                       <option value="note">📝 Ghi chú</option>
-                      <option value="checklist">✅ Checklist</option>
+                      <option value="checklist">✅ Việc cần kiểm tra</option>
                       <option value="plan">🎯 Kế hoạch</option>
                       <option value="report">📑 Báo cáo</option>
                       <option value="quiz">💡 Ôn tập</option>
@@ -440,12 +440,12 @@ export function ArtifactsPage() {
                   <div className="toolbar-divider metallic-toolbar-divider" />
 
                   <div className="toolbar-group">
-                    <Tooltip content="Chữ đậm (Bold)" relationship="label">
+                    <Tooltip content="Chữ đậm" relationship="label">
                       <button type="button" className="toolbar-btn glass-toolbar-btn" onClick={() => insertMarkdown('**', '**', 'chữ đậm')}>
                         <TextBold20Regular />
                       </button>
                     </Tooltip>
-                    <Tooltip content="Chữ nghiêng (Italic)" relationship="label">
+                    <Tooltip content="Chữ nghiêng" relationship="label">
                       <button type="button" className="toolbar-btn glass-toolbar-btn" onClick={() => insertMarkdown('*', '*', 'chữ nghiêng')}>
                         <TextItalic20Regular />
                       </button>
@@ -460,14 +460,14 @@ export function ArtifactsPage() {
                         • Danh sách
                       </button>
                     </Tooltip>
-                    <Tooltip content="Danh sách công việc (Task checklist)" relationship="label">
+                    <Tooltip content="Danh sách công việc" relationship="label">
                       <button type="button" className="toolbar-btn glass-toolbar-btn" onClick={() => insertMarkdown('- [ ] ', '', 'Công việc cần làm')}>
-                        ☑ Task
+                        ☑ Công việc
                       </button>
                     </Tooltip>
                     <Tooltip content="Khối trích dẫn" relationship="label">
                       <button type="button" className="toolbar-btn glass-toolbar-btn" onClick={() => insertMarkdown('> ', '', 'Nội dung trích dẫn')}>
-                        ” Quote
+                        ” Trích dẫn
                       </button>
                     </Tooltip>
                   </div>
@@ -475,12 +475,12 @@ export function ArtifactsPage() {
                   <div className="toolbar-divider metallic-toolbar-divider" />
 
                   <div className="toolbar-group">
-                    <Tooltip content="Khối mã nguồn (Code block)" relationship="label">
+                    <Tooltip content="Khối mã nguồn" relationship="label">
                       <button type="button" className="toolbar-btn glass-toolbar-btn" onClick={() => insertMarkdown('```markdown\n', '\n```', 'code here')}>
-                        <Code20Regular /> Code
+                        <Code20Regular /> Mã nguồn
                       </button>
                     </Tooltip>
-                    <Tooltip content="Chèn bảng biểu (Table)" relationship="label">
+                    <Tooltip content="Chèn bảng biểu" relationship="label">
                       <button
                         type="button"
                         className="toolbar-btn glass-toolbar-btn"
@@ -493,9 +493,9 @@ export function ArtifactsPage() {
                         <Table20Regular /> Bảng
                       </button>
                     </Tooltip>
-                    <Tooltip content="Chèn liên kết (Link)" relationship="label">
+                    <Tooltip content="Chèn liên kết" relationship="label">
                       <button type="button" className="toolbar-btn glass-toolbar-btn" onClick={() => insertMarkdown('[', '](https://)', 'Tên liên kết')}>
-                        <Link20Regular /> Link
+                        <Link20Regular /> Liên kết
                       </button>
                     </Tooltip>
                   </div>
@@ -527,8 +527,8 @@ export function ArtifactsPage() {
                 {(viewMode === 'preview' || viewMode === 'split') && (
                   <div className="preview-pane">
                     <div className="preview-pane-header">
-                      <span>Bản xem trước trực tiếp (Antigravity Typography)</span>
-                      <Badge appearance="tint" color="brand">Markdown Rendered</Badge>
+                      <span>Bản xem trước</span>
+                      <Badge appearance="tint" color="brand">Đã định dạng</Badge>
                     </div>
                     <div className="artifact-preview-content markdown-body">
                       {content.trim() ? (
@@ -625,7 +625,7 @@ export function ArtifactsPage() {
                 )}
               </div>
             </form>
-          </main>
+          </section>
         </div>
       )}
     </section>
