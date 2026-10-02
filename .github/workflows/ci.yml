@@ -121,6 +121,9 @@ jobs:
       - name: Check packaged runtime
         run: docker run --rm --entrypoint python veridra:${{ github.sha }} -c "import app.main; import pathlib; assert pathlib.Path('/app/frontend/dist/index.html').is_file()"
 
+      - name: Verify Vietnamese PDF export in the runtime image
+        run: docker run --rm --entrypoint python veridra:${{ github.sha }} -c "from app.services.report_exports import _pdf_font, export_pdf; assert _pdf_font() != 'Helvetica'; body = export_pdf('Báo cáo tư vấn', '| Mục | Giá trị |\n| --- | --- |\n| Nhân viên | 42 |'); assert body.startswith(b'%PDF-') and len(body) > 1000"
+
       - name: Save verified image
         run: docker save veridra:${{ github.sha }} --output release-image.tar
 

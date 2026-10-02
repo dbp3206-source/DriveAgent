@@ -2,6 +2,8 @@
 
 ## Thứ tự tiếp tục và các phép kiểm đang chờ
 
+Bản ứng viên `73f5a28` đã đẩy đúng nhánh staging được duyệt, không gộp main. GitHub run `36968947119`: PostgreSQL riêng đạt 11 ca trong 4,24 giây. Kiểm backend Linux phát hiện hai fixture health phụ thuộc thư mục kho local có sẵn trên máy phát triển; máy sạch không có nên trả degraded đúng chính sách mới. Sửa fixture cô lập probe kho khi kiểm vector/catalog; không đổi mặc định an toàn hoặc bỏ ca lỗi/phục hồi kho. Kết quả run thất bại được giữ nguyên, chưa gọi đóng gói đạt. Bổ sung phép kiểm font Unicode và xuất PDF trong đúng ảnh Docker ở CI để không chỉ kiểm import.
+
 Ma trận mới nhất có điều kiện chống thanh đầu che nội dung: `browser-smoke-2026-10-02T05-21-02-617Z/report.json`, 120 trạng thái đạt; không tràn ngang, lỗi JS/server, mất tiêu đề hoặc chờ tồn đọng được bộ kiểm phát hiện; bàn phím giữ trang, vào đúng nội dung và giảm chuyển động. Frontend 148 kiểm đạt trong 7,99 giây, build/lint đạt. Không coi đây là chứng minh mọi nghiệp vụ hoặc cloud. Ngân sách khóa local đang chọn đã dùng 13 lượt; phép chọn khóa đã xác thực khác trả `no_validated_available_key`, không tự reset bộ đếm hoặc gọi vượt phần dự phòng. Các phép đo cần AI tiếp theo giữ chờ, chuyển sang kiểm đóng gói/cơ sở dữ liệu và phần không cần AI.
 
 Lượt tải công khai có phân rã thời gian `public-load-1790918349380/report.json`: 21/21 hiển thị đăng nhập, 20 mẫu sau trung vị 879 ms, phân vị 95 là 1.397 ms. HTML và tài nguyên/API có thời gian riêng để đối soát. Không có thay mã cloud giữa hai lượt này, do đó không gọi chênh lệch là hiệu quả bản sửa; lượt trước 13.459 ms và khởi động lạnh vượt 120 giây vẫn giữ là hạn chế thực. Chưa đo sau đăng nhập hoặc chứng minh ổn định nhiều phiên/ngày.

@@ -142,7 +142,10 @@ async def test_system_health_catalog_and_operation_guards(tmp_path):
         registry=SimpleNamespace(definitions=lambda: skill_tool_definitions()),
     )
     db = AsyncMock()
-    with patch.object(system, "get_settings", return_value=settings):
+    with (
+        patch.object(system, "get_settings", return_value=settings),
+        patch.object(system, "probe_object_storage", AsyncMock(return_value=True)),
+    ):
         result = await system.health(request, db)
         assert result.status == "ok" and result.database is True
         catalog = await system.tool_catalog(request, _user())

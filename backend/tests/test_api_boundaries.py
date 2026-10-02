@@ -1,6 +1,7 @@
 """HTTP boundary checks for provider routes, independent of provider SDKs."""
 
 from types import SimpleNamespace
+from unittest.mock import AsyncMock
 
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
@@ -285,7 +286,10 @@ async def test_memory_http_boundary_fails_closed_across_tenants(tmp_path):
     await engine.dispose()
 
 
-async def test_health_reports_vector_fallback_as_degraded():
+async def test_health_reports_vector_fallback_as_degraded(monkeypatch):
+    # Isolate vector readiness from the developer's existing storage folder.
+    # Storage failure/recovery is exercised separately in readiness tests.
+    monkeypatch.setattr("app.api.system.probe_object_storage", AsyncMock(return_value=True))
     app = FastAPI()
     app.include_router(system_router)
 
