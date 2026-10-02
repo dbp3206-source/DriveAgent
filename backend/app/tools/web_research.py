@@ -355,7 +355,7 @@ async def collect_public_source_bundle(
             return_exceptions=True,
         )
     news_payloads = [result for result in news_results if isinstance(result, bytes)]
-    if not news_payloads:
+    if not news_payloads and not official_url:
         raise ToolError(
             "Không thể đọc nguồn Google News sau ba lần thử.",
             code="web_source_transport_error",
@@ -381,7 +381,7 @@ async def collect_public_source_bundle(
                 break
         if len(news) >= maximum - bool(official_url):
             break
-    if not news:
+    if not news and not official_url:
         raise ToolError("Không có nguồn tin tức để đối chiếu.", code="news_sources_empty")
     sources = ([WebSource(title=f"Website chính thức — {payload.company_name or 'nguồn cung cấp'}",
                          url=official_url)] if official_url else [])

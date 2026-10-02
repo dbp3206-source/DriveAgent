@@ -211,6 +211,37 @@ async def test_general_fallback_reads_news_without_requiring_company_domain(monk
     assert sources[0].published_at is not None and sources[0].event_date is None
 
 
+@pytest.mark.parametrize("rss_available", [True, False])
+async def test_official_source_survives_empty_or_unavailable_news(monkeypatch, tmp_path,
+                                                               rss_available):
+    import httpx
+
+    from app.tools.contracts import ToolContext
+    from app.tools.web_research import collect_public_source_bundle
+
+    official = "https://example.com/schedule"
+
+    async def fetch(_client, url, _maximum):
+        if url == official:
+            return (b"<html><body>Official schedule: September 19 to October 4, 2026. "
+                    b"Location: Aichi and Nagoya. This is the published event overview."
+                    b"</body></html>")
+        if not rss_available:
+            raise httpx.ConnectError("News unavailable")
+        return b"<rss><channel></channel></rss>"
+
+    monkeypatch.setattr("app.tools.web_research._fetch_with_retry", fetch)
+    context = ToolContext(request_id="official-only", user=SimpleNamespace(id="u"),
+                          db=SimpleNamespace(), settings=Settings(_env_file=None,
+                          database_url=f"sqlite+aiosqlite:///{tmp_path / 'test.db'}"))
+    sources, blocks = await collect_public_source_bundle(
+        WebResearchInput(question="Published schedule", domain=official), context)
+    assert len(sources) == len(blocks) == 1
+    assert sources[0].url == official
+    assert blocks[0].startswith("[S1] WEBSITE CHÍNH THỨC")
+    assert "September 19 to October 4" in blocks[0]
+
+
 @pytest.mark.parametrize("url", ["https://user:secret@example.com/", "https://example.com:8443/"])
 async def test_public_fetch_rejects_credentials_and_nonstandard_ports(url):
     from app.tools.contracts import ToolError
