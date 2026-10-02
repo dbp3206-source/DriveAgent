@@ -28,7 +28,12 @@ from app.agent.compiler import (
     deterministic_static_answer,
 )
 from app.agent.controls import ChatControls
-from app.agent.evidence import prior_turn_sources, retain_referenced_citations, source_references
+from app.agent.evidence import (
+    context_only_followup,
+    prior_turn_sources,
+    retain_referenced_citations,
+    source_references,
+)
 from app.agent.freshness import server_time_context
 from app.agent.orchestrator import (
     SYSTEM_PROMPT,
@@ -343,14 +348,16 @@ class AdkOrchestrator:
                 app_name="drive_agent", user_id=user.id, session_id=session_id
             )
             restored_history = []
-            async with SessionFactory() as db:
-                source_history = list(await db.scalars(
-                    select(Message)
-                    .where(Message.user_id == user.id, Message.session_id == session_id)
-                    .order_by(Message.created_at.desc())
-                    .limit(32)
-                ))
-            historical_citations = prior_turn_sources(source_history, user_message)
+            historical_citations = []
+            if context_only_followup(user_message):
+                async with SessionFactory() as db:
+                    source_history = list(await db.scalars(
+                        select(Message)
+                        .where(Message.user_id == user.id, Message.session_id == session_id)
+                        .order_by(Message.created_at.desc())
+                        .limit(32)
+                    ))
+                historical_citations = prior_turn_sources(source_history, user_message)
             last_update = getattr(existing, "last_update_time", None)
             # A compiler turn does not append an ADK event. Bridge canonical
             # messages newer than the last ADK event, including corrections,
