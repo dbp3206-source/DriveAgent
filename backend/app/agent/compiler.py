@@ -1517,6 +1517,20 @@ class CompilerOrchestrator:
             return Route()
         if controls.source == "general":
             return Route()
+        if controls.source == "local":
+            # The leading /local command has already been consumed. Resolve
+            # explicit filenames using the selected source, not the heuristic
+            # Drive route or the entire (possibly long) instruction as a query.
+            filenames = tuple(dict.fromkeys(re.findall(
+                r"([\w.-]+\.(?:md|txt|csv|ipynb|pdf|docx|xlsx))\b", message, re.I
+            )))
+            if filenames:
+                reads = tuple(Route(
+                    "local_source_search", {"query": name}, read_match=True
+                ) for name in filenames)
+                if len(reads) == 1:
+                    return reads[0]
+                return Route(sources=reads, required_sources=("local",))
         if route.sources and controls.source in {"drive", "gmail", "local", "memory"}:
             matching = tuple(
                     source_route
@@ -1541,7 +1555,7 @@ class CompilerOrchestrator:
         if controls.source == "memory":
             return Route("memory_search", {"query": message[:2000], "limit": 6})
         if controls.source == "local" and not route.tool:
-            return Route("local_source_search", {"query": message[:500]})
+            return Route("local_source_search", {"query": message[:200]})
         if controls.source == "drive" and route.tool and not route.tool.startswith("drive_"):
             return Route()
         if route.tool:

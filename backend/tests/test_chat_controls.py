@@ -3,8 +3,9 @@ from pydantic import ValidationError
 
 from app.agent.compiler import CompilerOrchestrator
 from app.agent.controls import ChatControls
-from app.agent.routing import Route
+from app.agent.routing import Route, route_request
 from app.api.schemas import ChatRequest
+from app.services.local_sources import LocalSearchInput
 
 TOOLS = [
     "drive_list_files",
@@ -17,6 +18,33 @@ TOOLS = [
     "calculate",
     "skill_run",
 ]
+
+
+def test_local_command_keeps_both_explicit_files_after_negative_drive_scope():
+    message = (
+        "/local Đọc cả hai tài liệu giả lập 01-yeu-cau-khach-hang.md và "
+        "02-dieu-chinh-pham-vi.md đã tải lên. "
+        + "Chuẩn bị báo cáo và tính bằng công cụ. " * 12
+        + "Không đọc Gmail, Drive, lịch, web hoặc bộ nhớ dài hạn."
+    )
+    controls, clean = ChatControls().parse_leading_commands(message)
+    actual = CompilerOrchestrator._apply_controls(route_request(clean), clean, controls)
+    assert actual.required_sources == ("local",)
+    assert [item.arguments["query"] for item in actual.sources] == [
+        "01-yeu-cau-khach-hang.md", "02-dieu-chinh-pham-vi.md"
+    ]
+    for item in actual.sources:
+        assert item.tool == "local_source_search"
+        assert item.read_match
+        LocalSearchInput.model_validate(item.arguments)
+
+
+def test_local_generic_long_request_obeys_search_schema():
+    message = "Đọc tài liệu và phân tích yêu cầu. " * 30
+    actual = CompilerOrchestrator._apply_controls(Route(), message, ChatControls(source="local"))
+    assert actual.tool == "local_source_search"
+    assert len(actual.arguments["query"]) == 200
+    LocalSearchInput.model_validate(actual.arguments)
 
 
 def test_chat_request_defaults_to_automatic_controls():
