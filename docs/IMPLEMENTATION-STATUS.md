@@ -2,6 +2,10 @@
 
 ## Thứ tự tiếp tục và các phép kiểm đang chờ
 
+Ứng viên `48d6551` đã qua GitHub run `36979519746` và Live đúng ảnh `9f29d2ce3213b200c22670db88d9db087d75f91de50a3b9551b470a7f970848e`, deployment `dep-davm1bbncjis73etcnjg`. Câu ASIAD không còn lỗi thiếu công cụ, hoàn thành 15,5 giây, nhưng chưa lấy đủ bằng chứng chính thức và tạo một URL không thuộc nguồn thu thập; điều kiện nguồn cập nhật vẫn KHÔNG ĐẠT. Sửa tiếp bằng kiểm tra URL đầu ra chỉ thuộc danh sách nguồn thực và giữ URL công khai người dùng chỉ định cho tuyến đọc nguồn. 59 kiểm định tuyến/nguồn đạt; chưa coi là kiểm cloud bản mới.
+
+Cloud hiện bật chế độ chỉ đọc: thử xác nhận xuất báo cáo giả lập bị chặn đúng chính sách, không tạo Google Doc. Đã hỏi người dùng cho phép bật ghi có duyệt và tạo một mẫu, cũng hỏi riêng việc gửi tối đa 5 thư thật tới Gemini; chưa có xác nhận nên không đổi chính sách hoặc thực hiện luồng đó. Bốn người thật vẫn chờ theo lựa chọn người dùng.
+
 Ứng viên `77a82d6` đã qua GitHub run `36977511091`, PostgreSQL riêng và đóng gói; Render Live đúng ảnh `6aa7f5a3d63401ba38d340e98c774be6dbd6499f2786fd8cf5ea5d2006b2cc91`. Kiểm hỏi tiếp trên cloud đổi đúng 30 người/20%, giữ giả định 12 phút/20 ngày, trả đúng 120/24/96 giờ trong 21 giây; một công cụ tính/hai lượt mô hình. Giao diện local 120 trạng thái đạt, backend local 932 đạt/11 PostgreSQL bỏ qua; không dùng số này làm điểm toàn sản phẩm.
 
 Kiểm nguồn mới trên cùng ảnh phát hiện lỗi thật `7593047c-5710-4031-aa8b-667b7e060bd2`: danh sách “Không đọc Gmail, Drive, lịch hoặc bộ nhớ, không ghi dữ liệu” chưa được nhận là loại trừ nguồn; agent không có web vẫn gọi web_research và thất bại. Đã sửa nhận diện danh sách phủ định đầy đủ, giữ chặn nội dung riêng tư còn lại; 56 kiểm điều hướng/nguồn mới đạt. Phải triển khai và thử lại chính câu lỗi trước khi đóng điều kiện nguồn cập nhật. Khóa hiệu lực còn 6/16 lượt bảo vệ tại lần đọc sau đó, không reset sổ và không tăng ngân sách.

@@ -183,7 +183,13 @@ def _gmail_full_read_route(
 def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
     text = message.strip().rstrip(".?!")
     if needs_public_evidence(text):
-        return Route("web_research", {"question": text[:800], "timezone": timezone}, direct=True)
+        arguments = {"question": text[:800], "timezone": timezone}
+        # Preserve the public page the user explicitly selected for evidence.
+        # The tool still validates HTTPS/DNS and rejects private destinations.
+        public_url = re.search(r"https://[^\s<>`\"']+", text, re.I)
+        if public_url:
+            arguments["domain"] = public_url[0].rstrip(".,;:!?)]}")
+        return Route("web_research", arguments, direct=True)
     is_gmail_request = bool(re.search(r"\b(?:gmail|email|mail|hộp thư|thư chưa đọc)\b", text, re.I))
     is_drive_request = bool(re.search(r"\b(?:drive|docs?|tài liệu|tệp|file)\b", text, re.I))
     asks_to_compare_sources = bool(

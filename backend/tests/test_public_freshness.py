@@ -8,6 +8,7 @@ from app.core.config import Settings
 from app.tools.web_research import (
     WebResearchInput,
     WebSource,
+    _bundle_urls_are_verified,
     _has_valid_citations,
     _normalize_bundle_citations,
     _safe_unverified_bundle_summary,
@@ -90,6 +91,18 @@ def test_incomplete_negative_clause_cannot_hide_private_content():
     )
 
 
+def test_public_question_preserves_explicit_evidence_page():
+    route = route_request(
+        "ASIAD hiện tại diễn ra ngày nào? Đọc nguồn https://www.joc.or.jp/games/asia/2026/. "
+        "Không đọc Gmail, Drive hoặc bộ nhớ."
+    )
+    assert route.tool == "web_research"
+    assert route.arguments["domain"] == "https://www.joc.or.jp/games/asia/2026/"
+    assert not needs_public_evidence(
+        "Đối chiếu tài liệu riêng hôm nay với https://example.com/news"
+    )
+
+
 def test_web_input_general_and_company_are_compatible():
     assert WebResearchInput(question="Lịch thi đấu hôm nay").company_name is None
     assert WebResearchInput(company_name="Bosch").company_name == "Bosch"
@@ -124,6 +137,39 @@ def test_source_bundle_normalizes_only_bounded_numeric_citations():
     normalized = _normalize_bundle_citations("Dữ kiện [1], nguồn khác [2], sai [9].", 2)
     assert normalized == "Dữ kiện [S1], nguồn khác [S2], sai [9]."
     assert _has_valid_citations(normalized, 2)
+
+
+def test_valid_marker_does_not_accept_invented_source_url():
+    sources = [WebSource(title="Nguồn thật", url="https://example.com/actual")]
+    assert _bundle_urls_are_verified("Dữ kiện [S1]", sources)
+    assert _bundle_urls_are_verified("[Nguồn](https://example.com/actual).", sources)
+    assert not _bundle_urls_are_verified("[S1] https://www.tinhtex.com/news/1", sources)
+    assert not _bundle_urls_are_verified("[S1] https://example.com/actual/forged", sources)
+
+
+async def test_bundle_replaces_model_answer_with_invented_url(monkeypatch):
+    from unittest.mock import AsyncMock, Mock
+
+    from app.tools.web_research import _source_bundle_fallback
+
+    sources = [WebSource(title="Nguồn thật", url="https://example.com/actual")]
+    client = SimpleNamespace(
+        aio=SimpleNamespace(models=SimpleNamespace(generate_content=AsyncMock(
+            return_value=SimpleNamespace(text="Đang diễn ra [S1] https://fake.example/news"))),
+            aclose=AsyncMock()), close=Mock())
+    monkeypatch.setattr("app.tools.web_research.collect_public_source_bundle",
+                        AsyncMock(return_value=(sources, ["[S1] Chỉ có tiêu đề"])))
+    monkeypatch.setattr("app.tools.web_research.create_inference_client", lambda **_: client)
+    reserve = Mock()
+    monkeypatch.setattr("app.tools.web_research.quota_guard",
+                        lambda *_args, **_kwargs: SimpleNamespace(reserve=reserve))
+    context = SimpleNamespace(settings=Settings(_env_file=None, gemini_api_key="fake-qa-key"))
+    output = await _source_bundle_fallback(WebResearchInput(question="Lịch hôm nay"), context)
+    assert "Chưa có đủ bằng chứng" in output.summary
+    assert "fake.example" not in output.summary
+    assert output.sources == sources
+    reserve.assert_called_once()
+    client.aio.aclose.assert_awaited_once()
 
 
 def test_source_bundle_can_fail_safe_with_a_cited_non_answer():

@@ -213,6 +213,13 @@ def _has_valid_citations(text: str, source_count: int) -> bool:
     return bool(citations) and all(1 <= value <= source_count for value in citations)
 
 
+def _bundle_urls_are_verified(text: str, sources: list[WebSource]) -> bool:
+    """A valid numeric marker does not authorize a model-invented link."""
+    allowed = {source.url for source in sources}
+    urls = re.findall(r"https?://[^\s<>`\"']+", text, flags=re.I)
+    return all(url.rstrip(".,;:!?)]}") in allowed for url in urls)
+
+
 def _normalize_bundle_citations(text: str, source_count: int) -> str:
     """Accept the model's common ``[1]`` spelling without inventing a source.
 
@@ -298,7 +305,8 @@ async def _source_bundle_fallback(
     text = _normalize_bundle_citations(
         str(getattr(response, "text", "") or "").strip(), len(sources)
     )
-    if not text or not _has_valid_citations(text, len(sources)):
+    if (not text or not _has_valid_citations(text, len(sources))
+            or not _bundle_urls_are_verified(text, sources)):
         text = _safe_unverified_bundle_summary(payload, sources)
     return WebResearchOutput(
         summary=text,
