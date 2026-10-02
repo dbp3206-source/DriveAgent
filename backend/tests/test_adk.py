@@ -645,4 +645,6 @@ async def test_adk_restores_owner_scoped_canonical_history(existing, with_source
         assert result.citations == sources
         assert "[1]" in result.answer
         assert "chưa xác minh lại" in captured["request"]
+        assert "theo đính chính của bạn" in captured["request"]
+        assert "không gắn tham chiếu tài liệu" in captured["request"]
         assert any(item.get("source_count") == 1 for item in result.trace)
