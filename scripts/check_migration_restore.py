@@ -12,8 +12,9 @@ sys.path.insert(0, str(ROOT / "backend"))
 
 
 def run(archive: Path) -> dict:
-    from app.core.config import get_settings
     from state_archive import restore_state
+
+    from app.core.config import get_settings
 
     archive = archive.resolve(strict=True)
     allowed = (ROOT / ".local-backups" / "migration-20260930").resolve(strict=True)
