@@ -5,21 +5,23 @@ import json
 import sqlite3
 import sys
 from pathlib import Path
+from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "backend"))
 
 
 def run(archive: Path) -> dict:
-    from state_archive import restore_state
-
     from app.core.config import get_settings
+    from state_archive import restore_state
 
     archive = archive.resolve(strict=True)
     allowed = (ROOT / ".local-backups" / "migration-20260930").resolve(strict=True)
     if archive.parent != allowed or not archive.name.startswith("state-pre-migration-"):
         raise ValueError("Expected exact migration application archive")
-    target = allowed / "restore-check-090150"
+    # Every verification must restore into a fresh directory. A fixed target
+    # prevented repeating the acceptance check after the first successful run.
+    target = allowed / f"restore-check-{uuid4().hex}"
     restored = restore_state(archive, target, get_settings().app_secret)
     database = target / "drive_agent.db"
     with sqlite3.connect(f"{database.as_uri()}?mode=ro", uri=True) as db:
