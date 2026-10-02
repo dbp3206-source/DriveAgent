@@ -57,6 +57,39 @@ def test_public_question_with_explicit_private_source_exclusion_still_routes_web
     )
 
 
+@pytest.mark.parametrize("exclusion", [
+    "Không đọc Gmail, Drive, lịch hoặc bộ nhớ, không ghi dữ liệu.",
+    "Không đọc Gmail, Drive, lịch hoặc bộ nhớ.",
+    "Không dùng memory và calendar.",
+])
+def test_comma_separated_source_exclusions_do_not_select_memory(exclusion):
+    question = "ASIAD hôm nay có đang diễn ra không? " + exclusion
+    assert route_request(question).tool == "web_research"
+
+
+def test_positive_private_content_still_blocks_web_with_negative_source_list():
+    assert not needs_public_evidence(
+        "Đối chiếu tài liệu khách hàng hôm nay với tin mới. Không đọc Gmail, Drive hoặc bộ nhớ."
+    )
+
+
+def test_live_asiad_followup_routes_to_registered_web_tool():
+    question = (
+        "Hôm nay theo giờ Việt Nam là ngày nào? ASIAD 2026 có đang diễn ra không, "
+        "ở đâu và từ ngày nào đến ngày nào? Kiểm chứng bằng nguồn chính thức trên "
+        "Internet, ghi liên kết nguồn. Không đọc Gmail, Drive, lịch hoặc bộ nhớ, "
+        "không ghi dữ liệu."
+    )
+    route = route_request(question)
+    assert route.tool == "web_research" and route.direct
+
+
+def test_incomplete_negative_clause_cannot_hide_private_content():
+    assert not needs_public_evidence(
+        "Tin hôm nay? Không đọc Gmail, nội dung email khách hàng là bí mật."
+    )
+
+
 def test_web_input_general_and_company_are_compatible():
     assert WebResearchInput(question="Lịch thi đấu hôm nay").company_name is None
     assert WebResearchInput(company_name="Bosch").company_name == "Bosch"
