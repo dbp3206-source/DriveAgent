@@ -271,6 +271,9 @@ class Settings(BaseSettings):
     # A separate owner decision is required before invited beta users can make
     # external Gmail/Drive writes, even after the normal per-operation approval.
     beta_allow_external_writes: bool = False
+    # Narrow acceptance mode: only the configured owner can execute approved
+    # Google Docs operations. Gmail/Sheets and other users remain read-only.
+    beta_owner_document_writes: bool = False
     web_research_max_sources: int = 12
     report_export_max_characters: int = 100_000
     metrics_bearer_token: str = ""

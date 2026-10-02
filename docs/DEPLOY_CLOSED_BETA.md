@@ -83,7 +83,12 @@ lên cloud. Trạng thái chỉ được đổi từ **HOLD** sang **PASS** sau 
 | `DRIVE_AGENT_METRICS_BEARER_TOKEN` | Token ngẫu nhiên ≥32 ký tự |
 | `DRIVE_AGENT_SCHEDULER_BEARER_TOKEN` | Token ngẫu nhiên khác metrics token, ≥32 ký tự |
 
-4. `DRIVE_AGENT_BETA_ALLOW_EXTERNAL_WRITES=false` là mặc định an toàn. Chỉ đổi `true`
+4. Để nghiệm thu một tài liệu Google bằng tài khoản chủ, có thể đặt
+   `DRIVE_AGENT_BETA_OWNER_DOCUMENT_WRITES=true`, vẫn giữ
+   `DRIVE_AGENT_BETA_ALLOW_EXTERNAL_WRITES=false`. Chỉ email chủ đã cấu hình
+   được thực hiện Google Docs sau bước xem trước và duyệt; các người khác,
+   Gmail và Sheets vẫn bị chặn ghi. Tắt lại sau kiểm thử nếu chưa phát hành.
+   `DRIVE_AGENT_BETA_ALLOW_EXTERNAL_WRITES=false` là mặc định an toàn. Chỉ đổi `true`
    sau khi owner chủ động cho phép; từng lần Gmail/Drive ghi vẫn phải preview → approval.
 5. Deploy. Backend cố ý từ chối khởi động nếu URL không HTTPS, secret yếu, invite >4,
    cấu hình OAuth cloud thiếu, storage không private hoặc database không phải PostgreSQL TLS.

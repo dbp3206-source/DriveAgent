@@ -8,6 +8,13 @@ from app.services.report_exports import _blocks, _pdf_text, export_docx, export_
 CONTENT = "## Dữ kiện\n\n| Nội dung | Giá trị |\n| --- | ---: |\n| Nhân viên | 42 |\n"
 
 
+def test_inline_code_does_not_leave_markdown_delimiters_in_exports():
+    content = "Tổng `96` giờ; mẫu `<script>`; **giả thuyết**."
+    assert _pdf_text(content) == "Tổng 96 giờ; mẫu &lt;script&gt;; giả thuyết."
+    document = Document(io.BytesIO(export_docx("Mẫu", content)))
+    assert document.paragraphs[-1].text == "Tổng 96 giờ; mẫu <script>; giả thuyết."
+
+
 def test_word_export_has_native_table_and_vietnamese(tmp_path):
     body = export_docx("Chuẩn bị tư vấn", CONTENT)
     (tmp_path / "consultation.docx").write_bytes(body)

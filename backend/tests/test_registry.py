@@ -100,6 +100,49 @@ async def test_closed_beta_cloud_write_gate_blocks_handler_and_audits(tmp_path):
     await engine.dispose()
 
 
+@pytest.mark.parametrize("email,name,enabled,allowed", [
+    ("owner@test.invalid", "docs_execute", True, True),
+    ("other@test.invalid", "docs_execute", True, False),
+    ("owner@test.invalid", "gmail_send", True, False),
+    ("owner@test.invalid", "sheets_execute", True, False),
+    ("owner@test.invalid", "docs_execute", False, False),
+])
+async def test_owner_document_acceptance_mode_does_not_open_other_writes(
+    tmp_path, email, name, enabled, allowed
+):
+    engine, factory = await create_session(tmp_path)
+    calls = []
+    registry = ToolRegistry()
+
+    async def handler(payload, context):
+        calls.append(payload.text)
+        return EchoOutput(value=payload.text)
+
+    registry.register(ToolDefinition(
+        name=name, description="Owner document acceptance test",
+        input_model=EchoInput, output_model=EchoOutput, handler=handler,
+        required_permissions={MEMORY_WRITE}, external_write=True,
+        requires_user_action=True,
+    ))
+    async with factory() as db:
+        user = User(email=email, display_name="Test", role="editor")
+        db.add(user)
+        await db.commit()
+        context = ToolContext(
+            request_id="owner-doc-test", user=user, db=db, source="api",
+            settings=Settings(environment="production", beta_owner_email="owner@test.invalid",
+                              beta_owner_document_writes=enabled),
+        )
+        if allowed:
+            await registry.execute(name, {"text": "synthetic"}, context)
+            assert calls == ["synthetic"]
+        else:
+            with pytest.raises(ToolAccessDeniedError):
+                await registry.execute(name, {"text": "synthetic"}, context)
+            assert calls == []
+    await engine.dispose()
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("source", ["agent", "adk", "api"])
 async def test_explicit_action_gate_is_enforced_and_audited(tmp_path, source):

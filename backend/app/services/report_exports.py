@@ -20,7 +20,7 @@ from reportlab.platypus import LongTable, Paragraph, SimpleDocTemplate, Spacer, 
 
 ReportFormat = Literal["md", "docx", "pdf"]
 
-_INLINE = re.compile(r"\[([^\]\n]+)\]\((https?://[^\s)]+)\)|\*\*([^*\n]+)\*\*")
+_INLINE = re.compile(r"\[([^\]\n]+)\]\((https?://[^\s)]+)\)|\*\*([^*\n]+)\*\*|`([^`\n]+)`")
 
 
 def _word_text(paragraph, text: str) -> None:
@@ -29,6 +29,8 @@ def _word_text(paragraph, text: str) -> None:
         paragraph.add_run(text[start:match.start()])
         if match.group(3) is not None:
             paragraph.add_run(match.group(3)).bold = True
+        elif match.group(4) is not None:
+            paragraph.add_run(match.group(4))
         else:
             link = OxmlElement("w:hyperlink")
             link.set(qn("r:id"), paragraph.part.relate_to(
@@ -56,6 +58,8 @@ def _pdf_text(text: str) -> str:
         if match.group(3) is not None:
             # The Unicode body font has no separately registered bold face.
             parts.append(escape(match.group(3)))
+        elif match.group(4) is not None:
+            parts.append(escape(match.group(4)))
         else:
             url = escape(match.group(2), {'"': '&quot;'})
             parts.append(f'<link href="{url}" color="#155E75">{escape(match.group(1))}</link>')

@@ -143,6 +143,13 @@ class ToolRegistry:
                 definition.external_write
                 and context.settings.environment.casefold() not in {"local", "development"}
                 and not context.settings.beta_allow_external_writes
+                and not (
+                    context.settings.beta_owner_document_writes
+                    and name == "docs_execute"
+                    and bool(context.settings.beta_owner_email.strip())
+                    and context.user.email.casefold()
+                    == context.settings.beta_owner_email.strip().casefold()
+                )
             ):
                 raise ToolAccessDeniedError(
                     "Closed beta hiện chỉ đọc và xem trước; thao tác ghi Google chưa được bật."
