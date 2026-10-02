@@ -17,7 +17,18 @@ from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from app.agent.orchestrator import AgentRunResult
 from app.api.chat_tasks import SubmitTask, cancel, enqueue, get_task
 from app.db.models import AuditEvent, Base, ChatTask, Message, User
-from app.services.chat_tasks import claim, execute_one, fence
+from app.services.chat_tasks import claim, execute_one, failure_message, fence
+from app.tools.contracts import ToolError
+
+
+def test_worker_failure_message_keeps_quota_reason_and_request_id_without_tool_payload():
+    message = failure_message(ToolError("private payload", code="quota_minute_exhausted"), "qa-id")
+    assert "một phút" in message
+    assert "qa-id" in message
+    assert "private payload" not in message
+    assert "private payload" not in failure_message(ToolError("private payload"), "qa-id")
+    assert "private payload" not in failure_message(RuntimeError("private payload"), "qa-id")
+    assert "hôm nay" in failure_message(ToolError("x", code="quota_daily_exhausted"), "qa-id")
 
 
 @pytest_asyncio.fixture
@@ -40,6 +51,26 @@ async def submit(queue):
     payload = SubmitTask(message="synthetic queued question", client_key=str(uuid4()))
     async with factory() as db:
         return await enqueue(payload, owner, db), payload
+
+
+async def test_worker_persists_safe_quota_failure_and_retains_question(queue, monkeypatch):
+    factory, owner, _ = queue
+    task, _ = await submit(queue)
+
+    async def quota_failure(*args, **kwargs):
+        raise ToolError("private provider payload", code="quota_minute_exhausted")
+
+    monkeypatch.setattr("app.api.chat.chat", quota_failure)
+    assert await execute_one(factory, SimpleNamespace())
+    async with factory() as db:
+        row = await get_task(task["id"], owner, db)
+        assert row["status"] == "failed"
+        assert "một phút" in row["error"]
+        assert task["id"] in row["error"]
+        assert "private provider payload" not in row["error"]
+        message = await db.scalar(select(Message))
+        assert message.content == "synthetic queued question"
+        assert message.status == "failed"
 
 
 async def test_enqueue_idempotency_owner_isolation_and_request_retention(queue):

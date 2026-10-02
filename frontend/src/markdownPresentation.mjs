@@ -24,6 +24,7 @@ function replaceFraction(_match, numerator, denominator) {
 export function normalizeMathNotation(content) {
   if (!content) return ''
   let normalized = content
+    .replace(/\$\s*([-−])\s*\$/g, '$1')
     .replace(/\\\(([^\n]*?)\\\)/g, '$1')
     .replace(/\\\[([^\n]*?)\\\]/g, '$1')
     .replace(/\$\$([^\n]*?)\$\$/g, '$1')

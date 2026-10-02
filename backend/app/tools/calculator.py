@@ -13,7 +13,8 @@ from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 
 class CalculateInput(BaseModel):
     operation: Literal[
-        "sum", "mean", "min", "max", "subtract", "multiply", "divide", "percent", "expression"
+        "sum", "mean", "min", "max", "subtract", "multiply", "divide", "percent", "expression",
+        "expressions",
     ]
     values: list[str] = Field(min_length=1, max_length=1000)
     unit: str = Field(default="", max_length=40)
@@ -25,6 +26,7 @@ class CalculateOutput(BaseModel):
     count: int
     unit: str
     explanation: str
+    results: list[str] = Field(default_factory=list)
 
 
 _EXPRESSION_TOKEN = re.compile(r"\s*(?:(\d+(?:\.\d+)?)|([()+\-*/]))")
@@ -106,6 +108,15 @@ def _safe_expression(source: str) -> Decimal:
 
 
 def calculate(payload: CalculateInput) -> CalculateOutput:
+    if payload.operation == "expressions":
+        if len(payload.values) > 16:
+            raise ToolError("Mỗi lượt chỉ tính tối đa 16 biểu thức.", code="invalid_operands")
+        results = [format(_safe_expression(value), "f") for value in payload.values]
+        return CalculateOutput(
+            result="; ".join(results), results=results, operation="expressions",
+            count=len(results), unit=payload.unit,
+            explanation="Kết quả theo đúng thứ tự biểu thức; dùng Decimal, không chạy mã tùy ý.",
+        )
     if payload.operation == "expression":
         if len(payload.values) != 1:
             raise ToolError("Biểu thức cần đúng một chuỗi đầu vào.", code="invalid_operands")
@@ -176,6 +187,8 @@ def calculator_tool_definitions() -> list[ToolDefinition]:
                 "Tính tổng/trung bình/min/max/trừ/nhân/chia/tỷ lệ từ số đã biết. "
                 "Hỗ trợ biểu thức số học an toàn bằng operation=expression và một chuỗi "
                 "trong values. Không đoán số thiếu; percent=a/b*100."
+                " Khi cần nhiều kết quả từ số có sẵn, dùng operation=expressions và "
+                "values gồm tối đa 16 biểu thức độc lập để tính cùng một lượt."
             ),
             input_model=CalculateInput,
             output_model=CalculateOutput,

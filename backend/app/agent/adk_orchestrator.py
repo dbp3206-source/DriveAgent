@@ -648,7 +648,11 @@ class AdkOrchestrator:
                     "Nếu người dùng cấm claim thiếu nguồn, không tự thêm thời lượng, tỷ lệ, "
                     "xếp hạng cao/thấp hoặc mức hiệu quả. Khi yêu cầu tính toán nhiều "
                     "bước từ số liệu được đưa sẵn, gọi calculate cho các biểu thức then "
-                    "chốt trước khi kết luận; đối chiếu diễn giải rủi ro với kết quả tính "
+                    "chốt trong cùng một lượt bằng operation=expressions khi đã đủ số đầu vào; "
+                    "không gọi mô hình từng bước cho các phép tính độc lập. "
+                    "Không cần đọc bộ nhớ khi yêu cầu chỉ tính số đã có trong câu hỏi. "
+                    "Phân biệt ước tính theo giả định với lợi ích đã đo thực tế. "
+                    "Đối chiếu diễn giải rủi ro với kết quả tính "
                     "và nói rõ trường hợp cơ sở khác với giả định chậm trễ/biến động. "
                     "Đừng đề xuất hành động có thời gian chờ nếu nó không thể kịp tác động."
                 ),

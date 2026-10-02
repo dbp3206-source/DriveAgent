@@ -2,6 +2,10 @@
 
 ## Thứ tự tiếp tục và các phép kiểm đang chờ
 
+Kiểm tiếp ngày 02/10 với khóa DriveAgent2: yêu cầu giả lập Mẫu C/24 người/12 phút/20 ngày/giảm 25% thất bại, mã `37d2f0d2-f543-48ce-97b5-629d472b1c68`. Nhật ký Render xác nhận `quota_minute_exhausted` tại `RelationalQuotaGuard.reserve`, không phải Google hết hạn mức ngày; còn 11/16 lượt, sổ ghi 5 lượt mô hình trong ngày, chưa quy toàn bộ cho một yêu cầu. Worker đang che nguyên nhân thành thông báo chung không có mã. Đã sửa thông báo theo mã lỗi an toàn, giữ câu hỏi và mã đối soát, không công khai nội dung lỗi tool. Bổ sung tính nhiều biểu thức độc lập trong một lần gọi công cụ để tránh vòng mô hình cho từng phép tính; không tăng giới hạn hoặc reset sổ sử dụng. Thử lại trên bản cũ sau cửa sổ phút thành công 14,9 giây, đúng 96/24/72 giờ, ghi rõ giả lập, một calculate/hai lượt model, còn 9/16. Phần sửa phải qua CI và kiểm live trước khi được tính đạt.
+
+Kiểm giao diện bổ sung: 152 ca frontend đạt, lint/build đạt; sửa ký hiệu trừ `$-$` thành văn bản thường mà không thay số tiền `$50`. Phép kiểm đọc công khai không đăng nhập trả 401 ở cả sáu khu vực dữ liệu riêng; đây không thay kiểm truy cập chéo giữa người dùng. Các ca kiểm mới cho công cụ tính nhiều biểu thức, thông báo worker và script kiểm quyền đạt 26/26. Giữ bằng chứng thất bại live, không tự chấm đạt từ các ca mã nguồn.
+
 Người dùng xác nhận ngày 02/10 chưa đủ bốn tài khoản, tiếp tục kiểm với quản trị hiện tại. Điều kiện nhiều người thật giữ CHƯA KIỂM CHỨNG; không tự tạo tài khoản hoặc dùng khóa của quản trị cho người khác.
 
 Ứng viên `4ca1b97`: GitHub run `36969474470` thành công, backend Linux sạch 915 đạt/12 bỏ qua, bao phủ 85,66%; kiểm mã/dependency/frontend/hồi quy/build Docker và font xuất PDF tiếng Việt trong ảnh đều đạt. Đã xuất bản và cố định Render bằng đúng digest `cae9401f8bc7615921cb86d55bb924196199de7bcdfe5b3f32eacf7a756182e2`, deployment `dep-davk8orncjis73en2frg` thành công. Không dùng nhãn staging có thể thay đổi để chứng minh cùng ảnh. Main chưa gộp.

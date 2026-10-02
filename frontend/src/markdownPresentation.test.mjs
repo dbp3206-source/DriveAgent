@@ -2,6 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { normalizeMathNotation } from './markdownPresentation.mjs'
 
+test('renders a standalone subtraction symbol without TeX delimiters', () => {
+  assert.equal(normalizeMathNotation('150 giờ $-$ 37,5 giờ = 112,5 giờ.'), '150 giờ - 37,5 giờ = 112,5 giờ.')
+  assert.equal(normalizeMathNotation('Ngân sách $50 và $20.'), 'Ngân sách $50 và $20.')
+})
+
 test('normalizes common inline math into readable text', () => {
   assert.equal(
     normalizeMathNotation('`3` $\\times$ `45` = `135` phút; $\\frac{1}{2}$; \\(x \\geq 2\\)'),

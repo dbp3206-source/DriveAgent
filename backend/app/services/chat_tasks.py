@@ -18,9 +18,29 @@ from sqlalchemy import and_, or_, select, update
 
 from app.api.schemas import ChatRequest
 from app.db.models import AuditEvent, ChatTask, Message, User
+from app.tools.contracts import ToolError
 
 logger = logging.getLogger(__name__)
 LEASE_SECONDS = 120
+
+
+def failure_message(exc: Exception, request_id: str) -> str:
+    """Expose only application-owned error text, never arbitrary tool output."""
+    if isinstance(exc, HTTPException):
+        return str(exc.detail)[:1000]
+    messages = {
+        "quota_minute_exhausted": (
+            "Đã chạm giới hạn xử lý trong một phút của Veridra. "
+            "Hãy đợi khoảng một phút rồi thử lại; đây không phải xác nhận hết hạn mức Google."
+        ),
+        "quota_daily_exhausted": (
+            "Đã hết ngân sách sử dụng hôm nay của khóa này trên Veridra. "
+            "Xem thời điểm đặt lại hoặc chọn khóa khác trong Cài đặt."
+        ),
+        "context_budget": "Ngữ cảnh quá dài. Hãy mở cuộc trò chuyện mới và chọn ít tài liệu hơn.",
+    }
+    message = (messages.get(exc.code) if isinstance(exc, ToolError) else None)
+    return f"{message or 'Không thể hoàn tất yêu cầu.'} Mã yêu cầu: {request_id}"
 
 
 def public_task(task: ChatTask) -> dict:
@@ -147,8 +167,7 @@ async def execute_one(factory, app) -> bool:
         except Exception as exc:
             await db.rollback()
             # HTTPException details here are the sanitized application messages.
-            detail = (str(exc.detail) if isinstance(exc, HTTPException)
-                      else "Agent không thể hoàn tất; xem mã yêu cầu.")
+            detail = failure_message(exc, claimed["id"])
             try:
                 await fence(db, claimed["id"], claimed["token"], claimed["attempt"],
                             status="failed", error_message=detail[:1000], lease_until=None)
