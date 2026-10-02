@@ -51,6 +51,7 @@ import {
 import { AVAILABLE_MODELS, type ModelOption } from '../modelOptions'
 import { markdownToDocumentBlocks as parseMarkdownDocument } from '../documentMarkdown.js'
 import { normalizeMathNotation } from '../markdownPresentation.mjs'
+import { citationHref } from '../citationLinks.mjs'
 import {
   DEFAULT_CHAT_CONTROLS,
   displaySessionTitle,
@@ -84,23 +85,6 @@ function formatRelativeTime(isoDate: string): string {
   }
 }
 
-function citationHref(citation: Citation): { href: string; title: string } {
-  // Drive citations open the in-app reader so the user can inspect the exact
-  // indexed chunk. Gmail and local-source citations have different readers;
-  // sending those IDs through /#/drive silently opened the wrong screen.
-  const isGmail = citation.web_view_link?.startsWith('https://mail.google.com/')
-  const isLocal = citation.file_id.startsWith('local:')
-  if ((isGmail || isLocal) && citation.web_view_link) {
-    return {
-      href: citation.web_view_link,
-      title: isGmail ? 'Mở đúng chuỗi email trong Gmail' : 'Mở nội dung nguồn local',
-    }
-  }
-  return {
-    href: `/#/drive?file=${encodeURIComponent(citation.file_id)}${citation.page_number ? `&page=${citation.page_number}` : ''}`,
-    title: 'Mở đúng đoạn nguồn trong trình đọc Veridra',
-  }
-}
 import type { ChatMessage, ChatSession, Citation, ProviderCapacity } from '../types'
 
 interface SessionTopicMeta {
