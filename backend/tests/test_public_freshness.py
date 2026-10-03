@@ -91,6 +91,24 @@ def test_incomplete_negative_clause_cannot_hide_private_content():
     )
 
 
+def test_official_rate_limit_question_with_comma_exclusions_routes_web():
+    question = (
+        "Thông tin hiện tại: hãy đọc nguồn chính thức "
+        "https://ai.google.dev/gemini-api/docs/rate-limits và cho biết hạn mức Gemini "
+        "tính theo API key hay project, hạn mức ngày đặt lại theo múi giờ nào, ngày "
+        "cập nhật trang là ngày nào. Chỉ dùng web, không đọc Gmail, Drive, tài liệu "
+        "local hoặc bộ nhớ; dẫn nguồn cho từng ý. Nếu không đọc được thì nói "
+        "chưa xác minh, không đoán."
+    )
+    route = route_request(question)
+    assert route.tool == "web_research"
+    assert route.arguments["domain"] == "https://ai.google.dev/gemini-api/docs/rate-limits"
+    assert not needs_public_evidence(
+        "Thông tin hiện tại: hãy đối chiếu nội dung Gmail khách hàng với nguồn web, "
+        "không đọc Drive, tài liệu local hoặc bộ nhớ."
+    )
+
+
 def test_public_question_preserves_explicit_evidence_page():
     route = route_request(
         "ASIAD hiện tại diễn ra ngày nào? Đọc nguồn https://www.joc.or.jp/games/asia/2026/. "

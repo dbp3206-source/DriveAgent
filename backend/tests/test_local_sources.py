@@ -118,6 +118,31 @@ async def test_exact_pdf_page_overrides_keyword_ranking_and_preserves_citation()
     assert rest.data["next_offset"] is None
 
 
+async def test_exact_page_retains_real_multiline_heading_in_followup_source():
+    from app.core.source_evidence import PROMINENT_LINES_LABEL
+    from app.services.local_sources import LocalReadInput, read_local
+
+    block = PROMINENT_LINES_LABEL + "\n- Báo cáo dự án:\n- Thay đổi tháng 8"
+    row = SimpleNamespace(id="source-a", name="sample.pdf", content_hash="native-hash",
+                          content="<!-- page:1 -->Đơn vị Mẫu.\n" + "Chi tiết. " * 100
+                          + "\n" + block + "\n<!-- page:2 -->Trang khác.")
+
+    class Database:
+        async def scalar(self, query):
+            assert "owner-a" in query.compile().params.values()
+            return row
+
+    context = SimpleNamespace(db=Database(), user=SimpleNamespace(id="owner-a"),
+                              settings=SimpleNamespace(pdf_ocr_enabled=False,
+                                                       public_base_url="http://localhost:8000"))
+    result = await read_local(LocalReadInput(source_id="source-a", page_number=1), context)
+    citation = result.data["citations"][0]
+    assert citation["page_number"] == 1
+    assert block in citation["snippet"]
+    assert "Trang khác" not in citation["snippet"]
+    assert len(citation["snippet"]) <= 4000
+
+
 async def test_search_preview_keeps_its_real_page_and_does_not_cross_pages():
     from app.services.local_sources import LocalSearchInput, search_local
 

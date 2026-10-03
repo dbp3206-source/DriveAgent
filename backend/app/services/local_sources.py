@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import or_, select
 
 from app.auth.permissions import RAG_READ
+from app.core.source_evidence import page_evidence_excerpt
 from app.db.models import LocalSource
 from app.services.chunking import chunk_document
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
@@ -231,7 +232,7 @@ async def read_local(payload: LocalReadInput, context: ToolContext) -> LocalOutp
             "citations": [{
                 "file_id": f"local:{row.id}", "file_name": row.name,
                 "chunk_index": start, "page_number": payload.page_number,
-                "snippet": text[:500], "score": 1.0,
+                "snippet": page_evidence_excerpt(text), "score": 1.0,
                 "web_view_link": (
                     f"{context.settings.public_base_url}/api/local-sources/{row.id}/text"
                 ),

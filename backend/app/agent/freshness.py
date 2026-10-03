@@ -10,9 +10,9 @@ def needs_public_evidence(message: str) -> bool:
     # An explicit exclusion is not a request to search private workspace data.
     # Remove only standalone negative source clauses; other private references
     # remain in the guard below, so their contents cannot become web queries.
-    source = r"(?:gmail|drive|calendar|local|lịch|bộ nhớ|memory)"
+    source = r"(?:tài\s+liệu\s+local|gmail|drive|calendar|local|lịch|bộ nhớ|memory)"
     text = re.sub(
-        r"(?:^|[.!?;])\s*không\s+(?:đọc|dùng|truy cập|tìm trong)\s+"
+        r"(?:^|[.!?;,])\s*không\s+(?:đọc|dùng|truy cập|tìm trong)\s+"
         + source
         + r"(?:(?:\s*,\s*|\s+(?:hay|hoặc|và)\s+)" + source
         + r")*\s*(?=[.!?;]|,\s*không\s+ghi\b|$)",

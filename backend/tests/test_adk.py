@@ -21,6 +21,90 @@ from app.tools.calculator import calculator_tool_definitions
 from app.tools.registry import ToolRegistry
 
 
+def test_official_web_question_routes_to_specialist_with_actual_web_tool():
+    import asyncio
+
+    from app.tools.web_research import web_research_tool_definitions
+
+    question = (
+        "Thông tin hiện tại: hãy đọc nguồn chính thức "
+        "https://ai.google.dev/gemini-api/docs/rate-limits và cho biết hạn mức Gemini "
+        "tính theo API key hay project, hạn mức ngày đặt lại theo múi giờ nào, ngày "
+        "cập nhật trang là ngày nào. Chỉ dùng web, không đọc Gmail, Drive, tài liệu "
+        "local hoặc bộ nhớ; dẫn nguồn cho từng ý. Nếu không đọc được thì nói "
+        "chưa xác minh, không đoán."
+    )
+    controls = ChatControls().enforce_explicit_source_exclusions(question)
+    assert controls.excluded_sources == frozenset({'gmail', 'drive', 'local', 'memory'})
+    selected = AdkOrchestrator._auto_agent_for_request(
+        question, excluded_sources=controls.excluded_sources,
+    )
+    assert selected == 'research'
+    registry = ToolRegistry()
+    for definition in [*web_research_tool_definitions(), *calculator_tool_definitions()]:
+        registry.register(definition)
+    names = controls.allowed_tool_names([item.name for item in registry.definitions()])
+    tools = [GovernedAdkTool(
+        definition, registry, Settings(_env_file=None), 'owner', 'request', [], [],
+        asyncio.Semaphore(2), set(), {},
+    ) for definition in registry.definitions() if definition.name in names]
+    agent = AdkOrchestrator._build_agent_tree(
+        RecoverableGemini(model='gemini-primary', fallback_model='gemini-fallback'),
+        tools, [], selected_agent=selected,
+    )
+    assert agent.name == 'web_research_agent'
+    assert [tool.name for tool in agent.tools] == ['web_research']
+
+
+@pytest.mark.parametrize('fallback', [False, True])
+async def test_invented_tool_is_blocked_before_adk_dispatch(monkeypatch, fallback):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+    from google.genai.errors import ServerError
+
+    from app.tools.contracts import ToolError
+
+    async def generate(self, request, stream=False):
+        if fallback and self.model == 'gemini-primary':
+            raise ServerError(503, {'error': {'message': 'down'}})
+        yield LlmResponse(content=types.Content(parts=[types.Part(
+            function_call=types.FunctionCall(name='web_research', args={'question': 'x'}),
+        )]))
+
+    monkeypatch.setattr(Gemini, 'generate_content_async', generate)
+    model = RecoverableGemini(model='gemini-primary', fallback_model='gemini-fallback')
+    request = LlmRequest(model='gemini-primary')
+    request.tools_dict['calculate'] = object()
+    with pytest.raises(ToolError) as caught:
+        _ = [reply async for reply in model.generate_content_async(request)]
+    assert caught.value.code == 'unavailable_tool'
+    assert model.records[-1]['rule'] == 'unavailable_tool'
+    assert model.records[-1]['tool'] == 'web_research'
+
+
+@pytest.mark.parametrize('tool_name', ['web_research', 'transfer_to_agent'])
+async def test_registered_tools_and_agent_transfer_are_not_blocked(monkeypatch, tool_name):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+
+    response = LlmResponse(content=types.Content(parts=[types.Part(
+        function_call=types.FunctionCall(name=tool_name, args={}),
+    )]))
+
+    async def generate(self, request, stream=False):
+        yield response
+
+    monkeypatch.setattr(Gemini, 'generate_content_async', generate)
+    model = RecoverableGemini(model='gemini-primary', fallback_model='gemini-fallback')
+    request = LlmRequest(model='gemini-primary')
+    request.tools_dict[tool_name] = object()
+    replies = [reply async for reply in model.generate_content_async(request)]
+    assert replies == [response]
+    assert model.records[-1]['status'] == 'success'
+
+
 async def test_fallback_does_not_deepcopy_tool_locks(monkeypatch):
     import threading
 

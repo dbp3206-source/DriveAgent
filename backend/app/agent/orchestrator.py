@@ -23,6 +23,7 @@ from app.agent.quantitative import inventory_facts
 from app.agent.routing import Route, route_request
 from app.core.config import APPROVED_GEMINI_MODELS, Settings
 from app.core.security import redact
+from app.core.source_evidence import page_evidence_excerpt
 from app.db.models import User
 from app.db.session import SessionFactory
 from app.tools.contracts import ToolContext
@@ -95,7 +96,7 @@ def _pdf_page_citations(payload: dict[str, Any]) -> list[dict[str, Any]]:
     if not markers:
         return [{
             "file_id": file["id"], "file_name": file["name"], "chunk_index": 0,
-            "page_number": None, "snippet": text[:3000],
+            "page_number": None, "snippet": page_evidence_excerpt(text, plain_limit=3000),
             "web_view_link": file.get("web_view_link"), "score": 1.0,
         }]
     by_page: dict[int, list[str]] = {}
@@ -109,7 +110,7 @@ def _pdf_page_citations(payload: dict[str, Any]) -> list[dict[str, Any]]:
         {
             "file_id": file["id"], "file_name": file["name"],
             "chunk_index": page - 1, "page_number": page,
-            "snippet": "\n\n".join(sections)[:3000],
+            "snippet": page_evidence_excerpt("\n\n".join(sections), plain_limit=3000),
             "web_view_link": file.get("web_view_link"), "score": 1.0,
         }
         for page, sections in sorted(by_page.items())

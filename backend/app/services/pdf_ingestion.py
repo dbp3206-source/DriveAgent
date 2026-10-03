@@ -173,10 +173,9 @@ def prominent_text_lines(page) -> str:
     content = "\n".join(f"- {line}" for line in lines)
     if len(content) > 3000:
         return ""
-    return (
-        "Các dòng chữ cỡ lớn trên trang (tách theo vị trí và cỡ chữ; "
-        "không tự xác định đây là tên báo cáo):\n" + content
-    )
+    from app.core.source_evidence import PROMINENT_LINES_LABEL
+
+    return PROMINENT_LINES_LABEL + "\n" + content
 
 
 def extract_page(path: Path, page_number: int, *, tesseract: str | None = None,

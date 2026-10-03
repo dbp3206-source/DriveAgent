@@ -26,6 +26,22 @@ class RecoverableGemini(Gemini):
     reserve_primary: bool = Field(default=False, exclude=True)
     enable_fallback: bool = Field(default=True, exclude=True)
 
+    def _validate_tool_calls(self, response: LlmResponse, request: LlmRequest) -> None:
+        """Fail closed before ADK dispatches an invented or forbidden tool."""
+        for part in getattr(response.content, "parts", None) or ():
+            call = getattr(part, "function_call", None)
+            if call is not None and call.name not in request.tools_dict:
+                self.records.append({
+                    "stage": "guardrail", "status": "blocked",
+                    "rule": "unavailable_tool", "tool": (call.name or "")[:80],
+                })
+                raise ToolError(
+                    "Chưa xác minh được câu trả lời: công cụ cần dùng không có trong "
+                    "phạm vi đã cho phép. Yêu cầu của bạn được giữ nguyên; "
+                    "không có nguồn bị cấm nào được truy cập.",
+                    code="unavailable_tool",
+                )
+
     async def generate_content_async(
         self,
         llm_request: LlmRequest,
@@ -56,6 +72,7 @@ class RecoverableGemini(Gemini):
                     conservative_tokens(serialized_request, 8192),
                 )
             async for response in super().generate_content_async(llm_request, stream=False):
+                self._validate_tool_calls(response, llm_request)
                 emitted = True
                 yield response
             if self.circuit is not None:
@@ -126,6 +143,7 @@ class RecoverableGemini(Gemini):
                                 continue
                             raise
                     async for response in fallback.generate_content_async(request, stream=False):
+                        self._validate_tool_calls(response, request)
                         yield response
                     if self.circuit is not None:
                         await asyncio.to_thread(self.circuit.success, candidate_capability)
