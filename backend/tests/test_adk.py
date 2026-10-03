@@ -363,6 +363,28 @@ def test_saved_skill_selects_dedicated_gmail_capability_agent():
     assert records[-1]["agent"] == "skill_agent"
 
 
+def test_forbidden_google_creation_does_not_disable_memory_agent_tools():
+    from app.agent.routing import Route
+
+    message = (
+        "Lưu vào bộ nhớ một ghi chú giả lập: dự án TEST có ba mục. "
+        "Không đọc Gmail, Drive hay nguồn bên ngoài, không tạo tài liệu Google."
+    )
+    assert not AdkOrchestrator._should_use_compiler(ChatControls(), Route(), message)
+    assert not AdkOrchestrator._has_workspace_creation_request(
+        "Không tạo Google Doc, chỉ ghi nhớ yêu cầu."
+    )
+    assert not AdkOrchestrator._has_workspace_creation_request(
+        "Do not create a Google document. Save this preference in memory."
+    )
+    assert AdkOrchestrator._has_workspace_creation_request(
+        "Không đọc Gmail, nhưng tạo Google Doc với dữ liệu giả."
+    )
+    assert AdkOrchestrator._should_use_compiler(
+        ChatControls(), Route(), "Tạo tài liệu Google từ dữ liệu tôi cung cấp."
+    )
+
+
 def test_study_agent_keeps_unsourced_scientific_claims_conditional():
     records = []
     model = RecoverableGemini(model="gemini-primary", fallback_model="gemini-fallback")

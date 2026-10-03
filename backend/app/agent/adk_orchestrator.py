@@ -538,15 +538,32 @@ class AdkOrchestrator:
             or (route.tool or "").startswith("gmail_")
             or bool(route.sources)
             or controls.output in {"document", "spreadsheet"}
-            or re.search(
+            or AdkOrchestrator._has_workspace_creation_request(user_message)
+        )
+
+    @staticmethod
+    def _has_workspace_creation_request(message: str) -> bool:
+        """A forbidden document action must not hijack an unrelated memory request."""
+        clauses = re.split(r"[.;!?\n]|\b(?:nhưng|but)\b", message, flags=re.I)
+        for clause in clauses:
+            # Strip only explicit prohibitions in this clause. This also avoids
+            # joining a memory-save verb to a document named in a later sentence.
+            positive = re.sub(
+                r"\b(?:không|đừng|chưa|do\s+not|don't|never)\s+"
+                r"(?:tạo|soạn|làm|sửa|chỉnh sửa|lưu|chuyển|xuất|"
+                r"create|edit|save|put|export)\b[^,]*",
+                " ", clause, flags=re.I,
+            )
+            if re.search(
                 r"\b(?:tạo|soạn|làm|sửa|chỉnh sửa|cho|đưa|lưu|chuyển|xuất|"
                 r"export|create|edit|save|put)"
                 r"\b.*\b(?:google\s*|gg\s*)?"
                 r"(?:docs?|sheets?|tài liệu|bảng tính)\b",
-                user_message,
+                positive,
                 re.I,
-            )
-        )
+            ):
+                return True
+        return False
 
     @staticmethod
     def _build_agent_tree(
