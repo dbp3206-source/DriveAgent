@@ -39,3 +39,20 @@ def test_total_budget_and_explicit_missing_history():
     assert "hỏi lại" in result[0]["text"]
     assert sum(len(row["text"]) for row in result[1:]) <= 64000
     assert result[-1]["text"].startswith("0")
+
+
+def test_recent_correction_retains_original_constraint_in_chronological_order():
+    rows = [
+        message("user", "Đổi ngày sang 14/10; vẫn chỉ dùng tài liệu B, không dùng Gmail."),
+        message("assistant", "Bản nháp ngày 12/10."),
+        message("user", "Khách hàng Sao Mai; ngày 12/10; chỉ dùng tài liệu B."),
+    ]
+    result = conversation_context(rows, "Viết báo cáo chi tiết")
+    assert result[0]["text"] == rows[2].content
+    assert result[-1]["text"] == rows[0].content
+    assert "14/10" in result[-1]["text"]
+    assert "không dùng Gmail" in result[-1]["text"]
+
+
+def test_no_history_does_not_invent_context_from_other_session():
+    assert conversation_context([], "Tiếp tục báo cáo khách hàng") == []

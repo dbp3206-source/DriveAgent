@@ -19,7 +19,7 @@ Xóa một bộ nhớ không tự xóa email, lịch sử Chat hoặc bản sao 
 
 ## 2. Hiện trạng đã đối chiếu mã
 
-- `backend/app/agent/compiler.py`: lấy 8 bản ghi Message gần nhất của đúng người/phiên; mỗi nội dung đưa vào lời nhắc bị giới hạn 4.000 ký tự. Chưa đủ căn cứ nói những ràng buộc xa hơn luôn được giữ.
+- Cập nhật mã ngày 03/10: `backend/app/agent/compiler.py` dùng ngữ cảnh chung, tối đa 32 bản ghi đúng người/phiên, tổng 64.000 ký tự và 16.000 ký tự mỗi nội dung; có thông báo khi lược bớt. Chưa đủ căn cứ nói ràng buộc nằm trong phần bị lược bớt luôn được giữ. Giới hạn 8 bản ghi/4.000 ký tự là hiện trạng lịch sử ngày 01/10, không còn là giới hạn mã hiện hành.
 - `backend/app/api/chat.py`: định tuyến hỏi tiếp Gmail/Drive dựa vào tối đa 12 tin nhắn trước; có xử lý thư được trích dẫn và hỏi rõ khi có nhiều thư. Phải kiểm cả đổi chủ đề và đổi phạm vi, không chỉ đại từ đơn giản.
 - `backend/app/agent/adk_orchestrator.py`: dùng kho phiên ADK theo người/phiên. Lịch sử nhìn được trên giao diện không chứng minh hai đường điều phối nhận cùng ngữ cảnh khi chuyển đường chạy.
 - `backend/app/services/memory.py`: lưu theo người, chống trùng nội dung, chặn mẫu bí mật, tìm kết hợp độ gần nghĩa và từ khóa, loại bản lưu trữ. Điều kiện giao từ khóa có thể bỏ sót cách diễn đạt khác; cần kiểm truy hồi tiếng Việt thực tế trước khi thay ngưỡng.
@@ -121,7 +121,7 @@ S08/S09/S11 và các lỗi phục hồi cần kiểm xác định bằng dữ li
 
 Tỷ lệ phải có tử số/mẫu số và lỗi cụ thể; với mẫu nhỏ, một lỗi có thể làm không đạt 95%. Không làm tròn để đạt ngưỡng. Sáu chuỗi là mức tối thiểu nghiệm thu có giới hạn, không chứng minh khả năng mọi hội thoại.
 
-Không tạo điểm “bộ nhớ 10/10” từ việc API lưu thành công. Kết quả bộ nhớ đi vào **25% hoàn thành nghiệp vụ và 20% độ tin cậy** của cách chấm hiện hành, mỗi bằng chứng chỉ tính một lần. Giữ tổng >=9,2/10, nhóm quan trọng >=9 và không lỗi nghiêm trọng; các điều kiện bắt buộc ở đây vẫn chặn phát hành dù trung bình cao.
+Không tạo điểm “bộ nhớ 10/10” từ việc lưu thành công. Kết quả bộ nhớ đi vào **25% hoàn thành nghiệp vụ và 20% độ tin cậy** của cách chấm hiện hành, mỗi bằng chứng chỉ tính một lần. Mục tiêu tổng 8,7–9/10 theo checklist hiện hành, không lỗi nghiêm trọng; các điều kiện bắt buộc ở đây vẫn chặn phát hành dù trung bình cao.
 
 Chạy lại ca ảnh hưởng sau sửa, rồi mẫu mới ngoài bộ sửa lỗi với khách hàng/cách diễn đạt/thứ tự khác. Khóa cách chấm trước khi chạy. Không đổi kỳ vọng chỉ để hợp câu trả lời thực tế.
 

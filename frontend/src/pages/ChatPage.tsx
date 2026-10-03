@@ -41,6 +41,7 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { api, ApiError } from '../api'
 import { waitForChatTask } from '../chatTaskPolling.mjs'
+import { readHistoryWithRecovery } from '../historyRecovery.mjs'
 import { EmptyState, ErrorState } from '../components/AsyncState'
 import { ExecutionTrace } from '../components/ExecutionTrace'
 import { CreationProposal, type Proposal } from '../components/CreationProposal'
@@ -232,6 +233,8 @@ const controlLabels = {
 export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [sessionCursor, setSessionCursor] = useState<string | null>(null)
+  const [historyAttempt, setHistoryAttempt] = useState(0)
+  const [historyState, setHistoryState] = useState<'loading' | 'ready' | 'failed'>('loading')
   const [searchQuery, setSearchQuery] = useState('')
   const [showAllSessions, setShowAllSessions] = useState(false)
   const [sessionId, setSessionIdState] = useState<string | null>(() => {
@@ -567,12 +570,21 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
   }, [busy, briefingBusy, onBusyChange])
 
   useEffect(() => {
-    let mounted = true
-    api<{items: ChatSession[]; next_cursor: string | null}>('/api/chat/sessions-page')
-      .then(data => { if (mounted) { setSessions(data.items); setSessionCursor(data.next_cursor) } })
-      .catch(() => { if (mounted) setError('Chưa tải được lịch sử. Bạn vẫn có thể bắt đầu cuộc trò chuyện mới.') })
-    return () => { mounted = false }
-  }, [])
+    const controller = new AbortController()
+    readHistoryWithRecovery(
+      () => api<{items: ChatSession[]; next_cursor: string | null}>('/api/chat/sessions-page', {signal: controller.signal}),
+      controller.signal,
+    )
+      .then(data => {
+        if (!controller.signal.aborted) {
+          setSessions(current => [...data.items, ...current.filter(item => !data.items.some(loaded => loaded.id === item.id))])
+          setSessionCursor(data.next_cursor)
+          setHistoryState('ready')
+        }
+      })
+      .catch(() => { if (!controller.signal.aborted) setHistoryState('failed') })
+    return () => controller.abort()
+  }, [historyAttempt])
 
   useEffect(() => {
     if (!isActive) return
@@ -1071,7 +1083,12 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
             <span className="rail-caption-count">{filteredSessions.length}</span>
           </div>
 
-          {filteredSessions.length === 0 ? (
+          {historyState === 'loading' ? <p className="rail-empty" role="status">Đang tải lịch sử… Bạn vẫn có thể trò chuyện.</p> : null}
+          {historyState === 'failed' ? <div className="rail-empty" role="status">
+            <p>Chưa tải được lịch sử. Bạn vẫn có thể bắt đầu cuộc trò chuyện mới.</p>
+            <Button size="small" onClick={() => { setHistoryState('loading'); setHistoryAttempt(value => value + 1) }}>Tải lại lịch sử</Button>
+          </div> : null}
+          {filteredSessions.length === 0 && historyState === 'ready' ? (
             <p className="rail-empty">
               {searchQuery ? 'Không tìm thấy cuộc trò chuyện nào.' : 'Các cuộc trò chuyện sẽ được lưu ở đây.'}
             </p>

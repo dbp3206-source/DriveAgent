@@ -122,7 +122,7 @@ Chỉ số bổ sung: đúng yêu cầu; đúng bằng chứng; độ đầy đ�
 
 So sánh với cách hiện tại của cùng người tư vấn trên dữ liệu tương đương. Ít nhất hai công việc đại diện chạy theo cặp, đổi thứ tự/case tương đương để giảm hiệu ứng đã biết đáp án; ghi khác biệt điều kiện. Mẫu nhỏ chỉ là bằng chứng thăm dò, không suy rộng thành tiết kiệm toàn thị trường hay tăng doanh thu.
 
-Ngưỡng điểm >=9,2/10 giữ theo plan, nhóm quan trọng >=9, không P0/P1. Không có số liệu live đầy đủ thì chưa tính điểm toàn sản phẩm. Điểm offline không chứng nhận nghiệp vụ; chữ “pending” không chứng minh đã chặn gửi; số nguồn không chứng minh tính đúng.
+Mục tiêu điểm tổng 8,7–9/10 theo quyết định hiện hành trong checklist; không có lỗi nghiêm trọng và mọi điều kiện bắt buộc phải đạt. Không có số liệu thực tế đầy đủ thì chưa tính điểm toàn sản phẩm. Điểm kiểm thử tự động không chứng nhận nghiệp vụ; chữ “đang chờ” không chứng minh đã chặn gửi; số nguồn không chứng minh tính đúng.
 
 Mỗi chức năng mới phải trả lời: giải quyết P1–P4 nào, phục vụ W1–W3 nào, đầu ra/metric nào thay đổi, bằng chứng tác động là gì. Nếu không, chỉ được làm khi bắt buộc ProtonX/an toàn/phát hành; còn lại hoãn.
 
@@ -130,6 +130,6 @@ Mỗi chức năng mới phải trả lời: giải quyết P1–P4 nào, phục
 
 Ngày 01/10/2026 đã chạy lại hồi quy: định tuyến 12/12, bộ chấm 12/12, hợp đồng mẫu 16/16, đối kháng 160/160; 35 test tập trung đạt. Không gọi Gemini/Google thật cho kết quả này.
 
-Mã hiện có cung cấp các thành phần chính, nhưng Home vẫn nói học tập/ngân sách; bộ đo công ty còn chấm theo 12 nguồn và 42 giây, dựa marker và tự báo mâu thuẫn; runner không đi qua đầy đủ W1–W3. Các vấn đề này chặn việc nhận kết quả cũ làm chứng nhận định hướng mới.
+Nhận xét lịch sử ngày 01/10: Home còn nói học tập/ngân sách, bộ đo công ty còn dựa vào số mẫu 12 nguồn và 42 giây. Đến 03/10, mã đã có lối vào chuẩn bị đầu ngày và bộ chấm không tự ghi số thao tác trái phép bằng 0 khi thiếu bằng chứng. Những thay đổi này chưa chứng minh thực thi đầy đủ W1–W3; vẫn cần đối soát trực tiếp trên cùng bản phát hành, không lấy kết quả cũ làm chứng nhận.
 
 Phương pháp và nội dung ở trên đã chốt trong tài liệu, **chưa tự trở thành hành vi chạy trong sản phẩm**. Các bước thực hiện tiếp theo được giới hạn bởi checklist hiện hành.

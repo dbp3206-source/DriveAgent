@@ -128,6 +128,29 @@ async def test_memory_edit_archive_restart_delete_and_cross_owner(tmp_path, monk
             saved.id, MemoryUpdateRequest(is_archived=True), request, owner, db
         )
         assert not (await service.search(SearchMemoryInput(query="chi tiết"), context)).memories
+        # Management may show archived records for recovery, but never another
+        # owner's records; recall must continue to exclude the archived value.
+        assert not (await memory_api.list_memories(user=owner, db=db)).memories
+        managed = await memory_api.list_memories(user=owner, db=db, include_archived=True)
+        assert [item.id for item in managed.memories] == [saved.id]
+        assert managed.memories[0].is_archived is True
+        assert not (
+            await memory_api.list_memories(user=other, db=db, include_archived=True)
+        ).memories
+        # Even a stale/high-scoring vector hit cannot resurrect an archived or
+        # owner-excluded database row. The relational filter is authoritative.
+        stale_search = AsyncMock(return_value=[(saved.id, 1.0)])
+        with monkeypatch.context() as stale_vectors:
+            stale_vectors.setattr(vectors, "search", stale_search)
+            assert not (
+                await service.search(SearchMemoryInput(query="chi tiết"), context)
+            ).memories
+            other_context = ToolContext(
+                request_id="memory-other", user=other, db=db, settings=settings
+            )
+            assert not (
+                await service.search(SearchMemoryInput(query="chi tiết"), other_context)
+            ).memories
         owner_id, saved_id = owner.id, saved.id
     await vectors.close()
     await engine.dispose()

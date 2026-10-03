@@ -2,7 +2,7 @@
 
 Ngày chốt: 01/10/2026. Nguồn định hướng: [PRODUCT-FOUNDATION.md](PRODUCT-FOUNDATION.md). Quản lý bằng **18 điều kiện nghiệm thu trong 6 nhóm**, triển khai và đối soát bằng [90 tiêu chí chi tiết hiện hành](ACCEPTANCE-DETAILS.md). Hai cấp cùng bắt buộc: gom nhóm không có nghĩa cắt bỏ yêu cầu. Bản cũ trong thư mục QA chỉ là lịch sử; bộ nhớ là phần bổ sung, không thay phạm vi toàn sản phẩm.
 
-**Điều chỉnh ngưỡng theo yêu cầu mới của người dùng:** mục tiêu điểm tổng 8,7–9/10 thay mức 9,2 của bản kế hoạch trước. Các chỗ ghi 9,2 dưới đây là ngưỡng lịch sử, không được dùng để kéo dài hoặc thay đổi phạm vi hiện hành. Điều kiện an toàn, hoàn thành chức năng chính, đủ nhóm đo, không lỗi nghiêm trọng và bằng chứng cùng phiên bản vẫn bắt buộc; không dùng điểm trung bình để bỏ qua điều kiện chưa đạt.
+**Ngưỡng hiện hành theo yêu cầu cập nhật của người dùng:** mục tiêu điểm tổng 8,7–9/10; mức 9,2 của kế hoạch trước chỉ là lịch sử. Điều kiện an toàn, hoàn thành chức năng chính, đủ nhóm đo, không lỗi nghiêm trọng và bằng chứng cùng phiên bản vẫn bắt buộc; không dùng điểm trung bình để bỏ qua điều kiện chưa đạt.
 
 Mỗi ô chỉ đóng khi có bằng chứng cùng bản mã/ảnh Docker/cấu hình: môi trường, thời điểm, đầu vào, kỳ vọng/thực tế, mã yêu cầu và dữ liệu đối soát đã khử riêng tư. ĐẠT / KHÔNG ĐẠT / CHƯA KIỂM CHỨNG / LOẠI KHỎI PHẠM VI; không điểm giả. Phần đã có mã vẫn có thể chưa nghiệm thu.
 
@@ -46,7 +46,7 @@ Mỗi bước cập nhật trạng thái thật và phần cần người dùng 
 
 - [ ] **A1. Chuẩn hóa bộ đo công ty.** Tách kiểm tra nguồn/nghiên cứu khỏi W1–W3 đầy đủ. Bỏ 12 nguồn và 42 giây như điều kiện bắt buộc từ số ví dụ; vẫn đo số nguồn/thời gian. Kiểm nhận định với nội dung nguồn, không chỉ marker; nguồn mâu thuẫn phải được nêu và xử lý, không tự FAIL vì phát hiện mâu thuẫn. Không dùng `unauthorized_side_effects=0` hằng số hoặc chữ `pending` làm bằng chứng an toàn. Thiếu dữ liệu phải hạ kết luận, không sửa expected để PASS. Hiện: cần sửa bộ đo trước khi chứng nhận nghiệp vụ.
 - [ ] **A2. Đầu ra nghiệp vụ có hợp đồng rõ.** Bản yêu cầu/báo cáo trước hẹn/bản phản hồi bám mục tiêu; tách dữ kiện-suy luận-giả định-chưa biết; câu hỏi hiện trạng/vấn đề/ảnh hưởng/kết quả mong muốn liên quan và không bịa ngân sách/ROI. Đọc nguồn, tính toán và hỏi lại chỉ khi cần; phương pháp thể hiện ở đầu ra thật, không chỉ copy giới thiệu. Hiện: có thành phần; cần đối soát toàn bộ.
-- [ ] **A3. Khóa mẫu và cách chấm.** Manifest đủ 6 doanh nghiệp ProtonX, 6 PDF cung cấp và mẫu thư/lịch/attachment/bảng/skills/memory; URL/checksum/quyền/oracle. Khóa 24 lượt live theo plan: 6 doanh nghiệp, 6 tác vụ tài liệu có text, 6 phối hợp, 6 nguồn cập nhật; thêm ca âm và mẫu mới ngoài bộ sửa lỗi. File scan là ca từ chối không OCR, không tính vào đọc thành công. Chấm 30% nguồn, 25% nghiệp vụ, 20% tin cậy, 15% khả dụng, 10% vận hành; giữ >=9,2 và nhóm quan trọng >=9. Lưu số mẫu, lỗi và giới hạn; không lấy điểm mẫu offline làm điểm live.
+- [ ] **A3. Khóa mẫu và cách chấm.** Manifest đủ 6 doanh nghiệp ProtonX, 6 PDF cung cấp và mẫu thư/lịch/attachment/bảng/skills/memory; URL/checksum/quyền/oracle. Khóa 24 lượt live theo plan: 6 doanh nghiệp, 6 tác vụ tài liệu có text, 6 phối hợp, 6 nguồn cập nhật; thêm ca âm và mẫu mới ngoài bộ sửa lỗi. File scan là ca từ chối không OCR, không tính vào đọc thành công. Chấm 30% nguồn, 25% nghiệp vụ, 20% tin cậy, 15% khả dụng, 10% vận hành; mục tiêu tổng 8,7–9/10 và nhóm quan trọng >=9. Lưu số mẫu, lỗi và giới hạn; không lấy điểm mẫu offline làm điểm live.
 
 ## B — Ba quy trình và nguồn (không mở rộng domain)
 
@@ -74,7 +74,7 @@ Mỗi bước cập nhật trạng thái thật và phần cần người dùng 
 
 ## F — Nghiệm thu và phát hành đúng bản
 
-- [ ] **F1. Bằng chứng live và giá trị.** Hoàn thành 24 lượt đã khóa, mẫu ngoài bộ sửa lỗi, fault injection và đối soát nhận định bằng nguồn/oracle. W1–W3 phải thực thi xuyên suốt, không ghép component PASS thành chuỗi PASS. Ít nhất 2 công việc so sánh cặp với cách hiện tại, gồm sửa tay và hạn chế mẫu nhỏ; không tự hứa mức tiết kiệm/doanh thu. Không P0/P1; gate thiếu/chưa kiểm chứng chặn phát hành dù điểm >=9,2.
+- [ ] **F1. Bằng chứng live và giá trị.** Hoàn thành 24 lượt đã khóa, mẫu ngoài bộ sửa lỗi, fault injection và đối soát nhận định bằng nguồn/oracle. W1–W3 phải thực thi xuyên suốt, không ghép component PASS thành chuỗi PASS. Ít nhất 2 công việc so sánh cặp với cách hiện tại, gồm sửa tay và hạn chế mẫu nhỏ; không tự hứa mức tiết kiệm/doanh thu. Không P0/P1; gate thiếu/chưa kiểm chứng chặn phát hành dù đạt mục tiêu điểm tổng 8,7–9/10.
 - [ ] **F2. Bốn người thật và cùng phiên bản.** Từng người tự OAuth/BYOK; >=5 vòng thao tác xen kẽ trên HTTPS, không chéo dữ liệu/crash/mất việc. Đóng băng Git/config/migration/model/dataset/digest cho hồ sơ cuối. Thay đổi sau chốt phải chạy lại phần ảnh hưởng. Dữ liệu có từ build cũ giữ lịch sử, không đổi nhãn thành build mới.
 - [ ] **F3. GitHub→Docker→Render.** Dependency khóa, kiểm mã/test/regression/build/smoke từ sạch; giải thích skip. Rà diff và secret/history/license; preserve stash/tệp của user. CI đóng gói đúng digest, nghiệm thu rồi gộp main; CI main/release/Render cùng ảnh. Đối soát URL/login/Chat/nguồn/duyệt/persistence và rollback. Không tự đổi repo URL/visibility hoặc quảng bá free-tier luôn sẵn sàng.
 
@@ -92,7 +92,7 @@ Bằng chứng chi tiết và dữ liệu riêng của tester được giữ ngo
 
 ## Điều kiện kết thúc và bàn giao
 
-Chỉ kết thúc khi cả 18 điều kiện và các tiêu chí chi tiết áp dụng đã ĐẠT trên cùng bản phát hành; không lỗi nghiêm trọng hoặc lỗi chức năng chính chưa xử lý; tổng >=9,2/10 và nguồn/nghiệp vụ/độ tin cậy từng nhóm >=9. Không thiếu nhóm đo, không lấy số liệu giả hoặc kết quả cũ để lấp khoảng trống.
+Chỉ kết thúc khi cả 18 điều kiện và các tiêu chí chi tiết áp dụng đã ĐẠT trên cùng bản phát hành; không lỗi nghiêm trọng hoặc lỗi chức năng chính chưa xử lý; đạt mục tiêu điểm tổng 8,7–9/10 và nguồn/nghiệp vụ/độ tin cậy từng nhóm >=9. Không thiếu nhóm đo, không lấy số liệu giả hoặc kết quả cũ để lấp khoảng trống.
 
 Hồ sơ từng mục có: trạng thái; mã bản nguồn/cấu hình/model/dữ liệu/ảnh đóng gói; môi trường; đầu vào/bước làm; kỳ vọng/thực tế; mã yêu cầu; số đo và mẫu số; bằng chứng đối soát; lỗi/cách sửa/kiểm lại hoặc lý do loại bỏ được duyệt. Tiêu chí chưa chạy giữ CHƯA KIỂM CHỨNG và chặn phần phát hành liên quan.
 
@@ -127,7 +127,7 @@ Mỗi mã cũ được gán một chủ quản để không bỏ sót; điều k
 | F2 | A01, C01, K04 |
 | F3 | A03, K01, K09, K10, K11 |
 
-Điều chỉnh công khai: E07 cũ bỏ tạo/sửa Calendar vì mã hiện read-only và ProtonX cần đọc/trigger; không phát triển ngoài yêu cầu. Bỏ “12 nguồn/42 giây” như gate cứng, vẫn ghi số đo để đối chiếu ví dụ ProtonX. Không hạ ngưỡng điểm, không bỏ thử bốn user/restore/an toàn/CI hoặc các mẫu bắt buộc.
+Điều chỉnh công khai: E07 cũ bỏ tạo/sửa Calendar vì mã hiện read-only và ProtonX cần đọc/trigger; không phát triển ngoài yêu cầu. Bỏ “12 nguồn/42 giây” như gate cứng, vẫn ghi số đo để đối chiếu ví dụ ProtonX. Ngưỡng điểm dùng quyết định cập nhật đã ghi ở đầu tài liệu; không tự đổi theo kết quả đo, không bỏ thử bốn user/restore/an toàn/CI hoặc các mẫu bắt buộc.
 
 Thứ tự: A trước → B/C song hành theo luồng → D trước khi release → E giới hạn theo concept → F chốt cùng bản. Lỗi bảo mật nghiêm trọng xử lý ngay, không chờ đến nhóm D.
 
