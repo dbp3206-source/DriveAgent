@@ -330,6 +330,30 @@ def test_adk_auto_router_skips_coordinator_for_clear_specialist_intents():
     assert AdkOrchestrator._auto_agent_for_request("Bạn làm được gì?") == "auto"
 
 
+def test_memory_recall_does_not_route_to_excluded_local_sources():
+    message = (
+        "Chỉ tìm trong bộ nhớ dài hạn đã lưu mục dự án DEMO-V-031026. "
+        "Mẫu báo cáo trước họp của dự án đó gồm những phần nào và áp dụng "
+        "trong phạm vi nào? Không đọc Gmail, Drive, tài liệu local hay web; "
+        "không lưu thêm hoặc tạo tài liệu. Nếu không có mục phù hợp thì nói "
+        "chưa tìm thấy."
+    )
+    controls = ChatControls().enforce_explicit_source_exclusions(message)
+    assert {"gmail", "drive", "local"}.issubset(controls.excluded_sources)
+    assert "memory" not in controls.excluded_sources
+    assert AdkOrchestrator._auto_agent_for_request(
+        message, excluded_sources=controls.excluded_sources
+    ) == "study"
+    for marker in ("local", "trên máy", "vừa import"):
+        assert AdkOrchestrator._auto_agent_for_request(
+            f"Đọc tài liệu {marker}"
+        ) == "research"
+        assert AdkOrchestrator._auto_agent_for_request(
+            f"Tìm bộ nhớ, không đọc tài liệu {marker}",
+            excluded_sources=frozenset({"local"}),
+        ) == "study"
+
+
 def test_saved_skill_stays_in_adk_even_when_its_message_matches_direct_gmail_route():
     controls = ChatControls(skill_name="daily_news_brief")
     route = route_request("Tổng hợp email Bản chi tiết hôm nay")

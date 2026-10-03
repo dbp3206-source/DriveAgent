@@ -872,7 +872,9 @@ class AdkOrchestrator:
             )
         ):
             return "research"
-        if any(marker in normalized for marker in ("local", "trên máy", "vừa import")):
+        if "local" not in excluded_sources and any(
+            marker in normalized for marker in ("local", "trên máy", "vừa import")
+        ):
             return "research"
         route = ChatControls(excluded_sources=excluded_sources).filter_excluded_route(
             route_request(message)
