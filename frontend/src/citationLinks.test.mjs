@@ -2,6 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { citationHref } from './citationLinks.mjs'
 
+test('memory evidence opens owner management, not Drive or an external supplied link', () => {
+  assert.deepEqual(citationHref({ file_id: 'memory:record123', web_view_link: 'https://example.com' }), {
+    href: '/#/memory', title: 'Xem bộ nhớ đã lưu của bạn',
+  })
+})
+
 test('web citation opens its collected URL rather than the Drive reader', () => {
   assert.deepEqual(citationHref({ file_id: 'https://www.joc.or.jp/games/asia/2026/' }), {
     href: 'https://www.joc.or.jp/games/asia/2026/', title: 'Mở trang nguồn trên Internet',

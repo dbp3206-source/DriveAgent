@@ -14,7 +14,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
-from langchain_core.tools import StructuredTool
 from pydantic import BaseModel, Field
 
 from app.agent.controls import ChatControls
@@ -30,6 +29,7 @@ from app.tools.contracts import ToolContext
 from app.tools.registry import ToolRegistry
 
 if TYPE_CHECKING:
+    from langchain_core.tools import StructuredTool
     from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
     from app.agent.state import AgentState
@@ -417,6 +417,10 @@ class AgentOrchestrator:
         records: list[dict[str, Any]],
         lock: asyncio.Lock,
     ) -> list[StructuredTool]:
+        # ADK reuses the evidence helpers in this module but never builds these
+        # LangGraph wrappers. Load their tool/tracer dependencies only on use.
+        from langchain_core.tools import StructuredTool
+
         tools: list[StructuredTool] = []
         for definition in self.registry.definitions():
             if definition.requires_user_action:
@@ -543,6 +547,20 @@ class AgentOrchestrator:
                 payload = json.loads(str(message.content))
             except json.JSONDecodeError:
                 continue
+            if message.name == "memory_search":
+                data = payload.get("data", payload)
+                payload["citations"] = [
+                    {
+                        "file_id": f"memory:{item['id']}",
+                        "file_name": "Bộ nhớ đã lưu",
+                        "chunk_index": 0,
+                        "snippet": item["content"][:500],
+                        "web_view_link": "/#/memory",
+                        "score": 1.0,
+                    }
+                    for item in data.get("memories", [])
+                    if item.get("id") and item.get("content") and not item.get("is_archived")
+                ]
             if message.name == "local_source_read":
                 payload = payload.get("data", {})
             if message.name == "local_source_search":

@@ -289,6 +289,51 @@ async def test_adk_returns_memoized_result_for_identical_tool_replay():
     ]
 
 
+async def test_memory_tool_supplies_numbered_real_reference_for_final_answer():
+    import asyncio
+    from datetime import UTC, datetime
+
+    from app.agent.evidence import retain_referenced_citations
+    from app.agent.orchestrator import AgentOrchestrator
+    from app.api.schemas import MemoryResponse
+    from app.services.memory import MemoryListResponse, memory_tool_definitions
+
+    record = MemoryResponse(
+        id="saved-memory", kind="fact", content="Dự án Mẫu có ba mục đã thống nhất.",
+        tags=[], confidence=1.0, is_archived=False,
+        created_at=datetime.now(UTC), updated_at=datetime.now(UTC),
+    )
+    registry = ToolRegistry()
+    registry.execute = AsyncMock(return_value=MemoryListResponse(memories=[record]))
+    evidence, events = [], []
+
+    class FakeDb:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *args):
+            return None
+
+        async def get(self, model, owner):
+            return SimpleNamespace(id=owner, is_active=True)
+
+    definitions = memory_tool_definitions(SimpleNamespace(save=AsyncMock(), search=AsyncMock()))
+    tool = GovernedAdkTool(
+        definitions[1], registry, Settings(_env_file=None), "owner-a", "request-a",
+        events, evidence, asyncio.Semaphore(2), set(),
+    )
+    with patch("app.agent.adk_orchestrator.SessionFactory", return_value=FakeDb()):
+        payload = await tool.run_async(args={"query": "Dự án Mẫu"}, tool_context=None)
+    assert payload["source_references"][0]["reference"] == 1
+    assert payload["source_references"][0]["file_id"] == "memory:saved-memory"
+    assert payload["source_references"][0]["snippet"] == record.content
+    citations = AgentOrchestrator._collect_citations(evidence)
+    answer, retained = retain_referenced_citations("Ba mục đã thống nhất [1].", citations)
+    assert answer == "Ba mục đã thống nhất [1]."
+    assert retained == citations
+    assert len(retained) == 1
+
+
 def test_adk_builds_real_coordinator_and_specialized_agents():
     """Multi-agent means an executable ADK tree, not only labels in the UI."""
 

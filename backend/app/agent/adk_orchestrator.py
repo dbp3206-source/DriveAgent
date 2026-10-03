@@ -694,7 +694,10 @@ class AdkOrchestrator:
                 instruction=common
                 + (
                     "\nBạn là Memory Agent. Chỉ đọc/ghi bộ nhớ qua tool được cấp và không biến "
-                    "sở thích thành sự thật khách quan. Dùng tài liệu local khi người dùng "
+                    "sở thích thành sự thật khách quan. Khi dùng thông tin đã lưu, dẫn đúng "
+                    "số [n] được cấp trong source_references của memory_search; không viết "
+                    "ký hiệu giữ chỗ [nguồn]. Nguồn bộ nhớ là thông tin người dùng đã lưu, "
+                    "không tự chứng minh sự thật ngoài đời. Dùng tài liệu local khi người dùng "
                     "chỉ định. Kiến thức nền không có nguồn phải dùng ngôn ngữ có điều kiện. "
                     "Nếu người dùng cấm claim thiếu nguồn, không tự thêm thời lượng, tỷ lệ, "
                     "xếp hạng cao/thấp hoặc mức hiệu quả. Khi yêu cầu tính toán nhiều "

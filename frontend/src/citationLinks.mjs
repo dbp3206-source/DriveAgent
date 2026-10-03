@@ -1,5 +1,8 @@
 /** Choose a reader from the actual source, never interpret a web URL as a Drive ID. */
 export function citationHref(citation) {
+  if (citation.file_id.startsWith('memory:')) {
+    return { href: '/#/memory', title: 'Xem bộ nhớ đã lưu của bạn' }
+  }
   const isLocal = citation.file_id.startsWith('local:')
   const isGmail = citation.web_view_link?.startsWith('https://mail.google.com/')
   const isWeb = citation.file_id.startsWith('https://')

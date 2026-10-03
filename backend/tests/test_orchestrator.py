@@ -78,6 +78,26 @@ def test_current_turn_keeps_evidence_and_empty_guard_is_safe() -> None:
     ]
 
 
+@pytest.mark.parametrize("wrapped", [False, True])
+def test_memory_recall_uses_only_actual_active_records_as_sources(wrapped) -> None:
+    data = {"memories": [
+        {"id": "memory-a", "content": "Dự án Mẫu: bối cảnh, câu hỏi, bước tiếp theo.",
+         "is_archived": False},
+        {"id": "memory-old", "content": "Bản đã cất", "is_archived": True},
+        {"content": "Không có mã nguồn"},
+    ]}
+    evidence = ToolMessage(content=json.dumps({"data": data} if wrapped else data),
+                           tool_call_id="memory-call", name="memory_search")
+    citations = AgentOrchestrator._collect_citations([HumanMessage(content="nhớ lại"), evidence])
+    assert citations == [{
+        "file_id": "memory:memory-a", "file_name": "Bộ nhớ đã lưu", "chunk_index": 0,
+        "snippet": "Dự án Mẫu: bối cảnh, câu hỏi, bước tiếp theo.",
+        "web_view_link": "/#/memory", "score": 1.0,
+    }]
+    empty = ToolMessage(content='{"memories":[]}', tool_call_id="empty", name="memory_search")
+    assert AgentOrchestrator._collect_citations([HumanMessage(content="không có"), empty]) == []
+
+
 def test_gmail_messages_become_stable_clickable_source_references() -> None:
     evidence = ToolMessage(
         content=(
