@@ -552,7 +552,9 @@ class AgentOrchestrator:
                     {
                         "file_id": f"local:{item['id']}",
                         "file_name": item.get("name") or "Tài liệu local",
-                        "chunk_index": 0,
+                        "chunk_index": item.get("offset", 0),
+                        **({"page_number": item["page_number"]}
+                           if item.get("page_number") is not None else {}),
                         "snippet": item.get("snippet", "")[:500],
                         "web_view_link": item.get("web_view_link"),
                         "score": 1.0,

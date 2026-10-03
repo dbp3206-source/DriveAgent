@@ -80,9 +80,15 @@ Mỗi bước cập nhật trạng thái thật và phần cần người dùng 
 
 ## Tình trạng hiện tại
 
-Đã chốt tài liệu nghiệp vụ và danh sách này. Chưa triển khai các thay đổi giao diện/phương pháp/bộ chấm mới. Kết quả hồi quy lượt 01/10: 12/12, 12/12, 16/16, 160/160; 35 test tập trung đạt. Các ô trên giữ chưa đóng vì chưa có đầy đủ bằng chứng cuối cùng trên cloud. Không đánh đồng 18 gate với 18 lỗi chưa sửa.
+Cập nhật 03/10/2026: sản phẩm đã được triển khai trên [URL kiểm thử](https://veridra-closed-beta.onrender.com), dùng PostgreSQL và kho tệp riêng tư. Nhánh staging đã có các sửa lỗi và kiểm thử mới; chưa gộp main hoặc chứng nhận hoàn thành 18 điều kiện. Không đánh đồng các ô chưa đóng với việc chưa có mã hoặc chưa thực hiện gì.
 
-Lượt chốt toàn diện này chỉ sửa tài liệu. Không chạy lại ứng dụng, không chứng nhận kết quả live mới, không sửa mã/push/gộp main/triển khai. Sáu test bộ nhớ của lượt trước là bằng chứng kỹ thuật giới hạn, không thay 90 tiêu chí.
+Bản đang chạy đã đối chiếu: `67bb43b`, ảnh `sha256:3ef8fa5b9000435db791f0fcec56bab359569a422675b41eb5a6d76109b921d6`; GitHub lần 46 thành công, Render phục vụ từ 18:02:16 ngày 03/10 giờ Việt Nam. Bộ máy chủ local của bản này: 977 đạt, 11 phép thử PostgreSQL không chạy local; phần PostgreSQL được kiểm riêng trong GitHub. Đây là bằng chứng kỹ thuật, không phải điểm chất lượng câu trả lời.
+
+Đã kiểm thật một số phần: đổi khóa đã lưu không khởi động lại và không đặt lại bộ đếm cũ; lưu ghi chú có phạm vi dự án, tìm lại trong phiên mới, trả đúng khi không có dự án phù hợp; PDF có văn bản được xử lý đủ 15 trang và giữ sau triển khai; ngày dữ liệu trang 3 được đọc đúng sau sửa. Các trường hợp này chỉ chứng minh phạm vi đã đo. Dẫn chứng trang 1 từ kết quả tìm kiếm vẫn cần hoàn thiện; chưa chứng minh toàn bộ RAG, 12 ca ngữ cảnh, 6 ca bộ nhớ hoặc 6 chuỗi nghiệp vụ.
+
+Các mục còn mở quan trọng: phục hồi tải lịch sử khi lỗi mạng; bộ thử nghiệp vụ và nguồn cập nhật đầy đủ; dẫn chứng/số liệu của các tài liệu còn lại; sửa/quên và hội thoại dài; luồng buổi sáng/trước hẹn; khôi phục dữ liệu trên môi trường mới; bốn người dùng thật; đối soát cuối cùng cùng một phiên bản. Chỉ có một tài khoản quản trị được người dùng cho phép kiểm hiện tại, nên mục bốn người giữ **CHƯA KIỂM CHỨNG**, không coi là đã loại bỏ.
+
+Bằng chứng chi tiết và dữ liệu riêng của tester được giữ ngoài Git. Kết quả hồi quy ngày 01/10 và các bản trước chỉ là lịch sử; không đổi nhãn thành bằng chứng của bản cuối. OCR và tuyến trả phí không nằm trong phạm vi đã chốt. Không đưa email thật, tài liệu riêng hoặc khóa vào kho mã để chứng minh nghiệm thu.
 
 ## Điều kiện kết thúc và bàn giao
 

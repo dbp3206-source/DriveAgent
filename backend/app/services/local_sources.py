@@ -135,7 +135,7 @@ async def search_local(payload: LocalSearchInput, context: ToolContext) -> Local
             )
         )
 
-    def _extract_snippet(content: str, q: str, tok_list: list[str]) -> str:
+    def _extract_snippet(content: str, q: str, tok_list: list[str]) -> tuple[str, int | None, int]:
         lower_content = content.lower()
         pos = -1
         if q and q.lower() in lower_content:
@@ -145,13 +145,20 @@ async def search_local(payload: LocalSearchInput, context: ToolContext) -> Local
                 pos = lower_content.find(t)
                 if pos >= 0:
                     break
-        if pos >= 0:
-            start = max(0, pos - 80)
-            end = min(len(content), pos + 280)
-            prefix = "…" if start > 0 else ""
-            suffix = "…" if end < len(content) else ""
-            return prefix + content[start:end].strip() + suffix
-        return content[:280].strip() + ("…" if len(content) > 280 else "")
+        anchor = max(pos, 0)
+        start = max(0, pos - 80) if pos >= 0 else 0
+        end = min(len(content), anchor + 280)
+        markers = list(re.finditer(r"<!--\s*page:(\d+)\s*-->", content))
+        preceding = [marker for marker in markers if marker.start() <= anchor]
+        page_number = int(preceding[-1].group(1)) if preceding else None
+        if preceding:
+            start = max(start, preceding[-1].start())
+            following = next((marker for marker in markers if marker.start() > anchor), None)
+            if following:
+                end = min(end, following.start())
+        prefix = "…" if start > 0 else ""
+        suffix = "…" if end < len(content) else ""
+        return prefix + content[start:end].strip() + suffix, page_number, start
 
     ranked_rows = []
     for row in rows:
@@ -163,19 +170,21 @@ async def search_local(payload: LocalSearchInput, context: ToolContext) -> Local
             match_score += 3
         ranked_rows.append((match_score, row))
     ranked_rows.sort(key=lambda item: (item[0], item[1].created_at), reverse=True)
-    sources = [
-        {
+    sources = []
+    for score, row in ranked_rows:
+        snippet, page_number, offset = _extract_snippet(row.content, clean_q, tokens)
+        sources.append({
             "id": row.id,
             "name": row.name,
             "characters": len(row.content),
-            "snippet": _extract_snippet(row.content, clean_q, tokens),
+            "snippet": snippet,
+            "page_number": page_number,
+            "offset": offset,
             "match_score": score,
             "web_view_link": (
                 f"{context.settings.public_base_url}/api/local-sources/{row.id}/text"
             ),
-        }
-        for score, row in ranked_rows
-    ]
+        })
 
     return LocalOutput(
         data={

@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 
 import pytest
@@ -116,11 +117,13 @@ def test_multi_email_full_body_creates_one_citation_per_read_message() -> None:
     assert citations[1]["web_view_link"] == "https://mail.google.com/mail/u/0/#all/t2"
 
 
-def test_local_search_sources_become_clickable_citations() -> None:
+@pytest.mark.parametrize("page_number", [None, 3])
+def test_local_search_sources_become_clickable_citations(page_number) -> None:
     evidence = ToolMessage(
         content=(
             '{"data":{"sources":[{"id":"source-1","name":"study.md",'
             '"snippet":"LOCAL-STUDY-2026",'
+            f'"page_number":{json.dumps(page_number)},'
             '"web_view_link":"http://localhost:8000/api/local-sources/source-1/text"}]}}'
         ),
         tool_call_id="local-call",
@@ -132,6 +135,7 @@ def test_local_search_sources_become_clickable_citations() -> None:
             "file_id": "local:source-1",
             "file_name": "study.md",
             "chunk_index": 0,
+            **({"page_number": page_number} if page_number is not None else {}),
             "snippet": "LOCAL-STUDY-2026",
             "web_view_link": "http://localhost:8000/api/local-sources/source-1/text",
             "score": 1.0,

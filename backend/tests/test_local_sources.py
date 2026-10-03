@@ -116,3 +116,37 @@ async def test_exact_pdf_page_overrides_keyword_ranking_and_preserves_citation()
     )
     assert rest.data["text"] == "x"
     assert rest.data["next_offset"] is None
+
+
+async def test_search_preview_keeps_its_real_page_and_does_not_cross_pages():
+    from app.services.local_sources import LocalSearchInput, search_local
+
+    row = SimpleNamespace(
+        id="source-a", name="sample.pdf", created_at=1,
+        content="<!-- page:1 -->\nPublished 04/05/2026.\n"
+        "<!-- page:3 -->\nNguồn cậpnhậttới29/4/2026\n"
+        "<!-- page:4 -->\nUnrelated page.\n",
+    )
+
+    class Database:
+        async def scalars(self, query):
+            assert "owner-a" in query.compile().params.values()
+            return [row]
+
+    context = SimpleNamespace(
+        db=Database(), user=SimpleNamespace(id="owner-a"),
+        settings=SimpleNamespace(pdf_ocr_enabled=False, public_base_url="http://localhost:8000"),
+    )
+    result = await search_local(LocalSearchInput(query="sample.pdf"), context)
+    assert result.data["sources"][0]["page_number"] == 1
+    assert "29/4/2026" not in result.data["sources"][0]["snippet"]
+    result = await search_local(LocalSearchInput(query="29/4/2026"), context)
+    source = result.data["sources"][0]
+    assert source["page_number"] == 3
+    assert source["offset"] == row.content.index("<!-- page:3 -->")
+    assert "04/05/2026" not in source["snippet"]
+    assert "Unrelated" not in source["snippet"]
+
+    row.content = "Plain text without page markers."
+    result = await search_local(LocalSearchInput(query="sample.pdf"), context)
+    assert result.data["sources"][0]["page_number"] is None
