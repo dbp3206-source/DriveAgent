@@ -79,6 +79,11 @@ class LocalSearchInput(BaseModel):
 
 class LocalReadInput(BaseModel):
     source_id: str | UUID = Field(default="", description="ID hoặc tên tệp local cần đọc")
+    page_number: int | None = Field(
+        default=None, ge=1,
+        description=("Trang PDF chính xác cần đọc. Khi người dùng chỉ rõ trang, "
+                     "dùng trường này thay vì tìm theo từ khóa."),
+    )
     offset: int = Field(default=0, ge=0, le=250_000_000)
     query: str = Field(default="", max_length=2000)
     limit: int = Field(default=6, ge=1, le=12)
@@ -194,6 +199,35 @@ async def read_local(payload: LocalReadInput, context: ToolContext) -> LocalOutp
     if excluded_ocr_source(row, context.settings):
         raise ToolError("Bản OCR cũ nằm ngoài phạm vi; hãy đọc lại PDF có lớp văn bản.",
                         code="pdf_ocr_excluded")
+    if payload.page_number is not None:
+        markers = list(re.finditer(r"<!--\s*page:(\d+)\s*-->", row.content))
+        selected = next(
+            (index for index, marker in enumerate(markers)
+             if int(marker.group(1)) == payload.page_number), None
+        )
+        if selected is None:
+            raise ToolError("Không tìm thấy trang được yêu cầu trong tài liệu.",
+                            code="source_page_not_found")
+        marker = markers[selected]
+        page_end = (markers[selected + 1].start()
+                    if selected + 1 < len(markers) else len(row.content))
+        start = min(marker.end() + payload.offset, page_end)
+        end = min(start + 12000, page_end)
+        text = row.content[start:end]
+        return LocalOutput(data={
+            "source_id": row.id, "name": row.name, "content_hash": row.content_hash,
+            "retrieval_method": "exact_page", "page_number": payload.page_number,
+            "offset": payload.offset, "next_offset": end - marker.end() if end < page_end else None,
+            "text": text,
+            "citations": [{
+                "file_id": f"local:{row.id}", "file_name": row.name,
+                "chunk_index": start, "page_number": payload.page_number,
+                "snippet": text[:500], "score": 1.0,
+                "web_view_link": (
+                    f"{context.settings.public_base_url}/api/local-sources/{row.id}/text"
+                ),
+            }],
+        })
     if payload.query:
         terms = set(re.findall(r"\w+", payload.query.casefold()))
         drafts = chunk_document(row.content, "text/markdown")
