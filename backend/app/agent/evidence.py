@@ -4,6 +4,17 @@ import json
 import re
 from typing import Any
 
+HISTORICAL_SOURCE_INSTRUCTION = (
+    "Nguồn đã đọc trong cuộc trò chuyện này, chưa xác minh lại. "
+    "Chỉ dùng khi tiếp nối dữ kiện cũ; không coi là thông tin mới. "
+    "Phân biệt dữ kiện có trong đoạn nguồn, đính chính hoặc giả thuyết của người dùng, "
+    "và kết quả tính toán. Đính chính mới được ưu tiên nhưng không trở thành dữ kiện "
+    "của tài liệu cũ: ghi rõ 'theo đính chính của bạn', không gắn tham chiếu tài liệu "
+    "cho giá trị chỉ có trong lời người dùng. Với số tính ra, nêu công thức và nguồn "
+    "của đầu vào; không nói tài liệu trực tiếp ghi kết quả nếu đoạn nguồn không có. "
+    "Số tham chiếu giữ nguyên, không tự tạo số hoặc đổi nguồn."
+)
+
 
 def context_only_followup(request: str) -> bool:
     return bool(re.search(

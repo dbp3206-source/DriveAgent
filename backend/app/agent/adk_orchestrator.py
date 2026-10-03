@@ -29,6 +29,7 @@ from app.agent.compiler import (
 )
 from app.agent.controls import ChatControls
 from app.agent.evidence import (
+    HISTORICAL_SOURCE_INSTRUCTION,
     context_only_followup,
     prior_turn_sources,
     retain_referenced_citations,
@@ -415,16 +416,7 @@ class AdkOrchestrator:
                 )
             if historical_citations:
                 request_text += (
-                    "\nNguồn đã đọc trong cuộc trò chuyện này, chưa xác minh lại. "
-                    "Chỉ dùng khi tiếp nối dữ kiện cũ; không coi là thông tin mới. "
-                    "Phân biệt ba loại thông tin: dữ kiện có trong đoạn nguồn, "
-                    "đính chính hoặc giả thuyết do người dùng đưa ra, và kết quả tính toán. "
-                    "Đính chính mới của người dùng được ưu tiên nhưng không trở thành "
-                    "dữ kiện của tài liệu cũ: ghi rõ 'theo đính chính của bạn', "
-                    "không gắn tham chiếu tài liệu cho giá trị chỉ có trong lời người dùng. "
-                    "Với số tính ra, nêu công thức và nguồn của đầu vào; không nói "
-                    "tài liệu trực tiếp ghi kết quả nếu đoạn nguồn không có kết quả đó. "
-                    "Số tham chiếu giữ nguyên, không tự tạo số hoặc đổi nguồn:\n"
+                    "\n" + HISTORICAL_SOURCE_INSTRUCTION + "\n"
                     + json.dumps(source_references(historical_citations), ensure_ascii=False)
                 )
             async for event in runner.run_async(

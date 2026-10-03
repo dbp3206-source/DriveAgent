@@ -31,7 +31,12 @@ from app.agent.creation import (
     ground_unsourced_spreadsheet_preview,
     preserve_explicit_literals,
 )
-from app.agent.evidence import retain_referenced_citations, source_references
+from app.agent.evidence import (
+    HISTORICAL_SOURCE_INSTRUCTION,
+    prior_turn_sources,
+    retain_referenced_citations,
+    source_references,
+)
 from app.agent.freshness import server_time_context
 from app.agent.orchestrator import (
     SYSTEM_PROMPT,
@@ -1078,6 +1083,16 @@ class CompilerOrchestrator:
                 )
             )
         citations = AgentOrchestrator._collect_citations(evidence)
+        reused_sources = False
+        if not citations and not route.direct:
+            citations = prior_turn_sources(history, user_message)
+            reused_sources = bool(citations)
+            if reused_sources:
+                trace.append({
+                    "stage": "context", "status": "success",
+                    "source_count": len(citations),
+                    "note": "Nguồn của phiên hiện tại được dùng lại; chưa đọc hoặc xác minh lại.",
+                })
         if local_calculation:
             raw_expression = str(local_calculation.get("expression") or "")
             factors = re.fullmatch(r"(\d+)\*(\d+(?:\.\d+)?)", raw_expression)
@@ -1215,6 +1230,7 @@ class CompilerOrchestrator:
             + (f"\n{source_constraint}" if source_constraint else "")
             + (f"\n{action_constraint}" if action_constraint else "")
             + response_contract_instruction
+            + ("\n" + HISTORICAL_SOURCE_INSTRUCTION if reused_sources else "")
             + "\nNếu verified_calculations có dữ liệu, dùng đúng các kết quả tính xác định; "
             "không tự thay kết quả. Trình bày giả định; ngưỡng đề xuất phải ghi là đề xuất."
             + (
@@ -1516,7 +1532,9 @@ class CompilerOrchestrator:
                     "note": "Chuẩn hóa heading/bước theo ý định câu hỏi; không thêm dữ kiện.",
                 }
             )
-        answer, citations = retain_referenced_citations(answer, citations, auto_reference=True)
+        answer, citations = retain_referenced_citations(
+            answer, citations, auto_reference=not reused_sources
+        )
         answer, affected_claims = enforce_explicit_source_restriction(
             user_message,
             answer,

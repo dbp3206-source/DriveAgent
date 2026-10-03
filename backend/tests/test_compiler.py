@@ -231,6 +231,39 @@ async def test_one_real_adk_round_and_tenant_history(runtime, monkeypatch):
     assert result.trace[-1]["model_call_count"] == 1
 
 
+@pytest.mark.parametrize("cited", [True, False])
+async def test_context_only_compiler_preserves_exact_source_mapping(runtime, monkeypatch, cited):
+    runner, user, session_id = runtime
+    sources = [{"file_id": "local:fixture", "file_name": "fixture.md", "chunk_index": 0,
+                "snippet": "24 người;12 phút;20 ngày;20% là giả thuyết.", "score": 1.0}]
+    async with compiler.SessionFactory() as db:
+        db.add(Message(user_id=user.id, session_id=session_id, role="assistant",
+                       content="Nguồn cũ [1].", citations_json=json.dumps(sources)))
+        await db.commit()
+
+    async def generate(self, request, stream=False):
+        prompt = str(request.contents)
+        assert "fixture.md" in prompt
+        assert "B_PRIVATE" not in prompt
+        assert "theo đính chính của bạn" in str(request.config.system_instruction)
+        answer = "24 người [1];37% theo đính chính của bạn." if cited else "37% do bạn thay đổi."
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
+            text=json.dumps({"answer": answer}, ensure_ascii=False)
+        )]))
+
+    async def forbidden_read(*args, **kwargs):
+        raise AssertionError("Context-only follow-up must not read another source")
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(runner.registry, "execute", forbidden_read)
+    result = await runner.run(user=user, session_id=session_id, request_id="cached-source",
+                              user_message="Chỉ dùng ngữ cảnh; không đọc thêm nguồn.",
+                              route_override=Route())
+    assert result.citations == (sources if cited else [])
+    assert ("[1]" in result.answer) == cited
+    assert any(item.get("source_count") == 1 for item in result.trace)
+
+
 async def test_document_question_uses_live_source_synthesis_not_golden_answer(
     runtime, monkeypatch
 ):
