@@ -1,7 +1,34 @@
 import json
 from types import SimpleNamespace
 
+import pytest
+
 from app.agent.evidence import retain_referenced_citations, source_references
+
+
+@pytest.mark.parametrize("message", [
+    "Chỉ dùng nội dung và nguồn đã đọc trong cuộc trò chuyện này, không đọc lại tệp.",
+    "Chỉ sử dụng thông tin đã có trong phiên này để tính tiếp.",
+    "Chỉ dùng dữ kiện đã đọc ở hội thoại này.",
+])
+def test_natural_context_only_followup_preserves_source_scope(message):
+    from app.agent.controls import ChatControls
+    from app.agent.evidence import context_only_followup
+
+    assert context_only_followup(message)
+    controls = ChatControls().enforce_explicit_source_exclusions(message)
+    assert {"drive", "gmail", "local", "memory"} <= set(controls.excluded_sources)
+
+
+@pytest.mark.parametrize("message", [
+    "Đọc nguồn mới và so sánh với thông tin đã đọc trong cuộc trò chuyện này.",
+    "Chỉ dùng nguồn chính thức để lấy thông tin hôm nay.",
+    "Chỉ dùng nội dung đã đọc trong báo cáo này.",
+])
+def test_new_source_requests_are_not_context_only(message):
+    from app.agent.evidence import context_only_followup
+
+    assert not context_only_followup(message)
 
 
 def test_reference_numbers_are_not_document_chunk_positions():

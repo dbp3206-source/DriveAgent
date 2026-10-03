@@ -300,6 +300,8 @@ def local_source_tool_definitions() -> list[ToolDefinition]:
                 "Liệt kê hoặc tìm kiếm tài liệu/tệp tin đã import local (trên máy) "
                 "theo tên file hoặc nội dung bên trong. "
                 "Dùng khi người dùng hỏi về tài liệu local, file trên máy, hoặc tệp vừa import."
+                " Kết quả chỉ là đoạn xem trước, không phải toàn trang. Khi cần tên chính, "
+                "bảng hoặc chi tiết của trang cụ thể, đọc trang bằng local_source_read."
             ),
             input_model=LocalSearchInput,
             output_model=LocalOutput,
@@ -312,6 +314,9 @@ def local_source_tool_definitions() -> list[ToolDefinition]:
             description=(
                 "Đọc nội dung chi tiết của tài liệu local theo source_id hoặc tên tệp. "
                 "Trả về văn bản và trích dẫn (citation) có nguồn dẫn tới tài liệu local."
+                " Với PDF, người dùng chỉ định trang nào thì truyền page_number đúng trang "
+                "đó; query không thay thế việc đọc trang cụ thể. Đọc tiếp next_offset nếu "
+                "trang còn nội dung. Phân biệt tiêu đề chính với tên mục nội dung."
             ),
             input_model=LocalReadInput,
             output_model=LocalOutput,

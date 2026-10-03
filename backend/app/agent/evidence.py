@@ -23,7 +23,11 @@ HISTORICAL_SOURCE_INSTRUCTION = (
 
 def context_only_followup(request: str) -> bool:
     return bool(re.search(
-        r"không\s+đọc\s+thêm\s+nguồn|chỉ\s+dùng\s+ngữ\s+cảnh", request, re.I
+        r"không\s+đọc\s+thêm\s+nguồn|chỉ\s+dùng\s+ngữ\s+cảnh|"
+        r"chỉ\s+(?:dùng|sử\s+dụng)\s+(?:nội\s+dung|thông\s+tin|dữ\s+kiện|nguồn)"
+        r"[^.!?;\n]{0,100}(?:đã\s+đọc|đã\s+có)"
+        r"[^.!?;\n]{0,60}(?:cuộc\s+trò\s+chuyện|hội\s+thoại|phiên)\s+này",
+        request, re.I
     ))
 
 

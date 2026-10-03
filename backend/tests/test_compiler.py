@@ -232,7 +232,13 @@ async def test_one_real_adk_round_and_tenant_history(runtime, monkeypatch):
 
 
 @pytest.mark.parametrize("cited", [True, False])
-async def test_context_only_compiler_preserves_exact_source_mapping(runtime, monkeypatch, cited):
+@pytest.mark.parametrize("message", [
+    "Chỉ dùng ngữ cảnh; không đọc thêm nguồn.",
+    "Chỉ dùng nội dung và nguồn đã đọc trong cuộc trò chuyện này, không đọc lại tệp.",
+])
+async def test_context_only_compiler_preserves_exact_source_mapping(
+    runtime, monkeypatch, cited, message
+):
     runner, user, session_id = runtime
     sources = [{"file_id": "local:fixture", "file_name": "fixture.md", "chunk_index": 0,
                 "snippet": "24 người;12 phút;20 ngày;20% là giả thuyết.", "score": 1.0}]
@@ -257,7 +263,7 @@ async def test_context_only_compiler_preserves_exact_source_mapping(runtime, mon
     monkeypatch.setattr(Gemini, "generate_content_async", generate)
     monkeypatch.setattr(runner.registry, "execute", forbidden_read)
     result = await runner.run(user=user, session_id=session_id, request_id="cached-source",
-                              user_message="Chỉ dùng ngữ cảnh; không đọc thêm nguồn.",
+                              user_message=message,
                               route_override=Route())
     assert result.citations == (sources if cited else [])
     assert ("[1]" in result.answer) == cited

@@ -2,6 +2,7 @@
 
 import re
 from collections.abc import Iterator
+from datetime import date
 from decimal import Decimal, InvalidOperation, localcontext
 from typing import Literal
 
@@ -14,7 +15,7 @@ from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 class CalculateInput(BaseModel):
     operation: Literal[
         "sum", "mean", "min", "max", "subtract", "multiply", "divide", "percent", "expression",
-        "expressions",
+        "expressions", "date_difference",
     ]
     values: list[str] = Field(min_length=1, max_length=1000)
     unit: str = Field(default="", max_length=40)
@@ -108,6 +109,25 @@ def _safe_expression(source: str) -> Decimal:
 
 
 def calculate(payload: CalculateInput) -> CalculateOutput:
+    if payload.operation == "date_difference":
+        if len(payload.values) != 2:
+            raise ToolError("Khoảng cách ngày cần đúng hai ngày.", code="invalid_operands")
+        try:
+            if any(not re.fullmatch(r"\d{4}-\d{2}-\d{2}", value) for value in payload.values):
+                raise ValueError
+            start, end = (date.fromisoformat(value) for value in payload.values)
+        except ValueError as exc:
+            raise ToolError(
+                "Ngày phải có thật, theo dạng năm-tháng-ngày (YYYY-MM-DD).",
+                code="invalid_date",
+            ) from exc
+        return CalculateOutput(
+            result=str((end - start).days), operation="date_difference", count=2,
+            unit="ngày", explanation=(
+                "Ngày thứ hai trừ ngày thứ nhất theo lịch; không tính gộp cả hai ngày, "
+                "không phải số ngày làm việc. Kết quả âm khi ngày thứ hai ở trước."
+            ),
+        )
     if payload.operation == "expressions":
         if len(payload.values) > 16:
             raise ToolError("Mỗi lượt chỉ tính tối đa 16 biểu thức.", code="invalid_operands")
@@ -189,6 +209,8 @@ def calculator_tool_definitions() -> list[ToolDefinition]:
                 "trong values. Không đoán số thiếu; percent=a/b*100."
                 " Khi cần nhiều kết quả từ số có sẵn, dùng operation=expressions và "
                 "values gồm tối đa 16 biểu thức độc lập để tính cùng một lượt."
+                " Khoảng cách ngày dùng operation=date_difference, values=[ngày đầu, "
+                "ngày cuối] theo YYYY-MM-DD; trả số ngày lịch có dấu, không đếm gộp hai đầu."
             ),
             input_model=CalculateInput,
             output_model=CalculateOutput,

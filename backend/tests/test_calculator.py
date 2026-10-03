@@ -4,6 +4,30 @@ from app.tools.calculator import CalculateInput, calculate
 from app.tools.contracts import ToolError
 
 
+@pytest.mark.parametrize(("values", "expected"), [
+    (["2026-04-29", "2026-05-04"], "5"),
+    (["2024-02-28", "2024-03-01"], "2"),
+    (["2026-01-01", "2025-12-31"], "-1"),
+    (["2026-10-03", "2026-10-03"], "0"),
+])
+def test_calendar_difference(values, expected):
+    result = calculate(CalculateInput(operation="date_difference", values=values))
+    assert result.result == expected
+    assert result.unit == "ngày"
+    assert "không phải số ngày làm việc" in result.explanation
+
+
+@pytest.mark.parametrize("values", [
+    ["2026-02-29", "2026-03-01"],
+    ["29/04/2026", "04/05/2026"],
+    ["2026-04-29"],
+    ["2026-04-29T00:00:00", "2026-05-04"],
+])
+def test_invalid_dates_are_not_guessed(values):
+    with pytest.raises(ToolError):
+        calculate(CalculateInput(operation="date_difference", values=values))
+
+
 @pytest.mark.parametrize(
     ("op", "values", "expected"),
     [
