@@ -111,7 +111,7 @@ export function LocalSourcesPage() {
     return () => { controller.abort(); window.clearInterval(timer) }
   }, [])
 
-  async function jobAction(job: PdfJob, action: 'cancel' | 'resume') {
+  async function jobAction(job: PdfJob, action: 'cancel' | 'resume' | 'reextract') {
     try {
       const updated = await api<PdfJob>(`/api/local-sources/pdf-jobs/${job.id}/${action}`, { method: 'POST' })
       setPdfJobs(current => current.map(value => value.id === updated.id ? updated : value))
@@ -281,8 +281,10 @@ export function LocalSourcesPage() {
           <div className="page-heading__actions">
             {['queued', 'running'].includes(job.status) ? <Button onClick={() => void jobAction(job, 'cancel')}>Hủy xử lý</Button> : null}
             {['failed', 'cancelled', 'needs_attention'].includes(job.status) ? <Button onClick={() => void jobAction(job, 'resume')}>Tiếp tục từ checkpoint</Button> : null}
+            {job.status === 'completed' ? <Button onClick={() => void jobAction(job, 'reextract')}>Đọc lại từ tệp gốc</Button> : null}
             {job.source_id ? <Button onClick={() => handleChatNow(job.name)}>Hỏi phần đã đọc</Button> : null}
           </div>
+          {job.status === 'completed' ? <p>Đọc lại dùng tệp đã lưu, không cần tải lên lần nữa. Bản văn bản hiện có vẫn được giữ đến khi xử lý lại thành công; không đọc chữ trong ảnh.</p> : null}
           {job.page_results.map(page => <p key={page.page}>Trang {page.page}: {({ text: 'Có văn bản', ocr: 'OCR lịch sử — ngoài phạm vi hỗ trợ', unsupported_scan: 'Trang scan — không hỗ trợ OCR', needs_ocr: 'Trang scan — ngoài phạm vi', low_confidence: 'OCR lịch sử chưa tin cậy — không dùng làm nguồn', error: 'Lỗi đọc trang' } as Record<string, string>)[page.status] ?? page.status}{page.confidence == null ? '' : ` · confidence ${page.confidence.toFixed(1)}/100`}{page.error_code ? ` · ${page.error_code}` : ''}</p>)}
         </details>)}
       </section> : null}

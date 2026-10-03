@@ -17,6 +17,7 @@ import tempfile
 import time
 from dataclasses import asdict, dataclass
 from pathlib import Path
+from statistics import median
 
 MAX_PDF_BYTES = 25 * 1024 * 1024
 MAX_PAGES = 1000
@@ -146,6 +147,38 @@ def native_page_text(page, *, has_tables: bool) -> str:
     return ordinary
 
 
+def prominent_text_lines(page) -> str:
+    """Preserve observable typography, without guessing which line is the title.
+
+    Flattened text can join a cover subtitle to unrelated column labels. Retain
+    large-font lines separately as evidence; never rewrite the underlying text.
+    """
+    sizes = [char.get("size", 0) for char in getattr(page, "chars", [])
+             if char.get("text", "").strip() and char.get("size", 0) > 0]
+    if not sizes or not hasattr(page, "extract_words"):
+        return ""
+    threshold = max(18, median(sizes) * 1.6)
+    words = [word for word in page.extract_words(extra_attrs=["size"])
+             if word.get("size", 0) >= threshold]
+    groups: list[list[dict]] = []
+    for word in sorted(words, key=lambda item: (item["top"], item["x0"])):
+        if not groups or abs(word["top"] - groups[-1][0]["top"]) > 3 or (
+            word["x0"] - groups[-1][-1]["x1"] > word["size"] * 2
+        ):
+            groups.append([])
+        groups[-1].append(word)
+    lines = [" ".join(word["text"] for word in group) for group in groups[:16]]
+    if not lines:
+        return ""
+    content = "\n".join(f"- {line}" for line in lines)
+    if len(content) > 3000:
+        return ""
+    return (
+        "Các dòng chữ cỡ lớn trên trang (tách theo vị trí và cỡ chữ; "
+        "không tự xác định đây là tên báo cáo):\n" + content
+    )
+
+
 def extract_page(path: Path, page_number: int, *, tesseract: str | None = None,
                  pdftoppm: str | None = None, tessdata: str | None = None,
                  ocr_enabled: bool = True) -> PageExtraction:
@@ -158,9 +191,12 @@ def extract_page(path: Path, page_number: int, *, tesseract: str | None = None,
             page = pdf.pages[page_number - 1]
             raw_tables = page.extract_tables()
             text = native_page_text(page, has_tables=bool(raw_tables))
+            typography = prominent_text_lines(page)
             tables = [table_markdown(table) for table in raw_tables]
             # Keep searchable native text and structured tables on the same page.
-            text = "\n\n".join([text, *[table for table in tables if table]]).strip()
+            text = "\n\n".join(
+                [text, *[table for table in tables if table], typography]
+            ).strip()
         if len(text) > MAX_PAGE_CHARACTERS:
             return PageExtraction(page_number, "error", error_code="page_text_limit")
         if len(text) >= 40:

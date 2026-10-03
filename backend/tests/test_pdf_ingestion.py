@@ -163,3 +163,29 @@ def test_single_column_pdf_is_not_split(tmp_path):
     with pdfplumber.open(path) as pdf:
         page = pdf.pages[0]
         assert native_page_text(page, has_tables=False) == page.extract_text(layout=False)
+
+
+def test_prominent_lines_keep_cover_title_separate_from_column_labels(tmp_path):
+    import pdfplumber
+    from reportlab.pdfgen.canvas import Canvas
+
+    from app.services.pdf_ingestion import prominent_text_lines
+
+    path = tmp_path / "cover.pdf"
+    canvas = Canvas(str(path), pagesize=(600, 800))
+    canvas.setFont("Helvetica", 32)
+    canvas.drawString(50, 700, "Quarterly review")
+    canvas.drawString(50, 650, "Outlook and priorities")
+    canvas.setFont("Helvetica", 10)
+    canvas.drawString(50, 550, "Current events and details unrelated to the report title")
+    canvas.drawString(50, 520, "Department one")
+    canvas.drawString(330, 520, "Department two")
+    canvas.save()
+    with pdfplumber.open(path) as pdf:
+        lines = prominent_text_lines(pdf.pages[0])
+        assert "- Quarterly review\n- Outlook and priorities" in lines
+        assert "Department" not in lines
+        assert "không tự xác định" in lines
+    result = extract_page(path, 1, ocr_enabled=False)
+    assert "Department one" in result.text
+    assert lines in result.text
