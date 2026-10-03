@@ -20,6 +20,24 @@ TOOLS = [
 ]
 
 
+def test_context_only_followup_cannot_read_memory_named_in_save_prohibition():
+    request = (
+        "Chỉ dùng ngữ cảnh đã có, không đọc thêm nguồn. "
+        "Gọi công cụ calculate để tính giờ còn lại. Không lưu bộ nhớ."
+    )
+    controls = ChatControls().enforce_explicit_source_exclusions(request)
+    assert controls.excluded_sources == frozenset({"drive", "gmail", "local", "memory"})
+    assert controls.allowed_tool_names(TOOLS) == {"calculate", "skill_run"}
+    assert controls.filter_excluded_route(route_request(request)).tool is None
+
+
+def test_not_saving_memory_does_not_prohibit_explicit_memory_read():
+    controls = ChatControls().enforce_explicit_source_exclusions(
+        "Tìm sở thích trong bộ nhớ của tôi, không lưu bộ nhớ mới."
+    )
+    assert "memory_search" in controls.allowed_tool_names(TOOLS)
+
+
 def test_local_command_keeps_both_explicit_files_after_negative_drive_scope():
     message = (
         "/local Đọc cả hai tài liệu giả lập 01-yeu-cau-khach-hang.md và "

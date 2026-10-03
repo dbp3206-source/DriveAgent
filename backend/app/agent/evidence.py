@@ -12,6 +12,11 @@ HISTORICAL_SOURCE_INSTRUCTION = (
     "của tài liệu cũ: ghi rõ 'theo đính chính của bạn', không gắn tham chiếu tài liệu "
     "cho giá trị chỉ có trong lời người dùng. Với số tính ra, nêu công thức và nguồn "
     "của đầu vào; không nói tài liệu trực tiếp ghi kết quả nếu đoạn nguồn không có. "
+    "Tách riêng các mục 'Dữ kiện từ nguồn đã đọc', 'Giả thuyết bạn thay đổi' và "
+    "'Kết quả tính toán'. Chỉ mục dữ kiện nguồn dùng tham chiếu tài liệu. "
+    "Mục giả thuyết và câu nhắc giả thuyết chưa được kiểm chứng không được gắn "
+    "tham chiếu tài liệu, vì tài liệu không xác nhận thay đổi của người dùng. "
+    "Nhắc rõ nguồn cũ chưa được kiểm tra lại trong lượt này. "
     "Số tham chiếu giữ nguyên, không tự tạo số hoặc đổi nguồn."
 )
 

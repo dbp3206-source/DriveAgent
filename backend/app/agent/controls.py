@@ -242,6 +242,10 @@ class ChatControls(BaseModel):
         """
 
         exclusions = set(self.excluded_sources)
+        # A context-only follow-up must not acquire new private evidence merely
+        # because the request mentions memory in a prohibition on saving it.
+        if re.search(r"\bchỉ\s+dùng\s+ngữ\s+cảnh\b", message, re.I):
+            exclusions.update({"drive", "gmail", "local", "memory"})
         clauses = re.split(r"[.!?;\n]+", message.casefold())
         negative_action = re.compile(
             r"(?:\b(?:không|khong|đừng|dung|no)\s+"
