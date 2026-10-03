@@ -33,6 +33,7 @@ from app.agent.creation import (
 )
 from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
+    label_historical_sources,
     prior_turn_sources,
     retain_referenced_citations,
     source_references,
@@ -1566,6 +1567,8 @@ class CompilerOrchestrator:
         # boundary normalization; do not synthesize new answer sections here.
         answer = normalize_math_notation(answer)
         answer, _ = normalize_markdown_boundaries(answer)
+        if reused_sources:
+            answer = label_historical_sources(answer, citations)
         if gmail_scope_warning:
             answer = f"{answer.rstrip()}\n\n**Giới hạn nguồn:** {gmail_scope_warning}"
         return AgentRunResult(

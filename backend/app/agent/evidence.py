@@ -60,6 +60,29 @@ def source_references(citations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{"reference": index, **citation} for index, citation in enumerate(citations, start=1)]
 
 
+def label_historical_sources(answer: str, citations: list[dict[str, Any]]) -> str:
+    """Present reused sources as context, never as newly validated claim support.
+
+    A snapshot preserves provenance but cannot prove that a new user hypothesis
+    is supported by an old document. Keep the selected mapping in a separate,
+    explicitly limited source line rather than implying sentence-level validation.
+    This does not change the answer's facts or perform another provider call.
+    """
+    if not citations:
+        return answer
+    single = r"\[\s*\d+(?:\s*[,;]\s*\d+)*\s*\](?!\()"
+    marker = re.compile(r"(?<!\!)" + single + r"(?:\s*[,;]\s*" + single + r")*")
+    cleaned = marker.sub("", answer)
+    cleaned = re.sub(r"[ \t]+([,.;:!?])", r"\1", cleaned)
+    cleaned = cleaned.strip()
+    refs = ", ".join(f"[{index}]" for index in range(1, len(citations) + 1))
+    return (
+        f"{cleaned}\n\nNguồn ngữ cảnh đã đọc ở lượt trước: {refs}. "
+        "Chưa đọc hoặc kiểm tra lại trong lượt này. Các nguồn này không xác nhận "
+        "giả thuyết mới của bạn hoặc kết quả tính toán mới."
+    )
+
+
 def _align_explicit_page_markers(
     answer: str, citations: list[dict[str, Any]]
 ) -> str:

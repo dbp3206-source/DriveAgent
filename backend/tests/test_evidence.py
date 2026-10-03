@@ -151,3 +151,27 @@ def test_corrupt_or_unbounded_prior_sources_are_not_reused():
     for raw in ['{"bad":1}', '[{"file_id":"x"}]', 'not-json']:
         rows = [SimpleNamespace(role="assistant", citations_json=raw)]
         assert prior_turn_sources(rows, "Chỉ dùng ngữ cảnh cuộc trò chuyện") == []
+
+
+def test_historical_sources_do_not_claim_to_validate_new_hypotheses():
+    from app.agent.evidence import label_historical_sources
+
+    answer = label_historical_sources(
+        "24 người [1]. Giả thuyết của bạn là 37% [1], [2]. "
+        "Kết quả tính: 35.52 giờ. [liên kết](https://example.org)",
+        [{"file_id": "a"}, {"file_id": "b"}],
+    )
+    claims, scope = answer.split("\n\n")
+    assert "[1]" not in claims and "[2]" not in claims
+    assert "24 người." in claims and "37%." in claims
+    assert "35.52 giờ" in claims
+    assert "[liên kết](https://example.org)" in claims
+    assert "[1], [2]" in scope
+    assert "Chưa đọc hoặc kiểm tra lại" in scope
+    assert "không xác nhận giả thuyết mới" in scope
+
+
+def test_historical_sources_without_selected_evidence_do_not_add_markers():
+    from app.agent.evidence import label_historical_sources
+
+    assert label_historical_sources("Chỉ có lời người dùng.", []) == "Chỉ có lời người dùng."

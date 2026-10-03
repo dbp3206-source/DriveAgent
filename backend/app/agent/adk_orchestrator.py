@@ -31,6 +31,7 @@ from app.agent.controls import ChatControls
 from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
     context_only_followup,
+    label_historical_sources,
     prior_turn_sources,
     retain_referenced_citations,
     source_references,
@@ -512,6 +513,8 @@ class AdkOrchestrator:
                 fallback_model=self.settings.gemini_fallback_model,
                 records=records,
             )
+            if reused_sources:
+                answer = label_historical_sources(answer, citations)
             return AgentRunResult(
                 answer=answer,
                 plan=[],
