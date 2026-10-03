@@ -264,6 +264,43 @@ async def test_context_only_compiler_preserves_exact_source_mapping(runtime, mon
     assert any(item.get("source_count") == 1 for item in result.trace)
 
 
+async def test_context_only_calculation_executes_without_reading_private_sources(
+    runtime, monkeypatch
+):
+    from app.tools.calculator import CalculateInput, calculate
+
+    runner, user, session_id = runtime
+    source = {"file_id": "local:fixture", "file_name": "fixture.md", "chunk_index": 0,
+              "snippet": "24 người,12 phút/ngày,20 ngày/tháng.", "score": 1.0}
+    async with compiler.SessionFactory() as db:
+        db.add(Message(user_id=user.id, session_id=session_id, role="assistant",
+                       content="Dữ kiện cũ [1].", citations_json=json.dumps([source])))
+        await db.commit()
+    called = []
+
+    async def generate(self, request, stream=False):
+        assert "expressions" in request.config.response_json_schema["required"]
+        assert "fixture.md" in str(request.contents)
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=json.dumps({
+            "answer": "24 người [1]. Theo giả thuyết bạn đổi: {{calc:0}} giờ và {{calc:1}} giờ.",
+            "expressions": ["24*12*20/60*0.37", "24*12*20/60*(1-0.37)"],
+        }, ensure_ascii=False))]))
+
+    async def execute(name, arguments, context):
+        assert name == "calculate", "Only bounded arithmetic is permitted in this follow-up"
+        called.append(name)
+        return calculate(CalculateInput(**arguments))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    result = await runner.run(user=user, session_id=session_id, request_id="history-calculation",
+                              user_message="Chỉ dùng ngữ cảnh, gọi calculate. Không lưu bộ nhớ.",
+                              route_override=Route())
+    assert called == ["calculate"]
+    assert "35.52" in result.answer and "60.48" in result.answer
+    assert result.citations == [source]
+
+
 async def test_document_question_uses_live_source_synthesis_not_golden_answer(
     runtime, monkeypatch
 ):

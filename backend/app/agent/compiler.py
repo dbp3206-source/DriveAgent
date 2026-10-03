@@ -1191,7 +1191,9 @@ class CompilerOrchestrator:
         # Canonical history survives both ADK and LangGraph. No framework checkpoint replay.
         history_data = conversation_context(history, user_message)
         source_calculation = needs_source_calculation(
-            user_message, has_evidence=context_data is not None, output=controls.output
+            user_message,
+            has_evidence=context_data is not None or reused_sources,
+            output=controls.output,
         )
         wire_schema = (
             CalculatedWireAnswer.provider_schema() if source_calculation
