@@ -280,7 +280,7 @@ export function MemoryPage() {
     setLoading(true)
     setError('')
     try {
-      const result = await api<{ memories: MemoryItem[] }>('/api/memories')
+      const result = await api<{ memories: MemoryItem[] }>('/api/memories?include_archived=true')
       setItems(result.memories)
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Không thể tải bộ nhớ.')
@@ -612,7 +612,7 @@ export function MemoryPage() {
                       appearance="subtle"
                       icon={<Archive24Regular style={{ fontSize: '16px' }} />}
                       onClick={() => void archive(item)}
-                      aria-label="Lưu trữ"
+                      aria-label={item.is_archived ? 'Khôi phục' : 'Lưu trữ'}
                     />
                   </Tooltip>
                   <Tooltip content="Xóa vĩnh viễn" relationship="label">
