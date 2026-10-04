@@ -3108,6 +3108,14 @@ button:active {
   max-width: 100%;
   margin-left: 0;
   text-align: right;
+  overflow: hidden;
+}
+.app-shell--chat .composer-bottom-bar .composer-quota-label {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .app-shell--chat .composer-bottom-bar .composer-send-btn.fui-Button {
   flex: 0 0 auto;

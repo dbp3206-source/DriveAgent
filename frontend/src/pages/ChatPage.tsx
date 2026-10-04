@@ -65,6 +65,11 @@ import {
 } from '../chatControls'
 import { useResizable } from '../hooks/useResizable'
 import { MermaidDiagram } from '../components/MermaidDiagram'
+import {
+  CAPACITY_HELP_TEXT,
+  capacityPillLabel,
+  effectiveCredentialLabel,
+} from '../providerCapacity.mjs'
 
 function formatRelativeTime(isoDate: string): string {
   if (!isoDate) return ''
@@ -1786,11 +1791,11 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
               type="button"
               className="composer-quota-pill"
               onClick={() => setUsageDialogOpen(true)}
-              title="Mở trạng thái model và ngân sách an toàn local"
+              title={CAPACITY_HELP_TEXT}
             >
               <span className="composer-quota-label">
-                {capacity?.local_budget
-                  ? <>Năng lực AI <strong className="composer-quota-val">{capacity.local_budget.daily_remaining}/{capacity.local_budget.daily_limit} lượt local</strong></>
+                {capacityPillLabel(capacity)
+                  ? <><span>Năng lực AI</span> <strong className="composer-quota-val">{capacityPillLabel(capacity)}</strong></>
                   : <>Ngữ cảnh <strong className="composer-quota-val">~{estimatedSessionTokens.toLocaleString('vi-VN')} token</strong></>}
               </span>
             </button>
@@ -1823,24 +1828,25 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
         <Dialog open={usageDialogOpen} onOpenChange={(_, data) => setUsageDialogOpen(data.open)}>
           <DialogSurface>
             <DialogBody>
-              <DialogTitle>Model đang dùng</DialogTitle>
+              <DialogTitle>Năng lực cho yêu cầu tiếp theo</DialogTitle>
               <DialogContent>
                 <div className="usage-dialog-content">
-                  <p><strong>Model hiện tại:</strong> {selectedModel.name} (<code>{selectedModel.id}</code>)</p>
+                  <p><strong>Mô hình đã chọn cho yêu cầu tiếp theo:</strong> {selectedModel.name} (<code>{selectedModel.id}</code>)</p>
                   <p>{selectedModel.description}</p>
                   {capacity?.local_budget ? (
                     <div className="usage-budget-grid">
-                      <p><strong>Key đã chọn:</strong> {capacity.active_display_name || capacity.credential_source}</p>
-                      <p><strong>Project/key hiệu lực:</strong> {capacity.display_name || capacity.credential_source}{capacity.failover_active ? ' (dự phòng)' : ''}</p>
-                      <p><strong>Ledger hôm nay:</strong> {capacity.local_budget.daily_used}/{capacity.local_budget.daily_limit} lượt đã ghi nhận</p>
+                      <p><strong>Khóa đã chọn:</strong> {capacity.active_display_name || capacity.credential_source}</p>
+                      <p><strong>Khóa khả dụng khi kiểm tra:</strong> {effectiveCredentialLabel(capacity)}</p>
+                      <p><strong>Lượt mô hình đã ghi nhận hôm nay:</strong> {capacity.local_budget.daily_used}/{capacity.local_budget.daily_limit}</p>
                       <p><strong>Cửa sổ 60 giây:</strong> {capacity.local_budget.minute_used}/{capacity.local_budget.minute_limit} lượt</p>
-                      <p><strong>Reset:</strong> {new Date(capacity.local_budget.resets_at).toLocaleString('vi-VN')}</p>
-                      <p><strong>Model dự phòng:</strong> <code>{capacity.fallback_model}</code></p>
+                      <p><strong>Mốc đặt lại:</strong> {new Date(capacity.local_budget.resets_at).toLocaleString('vi-VN')}</p>
+                      <p><strong>Mô hình dự phòng:</strong> <code>{capacity.fallback_model}</code></p>
                     </div>
                   ) : null}
                   <p className="usage-dialog-note">
                     {capacity?.provider_balance_note || 'Veridra chưa đọc được trạng thái năng lực AI. Hãy kiểm tra key trong Cài đặt.'}
                   </p>
+                  <p className="usage-dialog-note">{CAPACITY_HELP_TEXT} Đây là thông tin của lần kiểm tra gần nhất; không khẳng định khóa đã phục vụ một yêu cầu cụ thể.</p>
                 </div>
               </DialogContent>
               <DialogActions>

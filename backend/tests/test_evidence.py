@@ -198,8 +198,28 @@ def test_historical_sources_do_not_claim_to_validate_new_hypotheses():
     assert "35.52 giờ" in claims
     assert "[liên kết](https://example.org)" in claims
     assert "[1], [2]" in scope
-    assert "Chưa đọc hoặc kiểm tra lại" in scope
-    assert "không xác nhận giả thuyết mới" in scope
+    assert "Nguồn cũ chưa được đọc hoặc kiểm tra lại" in scope
+    assert (
+        "các giá trị bạn bổ sung và kết quả tính toán không tự trở thành dữ kiện của tài liệu"
+        in scope
+    )
+    assert "không xác nhận giả thuyết mới của bạn" not in scope
+
+
+def test_historical_footer_is_neutral_when_followup_has_no_hypothesis():
+    from app.agent.evidence import label_historical_sources
+
+    answer = label_historical_sources(
+        "Tên báo cáo theo phần tiêu đề chính. [1] Khoảng cách là 12 km. [1]",
+        [{"file_id": "a"}],
+    )
+
+    assert "Nguồn cũ chưa được đọc hoặc kiểm tra lại" in answer
+    assert (
+        "các giá trị bạn bổ sung và kết quả tính toán không tự trở thành dữ kiện của tài liệu"
+        in answer
+    )
+    assert "không xác nhận giả thuyết mới của bạn" not in answer
 
 
 def test_historical_sources_without_selected_evidence_do_not_add_markers():

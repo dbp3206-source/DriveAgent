@@ -96,8 +96,8 @@ def label_historical_sources(answer: str, citations: list[dict[str, Any]]) -> st
     refs = ", ".join(f"[{index}]" for index in range(1, len(citations) + 1))
     return (
         f"{cleaned}\n\nNguồn ngữ cảnh đã đọc ở lượt trước: {refs}. "
-        "Chưa đọc hoặc kiểm tra lại trong lượt này. Các nguồn này không xác nhận "
-        "giả thuyết mới của bạn hoặc kết quả tính toán mới."
+        "Nguồn cũ chưa được đọc hoặc kiểm tra lại trong lượt này; các giá trị bạn "
+        "bổ sung và kết quả tính toán không tự trở thành dữ kiện của tài liệu."
     )
 
 
