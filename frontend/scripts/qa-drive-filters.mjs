@@ -5,7 +5,7 @@ import path from 'node:path'
 import { chromium } from 'playwright'
 
 const base = process.env.QA_FRONTEND_URL || 'http://127.0.0.1:4173'
-const out = path.resolve('../design-work/qa/screenshots/drive-filters-20261004')
+const out = path.resolve(`../design-work/qa/screenshots/drive-filters-${base.startsWith('https:') ? 'cloud-' : ''}20261004`)
 await mkdir(out, { recursive: true })
 const browser = await chromium.launch({ channel: 'chrome', headless: true })
 const results = []
@@ -74,5 +74,5 @@ try {
 } finally {
   await browser.close()
 }
-await writeFile(path.join(out, 'report.json'), JSON.stringify({ synthetic: true, results }, null, 2))
+await writeFile(path.join(out, 'report.json'), JSON.stringify({ base, synthetic: true, results }, null, 2))
 console.log(JSON.stringify({ passed: results.length, synthetic: true, screenshots: results.map(row => row.screenshot) }, null, 2))

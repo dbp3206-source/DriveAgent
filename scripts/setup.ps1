@@ -21,8 +21,9 @@ function Find-Python {
         $exe = $candidate[0]
         $args = @($candidate | Select-Object -Skip 1)
         try {
-            $platform = & $exe @args -c "import sysconfig; print(sysconfig.get_platform())"
-            if ($LASTEXITCODE -eq 0 -and $platform -like "win-*") {
+            $runtimeInfo = & $exe @args -c "import sys, sysconfig; print(sysconfig.get_platform() + '|' + '.'.join(map(str, sys.version_info[:2])))" 2>$null
+            $runtimeParts = "$runtimeInfo" -split '\|'
+            if ($LASTEXITCODE -eq 0 -and $runtimeParts.Count -eq 2 -and $runtimeParts[0] -like "win-*" -and $runtimeParts[1] -in @("3.11", "3.12")) {
                 return @{ Exe = $exe; Args = $args }
             }
         } catch {}
@@ -34,6 +35,10 @@ $python = Find-Python
 if (-not (Test-Path ".\backend\.venv\Scripts\python.exe")) {
     & $python.Exe @($python.Args) -m venv ".\backend\.venv"
     if ($LASTEXITCODE -ne 0) { throw "Python venv creation failed." }
+}
+& ".\backend\.venv\Scripts\python.exe" -c "import sys; raise SystemExit(0 if sys.version_info[:2] in ((3, 11), (3, 12)) else 1)"
+if ($LASTEXITCODE -ne 0) {
+    throw "Môi trường backend/.venv không dùng Python 3.11/3.12. Giữ nguyên dữ liệu; chuyển riêng thư mục .venv cũ sang tên dự phòng rồi chạy lại setup."
 }
 & ".\backend\.venv\Scripts\python.exe" -m pip install "uv==0.12.19"
 if ($LASTEXITCODE -ne 0) { throw "Locked installer installation failed." }
