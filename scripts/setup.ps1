@@ -35,9 +35,10 @@ if (-not (Test-Path ".\backend\.venv\Scripts\python.exe")) {
     & $python.Exe @($python.Args) -m venv ".\backend\.venv"
     if ($LASTEXITCODE -ne 0) { throw "Python venv creation failed." }
 }
-& ".\backend\.venv\Scripts\python.exe" -m pip install --upgrade pip
-if ($LASTEXITCODE -ne 0) { throw "pip upgrade failed." }
-& ".\backend\.venv\Scripts\python.exe" -m pip install -e "backend[dev]"
+& ".\backend\.venv\Scripts\python.exe" -m pip install "uv==0.12.19"
+if ($LASTEXITCODE -ne 0) { throw "Locked installer installation failed." }
+# Use the same versioned lock as CI; do not resolve fresh dependency versions.
+& ".\backend\.venv\Scripts\python.exe" -m uv sync --project backend --frozen --extra dev --python ".\backend\.venv\Scripts\python.exe"
 if ($LASTEXITCODE -ne 0) { throw "Backend dependency installation failed." }
 
 Push-Location frontend

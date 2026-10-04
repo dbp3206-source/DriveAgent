@@ -1,6 +1,6 @@
 # Veridra: hướng dẫn sử dụng, phối hợp tính năng và kịch bản demo
 
-Phiên bản hướng dẫn: 02/10/2026. Dành cho chuyên viên chuẩn bị tư vấn giải pháp AI/phần mềm. Các thao tác dưới đây là kịch bản để kiểm chứng; không được hiểu là mọi kịch bản đã đạt nghiệm thu. Bản trên máy: http://localhost:8000. Bản thử có lời mời: https://veridra-closed-beta.onrender.com; trạng thái triển khai thành công không thay nghiệm thu từng chức năng.
+Phiên bản hướng dẫn: 04/10/2026. Dành cho chuyên viên chuẩn bị tư vấn giải pháp AI/phần mềm. Các thao tác dưới đây là kịch bản để kiểm chứng; không được hiểu là mọi kịch bản đã đạt nghiệm thu. Bản trên máy: http://localhost:8000. Bản thử có lời mời: https://veridra-closed-beta.onrender.com; trạng thái triển khai thành công không thay nghiệm thu từng chức năng.
 
 ## Ba công việc chính cần trình diễn
 
@@ -57,20 +57,20 @@ không còn nằm riêng trên máy người dùng.
 3. Chuẩn bị hai tài liệu không nhạy cảm, một thư thử nghiệm, một thư mục Drive riêng cho QA. Ghi lại tên, ID, nội dung kỳ vọng và thời điểm gửi. Không dùng dữ liệu thật trong public demo nếu chưa được phép.
 4. Đọc trước nội dung nguồn để có đáp án kiểm chứng. Dùng cùng nguồn khi hỏi tiếp. Không chấm câu trả lời chỉ vì câu chữ trôi chảy.
 5. Dành riêng ngân sách kiểm thử. Google giới hạn theo dự án/mô hình, gồm lượt mỗi phút, dung lượng xử lý mỗi phút và lượt mỗi ngày; đổi khóa cùng dự án không tạo hạn mức mới. Thanh Veridra đếm lượt gọi mô hình trong ngân sách ứng dụng, không phải số dư chính thức trên AI Studio. Một câu hỏi có thể tiêu nhiều lượt.
-6. Không demo khi ổ đĩa gần đầy. Dữ liệu SQLite, Qdrant, history và checkpoint cần dung lượng ghi.
+6. Không demo khi ổ đĩa gần đầy. Bản trên máy cần chỗ lưu cơ sở dữ liệu, chỉ mục và lịch sử. Bản cloud dùng cơ sở dữ liệu và kho tệp Supabase, không dùng ổ máy bạn để lưu bền.
 
 ## 2. Lộ trình demo 10 phút
 
 | Phút | Màn hình và thao tác | Lời dẫn và điều cần chứng minh |
 |---|---|---|
 | 0–1 | Bắt đầu, đổi sáng/tối | “Vấn đề không chỉ là hỏi AI, mà là hợp nhất nguồn và kiểm chứng hành động.” Nền chuyển động là trang trí, không phải bằng chứng Agent đang hoạt động. |
-| 1–3 | Gmail → đọc thư → Chat | Mở HTML/text, đọc nội dung gốc, hỏi phân tích. Đối chiếu từng claim với thư; click nguồn. |
+| 1–3 | Gmail → đọc thư → Chat | Mở bản trình bày và văn bản, đọc nội dung gốc, hỏi phân tích. Đối chiếu từng nhận định với thư; mở nguồn. |
 | 3–5 | Drive/local → Chat → báo cáo | Chọn nguồn, phân tích số liệu, hỏi tiếp. Cho thấy nguồn và phép tính, không chỉ bản tóm tắt. |
 | 5–6 | Bản xem trước Doc/Sheet hoặc nháp | Phân biệt “chuẩn bị” và “đã tạo”. Xem trước → duyệt → đọc lại. Không gửi thư trong demo. |
-| 6–7 | Kết quả đã lưu | Lưu báo cáo, mở lại và export Markdown. Giải thích dữ liệu lưu local khác với Google Docs. |
-| 7–8 | Skills, Bộ nhớ | Skill là quy trình tái sử dụng; bộ nhớ là thông tin/sở thích được quản lý. Chạy một Skill, mở specification. |
-| 8–9 | Cách Agent hoạt động, Chat pending | Giải thích orchestrator/specialist/tool. Chỉ gọi là multi-agent khi trace có handoff thực. A2A là giao thức, không phải mọi chat đều chạy A2A. |
-| 9–10 | Nhật ký, regression offline | Xem request ID, lỗi, latency, token; chạy regression bằng queue. Nêu điểm đo được và gate còn mở, không tuyên bố không thể lỗi. |
+| 6–7 | Kết quả đã lưu | Lưu báo cáo, mở lại và xuất tệp. Bản lưu trong Veridra không tự thành tài liệu trên Google. |
+| 7–8 | Skills, Bộ nhớ | Skills lưu quy trình để dùng lại; bộ nhớ lưu thông tin được xác nhận. Chạy một quy trình, mở các bước đã thiết lập. |
+| 8–9 | Cách hoạt động, tiến độ Chat | Giải thích phần điều phối, các trợ lý chuyên trách và công cụ. Chỉ nói các trợ lý phối hợp khi nhật ký chứng minh có chuyển việc thật. |
+| 9–10 | Nhật ký, kiểm thử không gọi mô hình | Xem mã yêu cầu, lỗi, thời gian xử lý và lượng nội dung đã xử lý. Nêu phạm vi đã đo và giới hạn, không tuyên bố không thể lỗi. |
 
 ## 3. Hướng dẫn từng màn hình
 
@@ -83,8 +83,8 @@ Chọn một công việc trong các điểm bắt đầu nhanh. Veridra đưa y
 - Tạo cuộc trò chuyện mới; dùng tìm kiếm/lịch sử để mở phiên cũ.
 - Gõ `/` để chọn nguồn, agent, workflow, output hoặc Skill. Xóa control chip nếu muốn trở về tự động.
 - Khi cần dữ liệu cụ thể, nêu tên tệp/người gửi/ngày và đầu ra mong muốn. Ví dụ: “Đọc thư từ [người gửi] nhận ngày [ngày] về [chủ đề], phân biệt dữ kiện và đề xuất.”
-- Khi chờ, khu vực sự kiện thực thi hiển thị tool hoặc handoff mà backend thực sự phát sinh. Không có handoff không có nghĩa bị lỗi; nhiều yêu cầu dùng compiler/direct route.
-- “Ngừng chờ” dừng phía trình duyệt; không được suy ra tác dụng phụ ở server đã rollback. Kiểm tra history/nhật ký trước khi thử lại thao tác có ghi.
+- Khi chờ, khu vực tiến độ hiển thị công cụ hoặc bước chuyển việc thực sự phát sinh. Yêu cầu đơn giản có thể xử lý trực tiếp, không cần chuyển qua nhiều trợ lý.
+- Nút dừng gửi yêu cầu hủy tới máy chủ; nếu chưa được xác nhận, giao diện nói rõ đang chờ xác nhận. Không suy ra việc ghi đã được hoàn tác. Lượt gọi mô hình đang chạy vẫn có thể tiêu hạn mức; kiểm tra lịch sử và nhật ký trước khi thử lại thao tác ghi.
 - Hỏi tiếp trong cùng phiên: “Đối chiếu nhận định thứ hai với nguồn”, “Ghi rõ giờ nhận theo metadata Gmail”, “Tính lại với giả định …”. Nếu thiếu dữ liệu, yêu cầu Agent nói rõ thiếu gì.
 - Dùng Copy, Lưu ghi chú, Xuất Google Doc hoặc Chuẩn bị thư nháp theo nhu cầu. Bản nháp chưa đạt hợp đồng định dạng phải được xem lại, không dùng như deliverable hoàn chỉnh.
 
@@ -99,7 +99,7 @@ Chọn một công việc trong các điểm bắt đầu nhanh. Veridra đưa y
 
 ### Google Drive, RAG và đầu ra Workspace
 
-1. Tìm theo tên và nội dung; thử phân trang khi có nhiều kết quả. Kiểm tra quyền của từng tệp.
+1. Mở Drive: các mục có hoạt động gần đây được xếp trước. Dưới thanh tìm kiếm, chọn Tất cả, Thư mục hoặc Tệp; bật Đã gắn sao nếu cần. Bộ lọc kết hợp được với tìm kiếm và giữ khi tải trang tiếp theo. Tắt Đã gắn sao và chọn Tất cả để xem lại toàn bộ phạm vi được cấp quyền. Tìm theo tên hoặc nội dung khi cần thu hẹp thêm. Kiểm tra quyền của từng tệp.
 2. Đọc Doc/Sheet/PDF và các định dạng hỗ trợ trong giao diện. Tệp không cho export phải báo lỗi quyền, không được ngầm coi là đã đọc.
 3. Nếu dùng RAG, lập chỉ mục tệp đã chọn trước; hỏi có nguồn. Đổi nội dung tệp rồi kiểm tra việc refresh index. RAG không đồng nghĩa luôn đọc live phiên bản mới nhất.
 4. Ví dụ: “Phân tích [Sheet A] và [Doc B], tính tổng/ngoại lệ bằng phép tính kiểm chứng được. Mỗi kết luận nêu tệp và dữ kiện. Tạo bản xem trước báo cáo, chưa ghi Google.”
@@ -114,7 +114,7 @@ Hỏi tiếp về một đoạn cụ thể và yêu cầu chỉ ra nguồn. Th�
 
 ### Kết quả đã lưu
 
-Lưu note/report từ Chat, tìm và mở lại, export Markdown. Đối chiếu heading, bảng, Unicode tiếng Việt, citation và code block với nội dung ban đầu. Thử báo cáo dài. Artifacts local không tự trở thành Google Doc; cần quy trình xuất/xem trước/duyệt riêng. Nếu thiếu định dạng nghiệp vụ mong muốn, ghi thành gap thay vì giả định đã có PDF/DOCX export ở trang này.
+Lưu ghi chú hoặc báo cáo từ Chat, tìm và mở lại. Trong Kết quả đã lưu, chọn Markdown, Word hoặc PDF rồi bấm Xuất bản đã lưu. Khi đang có chỉnh sửa chưa lưu, phải lưu trước khi xuất. Đối chiếu tiêu đề, bảng, tiếng Việt, liên kết nguồn và đoạn mã với nội dung đã lưu; thử cả báo cáo dài. Bản trong Veridra không tự trở thành Google Doc: tạo tài liệu trên Google vẫn cần xem trước và duyệt riêng.
 
 ### Skills của tôi
 
@@ -142,8 +142,8 @@ Multi-agent của ADK gồm orchestrator và các specialist theo nguồn/capabi
 ### Nhật ký / AgentOps
 
 - Tìm request ID từ lỗi Chat, đối chiếu tool events, status và latency. Tool success không phải business success.
-- Xem benchmark từng dòng: metric, mẫu số và phạm vi. N/A không tự trở thành đạt.
-- Bấm **Chạy regression offline**: job được lưu SQLite ở local hoặc PostgreSQL ở cloud, worker thực thi, checkpoint mỗi suite và poll trạng thái. Refresh trang sẽ nạp lượt gần nhất. Quota model không bị tiêu thụ.
+- Xem từng bộ đo: giá trị, số mẫu và phạm vi. Chỉ tiêu thiếu dữ liệu không được hiển thị như số đo hoặc tính là đạt.
+- Chạy kiểm thử không gọi mô hình: tác vụ được lưu bền, tiến độ được giữ sau mỗi bộ kiểm. Tải lại trang sẽ nạp lượt gần nhất. Việc này không tiêu hạn mức Gemini và không đo độ đúng của câu trả lời trực tiếp.
 - Cố ý restart backend trong lúc một job đang running: chờ lease 120 giây hết, worker lấy lại job và bỏ qua suite đã checkpoint. Tối đa 3 attempt. Chỉ thực hiện trên môi trường QA; không dừng lúc đang ghi Google.
 - Chat và kiểm thử tự động đều có hàng chờ SQL riêng và điểm lưu trạng thái. Chat phục hồi theo toàn lượt như mô tả cuối tài liệu, không tiếp tục chính xác từ từng bước công cụ. Không suy rộng thành mọi kết nối A2A đều phục hồi được.
 - OpenTelemetry local: `data/otel/trace-YYYYMMDD.jsonl`, request/agent/tool span có trace ID, span ID, parent ID và request ID. Không có prompt/body/key; giữ 30 ngày. Không gửi Langfuse Cloud mặc định.

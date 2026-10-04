@@ -48,7 +48,7 @@ Bộ model mặc định: `gemini-3.5-flash-lite` cho chat/planning, fallback c�
 Các lệnh run-dev bên dưới dành cho phát triển giao diện; dùng origin 5173 trong `.env`
 nếu chọn chế độ dev thay cho runner local.
 
-Yêu cầu: Python 3.11 hoặc 3.12 bản chính thức từ python.org, Node.js 20 trở lên.
+Yêu cầu: Python 3.11 hoặc 3.12 bản chính thức từ python.org, Node.js 22.12 trở lên (hoặc 20.19 trở lên). Script cài dùng `backend/uv.lock` và `frontend/package-lock.json`, cùng bộ phiên bản đã kiểm trên GitHub.
 
 ```powershell
 Set-ExecutionPolicy -Scope Process Bypass
