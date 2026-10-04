@@ -3103,6 +3103,7 @@ button:active {
   gap: 8px;
 }
 .app-shell--chat .composer-bottom-bar .composer-quota-pill {
+  display: inline-flex;
   flex: 1 1 150px;
   min-width: 0;
   max-width: 100%;

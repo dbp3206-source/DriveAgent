@@ -1,5 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import {
   CAPACITY_HELP_TEXT,
   capacityPillLabel,
@@ -33,4 +34,9 @@ test('composer label names the effective key and calls the count model turns', (
 test('help text distinguishes the local safety ledger from Google quota', () => {
   assert.match(CAPACITY_HELP_TEXT, /không phải số dư Google/)
   assert.match(CAPACITY_HELP_TEXT, /nhiều lượt mô hình/)
+})
+
+test('chat overrides the legacy mobile rule that hides the capacity control', () => {
+  const styles = readFileSync(new URL('./workspace.css', import.meta.url), 'utf8')
+  assert.match(styles, /\.app-shell--chat \.composer-bottom-bar \.composer-quota-pill\s*\{\s*display:\s*inline-flex;/)
 })

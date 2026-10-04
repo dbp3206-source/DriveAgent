@@ -30,13 +30,33 @@ Phiên bản hướng dẫn: 02/10/2026. Dành cho chuyên viên chuẩn bị t�
 
 Ba quy trình trên là trục demo; các màn hình Skills, Bộ nhớ, Nhật ký và nguồn tài liệu hỗ trợ chúng, không phải các sản phẩm nghiệp vụ độc lập. PDF có lớp văn bản vẫn có thể dùng; PDF scan cần OCR không nằm trong phạm vi. Mỗi kết quả cần được đối soát, không cam kết mọi lần chạy đều thành công khi dịch vụ bên ngoài lỗi hoặc hết hạn mức.
 
+## Bộ mẫu có sẵn để làm theo
+
+Hai tệp [yêu cầu khách hàng](demo/01-yeu-cau-khach-hang.md) và
+[điều chỉnh phạm vi](demo/02-dieu-chinh-pham-vi.md) là dữ liệu giả lập, có thể dùng
+ngay mà không đọc thư thật. Tải hai tệp lên mục Tài liệu local, đợi xử lý xong, rồi
+kiểm tra nội dung đã trích xuất. Yêu cầu: “Chỉ dùng hai tài liệu vừa chọn, lập bảng
+dữ kiện ban đầu, điều chỉnh mới và câu hỏi còn thiếu; mỗi dòng dẫn đúng nguồn.
+Không đọc Gmail, Drive, web hoặc bộ nhớ; không lưu hay tạo dữ liệu.”
+
+Đối chiếu trực tiếp với từng tệp, không dùng bản trả lời của mô hình làm đáp án.
+Hỏi tiếp một thay đổi ngày hoặc quy mô, rồi yêu cầu đổi cách trình bày: dữ kiện mới
+phải được giữ, nguồn ngoài không được tự mở. Nếu xảy ra lỗi, giữ nguyên yêu cầu và
+mã yêu cầu để đối soát. Đây là kịch bản kiểm thử có nguồn sẵn, không phải cam kết
+mọi lần gọi dịch vụ bên ngoài đều thành công.
+
+PDF chỉ nhận tệp có lớp văn bản, tối đa 25 MiB. Trang chỉ có ảnh phải được báo rõ
+không đọc được; không coi việc tải lên thành công là đã hiểu toàn bộ tài liệu.
+Trên URL cloud, “tài liệu local” là tệp tải từ thiết bị lên kho riêng trên cloud,
+không còn nằm riêng trên máy người dùng.
+
 ## 1. Chuẩn bị trước khi demo
 
-1. Mở Cài đặt. Kiểm tra key Gemini đang chọn và key hiệu lực, quota **local** và circuit. Không hiển thị API key trong màn hình chia sẻ.
+1. Mở Cài đặt. Kiểm tra khóa Gemini đã chọn, khóa đang khả dụng và ngân sách bảo vệ của Veridra. Khóa khả dụng lúc kiểm tra chưa chứng minh khóa đã phục vụ lượt trước. Không hiển thị khóa bí mật trong màn hình chia sẻ.
 2. Kết nối Google bằng tài khoản của bạn, cấp quyền đúng chức năng cần demo. Biểu tượng đã kết nối chưa chứng minh Google cho phép đọc mọi tệp.
 3. Chuẩn bị hai tài liệu không nhạy cảm, một thư thử nghiệm, một thư mục Drive riêng cho QA. Ghi lại tên, ID, nội dung kỳ vọng và thời điểm gửi. Không dùng dữ liệu thật trong public demo nếu chưa được phép.
 4. Đọc trước nội dung nguồn để có đáp án kiểm chứng. Dùng cùng nguồn khi hỏi tiếp. Không chấm câu trả lời chỉ vì câu chữ trôi chảy.
-5. Dành riêng ngân sách request. Quota Google áp dụng theo project/model và còn có RPM/TPM/RPD; đổi key không reset quota của project. Thanh trong Veridra là ledger local, không phải số dư chính thức trên AI Studio.
+5. Dành riêng ngân sách kiểm thử. Google giới hạn theo dự án/mô hình, gồm lượt mỗi phút, dung lượng xử lý mỗi phút và lượt mỗi ngày; đổi khóa cùng dự án không tạo hạn mức mới. Thanh Veridra đếm lượt gọi mô hình trong ngân sách ứng dụng, không phải số dư chính thức trên AI Studio. Một câu hỏi có thể tiêu nhiều lượt.
 6. Không demo khi ổ đĩa gần đầy. Dữ liệu SQLite, Qdrant, history và checkpoint cần dung lượng ghi.
 
 ## 2. Lộ trình demo 10 phút
@@ -125,13 +145,13 @@ Multi-agent của ADK gồm orchestrator và các specialist theo nguồn/capabi
 - Xem benchmark từng dòng: metric, mẫu số và phạm vi. N/A không tự trở thành đạt.
 - Bấm **Chạy regression offline**: job được lưu SQLite ở local hoặc PostgreSQL ở cloud, worker thực thi, checkpoint mỗi suite và poll trạng thái. Refresh trang sẽ nạp lượt gần nhất. Quota model không bị tiêu thụ.
 - Cố ý restart backend trong lúc một job đang running: chờ lease 120 giây hết, worker lấy lại job và bỏ qua suite đã checkpoint. Tối đa 3 attempt. Chỉ thực hiện trên môi trường QA; không dừng lúc đang ghi Google.
-- Queue hiện áp dụng cho evaluation offline, **không** phải durable chat/A2A tổng quát. Chat vẫn có thời hạn request và lịch sử/approval ledger riêng.
+- Chat và kiểm thử tự động đều có hàng chờ SQL riêng và điểm lưu trạng thái. Chat phục hồi theo toàn lượt như mô tả cuối tài liệu, không tiếp tục chính xác từ từng bước công cụ. Không suy rộng thành mọi kết nối A2A đều phục hồi được.
 - OpenTelemetry local: `data/otel/trace-YYYYMMDD.jsonl`, request/agent/tool span có trace ID, span ID, parent ID và request ID. Không có prompt/body/key; giữ 30 ngày. Không gửi Langfuse Cloud mặc định.
 - Grafana hiện xem metrics qua Prometheus. Trace-file OpenTelemetry chưa tự xuất hiện thành waterfall trong Grafana; cần tuyến OTLP/trace backend đã kiểm chứng.
 
 ### Phân quyền và Cài đặt
 
-Phân quyền hiển thị RBAC và OAuth độc lập: có một quyền không thay thế quyền còn lại. Chỉ sửa role khi có bài QA rõ ràng; không dùng admin để che lỗi role thường. Trong Cài đặt, quản lý kết nối, model/key, quota, theme và trạng thái hệ thống theo nhóm. Mascot cho biết trạng thái/quota local; key hiệu lực có thể khác key bạn chọn khi fallback đang hoạt động.
+Quyền trong Veridra và quyền do Google cấp độc lập: có một quyền không thay thế quyền còn lại. Chỉ sửa vai trò khi có bài kiểm thử rõ ràng; không dùng quản trị viên để che lỗi tài khoản thường. Trong Cài đặt, quản lý kết nối, mô hình/khóa, ngân sách, giao diện và trạng thái hệ thống theo nhóm. Linh vật hiển thị ngân sách bảo vệ ứng dụng; khóa khả dụng có thể khác khóa đã chọn khi tuyến dự phòng được bật.
 
 ## 4. Ma trận tester liên tính năng
 

@@ -2,7 +2,7 @@
 
 Phạm vi: tối đa bốn email được mời, mỗi người tự kết nối Google và dùng Gemini API
 key của mình. Hướng dẫn này không yêu cầu gửi secret qua Chat và không đưa dữ liệu local
-lên cloud. Trạng thái chỉ được đổi từ **HOLD** sang **PASS** sau mục kiểm chứng cuối tài liệu.
+lên cloud. Chỉ xác nhận hoàn tất sau mục kiểm chứng cuối tài liệu; trạng thái triển khai thành công không thay thế nghiệm thu nghiệp vụ.
 
 ## 1. Những gì được triển khai
 
@@ -19,11 +19,14 @@ lên cloud. Trạng thái chỉ được đổi từ **HOLD** sang **PASS** sau 
 ## 2. Supabase
 
 1. Tạo project mới trong organization của bạn; chọn region gần Render Singapore.
-2. Chờ project báo Healthy. Vào **Project Settings → Database** và lấy connection string
-   trực tiếp. Dùng pooler URL nếu Supabase khuyến nghị cho IPv4, giữ `sslmode=require`.
+2. Chờ project báo Healthy. Bấm **Connect** ở đầu trang dự án, chọn **Direct**, rồi
+   chọn phương thức **Session pooler** nếu máy chủ cần IPv4. Sao chép chuỗi kết nối
+   của chính dự án, thay chỗ mật khẩu bằng mật khẩu database đã đặt hoặc vừa đặt lại;
+   đây không phải mật khẩu đăng nhập Supabase. Giữ `sslmode=require`. Không dùng
+   Transaction pooler cho phiên kết nối ứng dụng nếu chưa kiểm chứng tương thích.
 3. Đổi driver ở đầu URL thành `postgresql+psycopg://`. Giá trị hoàn chỉnh được dùng cho
    cả `DRIVE_AGENT_DATABASE_URL` và `DRIVE_AGENT_RELATIONAL_STATE_URL`.
-4. Vào **Project Settings → API** lấy Project URL và service-role key. Service-role chỉ
+4. Lấy Project URL ở trang dự án; vào **Project Settings → API Keys** lấy service-role key. Service-role chỉ
    được nhập vào Render; không đặt trong biến `VITE_*`, GitHub source hoặc ảnh chụp.
 5. Không cần tạo bucket thủ công: backend tạo bucket private `veridra-private` nếu chưa có.
    Nếu tạo thủ công, chắc chắn **Public bucket** đang tắt.
@@ -121,8 +124,10 @@ Ghi commit SHA, digest image, URL và thời điểm vào biên bản trước k
    Memory, Gmail, Drive, PDF hoặc evaluation job của A.
 4. Upload PDF có text, chờ xử lý nền, hỏi có citation trang. PDF scan-only phải báo rõ
    không có lớp text; OCR đã loại khỏi scope và không được báo thành công rỗng.
-5. Chạy Chat/Gmail/Drive read-only. Nếu bật writes, thực hiện đúng một Doc và một Draft
-   qua preview → approval → execute → readback; retry không được tạo bản thứ hai.
+5. Chạy Chat/Gmail/Drive chỉ đọc với dữ liệu được chủ tài khoản cho phép. Quyền bật ghi
+   trong cấu hình không thay thế sự đồng ý kiểm thử: chỉ tạo tài liệu hoặc thư nháp đã
+   được cho phép riêng, qua xem trước → duyệt → thực hiện → đọc lại. Retry không được
+   tạo bản thứ hai. Không gửi thư trong phép thử này.
 6. Tạo một evaluation job và một ingestion job, redeploy/restart giữa chừng, xác nhận
    lease/checkpoint tiếp tục và owner isolation còn giữ.
 7. Redeploy cùng digest, kiểm tra Chat/Skill/Memory/job/PDF còn tồn tại. Đây mới là test
@@ -133,15 +138,20 @@ Ghi commit SHA, digest image, URL và thời điểm vào biên bản trước k
 ## 8. Rollback và backup
 
 - Rollback application: chọn digest SHA đã PASS trong GHCR/Render, không rebuild mã cũ.
-- Trước migration: backup database theo công cụ Supabase và tải manifest/object test từ
-  private Storage. Giữ bản mã hóa, owner-only, tối đa 30 ngày.
+- Trước thay đổi cấu trúc dữ liệu: sao lưu PostgreSQL và các tệp Storage riêng tư,
+  gồm danh sách đường dẫn, kích thước và mã kiểm tra SHA256. Không mặc định gói miễn phí
+  đã có bản sao lưu tự động có thể tải xuống. Nếu dùng `pg_dump`, chạy từ máy chủ tài
+  khoản với chuỗi kết nối riêng, lấy toàn bộ schema ứng dụng kể cả `veridra_private`,
+  rồi mã hóa bản sao. Không nhập mật khẩu trong dòng lệnh hoặc đưa bản sao vào Git.
+  Tệp Storage phải tải riêng; bản PostgreSQL không chứa nội dung PDF trong bucket.
+  Giữ bản mã hóa, chỉ chủ tài khoản truy cập, tối đa 30 ngày.
 - Restore gate: phục hồi vào project staging mới, cấu hình service staging, đăng nhập bằng
   test user và đọc lại tối thiểu một Skill, Memory, evaluation job và PDF object.
 - Không coi việc volume/database vẫn còn sau restart là một restore test.
 
 ## 9. Điều kiện đổi trạng thái phát hành
 
-Chỉ đổi README/Audit từ HOLD khi: CI của đúng commit xanh; digest triển khai khớp;
+Chỉ công bố nghiệm thu khi: CI của đúng commit xanh; digest triển khai khớp;
 PostgreSQL contract chạy thật; OAuth/BYOK chạy qua HTTPS; owner isolation và bốn-user test
 đạt; redeploy + restore đạt; benchmark live đủ mẫu số và không còn P0/P1. Render/Supabase
 Free có cold-start, quota và khả năng pause; đây là giới hạn công bố của closed beta, không

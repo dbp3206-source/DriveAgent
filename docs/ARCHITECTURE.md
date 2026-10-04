@@ -24,7 +24,7 @@ React UI
 - Local: SQLite giữ dữ liệu ứng dụng và state phụ; Qdrant embedded tăng tốc vector search.
   SQLite vẫn giữ embedding để cosine fallback hoạt động khi Qdrant không sẵn sàng.
 - Closed beta cloud: một Supabase PostgreSQL project giữ dữ liệu ứng dụng, Skill, quota,
-  circuit, approval ledger, evaluation queue/checkpoint và ADK session trong schema riêng.
+  circuit, sổ duyệt hành động, hàng chờ/điểm lưu của Chat và kiểm thử, cùng phiên ADK trong schema riêng.
   PDF gốc nằm trong bucket Supabase Storage private, owner được kiểm tra ở backend.
 - Cloud không phụ thuộc Qdrant/Redis/Kafka. PostgreSQL pgvector xếp hạng dense theo cosine;
   lexical/RRF hợp nhất ở dịch vụ. Cột vector được sinh từ embedding JSON trong cùng
@@ -60,9 +60,23 @@ nhập. Google OAuth và Gemini BYOK là riêng theo user; credentials được 
   vào hàng chờ đóng cho đến khi các request đã pin của **user đó** hoàn tất.
   Request dài của user khác không cản trở dọn runtime này. Lượt chat mới
   resolve credential mới; lượt đang chạy không bị đóng client giữa chừng.
-- Ledger quota trong UI là số request được ghi nhận ở máy theo key/tuyến hiệu lực,
-  không phải số dư chính thức từ Google. Trạng thái 429 và thời điểm reset từ
-  Google vẫn phải được phân loại riêng; không thể suy diễn số dư thực từ local ledger.
+- Bộ đếm trong giao diện ghi số lượt gọi mô hình trong ngân sách bảo vệ của Veridra,
+  theo tài khoản, khóa và tuyến xử lý; lưu SQLite ở máy hoặc PostgreSQL trên cloud.
+  Đây không phải số dư chính thức từ Google và không đồng nghĩa số câu hỏi còn gửi được.
+  Tên khóa khả dụng là ảnh chụp trạng thái cho lượt tiếp theo, không chứng minh khóa đã
+  phục vụ một câu trả lời trước đó. Đổi khóa không đặt lại bộ đếm; lỗi hạn mức Google
+  và thời điểm đặt lại ngân sách ứng dụng phải được phân biệt.
+
+## Tác vụ dài và phục hồi
+
+Chat lưu tác vụ vào hàng chờ SQL. Worker nhận quyền xử lý có thời hạn 120 giây,
+ghi trạng thái và chỉ công bố kết quả khi vẫn giữ quyền đó. Tác vụ chưa hoàn tất sau
+khi tiến trình dừng được chạy lại tối đa ba lần; đây là chạy lại toàn lượt, không phải
+tiếp tục từ từng token hay công cụ. Lần chạy lại có thể đọc nguồn và tiêu thêm lượt
+mô hình. Kết quả đã hoàn tất không được tạo lại; thao tác bộ nhớ có thể đã ghi phải
+được đối soát thay vì chạy lại mù. Ghi Google dùng sổ duyệt riêng, không tự thực thi
+qua worker Chat. Kiểm thử khôi phục trên máy không thay thế bằng chứng sau triển khai
+lại trên cloud.
 
 ## Creation & Execution Harness
 

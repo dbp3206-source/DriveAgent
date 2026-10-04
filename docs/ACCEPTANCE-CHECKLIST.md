@@ -80,6 +80,23 @@ Mỗi bước cập nhật trạng thái thật và phần cần người dùng 
 
 ## Tình trạng hiện tại
 
+### Việc còn lại để chốt — cập nhật 04/10/2026
+
+Không mở thêm phạm vi; ưu tiên sáu khối dưới đây. Có mã và kiểm thử thành phần không đồng nghĩa đã nghiệm thu cả khối.
+
+| Khối | Phần chưa đóng | Bước kết thúc cụ thể |
+|---|---|---|
+| Quy trình nghiệp vụ (A/B/F1) | Chưa đủ bằng chứng W1–W3 xuyên suốt và bộ mẫu đã khóa | Chạy ba quy trình với mẫu, đối soát nguồn/đầu ra/hành động; không ghép các ca thành phần thành một quy trình đạt |
+| Hội thoại và nguồn (B2/C1/F1) | Hỏi tiếp Mộc An từng lạc sang web; tên báo cáo khi hỏi tiếp còn sai trên bản trước; bộ đo chưa đủ | Kiểm lại nguyên ca lỗi sau sửa, rồi hoàn thành các mẫu còn thiếu; không liên tục thêm mẫu mới |
+| Đường vào và giao diện (C2/C3/E2) | Chưa đủ mẫu đo tốc độ; nút ngân sách bị ẩn trên điện thoại; chờ đánh thức máy miễn phí còn tồn tại | Sửa nút điện thoại, đo tải/chuyển khóa, kiểm trạng thái chờ và công bố giới hạn thực tế |
+| An toàn và phục hồi (D1/D2/D3) | Khôi phục cloud độc lập và đối soát quan sát chưa có đủ bằng chứng | Kiểm bộ xác định trên dữ liệu thử; thử khôi phục DB+kho tệp sang môi trường riêng, không đè dữ liệu đang dùng |
+| Hướng dẫn và demo (E1/E3) | Chưa chứng minh người dùng làm theo từ môi trường sạch thành công | Rà hướng dẫn với mã thật, chạy từ bản clone sạch, kiểm từng bước và kịch bản dự phòng |
+| Bản phát hành (F2/F3) | Chưa đủ bốn tài khoản thật, chưa gộp main | Giữ kiểm một quản trị theo lựa chọn người dùng; bốn người vẫn chưa kiểm chứng. Chỉ gộp main khi điều kiện bắt buộc được giải quyết và cùng ảnh đã nghiệm thu |
+
+Bản `41fee740f5231fd984920c6bea3b3db112ee9ac2` đã qua GitHub lần 56: kiểm mã/đóng gói 4 phút 19 giây, PostgreSQL 43 giây. Ảnh `sha256:adc86df42c0cc65c2fc158fd3e2a72c0ea27be31fd8c04f18b149d54d1285bd3` đã được đối chiếu trên Render, phục vụ lúc 17:01:54 ngày 04/10 giờ Việt Nam. Local: 1.021 ca máy chủ đạt, 11 ca PostgreSQL không chạy local; 168 ca giao diện đạt. Đây là kết quả kỹ thuật, chưa phải nghiệm thu toàn bộ sản phẩm hoặc điểm chất lượng nghiệp vụ. Nhật ký Render cho thấy khoảng 119 giây từ bắt đầu dịch vụ tới tiến trình máy chủ, thêm 18 giây khởi tạo ứng dụng; chưa giải quyết yêu cầu truy cập tức thì sau ngủ.
+
+OCR/PDF ảnh, tuyến trả phí, tạo/sửa lịch, đăng ký đại trà và hạ tầng nặng vẫn loại khỏi phạm vi. PDF có văn bản không phụ thuộc OCR và vẫn được hỗ trợ theo giới hạn đã công bố. Các đoạn bên dưới là kết quả lịch sử, không phải bản cloud mới nhất.
+
 Cập nhật 04/10/2026: sản phẩm đã được triển khai trên [URL kiểm thử](https://veridra-closed-beta.onrender.com), dùng PostgreSQL và kho tệp riêng tư. Nhánh staging đã có các sửa lỗi và kiểm thử mới; chưa gộp main hoặc chứng nhận hoàn thành 18 điều kiện. Không đánh đồng các ô chưa đóng với việc chưa có mã hoặc chưa thực hiện gì.
 
 Bản cloud đã đối chiếu gần nhất: `1020655`, ảnh `sha256:ea2046a44b54a33545f4f9386bab847885ae0aa068255d92a4d55a4801f5d22e`; GitHub lần 53 thành công, bước kiểm mã 4 phút 02 giây và PostgreSQL 37 giây, Render phục vụ từ 21:51:50 ngày 03/10 giờ Việt Nam. Bản này gồm sửa tải lịch sử, dẫn nguồn bộ nhớ, điều hướng web và giữ đoạn bằng chứng trang khi hỏi tiếp. Bộ máy chủ local trước đó có 1001 ca đạt, 11 phép thử PostgreSQL không chạy local; PostgreSQL được kiểm riêng trong GitHub. Đây là bằng chứng kỹ thuật, không phải điểm chất lượng câu trả lời hoặc chứng nhận cùng bản cuối.
