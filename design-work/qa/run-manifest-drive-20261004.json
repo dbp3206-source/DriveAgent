@@ -1,0 +1,14 @@
+{
+  "target_output": "Bộ lọc Drive trên ứng dụng Veridra hiện có",
+  "source_files": ["frontend/src/pages/DrivePage.tsx", "backend/app/tools/drive.py", "backend/app/api/drive.py"],
+  "primary_skill": "none — existing product design system",
+  "specialist_skills": [],
+  "mcp_tools_used": [],
+  "commands_run": ["backend/.venv/Scripts/python.exe -m pytest backend/tests -q", "npm test", "npm run lint", "npm run build", "node scripts/qa-drive-filters.mjs", "backend/.venv/Scripts/python.exe scripts/scan_release_secrets.py", "git diff --check"],
+  "repository_defined_outputs": ["frontend/dist"],
+  "delivered_outputs": ["frontend/src/pages/DrivePage.tsx", "frontend/src/styles.css", "backend/app/api/drive.py", "backend/app/tools/drive.py"],
+  "verification": {"structural": true, "rendered": true, "visual_review": true, "content_fidelity": true, "target_environment": false},
+  "verification_scope": "Chrome thật với API giả lập; truy vấn và ranh giới API được kiểm tự động. Chưa kiểm Google thật hoặc bản Render của thay đổi này.",
+  "quality_score": 84,
+  "known_limitations": ["Chưa nghiệm thu trên tài khoản Google thật", "Kiểm bốn người và khôi phục cloud độc lập chưa hoàn thành", "Render Free vẫn có thời gian đánh thức"]
+}

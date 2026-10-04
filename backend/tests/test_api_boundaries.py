@@ -181,6 +181,33 @@ async def test_drive_and_rag_http_boundaries_preserve_tenant_index_state(tmp_pat
         assert response.status_code == 200
         assert response.json()["files"][0]["index_status"] == "fresh"
         assert registry.calls[-1][0] == "drive_search_files"
+        assert registry.calls[-1][1]["sort_order"] == "recent"
+
+        response = await client.get(
+            "/api/drive/files",
+            params={"query": "Kế hoạch", "starred": "true", "item_type": "files"},
+        )
+        assert response.status_code == 200
+        assert registry.calls[-1][0] == "drive_search_files"
+        assert registry.calls[-1][1]["starred"] is True
+        assert registry.calls[-1][1]["item_type"] == "files"
+
+        response = await client.get(
+            "/api/drive/files",
+            params={"folder_id": "folder-a", "starred": "true", "item_type": "folders"},
+        )
+        assert response.status_code == 200
+        assert registry.calls[-1][0] == "drive_list_files"
+        assert registry.calls[-1][1]["folder_id"] == "folder-a"
+        assert registry.calls[-1][1]["starred"] is True
+        assert registry.calls[-1][1]["item_type"] == "folders"
+
+        previous_call_count = len(registry.calls)
+        response = await client.get(
+            "/api/drive/files", params={"item_type": "unsupported"}
+        )
+        assert response.status_code == 422
+        assert len(registry.calls) == previous_call_count
 
         response = await client.get("/api/drive/files/file-a/content")
         assert response.status_code == 200

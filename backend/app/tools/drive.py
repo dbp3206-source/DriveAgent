@@ -6,7 +6,7 @@ import io
 import json
 import tempfile
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
@@ -53,6 +53,9 @@ class ListDriveFilesInput(BaseModel):
     folder_id: str | None = None
     mime_type: str | None = None
     exclude_folders: bool = False
+    starred: bool | None = None
+    item_type: Literal["all", "folders", "files"] = "all"
+    sort_order: Literal["modified", "recent"] = "modified"
 
 
 class SearchDriveFilesInput(BaseModel):
@@ -60,6 +63,9 @@ class SearchDriveFilesInput(BaseModel):
     page_size: int = Field(default=50, ge=1, le=100)
     page_token: str | None = None
     mime_type: str | None = None
+    starred: bool | None = None
+    item_type: Literal["all", "folders", "files"] = "all"
+    sort_order: Literal["modified", "recent"] = "modified"
 
 
 class ReadDriveFileInput(BaseModel):
@@ -71,6 +77,22 @@ def _escape_drive_query(value: str) -> str:
     """Escape backslash và dấu nháy theo cú pháp query của Google Drive."""
 
     return value.replace("\\", "\\\\").replace("'", "\\'")
+
+
+def _append_drive_filters(
+    clauses: list[str],
+    *,
+    starred: bool | None,
+    item_type: Literal["all", "folders", "files"],
+) -> None:
+    """Apply structured Drive filters in the provider query, before pagination."""
+
+    if starred is True:
+        clauses.append("starred = true")
+    if item_type == "folders":
+        clauses.append(f"mimeType = '{GOOGLE_FOLDER}'")
+    elif item_type == "files":
+        clauses.append(f"mimeType != '{GOOGLE_FOLDER}'")
 
 
 def _file_response(item: dict[str, Any]) -> DriveFileResponse:
@@ -133,12 +155,15 @@ async def list_drive_files(
 ) -> DriveFileListResponse:
     service = await _drive_service(context)
     clauses = ["trashed = false"]
-    if payload.exclude_folders:
+    if payload.exclude_folders and payload.item_type != "folders":
         clauses.append(f"mimeType != '{GOOGLE_FOLDER}'")
     if payload.folder_id:
         clauses.append(f"'{_escape_drive_query(payload.folder_id)}' in parents")
     if payload.mime_type:
         clauses.append(f"mimeType = '{_escape_drive_query(payload.mime_type)}'")
+    _append_drive_filters(
+        clauses, starred=payload.starred, item_type=payload.item_type
+    )
     try:
         response = await asyncio.to_thread(
             service.files()
@@ -146,7 +171,7 @@ async def list_drive_files(
                 q=" and ".join(clauses),
                 pageSize=payload.page_size,
                 pageToken=payload.page_token,
-                orderBy="modifiedTime desc",
+                orderBy="recency desc" if payload.sort_order == "recent" else "modifiedTime desc",
                 fields=(
                     "nextPageToken,files(id,name,mimeType,modifiedTime,size,webViewLink,owners)"
                 ),
@@ -171,6 +196,9 @@ async def search_drive_files(
     clauses = ["trashed = false", f"(name contains '{escaped}' or fullText contains '{escaped}')"]
     if payload.mime_type:
         clauses.append(f"mimeType = '{_escape_drive_query(payload.mime_type)}'")
+    _append_drive_filters(
+        clauses, starred=payload.starred, item_type=payload.item_type
+    )
     try:
         response = await asyncio.to_thread(
             service.files()
@@ -178,7 +206,7 @@ async def search_drive_files(
                 q=" and ".join(clauses),
                 pageSize=payload.page_size,
                 pageToken=payload.page_token,
-                orderBy="modifiedTime desc",
+                orderBy="recency desc" if payload.sort_order == "recent" else "modifiedTime desc",
                 fields=(
                     "nextPageToken,files(id,name,mimeType,modifiedTime,size,webViewLink,owners)"
                 ),

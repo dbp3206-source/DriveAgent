@@ -247,6 +247,12 @@ async def test_drive_list_and_search_build_expected_queries(monkeypatch) -> None
     searched = await search_drive_files(
         SearchDriveFilesInput(query="Bao's plan", mime_type="text/plain"), tool_context()
     )
+    await list_drive_files(
+        ListDriveFilesInput(starred=True, item_type="folders", sort_order="recent"), tool_context()
+    )
+    await search_drive_files(
+        SearchDriveFilesInput(query="plan", starred=True, item_type="files"), tool_context()
+    )
 
     assert listed.files[0].id == "file-123"
     assert listed.next_page_token == "next-page"
@@ -254,6 +260,18 @@ async def test_drive_list_and_search_build_expected_queries(monkeypatch) -> None
     assert "'folder-1' in parents" in service.files_resource.list_calls[0]["q"]
     assert "name contains 'Bao\\'s plan'" in service.files_resource.list_calls[1]["q"]
     assert "mimeType = 'text/plain'" in service.files_resource.list_calls[1]["q"]
+    assert "starred = true" in service.files_resource.list_calls[2]["q"]
+    assert (
+        "mimeType = 'application/vnd.google-apps.folder'"
+        in service.files_resource.list_calls[2]["q"]
+    )
+    assert service.files_resource.list_calls[0]["orderBy"] == "modifiedTime desc"
+    assert service.files_resource.list_calls[2]["orderBy"] == "recency desc"
+    assert "starred = true" in service.files_resource.list_calls[3]["q"]
+    assert (
+        "mimeType != 'application/vnd.google-apps.folder'"
+        in service.files_resource.list_calls[3]["q"]
+    )
 
 
 @pytest.mark.asyncio

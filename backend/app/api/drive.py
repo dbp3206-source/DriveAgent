@@ -3,6 +3,7 @@
 import asyncio
 import hashlib
 import io
+from typing import Literal
 from uuid import uuid4
 
 from fastapi import APIRouter, HTTPException, Query, Request
@@ -75,6 +76,9 @@ async def list_files(
     page_token: str | None = None,
     mime_type: str | None = None,
     folder_id: str | None = None,
+    starred: bool | None = None,
+    item_type: Literal["all", "folders", "files"] = "all",
+    sort_order: Literal["modified", "recent"] = "recent",
 ):
     if query:
         result = await execute(
@@ -87,6 +91,9 @@ async def list_files(
                 page_size=page_size,
                 page_token=page_token,
                 mime_type=mime_type,
+                starred=starred,
+                item_type=item_type,
+                sort_order=sort_order,
             ).model_dump(),
         )
     else:
@@ -100,6 +107,9 @@ async def list_files(
                 page_token=page_token,
                 mime_type=mime_type,
                 folder_id=folder_id,
+                starred=starred,
+                item_type=item_type,
+                sort_order=sort_order,
             ).model_dump(),
         )
     indexed_rows = {

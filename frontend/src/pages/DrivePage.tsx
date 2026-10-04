@@ -30,6 +30,8 @@ const getDriveCapability = (mimeType: string, fileName: string) => driveFileCapa
 
 interface FileList { files: DriveFile[]; next_page_token: string | null }
 interface IndexResult { chunks: number; skipped: boolean; message: string }
+type DriveItemType = 'all' | 'folders' | 'files'
+interface DriveFilters { starred: boolean; itemType: DriveItemType }
 
 function readableType(mime: string) {
   if (mime.includes('document')) return 'Tài liệu'
@@ -50,8 +52,11 @@ export function DrivePage() {
   const [notice, setNotice] = useState('')
   const [nextPage, setNextPage] = useState<string | null>(null)
   const [activeQuery, setActiveQuery] = useState('')
+  const [starredOnly, setStarredOnly] = useState(false)
+  const [itemType, setItemType] = useState<DriveItemType>('all')
   const [folderStack, setFolderStack] = useState<Array<{ id: string; name: string }>>([])
   const listRequest = useRef<AbortController | null>(null)
+  const filters = useRef<DriveFilters>({ starred: false, itemType: 'all' })
   const currentFolderId = folderStack[folderStack.length - 1]?.id ?? null
 
   const load = useCallback(async (search = '', pageToken: string | null = null, folderId: string | null = null) => {
@@ -65,6 +70,8 @@ export function DrivePage() {
       if (search.trim()) params.set('query', search.trim())
       if (pageToken) params.set('page_token', pageToken)
       if (folderId && !search.trim()) params.set('folder_id', folderId)
+      if (filters.current.starred) params.set('starred', 'true')
+      if (filters.current.itemType !== 'all') params.set('item_type', filters.current.itemType)
       const result = await api<FileList>(`/api/drive/files?${params}`, { signal: controller.signal })
       // A previous folder/search response must never replace the latest selection.
       if (controller.signal.aborted) return
@@ -113,6 +120,19 @@ export function DrivePage() {
     await load(query, null, currentFolderId)
   }
 
+  function changeItemType(nextType: DriveItemType) {
+    filters.current = { ...filters.current, itemType: nextType }
+    setItemType(nextType)
+    void load(query, null, currentFolderId)
+  }
+
+  function toggleStarredOnly() {
+    const nextStarred = !filters.current.starred
+    filters.current = { ...filters.current, starred: nextStarred }
+    setStarredOnly(nextStarred)
+    void load(query, null, currentFolderId)
+  }
+
 
   async function unindex(file: DriveFile) {
     if (!window.confirm(`Hoàn tác lập chỉ mục cho “${file.name}”? Tệp gốc trên Drive sẽ không bị thay đổi.`)) return
@@ -153,8 +173,8 @@ export function DrivePage() {
     <section className="stack-page">
       <div className="page-heading">
         <div>
-          <h2>Tệp bạn đã cấp quyền</h2>
-          <p>Danh sách đến trực tiếp từ Drive API. Lập chỉ mục để hỏi đáp có trích dẫn.</p>
+          <h2>Drive của bạn</h2>
+          <p>Các mục có hoạt động gần đây được xếp lên trước. Chọn bộ lọc để tìm nhanh thư mục và tài liệu.</p>
         </div>
         <Button appearance="subtle" icon={<ArrowSync24Regular />} onClick={() => load(query, null, currentFolderId)}>
           Làm mới
@@ -173,6 +193,39 @@ export function DrivePage() {
         />
         <Button appearance="primary" type="submit" disabled={loading} className="drive-search-btn">Tìm kiếm</Button>
       </form>
+      <div className="drive-filter-toolbar" aria-label="Bộ lọc Drive">
+        <div className="drive-filter-group" role="group" aria-label="Lọc theo loại">
+          <span className="drive-filter-label">Loại</span>
+          {([
+            ['all', 'Tất cả'],
+            ['folders', 'Thư mục'],
+            ['files', 'Tệp'],
+          ] as const).map(([value, label]) => (
+            <Button
+              key={value}
+              type="button"
+              appearance="secondary"
+              className={`drive-filter-chip ${itemType === value ? 'drive-filter-chip--selected' : ''}`}
+              aria-pressed={itemType === value}
+              disabled={loading}
+              onClick={() => changeItemType(value)}
+            >
+              {label}
+            </Button>
+          ))}
+        </div>
+        <Button
+          type="button"
+          appearance="secondary"
+          className={`drive-filter-chip drive-starred-filter ${starredOnly ? 'drive-filter-chip--selected' : ''}`}
+          aria-pressed={starredOnly}
+          disabled={loading}
+          onClick={toggleStarredOnly}
+        >
+          Đã gắn sao
+        </Button>
+        <span className="drive-sort-note">Gần đây trước</span>
+      </div>
       {notice ? (
         <MessageBar intent="success"><MessageBarBody>{notice}</MessageBarBody></MessageBar>
       ) : null}

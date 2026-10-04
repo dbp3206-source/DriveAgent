@@ -1,5 +1,8 @@
 # Design Brief — DriveAgent Study & Work Command Center
 
+## Bổ sung 04/10/2026 — tìm nhanh trên Drive
+Đối tượng hiện hành là người chuẩn bị tư vấn khách hàng theo PRODUCT-FOUNDATION.md. Tại màn hình Drive thật, giữ Fluent, Be Vietnam Pro và màu theo theme; đặt bộ lọc ngay dưới thanh tìm kiếm. Mặc định hoạt động gần đây trước, dùng thứ tự recency của Google; cho phép kết hợp mục đã gắn sao với tất cả/thư mục/tệp. Bộ lọc áp dụng trước phân trang ở Google Drive. Kiểm hình thức bằng dữ liệu giả lập được ghi nhãn trong hồ sơ QA; kiểm truy vấn và ranh giới API bằng bộ kiểm máy chủ. Không sử dụng dữ liệu giả lập làm bằng chứng Google hoạt động thật.
+
 ## Cập nhật có thẩm quyền 04/10/2026 — thay minh họa hành trình
 Phạm vi lượt này: thay ảnh trong phần câu chuyện của Harness bằng PNG người dùng cung cấp; không tạo lại ảnh, không thay hệ thống thiết kế. Đối tượng và định vị hiện hành theo docs/PRODUCT-FOUNDATION.md, không lấy định vị sinh viên lịch sử bên dưới. Giữ toàn ảnh, tỷ lệ 1672×941, cả hai theme dùng cùng asset. Các số trong ảnh được ghi rõ là minh họa, không phải số đo. Nguồn: codex-clipboard-86efcc92-241c-4214-ae6d-8df9ab4b1242.png do người dùng cung cấp; không suy quyền tái sử dụng ngoài sản phẩm yêu cầu. Đầu ra là giao diện thật và asset frontend/public/harness/veridra-verified-workflow.png; kiểm đóng gói và mở trên URL thật.
 
