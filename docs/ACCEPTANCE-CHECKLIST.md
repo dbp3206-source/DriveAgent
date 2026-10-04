@@ -88,7 +88,7 @@ Không mở thêm phạm vi; ưu tiên sáu khối dưới đây. Có mã và ki
 |---|---|---|
 | Quy trình nghiệp vụ (A/B/F1) | Chưa đủ bằng chứng W1–W3 xuyên suốt và bộ mẫu đã khóa | Chạy ba quy trình với mẫu, đối soát nguồn/đầu ra/hành động; không ghép các ca thành phần thành một quy trình đạt |
 | Hội thoại và nguồn (B2/C1/F1) | Hỏi tiếp Mộc An từng lạc sang web; tên báo cáo khi hỏi tiếp còn sai trên bản trước; bộ đo chưa đủ | Kiểm lại nguyên ca lỗi sau sửa, rồi hoàn thành các mẫu còn thiếu; không liên tục thêm mẫu mới |
-| Đường vào và giao diện (C2/C3/E2) | Chưa đủ mẫu đo tốc độ; nút ngân sách bị ẩn trên điện thoại; chờ đánh thức máy miễn phí còn tồn tại | Sửa nút điện thoại, đo tải/chuyển khóa, kiểm trạng thái chờ và công bố giới hạn thực tế |
+| Đường vào và giao diện (C2/C3/E2) | Nút ngân sách đã mở được ở 375 px trên bản 527ad2d; còn thiếu mẫu đo tốc độ và kiểm đủ màn hình; ảnh minh họa chưa được đóng gói trên cloud; chờ đánh thức máy miễn phí còn tồn tại | Đóng gói ảnh đang được sử dụng, đo tải/chuyển khóa, kiểm trạng thái chờ và công bố giới hạn thực tế |
 | An toàn và phục hồi (D1/D2/D3) | Khôi phục cloud độc lập và đối soát quan sát chưa có đủ bằng chứng | Kiểm bộ xác định trên dữ liệu thử; thử khôi phục DB+kho tệp sang môi trường riêng, không đè dữ liệu đang dùng |
 | Hướng dẫn và demo (E1/E3) | Chưa chứng minh người dùng làm theo từ môi trường sạch thành công | Rà hướng dẫn với mã thật, chạy từ bản clone sạch, kiểm từng bước và kịch bản dự phòng |
 | Bản phát hành (F2/F3) | Chưa đủ bốn tài khoản thật, chưa gộp main | Giữ kiểm một quản trị theo lựa chọn người dùng; bốn người vẫn chưa kiểm chứng. Chỉ gộp main khi điều kiện bắt buộc được giải quyết và cùng ảnh đã nghiệm thu |

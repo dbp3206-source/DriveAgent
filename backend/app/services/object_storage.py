@@ -53,15 +53,23 @@ class LocalPdfObjectStorage(PdfObjectStorage):
     def _path(self, owner: str, job_id: str) -> Path:
         if not OBJECT_ID.fullmatch(owner) or not OBJECT_ID.fullmatch(job_id):
             raise ObjectStorageError("invalid_object_identity")
-        path = (self.root / owner / f"{job_id}.pdf").resolve()
-        if not path.is_relative_to(self.root):
+        unresolved = self.root / owner / f"{job_id}.pdf"
+        path = unresolved.resolve()
+        # Require the exact owner namespace, not merely any path under root.
+        # Resolving a file symlink or an owner-directory junction must never
+        # turn a read/write/delete into an operation on another owner's data.
+        if path != unresolved:
             raise ObjectStorageError("invalid_object_identity")
         return path
 
     def _legacy_path(self, job_id: str) -> Path:
         if not OBJECT_ID.fullmatch(job_id):
             raise ObjectStorageError("invalid_object_identity")
-        return (self.root / f"{job_id}.pdf").resolve()
+        unresolved = self.root / f"{job_id}.pdf"
+        path = unresolved.resolve()
+        if path != unresolved:
+            raise ObjectStorageError("invalid_object_identity")
+        return path
 
     async def _existing_path(self, owner: str, job_id: str) -> Path:
         current = self._path(owner, job_id)
@@ -84,8 +92,10 @@ class LocalPdfObjectStorage(PdfObjectStorage):
         return await asyncio.to_thread((await self._existing_path(owner, job_id)).read_bytes)
 
     async def delete(self, owner: str, job_id: str) -> None:
-        await asyncio.to_thread(self._path(owner, job_id).unlink, missing_ok=True)
-        await asyncio.to_thread(self._legacy_path(job_id).unlink, missing_ok=True)
+        current = self._path(owner, job_id)
+        legacy = self._legacy_path(job_id)
+        await asyncio.to_thread(current.unlink, missing_ok=True)
+        await asyncio.to_thread(legacy.unlink, missing_ok=True)
 
     async def processing_path(self, owner: str, job_id: str) -> tuple[Path, bool]:
         return await self._existing_path(owner, job_id), False

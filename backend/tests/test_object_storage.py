@@ -1,3 +1,6 @@
+import os
+import subprocess
+
 import httpx
 import pytest
 import respx
@@ -56,6 +59,56 @@ async def test_local_pdf_storage_is_owner_scoped_and_keeps_legacy_read_compatibi
     assert await storage.get("owner-a", "job-old") == b"legacy"
     await storage.delete("owner-a", "job-old")
     assert not legacy.exists()
+
+
+@pytest.mark.parametrize("operation", ["get", "put", "delete", "processing_path"])
+async def test_local_storage_rejects_owner_directory_alias(tmp_path, operation):
+    storage = LocalPdfObjectStorage(tmp_path / "objects")
+    await storage.initialize()
+    await storage.put("owner-b", "job-one", b"private owner-b canary")
+    alias = storage.root / "owner-a"
+    try:
+        alias.symlink_to(storage.root / "owner-b", target_is_directory=True)
+    except (OSError, NotImplementedError):
+        if os.name != "nt":
+            pytest.skip("Directory symlinks unavailable on this host")
+        # Windows junctions exercise the same redirect without requiring the
+        # elevated privilege needed to create file/directory symlinks.
+        result = subprocess.run(
+            ["cmd", "/c", "mklink", "/J", str(alias), str(storage.root / "owner-b")],
+            capture_output=True,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr.decode(errors="replace")
+    with pytest.raises(ObjectStorageError, match="invalid_object_identity"):
+        if operation == "put":
+            await storage.put("owner-a", "job-one", b"unauthorized overwrite")
+        else:
+            await getattr(storage, operation)("owner-a", "job-one")
+    assert await storage.get("owner-b", "job-one") == b"private owner-b canary"
+
+
+@pytest.mark.parametrize("operation", ["get", "delete", "processing_path"])
+async def test_local_storage_rejects_legacy_file_alias_without_touching_canary(tmp_path, operation):
+    storage = LocalPdfObjectStorage(tmp_path / "objects")
+    await storage.initialize()
+    outside = tmp_path / "outside.pdf"
+    outside.write_bytes(b"private outside canary")
+    alias = storage.root / "job-old.pdf"
+    try:
+        alias.symlink_to(outside)
+    except (OSError, NotImplementedError):
+        pytest.skip("File symlinks unavailable on this host")
+    # Delete validates both paths before removing even the owned object.
+    await storage.put("owner-a", "job-old", b"owned canary")
+    if operation != "delete":
+        (storage.root / "owner-a" / "job-old.pdf").unlink()
+    with pytest.raises(ObjectStorageError, match="invalid_object_identity"):
+        await getattr(storage, operation)("owner-a", "job-old")
+    assert outside.read_bytes() == b"private outside canary"
+    assert alias.is_symlink()
+    if operation == "delete":
+        assert await storage.get("owner-a", "job-old") == b"owned canary"
 
 
 @respx.mock

@@ -70,3 +70,5 @@ backend/evals/results/
 backend/evals/business_live.json
 frontend/public/*.visual-check.*
 frontend/public/harness/*.visual-check.*
+!frontend/public/harness/*.visual-check.1440x900.light.png
+!frontend/public/harness/*.visual-check.1440x900.dark.png

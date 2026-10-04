@@ -26,7 +26,7 @@ const operationLabels: Record<string, string> = {
 
 const operationErrorLabels: Record<string, string> = {
   google_execution_uncertain: 'Mất phản hồi sau khi gọi Google',
-  verification_failed: 'Read-back chưa khớp kết quả mong đợi',
+  verification_failed: 'Nội dung đọc lại chưa khớp kết quả mong đợi',
   google_permission_denied: 'Google từ chối quyền ở lần chạy đó',
 }
 
@@ -34,6 +34,9 @@ const scopeLabels: Record<string, string> = {
   openid: 'Xác thực danh tính Google',
   email: 'Đọc địa chỉ email tài khoản',
   profile: 'Đọc tên và ảnh hồ sơ',
+  'https://www.googleapis.com/auth/userinfo.email': 'Đọc địa chỉ email tài khoản',
+  'https://www.googleapis.com/auth/userinfo.profile': 'Đọc tên và ảnh hồ sơ',
+  'https://www.googleapis.com/auth/calendar.readonly': 'Đọc lịch hẹn; không tạo hoặc sửa lịch',
   'https://www.googleapis.com/auth/drive.readonly': 'Đọc và tìm tệp trong Google Drive',
   'https://www.googleapis.com/auth/drive.file': 'Tạo và sửa tệp do Veridra tạo hoặc được bạn chọn',
   'https://www.googleapis.com/auth/gmail.readonly': 'Đọc thư Gmail để tìm kiếm và tóm tắt',
@@ -131,7 +134,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       setCredentials(items)
       setCapacity(current)
     } catch (error) {
-      setCredentialMessage({ intent: 'error', text: error instanceof Error ? error.message : 'Không đọc được danh sách Gemini key.' })
+      setCredentialMessage({ intent: 'error', text: error instanceof Error ? error.message : 'Không đọc được danh sách khóa Gemini.' })
     } finally {
       setCredentialLoading(false)
     }
@@ -148,8 +151,8 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       setCredentialMessage({
         intent: 'success',
         text: enabled
-          ? 'Key được phép tham gia dự phòng trước request khi key chính bị chặn local.'
-          : 'Đã tắt dự phòng cho key này.',
+          ? 'Khóa được dùng dự phòng khi khóa chính bị chặn bởi giới hạn bảo vệ của ứng dụng.'
+          : 'Đã tắt dự phòng cho khóa này.',
       })
       await loadCredentials()
     } catch (error) {
@@ -180,7 +183,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       setCredentialMessage({ intent: 'success', text: 'Key đã được kiểm tra và lưu mã hóa cho tài khoản của bạn.' })
       await loadCredentials()
     } catch (error) {
-      setCredentialMessage({ intent: 'error', text: error instanceof Error ? error.message : 'Không lưu được key.' })
+      setCredentialMessage({ intent: 'error', text: error instanceof Error ? error.message : 'Không lưu được khóa.' })
     } finally {
       setCredentialBusy('')
     }
@@ -199,12 +202,12 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       })
       setCredentialMessage({
         intent: 'success',
-        text: action === 'activate' ? 'Đã chuyển key nóng; không cần khởi động lại.' : action === 'delete' ? 'Đã xóa key khỏi thiết bị.' : 'Key vẫn kết nối được với Gemini.',
+        text: action === 'activate' ? 'Đã đổi khóa; không cần khởi động lại.' : action === 'delete' ? 'Đã xóa khóa khỏi kho của tài khoản.' : 'Khóa vẫn kết nối được với Gemini.',
       })
       await loadCredentials()
       if (action === 'activate') window.dispatchEvent(new Event('veridra-credential-changed'))
     } catch (error) {
-      setCredentialMessage({ intent: 'error', text: error instanceof Error ? error.message : 'Thao tác key không thành công.' })
+      setCredentialMessage({ intent: 'error', text: error instanceof Error ? error.message : 'Thao tác khóa không thành công.' })
       if (action === 'activate') {
         await loadCredentials()
         window.dispatchEvent(new Event('veridra-credential-changed'))
@@ -266,26 +269,26 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
     <section id="settings-system" className="settings-group" aria-labelledby="settings-system-title">
       <header className="settings-group__heading">
         <div><span>Hệ thống</span><h3 id="settings-system-title">Trạng thái dịch vụ</h3></div>
-        <p>Health kiểm tra database và trạng thái hệ thống. Google và Gemini được xác nhận sau thao tác thật.</p>
+        <p>Kiểm tra cơ sở dữ liệu và cấu hình hệ thống. Kết nối Google và Gemini chỉ được xác nhận sau thao tác thật.</p>
       </header>
       <div className="status-board">
-        <StatusLine label={health?.vector_store === 'postgres-pgvector' ? 'PostgreSQL' : 'Database'} ready={Boolean(health?.database)} detail="Lưu tài khoản, phiên làm việc, audit và dữ liệu RAG trên hệ thống đang chạy." />
-        <StatusLine label="Vector store" ready={Boolean(health?.vector_store)} detail={health?.vector_store ?? 'Chưa khởi tạo'} />
+        <StatusLine label="Cơ sở dữ liệu" ready={Boolean(health?.database)} detail="Lưu tài khoản, phiên làm việc, nhật ký và dữ liệu tìm kiếm tài liệu." />
+        <StatusLine label="Kho tìm kiếm tài liệu" ready={Boolean(health?.vector_store)} detail={health?.vector_store ? 'Đã cấu hình kho tìm đoạn nội dung liên quan.' : 'Chưa khởi tạo'} />
         <StatusLine
           label="Gemini"
           ready={status.gemini_configured}
           detail={health
-            ? `${health.gemini_chat_model} · dự phòng ${health.gemini_fallback_model} · ${health.gemini_embedding_model} (${health.embedding_dimensions}D) · chưa probe kết nối từ health`
-            : 'Đang đọc cấu hình model…'}
+            ? `${health.gemini_chat_model} · dự phòng ${health.gemini_fallback_model} · chưa kiểm tra kết nối trong bước này`
+            : 'Đang đọc cấu hình mô hình…'}
         />
         <StatusLine
           label="Google OAuth"
           ready={status.oauth_configured}
           detail={workspaceReadReady
-            ? 'OAuth client đã cấu hình; user đã cấp phạm vi đọc Drive và Gmail.'
+            ? 'Đã cấu hình đăng nhập Google; tài khoản đã cấp quyền đọc Drive và Gmail.'
             : driveReadReady
-              ? 'OAuth client đã cấu hình; user chưa cấp phạm vi đọc Gmail.'
-              : 'OAuth client đã cấu hình; user chưa cấp đủ phạm vi đọc Drive.'}
+              ? 'Đã cấu hình đăng nhập Google; tài khoản chưa cấp quyền đọc Gmail.'
+              : 'Đã cấu hình đăng nhập Google; tài khoản chưa cấp đủ quyền đọc Drive.'}
         />
       </div>
     </section>
@@ -338,21 +341,21 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       <header className="gemini-credentials__header">
         <div>
           <h3 id="gemini-credentials-title">Gemini API & hạn mức</h3>
-          <p>Lưu tối đa 5 key riêng cho tài khoản. Key được mã hóa trên backend và không bao giờ được trả lại trình duyệt sau khi lưu.</p>
+          <p>Lưu tối đa 5 khóa riêng cho tài khoản. Khóa được mã hóa trên máy chủ và không được trả lại trình duyệt sau khi lưu.</p>
         </div>
-        <Badge appearance="tint" color="informative">Free-tier · BYOK cô lập theo người dùng</Badge>
+        <Badge appearance="tint" color="informative">Miễn phí · mỗi người dùng khóa riêng</Badge>
       </header>
       {capacity?.local_budget ? (
         <div className="provider-capacity-summary" aria-label="Năng lực AI hiện tại">
-          <div><span>Còn theo ngân sách local của key hiệu lực</span><strong>{capacity.local_budget.daily_remaining}/{capacity.local_budget.daily_limit} lượt</strong></div>
+          <div><span>Ngân sách ứng dụng còn lại của khóa khả dụng</span><strong>{capacity.local_budget.daily_remaining}/{capacity.local_budget.daily_limit} lượt</strong></div>
           <div><span>Trong 60 giây</span><strong>{capacity.local_budget.minute_used}/{capacity.local_budget.minute_limit} lượt</strong></div>
-          <div><span>Model dự phòng</span><strong>{capacity.fallback_model}</strong></div>
-          <div><span>Key bạn đã chọn</span><strong>{activeCredential?.display_name || (capacity.active_credential_id ? 'Đang đồng bộ' : capacity.credential_source)}</strong></div>
-          <div><span>Project/key hiệu lực</span><strong>{capacity.display_name || capacity.credential_source}{capacity.failover_active ? ' · dự phòng' : ''}</strong></div>
+          <div><span>Mô hình dự phòng</span><strong>{capacity.fallback_model}</strong></div>
+          <div><span>Khóa bạn đã chọn</span><strong>{activeCredential?.display_name || (capacity.active_credential_id ? 'Đang đồng bộ' : capacity.credential_source)}</strong></div>
+          <div><span>Khóa khả dụng khi kiểm tra</span><strong>{capacity.display_name || capacity.credential_source}{capacity.failover_active ? ' · dự phòng' : ''}</strong></div>
         </div>
       ) : null}
       {credentialMessage && <MessageBar intent={credentialMessage.intent}><MessageBarBody>{credentialMessage.text}</MessageBarBody></MessageBar>}
-      {credentialLoading ? <Spinner label="Đang đọc kho key mã hóa…" /> : credentials.length ? (
+      {credentialLoading ? <Spinner label="Đang đọc kho khóa mã hóa…" /> : credentials.length ? (
         <div className="gemini-credential-list">
           {credentials.map((item) => <article key={item.id} className={item.is_active ? 'gemini-credential-card is-active' : 'gemini-credential-card'}>
             <div>
@@ -360,11 +363,11 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
                 <strong>{item.display_name}</strong>
                 {item.is_active && <Badge appearance="filled" color="success">Đang dùng</Badge>}
               </div>
-              <p>{item.project_alias || 'Chưa đặt tên project'} · fingerprint <code>{item.fingerprint}</code></p>
+              <p>{item.project_alias || 'Chưa đặt tên dự án'} · mã nhận diện <code>{item.fingerprint}</code></p>
               <small>
                 Trạng thái: {item.status === 'ready' ? 'Sẵn sàng' : item.status}
-                {' · '}{item.daily_flash_used} lượt model hôm nay
-                {item.circuit_open ? ` · tạm nghỉ ${item.retry_after_seconds}s` : ' · circuit sẵn sàng'}
+                {' · '}{item.daily_flash_used} lượt mô hình hôm nay
+                {item.circuit_open ? ` · tạm nghỉ ${item.retry_after_seconds} giây` : ' · không tạm khóa'}
               </small>
             </div>
             <div className="gemini-credential-card__actions">
@@ -379,21 +382,21 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
                 {credentialBusy === `validate:${item.id}` ? 'Đang kiểm tra…' : 'Kiểm tra'}
               </Button>
               {!item.is_active && <Button size="small" appearance="primary" disabled={Boolean(credentialBusy)} onClick={() => void credentialAction(item.id, 'activate')}>
-                {credentialBusy === `activate:${item.id}` ? 'Đang chuyển…' : 'Đặt làm key hiện tại'}
+                {credentialBusy === `activate:${item.id}` ? 'Đang chuyển…' : 'Đặt làm khóa hiện tại'}
               </Button>}
               {!item.is_active && <Button size="small" appearance="subtle" disabled={Boolean(credentialBusy)} onClick={() => void credentialAction(item.id, 'delete')}>Xóa</Button>}
             </div>
           </article>)}
         </div>
-      ) : <p className="operation-ledger__empty">Chưa có key riêng trong kho mã hóa. Thêm Gemini API key của bạn để sử dụng AI.</p>}
+      ) : <p className="operation-ledger__empty">Chưa có khóa riêng trong kho mã hóa. Thêm khóa Gemini của bạn để sử dụng AI.</p>}
       <form className="gemini-credential-form" onSubmit={addCredential} autoComplete="off">
         <Field label="Tên dễ nhớ" required><Input value={credentialName} maxLength={80} onChange={(_, data) => setCredentialName(data.value)} placeholder="Ví dụ: Gemini chính" /></Field>
-        <Field label="Tên project"><Input value={credentialProject} maxLength={120} onChange={(_, data) => setCredentialProject(data.value)} placeholder="Chỉ là bí danh hiển thị" /></Field>
-        <Field label="API key" required hint="Key được gửi tới backend của Veridra để kiểm tra và lưu mã hóa cho tài khoản của bạn.">
-          <Input type="password" value={credentialSecret} maxLength={512} onChange={(_, data) => setCredentialSecret(data.value)} placeholder="Dán Gemini API key" />
+        <Field label="Tên dự án"><Input value={credentialProject} maxLength={120} onChange={(_, data) => setCredentialProject(data.value)} placeholder="Chỉ là bí danh hiển thị" /></Field>
+        <Field label="Khóa Gemini" required hint="Khóa được gửi tới máy chủ Veridra để kiểm tra và lưu mã hóa cho tài khoản của bạn.">
+          <Input type="password" value={credentialSecret} maxLength={512} onChange={(_, data) => setCredentialSecret(data.value)} placeholder="Dán khóa Gemini" />
         </Field>
         <Button type="submit" appearance="primary" disabled={credentialBusy === 'create' || !credentialName.trim() || credentialSecret.trim().length < 20}>
-          {credentialBusy === 'create' ? 'Đang kiểm tra và lưu…' : 'Kiểm tra & lưu key'}
+          {credentialBusy === 'create' ? 'Đang kiểm tra và lưu…' : 'Kiểm tra & lưu khóa'}
         </Button>
       </form>
       <MessageBar intent="info"><MessageBarBody>{capacity?.provider_balance_note || 'Đây là bộ đếm bảo vệ của Veridra, không phải hạn mức còn lại được Google xác nhận.'} Chỉ các khóa bạn bật “Dự phòng” mới được chọn khi khóa chính tạm bị chặn do lỗi hoặc đã hết ngân sách bảo vệ.</MessageBarBody></MessageBar>
@@ -457,7 +460,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
 
     <section id="settings-security" className="settings-security settings-group" aria-labelledby="settings-security-title">
       <h3 id="settings-security-title">Bảo mật và phiên làm việc</h3>
-      <MessageBar intent="info"><MessageBarBody>Veridra không lưu API key trên trình duyệt. OAuth token được mã hóa bằng APP_SECRET trước khi ghi database.</MessageBarBody></MessageBar>
+      <MessageBar intent="info"><MessageBarBody>Veridra không lưu khóa Gemini trên trình duyệt. Thông tin cấp quyền Google được mã hóa trên máy chủ trước khi lưu vào cơ sở dữ liệu.</MessageBarBody></MessageBar>
       <div className="danger-zone"><div><h3>Rời phiên hiện tại</h3><p>Đăng xuất chỉ xóa cookie trên trình duyệt, không xóa dữ liệu hoặc quyền Google.</p></div><Button icon={<ArrowExit24Regular />} onClick={logout}>Đăng xuất</Button></div>
     </section>
   </section>
