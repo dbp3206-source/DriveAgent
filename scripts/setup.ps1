@@ -1,4 +1,4 @@
-$ErrorActionPreference = "Stop"
+﻿$ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $repoRoot
 
@@ -38,7 +38,7 @@ if (-not (Test-Path ".\backend\.venv\Scripts\python.exe")) {
 }
 & ".\backend\.venv\Scripts\python.exe" -c "import sys; raise SystemExit(0 if sys.version_info[:2] in ((3, 11), (3, 12)) else 1)"
 if ($LASTEXITCODE -ne 0) {
-    throw "Môi trường backend/.venv không dùng Python 3.11/3.12. Giữ nguyên dữ liệu; chuyển riêng thư mục .venv cũ sang tên dự phòng rồi chạy lại setup."
+    throw "Existing backend/.venv must use Python 3.11/3.12. Preserve application data; move only .venv to a backup name before running setup again."
 }
 & ".\backend\.venv\Scripts\python.exe" -m pip install "uv==0.12.19"
 if ($LASTEXITCODE -ne 0) { throw "Locked installer installation failed." }

@@ -82,13 +82,17 @@ Mỗi bước cập nhật trạng thái thật và phần cần người dùng 
 
 ### Việc còn lại để chốt — cập nhật 04/10/2026
 
+Bổ sung cuối ngày: CI lần 61 của `30a2ec4` đã đạt; tài nguyên frontend trên URL Render đã được đối chiếu với ảnh `sha256:c2092a47e21e089bfe59571771f7b4f36f8e24ab9d53b873c15f5149458e8917`. Ảnh người dùng đã có trên URL và khớp checksum; bộ lọc Drive đã có trong mã đang phục vụ. Bốn kích thước giao diện trên tài nguyên cloud đạt với API giả lập, chưa thay thao tác Google thật. Xem `design-work/qa/drive-filters-20261004.md`. Bảng dưới giữ các phần còn thiếu; ghi chú “ảnh chưa đóng gói” là trạng thái trước lần triển khai này, không còn đúng.
+
 Không mở thêm phạm vi; ưu tiên sáu khối dưới đây. Có mã và kiểm thử thành phần không đồng nghĩa đã nghiệm thu cả khối.
+
+Cài từ mã sạch ngày 04/10 đã đạt phần thư viện khóa, đóng gói và khởi động sau sửa bộ chọn Python. 51 ca liên quan đạt; chưa có OAuth/BYOK hoặc W1–W3 trên môi trường mới. Hồ sơ `design-work/qa/CLEAN-SETUP-20261004.md` giữ rõ giới hạn, không đóng toàn bộ E3/F3.
 
 | Khối | Phần chưa đóng | Bước kết thúc cụ thể |
 |---|---|---|
 | Quy trình nghiệp vụ (A/B/F1) | Chưa đủ bằng chứng W1–W3 xuyên suốt và bộ mẫu đã khóa | Chạy ba quy trình với mẫu, đối soát nguồn/đầu ra/hành động; không ghép các ca thành phần thành một quy trình đạt |
 | Hội thoại và nguồn (B2/C1/F1) | Hỏi tiếp Mộc An từng lạc sang web; tên báo cáo khi hỏi tiếp còn sai trên bản trước; bộ đo chưa đủ | Kiểm lại nguyên ca lỗi sau sửa, rồi hoàn thành các mẫu còn thiếu; không liên tục thêm mẫu mới |
-| Đường vào và giao diện (C2/C3/E2) | Nút ngân sách đã mở được ở 375 px trên bản 527ad2d; còn thiếu mẫu đo tốc độ và kiểm đủ màn hình; ảnh minh họa chưa được đóng gói trên cloud; chờ đánh thức máy miễn phí còn tồn tại | Đóng gói ảnh đang được sử dụng, đo tải/chuyển khóa, kiểm trạng thái chờ và công bố giới hạn thực tế |
+| Đường vào và giao diện (C2/C3/E2) | Ảnh mới và bộ lọc Drive đã có trên cloud bản 30a2ec4; còn thiếu mẫu đo tốc độ và kiểm đủ màn hình; chờ đánh thức máy miễn phí còn tồn tại | Đối chiếu Google thật, đo tải/chuyển khóa, kiểm trạng thái chờ và công bố giới hạn thực tế |
 | An toàn và phục hồi (D1/D2/D3) | Khôi phục cloud độc lập và đối soát quan sát chưa có đủ bằng chứng | Kiểm bộ xác định trên dữ liệu thử; thử khôi phục DB+kho tệp sang môi trường riêng, không đè dữ liệu đang dùng |
 | Hướng dẫn và demo (E1/E3) | Chưa chứng minh người dùng làm theo từ môi trường sạch thành công | Rà hướng dẫn với mã thật, chạy từ bản clone sạch, kiểm từng bước và kịch bản dự phòng |
 | Bản phát hành (F2/F3) | Chưa đủ bốn tài khoản thật, chưa gộp main | Giữ kiểm một quản trị theo lựa chọn người dùng; bốn người vẫn chưa kiểm chứng. Chỉ gộp main khi điều kiện bắt buộc được giải quyết và cùng ảnh đã nghiệm thu |
