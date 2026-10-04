@@ -7,6 +7,17 @@ from zoneinfo import ZoneInfo
 
 def needs_public_evidence(message: str) -> bool:
     text = message.casefold()
+    # "Latest" may refer to the user's current conversation state, not public
+    # news. Never send a reformulation/correction of that state to web search.
+    # Keep the guard specific to preserving conversation state: a question
+    # about the current economic context must still require public evidence.
+    if re.search(
+        r"\b(?:giữ|giữ nguyên|giữ lại|tiếp nối)\s+(?:nguyên\s+)?"
+        r"(?:bối cảnh|ngữ cảnh|bản nháp|câu trả lời|yêu cầu)\s+"
+        r"(?:mới nhất|hiện tại|vừa rồi|trước đó)\b",
+        text,
+    ):
+        return False
     # An explicit exclusion is not a request to search private workspace data.
     # Remove only standalone negative source clauses; other private references
     # remain in the guard below, so their contents cannot become web queries.

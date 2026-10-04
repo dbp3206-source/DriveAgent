@@ -1886,7 +1886,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
 
         <MessageBar intent="info">
           <MessageBarBody>
-            Tất cả thao tác ghi và gửi email đều yêu cầu xác nhận 2 pha từ bạn (Human-in-the-Loop).
+            Bạn luôn được xem trước và duyệt trước khi ghi dữ liệu hoặc gửi email.
           </MessageBarBody>
         </MessageBar>
       </section>

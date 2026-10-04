@@ -13,7 +13,7 @@ export const AVAILABLE_MODELS: ModelOption[] = [
     name: 'Gemini 3.5 Flash Lite',
     speed: 'Phản hồi nhanh',
     availability: 'Ưu tiên tiết kiệm hạn mức',
-    description: 'Phù hợp câu hỏi thường ngày và thao tác tài liệu ngắn, tiết kiệm quota.',
+    description: 'Phù hợp câu hỏi thường ngày và thao tác tài liệu ngắn, tiết kiệm hạn mức sử dụng.',
   },
   {
     id: 'gemini-3.8-flash',

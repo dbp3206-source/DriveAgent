@@ -224,8 +224,8 @@ async def capacity_status(db: DbSession, user: CurrentUser):
             else []
         ),
         provider_balance_note=(
-            "Gemini không cung cấp số dư quota còn lại qua API này; Veridra hiển thị "
-            "ledger an toàn local và lỗi provider thực nhận."
+            "Gemini không cung cấp số dư hạn mức qua kết nối này. Veridra chỉ hiển thị "
+            "bộ đếm bảo vệ của ứng dụng và lỗi thực tế nhận từ Gemini."
         ),
     )
 

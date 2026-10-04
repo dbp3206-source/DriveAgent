@@ -396,7 +396,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
           {credentialBusy === 'create' ? 'Đang kiểm tra và lưu…' : 'Kiểm tra & lưu key'}
         </Button>
       </form>
-      <MessageBar intent="info"><MessageBarBody>{capacity?.provider_balance_note || 'Số liệu hiển thị là ledger an toàn local, không phải số dư quota do Google xác nhận.'} Chỉ các key bạn bật “Dự phòng” mới được chọn trước request khi key chính đã bị circuit hoặc ngân sách local chặn.</MessageBarBody></MessageBar>
+      <MessageBar intent="info"><MessageBarBody>{capacity?.provider_balance_note || 'Đây là bộ đếm bảo vệ của Veridra, không phải hạn mức còn lại được Google xác nhận.'} Chỉ các khóa bạn bật “Dự phòng” mới được chọn khi khóa chính tạm bị chặn do lỗi hoặc đã hết ngân sách bảo vệ.</MessageBarBody></MessageBar>
     </section>
 
     <section id="settings-experience" className="settings-section settings-group" aria-labelledby="assistant-prefs-title">

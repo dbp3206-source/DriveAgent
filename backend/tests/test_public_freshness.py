@@ -34,6 +34,22 @@ def test_public_freshness_requires_tool(question):
     assert route.arguments["question"] == question.strip().rstrip(".?!")
 
 
+@pytest.mark.parametrize("question", [
+    "Giờ đổi cách trình bày thành đúng 3 gạch đầu dòng: khách hàng, lịch hẹn, "
+    "mục tiêu. Giữ nguyên bối cảnh mới nhất và mọi giới hạn về nguồn, lưu và "
+    "tạo dữ liệu. Không cần tính toán.",
+    "Giữ bản nháp hiện tại, chỉ sửa độ dài.",
+    "Tiếp nối ngữ cảnh vừa rồi và trình bày ngắn hơn.",
+])
+def test_conversation_state_updates_are_not_public_news(question):
+    assert not needs_public_evidence(question)
+    assert route_request(question).tool != "web_research"
+
+
+def test_current_public_context_is_not_mistaken_for_conversation_state():
+    assert needs_public_evidence("Phân tích bối cảnh kinh tế hiện tại bằng nguồn chính thức.")
+
+
 @pytest.mark.parametrize(
     "question",
     [
