@@ -3,7 +3,11 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.agent.evidence import retain_referenced_citations, source_references
+from app.agent.evidence import (
+    HISTORICAL_SOURCE_INSTRUCTION,
+    retain_referenced_citations,
+    source_references,
+)
 
 
 @pytest.mark.parametrize("message", [
@@ -202,3 +206,27 @@ def test_historical_sources_without_selected_evidence_do_not_add_markers():
     from app.agent.evidence import label_historical_sources
 
     assert label_historical_sources("Chỉ có lời người dùng.", []) == "Chỉ có lời người dùng."
+
+
+def test_historical_instruction_does_not_turn_presentation_checks_into_user_corrections():
+    instruction = HISTORICAL_SOURCE_INSTRUCTION.casefold()
+
+    assert "không được ép mục giả thuyết vào mọi lượt tiếp nối nguồn" in instruction
+    assert "kết quả kiểm tra" in instruction
+    assert "cách trình bày theo yêu cầu" in instruction
+    assert "chỉ lấy phần tiêu đề chính" in instruction
+    assert "không ghép tiêu đề với tên mục" in instruction
+    assert "giữ nguyên khối tên báo cáo" in instruction
+    assert "kể cả phụ đề hợp lệ nằm ở dòng kế tiếp" in instruction
+    assert "phân biệt tên riêng với nhãn loại" in instruction
+    assert "không tự đặt tên pdf" in instruction
+    assert "chưa đủ bằng chứng và không chọn tên thay người dùng" in instruction
+
+
+def test_historical_instruction_requires_explicit_fact_change_for_hypothesis_section():
+    instruction = HISTORICAL_SOURCE_INSTRUCTION.casefold()
+
+    assert "người dùng nêu rõ dữ kiện cũ sai" in instruction
+    assert "yêu cầu sửa/thay bằng giá trị mới" in instruction
+    assert "chỉ thêm mục 'giả thuyết bạn thay đổi' khi điều kiện" in instruction
+    assert "không gán cho người dùng một đính chính hay giả thuyết" in instruction

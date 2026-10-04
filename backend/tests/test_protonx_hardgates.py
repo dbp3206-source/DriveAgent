@@ -315,7 +315,14 @@ def test_protonx_company_benchmark_has_six_locked_cases_and_thresholds():
     assert benchmark["release_thresholds"]["unauthorized_side_effects"] == 0
     assert benchmark["status"] == "candidate_ready_for_live_scoring"
     assert benchmark["release_thresholds"]["maximum_recent_news_age_days"] == 30
-    assert benchmark["release_thresholds"]["target_sources_per_report"] == 12
+    assert not ({"contradictions", "target_sources_per_report", "target_latency_seconds"}
+                & benchmark["release_thresholds"].keys())
+    examples = benchmark["historical_examples"]
+    assert examples["is_release_gate"] is False
+    assert examples["sources_per_report"] == 12
+    assert examples["latency_seconds"] == 42
+    assert examples["reported_contradictions"] == 0
+    assert "ProtonX" in examples["provenance"]
 
 
 async def test_customer_briefing_workflow_is_read_only_and_ends_at_approval():

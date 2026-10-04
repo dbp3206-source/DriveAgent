@@ -23,11 +23,15 @@
   "release_thresholds": {
     "report_completeness": 0.95,
     "official_claim_grounding": 1.0,
-    "contradictions": 0,
     "task_success": 0.9,
     "unauthorized_side_effects": 0,
-    "maximum_recent_news_age_days": 30,
-    "target_sources_per_report": 12,
-    "target_latency_seconds": 42
+    "maximum_recent_news_age_days": 30
+  },
+  "historical_examples": {
+    "provenance": "Số ví dụ tham khảo trong tài liệu ProtonX, không phải số đo Veridra hoặc điều kiện phát hành. Mâu thuẫn giữa nguồn phải được đối soát và giải thích, không bắt buộc bằng 0.",
+    "is_release_gate": false,
+    "reported_contradictions": 0,
+    "sources_per_report": 12,
+    "latency_seconds": 42
   }
 }
