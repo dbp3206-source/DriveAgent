@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { attachmentUrl, canRenderGmailThread, inlineImageFetchPlan, normalizeContentId, rewriteEmailCssImageUrls } from './gmailPresentation.mjs'
+import { attachmentUrl, canRenderGmailThread, externalImageFetchPlan, inlineImageFetchPlan, normalizeContentId, rewriteEmailCssImageUrls } from './gmailPresentation.mjs'
 
 test('plain text and safe HTML emails can render in the same conversation', () => {
   assert.equal(canRenderGmailThread([
@@ -27,6 +27,16 @@ test('empty threads or unsupported messages with no readable body remain non-ren
 test('attachment URLs encode identifiers and separate inline image access', () => {
   assert.equal(attachmentUrl('msg/1', 'att 2'), '/api/gmail/messages/msg%2F1/attachments/att%202')
   assert.equal(attachmentUrl('msg1', 'att2', true), '/api/gmail/messages/msg1/attachments/att2?inline=true')
+})
+
+test('external image fallback accepts only trusted CDN and the current message image endpoint', () => {
+  const endpoint = `/api/gmail/messages/mail%2F1/images/${'a'.repeat(64)}`
+  const source = 'https://miro.medium.com/logo.png'
+  assert.deepEqual(externalImageFetchPlan('mail/1', { [source]: endpoint }), [[source, endpoint]])
+  assert.deepEqual(externalImageFetchPlan('another', { [source]: endpoint }), [])
+  assert.deepEqual(externalImageFetchPlan('mail/1', { [source]: endpoint + '?redirect=/api/private' }), [])
+  assert.deepEqual(externalImageFetchPlan('mail/1', { 'https://localhost/a': endpoint }), [])
+  assert.deepEqual(externalImageFetchPlan('mail/1', { [source]: '/api/admin/export' }), [])
 })
 
 test('CID matching ignores brackets, prefix, case, and whitespace', () => {

@@ -92,7 +92,7 @@ Chọn một công việc trong các điểm bắt đầu nhanh. Veridra đưa y
 
 1. Tìm theo người gửi, tiêu đề, ngày; xem các bộ lọc thư/tệp đính kèm.
 2. Mở thư. Chuyển HTML và text, kiểm tra thư dài, bảng và link.
-3. Ảnh CID là ảnh gắn MIME, ảnh ngoài phụ thuộc máy chủ ảnh. Không hứa xem được ảnh đã bị xóa, cần đăng nhập riêng hoặc chặn truy cập. Nội dung HTML phải qua sandbox/sanitization.
+3. Ảnh đính trong thư được đọc cùng thư. Ảnh ngoài phụ thuộc máy chủ ảnh. Với ảnh Medium, Veridra có đường tải dự phòng qua máy chủ, chỉ dành cho ảnh trong thư tài khoản vừa mở; không chuyển khóa hoặc cookie Google tới Medium. Giới hạn 2 MB/ảnh, tổng 8 MB/thư và 30 giây; mở lại thư để thử lại khi báo chưa tải được. Không hứa xem được ảnh đã bị xóa, cần đăng nhập riêng hoặc chặn truy cập. Mở trong Gmail để đối chiếu khi cần. Nội dung HTML vẫn được làm sạch và cô lập.
 4. Chọn phân tích trong Chat. Prompt: “Tóm tắt 5 mail gần nhất; với mỗi mail ghi người gửi, giờ nhận, chủ đề, việc cần làm và nguồn. Nếu đọc thiếu thì báo số lượng thực.”
 5. Daily Skill: “Tổng hợp các mail ‘Bản chi tiết’ của Đinh Bảo Phúc nhận trong ngày hôm nay tính đến lúc chạy. Không yêu cầu đủ 8h/12h/15h/21h. Gộp chủ đề trùng; giữ link nguồn, phát hiện mâu thuẫn.”
 6. Nháp: chuẩn bị nội dung, kiểm tra người nhận/subject/body, duyệt đúng một lần; mở Drafts Google để đối chiếu. Tạo nháp không phải gửi thư. Không dùng nút gửi khi mục tiêu chỉ là QA nháp.

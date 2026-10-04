@@ -45,6 +45,7 @@ type ThreadMessage = {
   body: string
   plain_body?: string
   html_body?: string
+  external_image_sources?: Record<string, string>
   presentation_mode: 'faithful_text' | 'readable_text' | 'safe_html' | 'calendar_text' | 'unsupported'
   reply_to: string
   message_id_header: string
@@ -335,6 +336,7 @@ export function GmailPage({canCreateDraft, canSend}: {canCreateDraft: boolean; c
                 body={message.body}
                 plainBody={message.plain_body}
                 htmlBody={message.html_body}
+                externalImageSources={message.external_image_sources}
                 mode={message.presentation_mode}
                 messageId={message.id}
                 attachments={message.attachments}

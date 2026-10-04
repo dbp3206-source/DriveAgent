@@ -5,11 +5,14 @@ import base64
 import re
 from urllib.parse import quote
 
+import httpx
 from fastapi import APIRouter, HTTPException, Query, Request, Response
 
 from app.api.dependencies import CurrentUser, DbSession, is_trusted_ui_origin
+from app.auth.permissions import GMAIL_READ, permissions_for_role
 from app.core.config import get_settings
 from app.core.json_utils import json_object
+from app.services.mail_images import MailImageError, MailImageIndex, fetch_mail_image
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import ToolContext, ToolError
 from app.tools.gmail import (
@@ -21,6 +24,8 @@ from app.tools.gmail import (
 )
 
 router = APIRouter(prefix="/api/gmail", tags=["gmail"])
+_mail_images = MailImageIndex()
+_image_slots = asyncio.Semaphore(4)
 
 
 async def invoke_gmail_tool(name: str, payload: dict, request: Request, user, db):
@@ -66,7 +71,35 @@ async def read_thread(
 ):
     """Đọc toàn bộ nội dung chuỗi hội thoại email."""
     payload = GmailReadThreadInput(thread_id=thread_id).model_dump(mode="json")
-    return await invoke_gmail_tool("gmail_read_thread", payload, request, user, db)
+    result = await invoke_gmail_tool("gmail_read_thread", payload, request, user, db)
+    data = result.model_dump(mode="json")
+    for message in data.get("messages", []):
+        message["external_image_sources"] = _mail_images.register(
+            str(user.id), message["id"], message.get("html_body") or ""
+        )
+    return data
+
+
+@router.get("/messages/{message_id}/images/{image_id}")
+async def external_image(message_id: str, image_id: str, user: CurrentUser):
+    if GMAIL_READ not in permissions_for_role(user.role):
+        raise HTTPException(403, "Tài khoản không có quyền đọc Gmail.")
+    source = _mail_images.lookup(str(user.id), message_id, image_id)
+    if not source:
+        raise HTTPException(404, "Mở lại thư để tải ảnh; ảnh không thuộc thư đã mở của tài khoản.")
+    try:
+        async with asyncio.timeout(15):
+            async with _image_slots:
+                async with httpx.AsyncClient(timeout=8, trust_env=False) as client:
+                    content, mime = await fetch_mail_image(source, client)
+    except (MailImageError, httpx.HTTPError, OSError, TimeoutError) as exc:
+        raise HTTPException(502, "Chưa tải được ảnh từ máy chủ bên ngoài.") from exc
+    return Response(content, media_type=mime, headers={
+        "Cache-Control": "private, max-age=300",
+        "Vary": "Cookie",
+        "X-Content-Type-Options": "nosniff",
+        "Content-Security-Policy": "default-src 'none'; sandbox",
+    })
 
 
 @router.get("/messages/{message_id}/attachments/{attachment_id}")

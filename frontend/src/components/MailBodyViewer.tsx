@@ -5,7 +5,7 @@ import { Checkmark16Regular, Copy16Regular, Open16Regular } from '@fluentui/reac
 import { useEffect, useMemo, useState } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import { attachmentUrl, inlineImageFetchPlan, normalizeContentId, rewriteEmailCssImageUrls } from '../gmailPresentation.mjs'
+import { attachmentUrl, externalImageFetchPlan, inlineImageFetchPlan, normalizeContentId, rewriteEmailCssImageUrls } from '../gmailPresentation.mjs'
 
 export function SenderAvatar({ sender }: { sender: string }) {
   const clean = sender.replace(/<.*?>/, '').trim()
@@ -28,6 +28,7 @@ function safeHtmlDocument(
   attachments: MailAttachment[],
   allowExternalImages: boolean,
   inlineImageData: Record<string, string>,
+  externalImageData: Record<string, string>,
 ) {
   const sanitized = DOMPurify.sanitize(source, {
     USE_PROFILES: { html: true },
@@ -84,7 +85,8 @@ function safeHtmlDocument(
       image.removeAttribute('src')
     }
     if (image.hasAttribute('data-remote-src') && allowExternalImages) {
-      image.setAttribute('src', image.getAttribute('data-remote-src') || '')
+      const remote = image.getAttribute('data-remote-src') || ''
+      image.setAttribute('src', externalImageData[remote] || remote)
     }
     // The sandboxed srcDoc is a fixed-height nested viewport. Lazy-loaded
     // newsletter images beyond its initial viewport can otherwise remain blank
@@ -146,18 +148,57 @@ export interface MailBodyViewerProps {
   body: string
   plainBody?: string
   htmlBody?: string
+  externalImageSources?: Record<string, string>
   mode?: 'faithful_text' | 'readable_text' | 'safe_html' | 'calendar_text' | 'unsupported'
   messageId: string
   attachments?: MailAttachment[]
 }
 
-export function MailBodyViewer({ body, plainBody = '', htmlBody = '', mode = 'readable_text', messageId, attachments = [] }: MailBodyViewerProps) {
+export function MailBodyViewer({ body, plainBody = '', htmlBody = '', externalImageSources = {}, mode = 'readable_text', messageId, attachments = [] }: MailBodyViewerProps) {
   const hasHtml = Boolean(htmlBody.trim())
   const [viewMode, setViewMode] = useState<'html' | 'readable_text' | 'faithful_text'>(hasHtml ? 'html' : 'readable_text')
   // Gmail-like default: render external images on open; the reader still offers
   // a per-message block control because remote hosts can observe image requests.
   const [allowExternalImages, setAllowExternalImages] = useState(true)
   const [copied, setCopied] = useState(false)
+  const externalPlanKey = JSON.stringify(externalImageFetchPlan(messageId, externalImageSources))
+  const externalResultKey = `${messageId}:${externalPlanKey}`
+  const [externalResult, setExternalResult] = useState<{ key: string; images: Record<string, string> }>({ key: '', images: {} })
+  useEffect(() => {
+    const plan = JSON.parse(externalPlanKey) as Array<[string, string]>
+    if (!hasHtml || viewMode !== 'html' || !allowExternalImages || !plan.length) return
+    const controller = new AbortController()
+    // Bounded workers avoid opening dozens of image requests at once on Free.
+    let cursor = 0
+    let bytes = 0
+    const images: Record<string, string> = {}
+    const deadline = window.setTimeout(() => controller.abort(), 30_000)
+    const worker = async () => {
+      while (cursor < plan.length && !controller.signal.aborted) {
+        const next = plan[cursor++]
+        if (!next) break
+        const [source, path] = next
+        try {
+          const blob = await apiBlob(path, { signal: controller.signal, timeoutMs: 18_000 })
+          if (!/^image\/(png|jpeg|gif|webp)$/i.test(blob.type)) continue
+          if (bytes + blob.size > 8_000_000) { cursor = plan.length; continue }
+          bytes += blob.size
+          images[source] = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => resolve(String(reader.result || ''))
+            reader.onerror = () => reject(reader.error)
+            reader.readAsDataURL(blob)
+          })
+        } catch { /* Original HTTPS source and the Gmail link remain available. */ }
+      }
+    }
+    let mounted = true
+    void Promise.all(Array.from({ length: Math.min(4, plan.length) }, worker)).then(() => {
+      window.clearTimeout(deadline)
+      if (mounted) setExternalResult({ key: externalResultKey, images })
+    })
+    return () => { mounted = false; window.clearTimeout(deadline); controller.abort() }
+  }, [allowExternalImages, externalPlanKey, externalResultKey, hasHtml, viewMode])
   const inlinePlanKey = JSON.stringify(inlineImageFetchPlan(attachments))
   const inlineResultKey = `${messageId}:${inlinePlanKey}`
   const [inlineImageResult, setInlineImageResult] = useState<{ key: string; images: Record<string, string> }>({ key: '', images: {} })
@@ -206,8 +247,9 @@ export function MailBodyViewer({ body, plainBody = '', htmlBody = '', mode = 're
 
   const htmlDocument = useMemo(() => {
     if (!hasHtml) return ''
-    return safeHtmlDocument(htmlBody, messageId, attachments, allowExternalImages, inlineImageResult.images)
-  }, [allowExternalImages, attachments, hasHtml, htmlBody, inlineImageResult.images, messageId])
+    const external = externalResult.key === externalResultKey ? externalResult.images : {}
+    return safeHtmlDocument(htmlBody, messageId, attachments, allowExternalImages, inlineImageResult.images, external)
+  }, [allowExternalImages, attachments, hasHtml, htmlBody, inlineImageResult.images, messageId, externalResult, externalResultKey])
   const remoteImageCount = useMemo(() => {
     if (!htmlDocument) return 0
     const doc = new DOMParser().parseFromString(htmlDocument, 'text/html')
@@ -247,7 +289,10 @@ export function MailBodyViewer({ body, plainBody = '', htmlBody = '', mode = 're
       <div className="mail-security-banner">Bản HTML email đã được làm sạch và cô lập để chặn mã chủ động. Ảnh trong thư và ảnh ngoài được tải khi mở thư.</div>
       {inlineFailedCount > 0 ? <p className="mail-image-warning" role="alert">{inlineFailedCount} ảnh đính kèm chưa tải được. Mở thư gốc trong Gmail để xem đầy đủ.</p> : null}
       {remoteImageCount > 0 ? <Button className="mail-load-images" appearance="subtle" onClick={() => setAllowExternalImages(value => !value)}>{allowExternalImages ? 'Chặn ảnh ngoài' : `Tải ${remoteImageCount} ảnh ngoài`}</Button> : null}
-      {allowExternalImages && remoteImageCount > 0 ? <p className="mail-image-warning" role="status">Ảnh ngoài đang được tải; máy chủ gửi ảnh có thể ghi nhận lượt xem.</p> : null}
+      {allowExternalImages && remoteImageCount > 0 ? <p className="mail-image-warning" role="status">Đã cho phép tải ảnh ngoài; máy chủ gửi ảnh có thể ghi nhận lượt xem. Ảnh không hiện có thể do máy chủ ảnh chưa kết nối được.</p> : null}
+      {allowExternalImages && externalResult.key === externalResultKey &&
+        JSON.parse(externalPlanKey).length > Object.keys(externalResult.images).length
+        ? <p className="mail-image-warning" role="alert">Một số ảnh chưa tải được qua tuyến dự phòng. Mở lại thư để thử lại hoặc chọn “Mở trong Gmail” để xem bản gốc.</p> : null}
       {inlineReady
         ? <iframe className="mail-html-frame" title="Nội dung HTML của email" sandbox="allow-popups" referrerPolicy="no-referrer" srcDoc={htmlDocument} />
         : <p className="mail-empty-note" role="status">Đang tải ảnh trong thư…</p>}

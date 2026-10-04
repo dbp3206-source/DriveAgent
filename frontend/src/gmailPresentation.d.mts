@@ -5,6 +5,7 @@ export function canRenderGmailThread(messages: Array<{
   attachments?: unknown[]
 }>): boolean
 export function attachmentUrl(messageId: string, attachmentId: string, inline?: boolean): string
+export function externalImageFetchPlan(messageId: string, sources?: Record<string, string>): Array<[string, string]>
 export function normalizeContentId(value: string): string
 export function rewriteEmailCssImageUrls(
   source: string,

@@ -11,6 +11,19 @@ export function canRenderGmailThread(messages) {
   )
 }
 
+export function externalImageFetchPlan(messageId, sources = {}) {
+  const prefix = `/api/gmail/messages/${encodeURIComponent(messageId)}/images/`
+  return Object.entries(sources).filter(([source, path]) => {
+    if (typeof path !== 'string' || !path.startsWith(prefix) ||
+      !/^[a-f0-9]{64}$/.test(path.slice(prefix.length))) return false
+    try {
+      const url = new URL(source)
+      return url.protocol === 'https:' && url.hostname === 'miro.medium.com' &&
+        !url.username && !url.password && !url.port && !url.hash
+    } catch { return false }
+  }).slice(0, 192)
+}
+
 export function attachmentUrl(messageId, attachmentId, inline = false) {
   const base = `/api/gmail/messages/${encodeURIComponent(messageId)}/attachments/${encodeURIComponent(attachmentId)}`
   return inline ? `${base}?inline=true` : base
