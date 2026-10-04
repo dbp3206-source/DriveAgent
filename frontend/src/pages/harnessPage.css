@@ -219,9 +219,6 @@
   border-radius: 14px;
   box-shadow: var(--shadow);
 }
-.harness-story__image--dark { display: none; }
-:root[data-theme='dark'] .harness-story__image--light { display: none; }
-:root[data-theme='dark'] .harness-story__image--dark { display: block; }
 .harness-story figcaption {
   margin-top: 10px;
   color: var(--text-secondary);

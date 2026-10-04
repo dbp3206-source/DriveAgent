@@ -1,5 +1,8 @@
 # Design Brief — DriveAgent Study & Work Command Center
 
+## Cập nhật có thẩm quyền 04/10/2026 — thay minh họa hành trình
+Phạm vi lượt này: thay ảnh trong phần câu chuyện của Harness bằng PNG người dùng cung cấp; không tạo lại ảnh, không thay hệ thống thiết kế. Đối tượng và định vị hiện hành theo docs/PRODUCT-FOUNDATION.md, không lấy định vị sinh viên lịch sử bên dưới. Giữ toàn ảnh, tỷ lệ 1672×941, cả hai theme dùng cùng asset. Các số trong ảnh được ghi rõ là minh họa, không phải số đo. Nguồn: codex-clipboard-86efcc92-241c-4214-ae6d-8df9ab4b1242.png do người dùng cung cấp; không suy quyền tái sử dụng ngoài sản phẩm yêu cầu. Đầu ra là giao diện thật và asset frontend/public/harness/veridra-verified-workflow.png; kiểm đóng gói và mở trên URL thật.
+
 ## Audience and viewing context
 Sinh viên và người dùng non-tech làm việc local trên desktop, tablet hoặc mobile. Dữ liệu được tách theo người dùng; các thao tác ghi ra Google luôn cần người dùng xem trước và xác nhận.
 

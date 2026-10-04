@@ -387,16 +387,14 @@ export function HarnessPage() {
         </div>
         <figure className="harness-story__figure">
           <img
-            className="harness-story__image harness-story__image--light"
-            src={`/harness/${scenario.id}.visual-check.1440x900.light.png`}
-            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở giao diện sáng`}
+            className="harness-story__image"
+            src="/harness/veridra-verified-workflow.png"
+            alt="Hành trình Veridra: dữ liệu rải rác → nối nguồn và công cụ → đọc, xem trước, duyệt, thực thi, đọc lại → kết quả có nguồn và nhật ký"
+            width={1672}
+            height={941}
+            loading="lazy"
           />
-          <img
-            className="harness-story__image harness-story__image--dark"
-            src={`/harness/${scenario.id}.visual-check.1440x900.dark.png`}
-            alt={`Ảnh kiểm chứng giao diện kiến trúc cho tình huống ${scenario.domain} ở giao diện tối`}
-          />
-          <figcaption>Ảnh chụp thật của sơ đồ nghiệp vụ. Số liệu trong tình huống vẫn là dữ liệu minh họa, không phải kết quả thử nghiệm thực tế.</figcaption>
+          <figcaption>Minh họa hành trình xử lý của Veridra. Các số 12 nguồn, 5 hành động, 100%, +24% và −18% trong ảnh là ví dụ minh họa, không phải số đo hoặc cam kết của sản phẩm.</figcaption>
         </figure>
       </section>
 
