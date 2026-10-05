@@ -20,6 +20,7 @@ from app.agent.presentation import (
     explicit_presentation_contract,
     presentation_contract_violations,
 )
+from app.agent.source_calculations import SOURCE_NUMERIC_FIDELITY_INSTRUCTION
 from app.core.config import APPROVED_GEMINI_MODELS
 from app.services.quota import QuotaGuard, conservative_tokens
 
@@ -462,7 +463,7 @@ async def enforce_presentation_contract(
         await asyncio.to_thread(
             quota.reserve,
             "flash",
-            conservative_tokens(prompt, 6144),
+            conservative_tokens(prompt + SOURCE_NUMERIC_FIDELITY_INSTRUCTION, 6144),
         )
     except Exception as exc:
         if (
@@ -501,6 +502,10 @@ async def enforce_presentation_contract(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.1,
+                system_instruction=(
+                    "Only repair presentation; preserve the draft's factual qualifications. "
+                    + SOURCE_NUMERIC_FIDELITY_INSTRUCTION
+                ),
                 max_output_tokens=6144,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             ),
@@ -530,7 +535,7 @@ async def enforce_presentation_contract(
             await asyncio.to_thread(
                 quota.reserve,
                 "flash",
-                conservative_tokens(prompt, 6144),
+                conservative_tokens(prompt + SOURCE_NUMERIC_FIDELITY_INSTRUCTION, 6144),
             )
         except Exception as quota_exc:
             records.append(
@@ -552,6 +557,10 @@ async def enforce_presentation_contract(
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.1,
+                    system_instruction=(
+                        "Only repair presentation; preserve the draft's factual qualifications. "
+                        + SOURCE_NUMERIC_FIDELITY_INSTRUCTION
+                    ),
                     max_output_tokens=6144,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                 ),

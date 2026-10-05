@@ -49,7 +49,15 @@ const AccessPage = lazyWithChunkRecovery(() => import('./pages/AccessPage').then
 const ArtifactsPage = lazyWithChunkRecovery(() => import('./pages/ArtifactsPage').then((module) => ({ default: module.ArtifactsPage })))
 const LocalSourcesPage = lazyWithChunkRecovery(() => import('./pages/LocalSourcesPage').then((module) => ({ default: module.LocalSourcesPage })))
 const AuditPage = lazyWithChunkRecovery(() => import('./pages/AuditPage').then((module) => ({ default: module.AuditPage })))
-const ChatPage = lazyWithChunkRecovery(() => import('./pages/ChatPage').then((module) => ({ default: module.ChatPage })))
+let chatPageModule: Promise<typeof import('./pages/ChatPage')> | undefined
+function loadChatPage() {
+  chatPageModule ??= import('./pages/ChatPage').catch(error => {
+    chatPageModule = undefined
+    throw error
+  })
+  return chatPageModule
+}
+const ChatPage = lazyWithChunkRecovery(() => loadChatPage().then((module) => ({ default: module.ChatPage })))
 const DrivePage = lazyWithChunkRecovery(() => import('./pages/DrivePage').then((module) => ({ default: module.DrivePage })))
 const GmailPage = lazyWithChunkRecovery(() => import('./pages/GmailPage').then((module) => ({ default: module.GmailPage })))
 const MemoryPage = lazyWithChunkRecovery(() => import('./pages/MemoryPage').then((module) => ({ default: module.MemoryPage })))
@@ -168,6 +176,13 @@ export default function App() {
   }
 
   useEffect(() => { void load() }, [])
+  useEffect(() => {
+    // Overlap the bookmarked Chat chunk with auth startup. This only loads
+    // public application code; Chat's private API reads still wait for auth.
+    if (page === 'chat') void loadChatPage().catch(() => {
+      // The actual lazy render owns chunk recovery and its visible error.
+    })
+  }, [page])
   useEffect(() => {
     // A successful shell mount means any previous chunk recovery completed.
     try { sessionStorage.removeItem('drive-agent-chunk-reload') } catch {

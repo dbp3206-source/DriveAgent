@@ -3,6 +3,8 @@ import json
 import pytest
 
 from app.agent.source_calculations import (
+    SOURCE_CALCULATION_INSTRUCTION,
+    SOURCE_NUMERIC_FIDELITY_INSTRUCTION,
     CalculatedWireAnswer,
     needs_source_calculation,
     resolve_calculations,
@@ -10,6 +12,26 @@ from app.agent.source_calculations import (
 )
 from app.tools.calculator import CalculateInput, calculate
 from app.tools.contracts import ToolError
+
+
+def test_calculation_contract_requires_signed_formula_and_population_fidelity():
+    assert SOURCE_NUMERIC_FIDELITY_INSTRUCTION in SOURCE_CALCULATION_INSTRUCTION
+    assert "giữ đúng thứ tự toán hạng" in SOURCE_CALCULATION_INSTRUCTION
+    assert "công thức hiển thị và dấu kết quả" in SOURCE_CALCULATION_INSTRUCTION
+    assert "không đại diện cho toàn ngành/toàn thị trường" in SOURCE_CALCULATION_INSTRUCTION
+
+
+async def test_signed_subtraction_preserves_order_during_numeric_substitution():
+    class Registry:
+        async def execute(self, name, arguments, context):
+            return calculate(CalculateInput.model_validate(arguments))
+
+    wire = validate_calculation_payload(json.dumps({
+        "answer": "3.1 - 3.6 = {{calc:0}}; 3.6 - 3.1 = {{calc:1}}.",
+        "expressions": ["3.1-3.6", "3.6-3.1"],
+    }))
+    result = await resolve_calculations(wire, Registry(), None, [])
+    assert result.answer == "3.1 - 3.6 = -0.5; 3.6 - 3.1 = 0.5."
 
 
 def test_calculation_trigger_requires_user_request_and_read_evidence():

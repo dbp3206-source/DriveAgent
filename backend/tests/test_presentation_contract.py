@@ -8,6 +8,7 @@ from app.agent.presentation import (
     explicit_presentation_contract,
     presentation_contract_violations,
 )
+from app.agent.source_calculations import SOURCE_NUMERIC_FIDELITY_INSTRUCTION
 
 
 def test_extracts_only_literal_measurable_contracts():
@@ -148,6 +149,35 @@ async def test_contract_guard_repairs_once_and_revalidates():
     assert result == repaired
     assert quota.calls == 1
     assert records[-1]["status"] == "corrected"
+
+
+@pytest.mark.parametrize("fallback", [False, True])
+async def test_format_rewrite_receives_source_numeric_preservation_constraints(fallback):
+    """Check both provider boundaries; this does not certify semantic compliance."""
+    draft = "Nhóm doanh nghiệp khảo sát: 3.1 - 3.6 = -0.5 điểm phần trăm; "
+    draft += "dự báo năm 2027, nguồn ngày 12/02/2026."
+    repaired = "- " + draft
+    calls = []
+
+    class Models:
+        async def generate_content(self, **kwargs):
+            calls.append(kwargs)
+            assert SOURCE_NUMERIC_FIDELITY_INSTRUCTION in kwargs["config"].system_instruction
+            assert "nhóm" in kwargs["contents"].casefold()
+            if fallback and len(calls) == 1:
+                raise errors.APIError(504, {"error": {"message": "provider timeout"}})
+            return SimpleNamespace(text=repaired)
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Trả lời bằng một bullet.", answer=draft,
+        model_name="gemini-3.5-flash-lite", fallback_model="gemini-3.8-flash",
+        records=records,
+    )
+    assert result == repaired
+    assert len(calls) == (2 if fallback else 1)
 
 
 async def test_contract_guard_repairs_a_concise_answer_over_the_word_limit():

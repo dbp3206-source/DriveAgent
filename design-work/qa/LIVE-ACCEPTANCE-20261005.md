@@ -100,6 +100,19 @@ P06 13,3 giây, một lượt mô hình, đúng điện 7,2%/kế hoạch 7,5%/c
 
 ### Cloud d544a13 — đối soát sau triển khai
 
+Lượt sửa tiếp sau d544a13: chồng thời gian tải module Chat với đăng nhập trên đường
+vào Chat, dùng chung cache và thử lại nếu preload lỗi. Chỉ tải mã công khai, không
+mount Chat hoặc gọi API riêng khi chưa đăng nhập. Hai phép kiểm thực thi App qua
+harness auth trì hoãn xác nhận ranh giới này và thử lại chunk lỗi. Toàn bộ giao diện
+178 đạt, lint/build đạt; chưa có phép đo trình duyệt trên bản sửa để chứng nhận tốc độ.
+
+Hợp đồng tính toán bổ sung thứ tự phép trừ có dấu, công thức hiển thị đúng biểu thức
+và giữ tập mẫu. Cùng hướng dẫn bảo toàn đơn vị/ngày/dự báo được cấp cho cả lượt sửa
+định dạng thường và dự phòng; ngân sách tính cả hướng dẫn thêm. Đây vẫn là hướng
+dẫn mô hình, không phải bộ xác minh ngữ nghĩa xác định. 94 phép kiểm phạm vi đạt;
+toàn bộ máy chủ 1.174 đạt, 15 không chạy local, 234,87 giây. Ruff backend/scripts
+và diff check đạt; không chứng nhận P06 live từ các phép kiểm này.
+
 CI `37309375496` thành công cho commit `d544a138447e285ee150404ad868a772b2017e73`. GHCR xác nhận HTTP 200, ảnh `sha256:e73f2d0a1227e41b75ac302ee2d6444544241105c44e65b0898583cb3b7009a9`. Render `dep-db1pl23ncjis73bra1u0` hiển thị Live lúc 19:41:30 giờ Việt Nam; khởi động 19:41:24, database/kho tệp xác nhận qua health. Không gộp main hoặc dùng health để chứng nhận chức năng Google/Gemini. Supabase đọc trực tiếp vẫn có năm object, bucket riêng tư, anon/authenticated không có USAGE schema ứng dụng; pg_cron/pg_net chưa có.
 
 P05 chạy trong phiên mới qua Chat thật: đúng 4.324/17,6%, 7.574/27,2%, chênh 3.250/9,6 điểm phần trăm; giữ số trần, nêu bảng thiếu đơn vị chung và ngày dự báo 30/03/2026, trang 2. 16,1 giây, một lượt mô hình, dấu vết có Tính toán. Lỗi tự gán đơn vị đã khắc phục trong lượt này. Chưa nêu riêng đơn vị tỷ đồng ở nhận định BID như oracle chi tiết, nên không chấm đủ toàn ca.

@@ -8,6 +8,18 @@ from app.agent.creation import WireAnswer
 from app.tools.calculator import CalculateInput, calculate
 from app.tools.contracts import ToolContext
 
+SOURCE_NUMERIC_FIDELITY_INSTRUCTION = (
+    "Giữ nguyên phạm vi và tập mẫu của từng số liệu: nhóm được theo dõi, khảo sát "
+    "hoặc lựa chọn không đại diện cho toàn ngành/toàn thị trường; giữ điều kiện chọn mẫu. "
+    "Giữ đơn vị trong đúng phạm vi nguồn xác định, giới hạn đơn vị chưa rõ, "
+    "kỳ số liệu, ngày nguồn và trạng thái dự báo/kế hoạch/ước tính/thực tế. "
+    "Phép trừ có dấu phải giữ đúng thứ tự toán hạng; công thức hiển thị và dấu kết quả "
+    "phải khớp biểu thức tính. Khi trình bày độ lớn chênh lệch dương, ghi rõ đó là "
+    "độ lớn và đối tượng nào cao hơn/thấp hơn; không gán độ lớn dương cho phép trừ "
+    "có kết quả âm. Không đổi thứ tự toán hạng, dấu, công thức hoặc phạm vi khi diễn đạt lại. "
+    "Đây là yêu cầu bảo toàn nội dung; công cụ số học không xác minh phạm vi nguồn."
+)
+
 SOURCE_CALCULATION_INSTRUCTION = (
     "\nYêu cầu tính bằng công cụ: trả expressions gồm tối đa 12 biểu thức số "
     "chỉ dùng + - * / và ngoặc, mỗi biểu thức tối đa 300 ký tự. "
@@ -24,6 +36,8 @@ SOURCE_CALCULATION_INSTRUCTION = (
     "Phân biệt % với điểm phần trăm; kết quả giữ trạng thái dự báo/kế hoạch/ước tính "
     "của đầu vào và nêu ngày nguồn nếu có. Công cụ chỉ kiểm tra số học, "
     "không xác minh đơn vị hay ý nghĩa dữ liệu. "
+    + SOURCE_NUMERIC_FIDELITY_INSTRUCTION
+    + " "
     "Trong answer thay mọi kết quả tính bằng {{calc:0}}, {{calc:1}}, ... "
     "theo chỉ số expressions. Mỗi biểu thức phải được tham chiếu. "
     "Không tự điền kết quả, không tuyên bố công cụ đã chạy; máy chủ sẽ tính "
