@@ -233,7 +233,7 @@ export default function App() {
           aria-hidden={page !== 'chat'}
         >
           <Suspense fallback={<Spinner label="Đang mở cuộc trò chuyện" />}>
-            <ChatPage onBusyChange={setIsChatBusy} isActive={page === 'chat'} />
+            <ChatPage ownerId={status.user?.id ?? undefined} onBusyChange={setIsChatBusy} isActive={page === 'chat'} />
           </Suspense>
         </div>}
 

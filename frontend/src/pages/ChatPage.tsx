@@ -53,6 +53,7 @@ import { AVAILABLE_MODELS, type ModelOption } from '../modelOptions'
 import { markdownToDocumentBlocks as parseMarkdownDocument } from '../documentMarkdown.js'
 import { normalizeMathNotation } from '../markdownPresentation.mjs'
 import { citationHref } from '../citationLinks.mjs'
+import { documentPreviewKey, renewDocumentPreviewKey } from '../documentPreviewRecovery.mjs'
 import {
   DEFAULT_CHAT_CONTROLS,
   displaySessionTitle,
@@ -181,6 +182,7 @@ const prompts = [
 
 
 interface ChatPageProps {
+  ownerId?: string
   onBusyChange?: (busy: boolean) => void
   isActive?: boolean
 }
@@ -235,7 +237,7 @@ const controlLabels = {
   workflow: {source_summary: 'Tóm tắt có nguồn', email_digest: 'Tổng hợp hộp thư', meeting_notes: 'Biên bản họp', study_plan: 'Lộ trình học', budget_tracker: 'Theo dõi ngân sách', compare_sources: 'So sánh nguồn'},
 } as const
 
-export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) {
+export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPageProps = {}) {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [sessionCursor, setSessionCursor] = useState<string | null>(null)
   const [historyAttempt, setHistoryAttempt] = useState(0)
@@ -265,6 +267,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
   const [savedMessages, setSavedMessages] = useState<Set<string>>(new Set())
   const [savingMessage, setSavingMessage] = useState<string | null>(null)
   const [exportingDoc, setExportingDoc] = useState<string | null>(null)
+  const docExportLock = useRef(false)
   const [preparedDocs, setPreparedDocs] = useState<Record<string, PreparedDocumentExport>>({})
   const [preparedDrafts, setPreparedDrafts] = useState<Record<string, PreparedGmailDraft>>({})
   const [createdDrafts, setCreatedDrafts] = useState<Record<string, { draft_id: string; url: string }>>({})
@@ -848,10 +851,16 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
     }
   }
 
-  async function exportToGoogleDoc(message: ChatMessage) {
+  async function exportToGoogleDoc(message: ChatMessage, expiredOperationId?: string) {
+    if (docExportLock.current) return
+    docExportLock.current = true
     setExportingDoc(message.id)
     setError('')
     try {
+      const requestKey = expiredOperationId
+        ? await renewDocumentPreviewKey(sessionStorage, ownerId, message.id, expiredOperationId,
+          id => api<{state: string}>(`/api/documents/operations/${id}`))
+        : documentPreviewKey(sessionStorage, ownerId, message.id)
       const firstLine = (message.content.split('\n')[0] ?? '').replace(/^#+\s*/, '').slice(0, 50).trim()
       const title = firstLine ? `Veridra: ${firstLine}` : `Tài liệu Veridra - ${new Date().toLocaleDateString('vi-VN')}`
       const result = await api<{
@@ -861,7 +870,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
         {
           method: 'POST',
           body: JSON.stringify({
-            request_key: `doc-export-${message.id}`,
+            request_key: requestKey,
             action: 'create',
             document: {
               title,
@@ -888,6 +897,7 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Không thể xuất Google Doc.')
     } finally {
+      docExportLock.current = false
       setExportingDoc(null)
     }
   }
@@ -1564,7 +1574,12 @@ export function ChatPage({ onBusyChange, isActive = true }: ChatPageProps = {}) 
                   </div>
                 )}
                 {preparedDocs[message.id] ? (
-                  <DocumentExportApproval prepared={preparedDocs[message.id]!} />
+                  <DocumentExportApproval
+                    key={preparedDocs[message.id]!.operation_id}
+                    prepared={preparedDocs[message.id]!}
+                    preparing={exportingDoc === message.id}
+                    onReprepare={() => exportToGoogleDoc(message, preparedDocs[message.id]!.operation_id)}
+                  />
                 ) : null}
               </article>
             ))

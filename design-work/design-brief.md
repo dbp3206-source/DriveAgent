@@ -1,5 +1,8 @@
 # Design Brief — DriveAgent Study & Work Command Center
 
+## Bổ sung 05/10/2026 — phục hồi bản xem trước hết hạn
+Giữ giao diện Fluent và lớp `inline-approval` hiện có; chỉ thêm nút “Tạo lại bản xem trước” khi máy chủ xác nhận thao tác hết hạn. Mỗi lần chuẩn bị lại vẫn phải duyệt riêng, không tự tạo tài liệu. Phạm vi người dùng: quản trị đang nghiệm thu và người dùng có quyền tạo tài liệu. Không đổi màu, bố cục, hình ảnh hoặc quyền Google. Chỉ lưu mã yêu cầu trong bộ nhớ phiên trình duyệt, tách theo tài khoản và câu trả lời; không lưu nội dung hay khóa. Đầu ra là ChatPage và DocumentExportApproval thật; kiểm nhánh hết hạn, chưa rõ kết quả, thành công, tải lại và duyệt lại. Kiểm trình duyệt thật do lượt nghiệm thu chung thực hiện; kiểm máy không thay thế bằng chứng giao diện.
+
 ## Bổ sung 04/10/2026 — tìm nhanh trên Drive
 Đối tượng hiện hành là người chuẩn bị tư vấn khách hàng theo PRODUCT-FOUNDATION.md. Tại màn hình Drive thật, giữ Fluent, Be Vietnam Pro và màu theo theme; đặt bộ lọc ngay dưới thanh tìm kiếm. Mặc định hoạt động gần đây trước, dùng thứ tự recency của Google; cho phép kết hợp mục đã gắn sao với tất cả/thư mục/tệp. Bộ lọc áp dụng trước phân trang ở Google Drive. Kiểm hình thức bằng dữ liệu giả lập được ghi nhãn trong hồ sơ QA; kiểm truy vấn và ranh giới API bằng bộ kiểm máy chủ. Không sử dụng dữ liệu giả lập làm bằng chứng Google hoạt động thật.
 

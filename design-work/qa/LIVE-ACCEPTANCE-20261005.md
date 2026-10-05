@@ -178,3 +178,23 @@ chưa đủ giải quyết lỗi ngữ nghĩa. Không đánh dấu đạt từ p
 
 Chủ sở hữu xác nhận đã đặt và lưu mật khẩu project khôi phục thử.
 Chưa nhập mật khẩu vào Chat, chưa chuyển dữ liệu, chưa đóng điều kiện khôi phục.
+
+## Bản d319f1d và phục hồi bản xem trước
+
+CI 37319209752 đạt; Render dep-db1qnt17lnhs73e4v8e0 chạy ảnh
+sha256:8f6d157dcf53d10cf368ca9905a2c3384c90c3426c360611ac0b896176e20f18.
+Quyền tạo Doc riêng quản trị được áp dụng trong lần triển khai này; không mở gửi thư.
+Câu yêu cầu khoảng 220 từ được nhận diện nhưng câu trả lời thật vẫn ngắn:
+18,9 giây, hai lượt mô hình, tám sự kiện. Bản sửa lại thay dấu dẫn nguồn nên bị
+từ chối; giao diện giữ bản nháp chưa đạt và khóa xuất. Chưa nghiệm thu chất lượng.
+
+Thử xuất báo cáo giả lập hỏi tiếp trong phiên cũ bị chặn vì bản xem trước quá
+30 phút. Máy chủ ghi trạng thái hết hạn, chưa tạo Google Doc. Sửa giao diện để
+người dùng chủ động chuẩn bị lại sau khi đọc trạng thái hết hạn, rồi duyệt riêng;
+không tạo lại khi kết quả chưa rõ hoặc đã thành công. Kiểm giao diện bằng máy:
+187/187 đạt, kiểm mã và dựng ứng dụng đạt; kiểm trên URL thật còn chờ bản mới.
+
+Phép đọc Gmail được phép trên e03078b: 14,9 giây, một lượt mô hình, năm sự kiện;
+bốn thư được trình bày cùng bốn dẫn nguồn. Chưa có bằng chứng đủ để chứng nhận
+đã đọc đủ năm thư hoặc toàn hộp thư. Không lưu nội dung riêng trong hồ sơ Git.
+Không gửi thư và chưa có Google Doc được tạo trong lượt nghiệm thu này.

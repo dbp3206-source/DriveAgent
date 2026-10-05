@@ -19,7 +19,11 @@ interface OperationStatus {
 }
 
 /** Finishes the explicit approval phase for a prepared Google Doc. */
-export function DocumentExportApproval({ prepared }: { prepared: PreparedDocumentExport }) {
+export function DocumentExportApproval({ prepared, onReprepare, preparing = false }: {
+  prepared: PreparedDocumentExport
+  onReprepare?: () => Promise<void>
+  preparing?: boolean
+}) {
   const [operation, setOperation] = useState<OperationStatus>({ state: prepared.state })
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -66,12 +70,19 @@ export function DocumentExportApproval({ prepared }: { prepared: PreparedDocumen
           <span>
             {succeeded
               ? 'Google Doc đã được tạo và đọc lại thành công.'
-              : 'Bản nội dung đã khóa. File chỉ được tạo sau khi bạn xác nhận.'}
+              : operation.state === 'expired'
+                ? 'Bản xem trước đã hết hạn. Chưa tạo tài liệu; hãy chuẩn bị lại rồi xác nhận.'
+                : 'Bản nội dung đã khóa. File chỉ được tạo sau khi bạn xác nhận.'}
           </span>
         </div>
       </div>
       {error ? <ErrorState message={error} /> : null}
       <div className="inline-approval__actions">
+        {operation.state === 'expired' && onReprepare ? (
+          <Button disabled={busy || preparing} onClick={() => void onReprepare()}>
+            {preparing ? 'Đang chuẩn bị…' : 'Tạo lại bản xem trước'}
+          </Button>
+        ) : null}
         {operation.state === 'pending' ? (
           <Button appearance="primary" disabled={busy} onClick={() => void approve()}>
             {busy ? 'Đang tạo và kiểm tra…' : 'Xác nhận tạo Google Doc'}
@@ -90,7 +101,8 @@ export function DocumentExportApproval({ prepared }: { prepared: PreparedDocumen
       </div>
       {operation.state !== 'pending' && !succeeded ? (
         <p className="inline-approval__status" role="status">
-          Trạng thái: {operation.state}{operation.error_code ? ` · ${operation.error_code}` : ''}
+          Trạng thái: {({ expired: 'Đã hết hạn', running: 'Đang xử lý', uncertain: 'Chưa xác nhận được kết quả',
+            unknown: 'Chưa biết kết quả', failed: 'Chưa hoàn thành', succeeded: 'Đã tạo, chưa xác minh' } as Record<string, string>)[operation.state] ?? 'Cần kiểm tra'}
         </p>
       ) : null}
     </section>
