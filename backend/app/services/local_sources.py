@@ -13,6 +13,7 @@ from sqlalchemy import or_, select
 
 from app.auth.permissions import RAG_READ
 from app.core.source_evidence import page_evidence_excerpt
+from app.core.source_pages import explicit_page_numbers
 from app.db.models import LocalSource
 from app.services.chunking import chunk_document
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
@@ -209,11 +210,23 @@ async def read_local(payload: LocalReadInput, context: ToolContext) -> LocalOutp
     if excluded_ocr_source(row, context.settings):
         raise ToolError("Bản OCR cũ nằm ngoài phạm vi; hãy đọc lại PDF có lớp văn bản.",
                         code="pdf_ocr_excluded")
-    if payload.page_number is not None:
+    page_number = payload.page_number
+    if page_number is None and row.name.casefold().endswith(".pdf") and payload.query:
+        try:
+            requested_pages = explicit_page_numbers(payload.query)
+        except ValueError as exc:
+            raise ToolError("Phạm vi trang không hợp lệ hoặc quá rộng.",
+                            code="source_page_limit") from exc
+        if len(requested_pages) > 1:
+            raise ToolError("Hãy đọc từng trang được yêu cầu bằng page_number.",
+                            code="source_page_selection_required")
+        if requested_pages:
+            page_number = requested_pages[0]
+    if page_number is not None:
         markers = list(re.finditer(r"<!--\s*page:(\d+)\s*-->", row.content))
         selected = next(
             (index for index, marker in enumerate(markers)
-             if int(marker.group(1)) == payload.page_number), None
+             if int(marker.group(1)) == page_number), None
         )
         if selected is None:
             raise ToolError("Không tìm thấy trang được yêu cầu trong tài liệu.",
@@ -226,12 +239,12 @@ async def read_local(payload: LocalReadInput, context: ToolContext) -> LocalOutp
         text = row.content[start:end]
         return LocalOutput(data={
             "source_id": row.id, "name": row.name, "content_hash": row.content_hash,
-            "retrieval_method": "exact_page", "page_number": payload.page_number,
+            "retrieval_method": "exact_page", "page_number": page_number,
             "offset": payload.offset, "next_offset": end - marker.end() if end < page_end else None,
             "text": text,
             "citations": [{
                 "file_id": f"local:{row.id}", "file_name": row.name,
-                "chunk_index": start, "page_number": payload.page_number,
+                "chunk_index": start, "page_number": page_number,
                 "snippet": page_evidence_excerpt(text), "score": 1.0,
                 "web_view_link": (
                     f"{context.settings.public_base_url}/api/local-sources/{row.id}/text"

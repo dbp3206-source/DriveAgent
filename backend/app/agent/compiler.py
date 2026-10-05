@@ -66,6 +66,7 @@ from app.agent.source_calculations import (
     validate_calculation_payload,
 )
 from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Settings
+from app.core.source_pages import explicit_page_numbers
 from app.db.models import Message, User
 from app.db.session import SessionFactory
 from app.services.quota import conservative_tokens
@@ -744,14 +745,11 @@ class CompilerOrchestrator:
                                 f"Chưa xác định được đúng một tài liệu local: {query}",
                                 code="local_source_ambiguous",
                             )
-                        read_result = await self.registry.execute(
-                            "local_source_read",
-                            {"query": user_message[:2000],
-                             "source_id": candidates[0]['id'], "limit": 6},
+                        source_data = await self._read_local_evidence(
+                            candidates[0], user_message,
                             ToolContext(request_id=request_id, user=user, db=db,
                                         settings=self.settings, source="compiler_gather"),
                         )
-                        source_data = read_result.model_dump(mode="json")
                         if not source_data.get("data", {}).get("citations"):
                             raise ToolError(
                                 f"Tài liệu {query} chưa có bằng chứng được lập chỉ mục.",
@@ -984,25 +982,27 @@ class CompilerOrchestrator:
                         if local
                         else {"file_id": matches[0]["id"], "max_characters": 20000}
                     )
-                    read = await self.registry.execute(
-                        name,
-                        args,
-                        ToolContext(
-                            request_id=request_id,
-                            user=user,
-                            db=db,
-                            settings=self.settings,
-                            source="compiler_gather",
-                        ),
+                    read_context = ToolContext(
+                        request_id=request_id, user=user, db=db,
+                        settings=self.settings, source="compiler_gather",
                     )
-                    context_data = read.model_dump(mode="json")
-                    evidence.append(
-                        ToolMessage(
-                            content=json.dumps(context_data),
-                            name=name,
-                            tool_call_id=request_id + "-read",
+                    if local:
+                        context_data = await self._read_local_evidence(
+                            matches[0], user_message, read_context,
                         )
+                    else:
+                        read = await self.registry.execute(name, args, read_context)
+                        context_data = read.model_dump(mode="json")
+                    read_evidence = ToolMessage(
+                        content=json.dumps(context_data), name=name,
+                        tool_call_id=request_id + "-read",
                     )
+                    if local:
+                        # Search previews identify the file; only the completed
+                        # read supplies evidence for its requested pages.
+                        evidence[-1] = read_evidence
+                    else:
+                        evidence.append(read_evidence)
                     trace.append({"stage": "tool", "tool": name, "status": "success"})
                     if local:
                         local_data = (
@@ -1574,6 +1574,76 @@ class CompilerOrchestrator:
         return AgentRunResult(
             answer=answer, plan=[], trace=trace, citations=citations, proposals=proposals
         )
+
+    async def _read_local_evidence(
+        self, source: dict[str, Any], message: str, context: ToolContext,
+    ) -> dict[str, Any]:
+        """Honor explicit PDF pages before relevance retrieval, retaining full pages.
+
+        Each call goes through the permissioned registry with the original user
+        context. Pagination is bounded, cancellable, and fails closed rather than
+        silently generating from a partial requested page.
+        """
+        is_pdf = str(source.get("name", "")).casefold().endswith(".pdf")
+        try:
+            pages = explicit_page_numbers(message) if is_pdf else ()
+        except ValueError as exc:
+            raise ToolError(
+                "Phạm vi trang không hợp lệ hoặc quá rộng; hãy chọn tối đa 12 trang.",
+                code="source_page_limit",
+            ) from exc
+        filenames = set(re.findall(r"[\w.-]+\.pdf\b", message.casefold()))
+        if len(filenames) > 1 and len(pages) > 1 and len(re.findall(
+            r"\b(?:trang|pages?|p\.)\s*\d", message, re.I,
+        )) > 1:
+            raise ToolError(
+                "Phạm vi trang của từng tệp chưa rõ; hãy đọc từng tệp với trang tương ứng.",
+                code="source_page_scope_ambiguous",
+            )
+        if not pages:
+            args = {"source_id": source["id"]}
+            if is_pdf:
+                args["query"] = message[:2000]
+            read = await self.registry.execute("local_source_read", args, context)
+            return read.model_dump(mode="json")
+
+        text_parts: list[str] = []
+        citations: list[dict[str, Any]] = []
+        result: dict[str, Any] = {}
+        calls = 0
+        for page in pages:
+            offset = 0
+            while True:
+                if calls >= 12:
+                    raise ToolError(
+                        "Các trang yêu cầu vượt giới hạn đọc; hãy chia thành phạm vi nhỏ hơn.",
+                        code="source_page_limit",
+                    )
+                read = await self.registry.execute(
+                    "local_source_read",
+                    {"source_id": source["id"], "page_number": page, "offset": offset},
+                    context,
+                )
+                calls += 1
+                result = read.model_dump(mode="json")
+                data = result.get("data", {})
+                text_parts.append(f"<!-- page:{page} -->\n{data.get('text', '')}")
+                citations.extend(data.get("citations", []))
+                next_offset = data.get("next_offset")
+                if next_offset is None:
+                    break
+                if not isinstance(next_offset, int) or next_offset <= offset:
+                    raise ToolError("Không thể đọc tiếp trang được yêu cầu.",
+                                    code="source_page_incomplete")
+                offset = next_offset
+        result["data"] = {
+            **result.get("data", {}), "text": "\n\n".join(text_parts),
+            "citations": citations, "retrieval_method": "exact_page",
+            "page_numbers": list(pages), "next_offset": None,
+        }
+        if len(pages) > 1:
+            result["data"].pop("page_number", None)
+        return result
 
     @staticmethod
     def _apply_controls(route: Route, message: str, controls: ChatControls) -> Route:

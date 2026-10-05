@@ -10,6 +10,7 @@ from __future__ import annotations
 import re
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -51,6 +52,76 @@ def git_visible_files() -> list[str]:
     return sorted({item.decode("utf-8", "surrogateescape") for item in raw.split(b"\0") if item})
 
 
+@contextmanager
+def git_stream(*arguments: str, interactive: bool = False):
+    """Keep Git pipes bounded and treat interrupted/failed readers as scan failures."""
+    process = subprocess.Popen(
+        ["git", "-c", f"safe.directory={ROOT.as_posix()}", *arguments],
+        cwd=ROOT, stdin=subprocess.PIPE if interactive else subprocess.DEVNULL,
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL,
+    )
+    try:
+        yield process
+        if process.stdin is not None:
+            process.stdin.close()
+        if process.wait() != 0:
+            raise RuntimeError("Git history reader failed; scan incomplete.")
+    finally:
+        if process.poll() is None:
+            process.kill()
+        process.wait()
+        if process.stdout is not None:
+            process.stdout.close()
+        if process.stdin is not None and not process.stdin.closed:
+            process.stdin.close()
+
+
+def batch_request(process, oid: bytes) -> list[bytes]:
+    process.stdin.write(oid + b"\n")
+    process.stdin.flush()
+    header = process.stdout.readline(256).split()
+    if len(header) != 3 or header[0] != oid or not header[2].isdigit():
+        raise RuntimeError("Invalid Git batch response; history scan incomplete.")
+    return header
+
+
+def scan_history() -> tuple[list[tuple[str, str]], int]:
+    findings: list[tuple[str, str]] = []
+    checked = 0
+    # Read metadata before requesting content so large/excluded objects never enter
+    # Python memory. Three Git processes suffice regardless of history length.
+    with git_stream("rev-list", "--objects", "--all") as objects, \
+            git_stream("cat-file", "--batch-check", interactive=True) as metadata, \
+            git_stream("cat-file", "--batch", interactive=True) as blobs:
+        for item in objects.stdout:
+            parts = item.rstrip(b"\n").split(b" ", 1)
+            if len(parts) != 2:
+                continue
+            oid, raw_path = parts
+            _, kind, raw_size = batch_request(metadata, oid)
+            if kind != b"blob":
+                continue
+            path = raw_path.decode("utf-8", "replace")
+            if any(pattern.search(path) for pattern in FORBIDDEN_NAMES):
+                findings.append((path, "private/runtime file in Git history"))
+                continue
+            size = int(raw_size)
+            if size > MAX_TEXT_BYTES or path.startswith("backend/tests/") or "/fixtures/" in path:
+                continue
+            _, blob_kind, blob_size = batch_request(blobs, oid)
+            if blob_kind != b"blob" or int(blob_size) != size:
+                raise RuntimeError("Git blob metadata changed; history scan incomplete.")
+            data = blobs.stdout.read(size)
+            if len(data) != size or blobs.stdout.read(1) != b"\n":
+                raise RuntimeError("Truncated Git blob; history scan incomplete.")
+            data = without_known_canary(data)
+            checked += 1
+            for label, pattern in SECRET_PATTERNS.items():
+                if pattern.search(data):
+                    findings.append((path, f"{label} in Git history"))
+    return findings, checked
+
+
 def main() -> int:
     findings: list[tuple[str, str]] = []
     for relative in git_visible_files():
@@ -75,32 +146,8 @@ def main() -> int:
         return 1
     print(f"Release secret scan passed for {len(git_visible_files())} Git-visible files.")
     if "--history" in sys.argv:
-        command = ["git", "-c", f"safe.directory={ROOT.as_posix()}"]
-        objects = subprocess.check_output([*command, "rev-list", "--objects", "--all"],
-                                          cwd=ROOT).splitlines()
-        checked = 0
-        for item in objects:
-            parts = item.split(b" ", 1)
-            if len(parts) != 2:
-                continue
-            oid, raw_path = parts
-            path = raw_path.decode("utf-8", "replace")
-            kind = subprocess.check_output([*command, "cat-file", "-t", oid.decode()],
-                                           cwd=ROOT).strip()
-            if kind != b"blob":
-                continue
-            if any(pattern.search(path) for pattern in FORBIDDEN_NAMES):
-                findings.append((path, "private/runtime file in Git history"))
-                continue
-            size = int(subprocess.check_output([*command, "cat-file", "-s", oid.decode()], cwd=ROOT))
-            if size > MAX_TEXT_BYTES or path.startswith("backend/tests/") or "/fixtures/" in path:
-                continue
-            data = without_known_canary(subprocess.check_output(
-                [*command, "cat-file", "blob", oid.decode()], cwd=ROOT))
-            checked += 1
-            for label, pattern in SECRET_PATTERNS.items():
-                if pattern.search(data):
-                    findings.append((path, f"{label} in Git history"))
+        history_findings, checked = scan_history()
+        findings.extend(history_findings)
         if findings:
             print("History scan FAILED; values redacted.")
             for path, label in sorted(set(findings)):

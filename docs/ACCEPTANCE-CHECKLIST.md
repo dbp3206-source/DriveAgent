@@ -84,6 +84,16 @@ Mỗi bước cập nhật trạng thái thật và phần cần người dùng 
 
 ## Tình trạng hiện tại
 
+### Cập nhật 05/10/2026 — ưu tiên kết thúc, không mở phạm vi
+
+Bản cloud đã đối chiếu là `7813122`, CI `37273959415`, ảnh `sha256:03587e5e6fbc6f60087a960e111ec68a4feaa80df9335136630986f3aa97b304`. Chi tiết cùng bản tại `design-work/qa/LIVE-ACCEPTANCE-20261005.md`. Đã kiểm Drive thật, giữ ngữ cảnh qua triển khai, năm nguồn PDF có văn bản và quyền riêng tư bảng phiên điều phối. Đo RAM thực một thời điểm khoảng 176,1 MiB/512 MiB; chưa có mức đỉnh hoặc phép thử tải đủ thời gian.
+
+Người dùng cho phép hoãn việc ít tác động: không mở vòng thiết kế lại, thêm hiệu ứng hoặc tinh chỉnh trang trí. Các việc này hoãn, không tự đánh dấu ĐẠT. Giữ kiểm giao diện ảnh hưởng thao tác, nội dung nguồn đúng, ngữ cảnh/bộ nhớ, duyệt thao tác, cách ly dữ liệu, phục hồi và cùng ảnh phát hành.
+
+Bộ PDF khóa trước khi đo đã phát hiện hai lỗi chức năng cần sửa: ý định tính tổng/chênh lệch chưa bắt buộc công cụ tính, và câu hỏi chỉ định trang có thể bị tìm theo độ liên quan thay thế. Đang xử lý song song; kết quả số đúng không thay bằng chứng công cụ, câu trả lời từ chối thận trọng không thay việc đọc đúng trang.
+
+Bốn người thật vẫn chưa có theo xác nhận người dùng; tiếp tục nghiệm thu một quản trị, không chứng nhận beta bốn người. Nhánh chính giữ nguyên cho tới khi các điều kiện bắt buộc còn lại được giải quyết; không dùng bản staging có CI đạt để gọi toàn bộ sản phẩm sẵn sàng phát hành.
+
 ### Việc còn lại để chốt — cập nhật 04/10/2026
 
 Bổ sung cuối ngày: CI lần 61 của `30a2ec4` đã đạt; tài nguyên frontend trên URL Render đã được đối chiếu với ảnh `sha256:c2092a47e21e089bfe59571771f7b4f36f8e24ab9d53b873c15f5149458e8917`. Ảnh người dùng đã có trên URL và khớp checksum; bộ lọc Drive đã có trong mã đang phục vụ. Bốn kích thước giao diện trên tài nguyên cloud đạt với API giả lập, chưa thay thao tác Google thật. Xem `design-work/qa/drive-filters-20261004.md`. Bảng dưới giữ các phần còn thiếu; ghi chú “ảnh chưa đóng gói” là trạng thái trước lần triển khai này, không còn đúng.

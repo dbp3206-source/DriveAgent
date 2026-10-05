@@ -22,6 +22,63 @@ def test_calculation_trigger_requires_user_request_and_read_evidence():
     assert not needs_source_calculation("Tóm tắt", has_evidence=True, output="chat")
 
 
+@pytest.mark.parametrize("prompt", [
+    "Tính tổng hai nhóm và chênh lệch tốc độ tăng trưởng bằng điểm phần trăm",
+    "TÍNH LẠI TỔNG doanh thu của hai nhóm.",
+    "Cộng tổng giờ từ hai tệp.",
+    "Tính chênh lệch giữa năm 2024 và 2025.",
+    "Tính hiệu số hai nhóm.",
+    "Tính phần trăm đóng góp của nhóm A.",
+    "Tính điểm phần trăm chênh lệch.",
+    "Tính tỷ lệ nhóm A so với nhóm B.",
+    "Tính tỉ số giữa hai nhóm.",
+    "Tính tốc độ tăng trưởng doanh thu.",
+    "Tính mức giảm so với năm trước.",
+    "Tính trung bình mỗi nhóm.",
+    "Cho biết chênh lệch doanh thu hai nhóm.",
+    "Tổng hai nhóm là bao nhiêu?",
+    "Chênh lệch tốc độ tăng trưởng bằng bao nhiêu điểm phần trăm?",
+    "Tóm tắt tài liệu, sau đó tính tổng hai nhóm.",
+    "Dùng calculate để đối chiếu.",
+    "Không tính tổng; hãy tính chênh lệch hai nhóm.",
+    "Đừng tính tỷ lệ, nhưng tính tổng hai nhóm.",
+    "Không dùng calculate ở bước tóm tắt. Sau đó tính tổng hai nhóm.",
+    "Tính tổng hai nhóm và không tính tỷ lệ tăng trưởng.",
+    "Không tính tổng mà tính chênh lệch hai nhóm.",
+    "Không chỉ tính tổng hai nhóm mà còn tính tỷ lệ tăng trưởng.",
+])
+def test_arithmetic_intents_require_evidence_and_chat(prompt):
+    assert needs_source_calculation(prompt, has_evidence=True, output="chat")
+    assert not needs_source_calculation(prompt, has_evidence=False, output="chat")
+    for output in ("pptx", "docx", "xlsx"):
+        assert not needs_source_calculation(prompt, has_evidence=True, output=output)
+
+
+@pytest.mark.parametrize("prompt", [
+    "Tóm tắt nội dung hai tệp.",
+    "Tổng hợp thông tin từ hai nhóm.",
+    "Tính tổng hợp trong báo cáo có ý nghĩa gì?",
+    "Tóm tắt tỷ lệ và tốc độ tăng trưởng đã ghi trong PDF.",
+    "Tổng hợp chênh lệch giữa hai báo cáo.",
+    "Giải thích tính năng tổng hợp báo cáo.",
+    "Giới thiệu cộng đồng người dùng.",
+    "Đọc báo cáo tăng trưởng.",
+    "Tỷ lệ nhóm A so với nhóm B là bao nhiêu?",
+    "Tỷ lệ tăng trưởng là bao nhiêu?",
+    "Phần trăm đóng góp của nhóm A được báo cáo là bao nhiêu?",
+    "Cho biết tỷ lệ tăng trưởng ghi trong PDF.",
+    "Không tính tổng hai nhóm, chỉ tóm tắt.",
+    "KHÔNG CẦN PHẢI TÍNH TỔNG hai nhóm.",
+    "Đừng tính chênh lệch hai nhóm.",
+    "Chớ tính tỷ lệ tăng trưởng.",
+    "Không dùng calculate để đọc báo cáo.",
+    "Không cần tính bằng công cụ tổng giờ.",
+    "Không tính tổng và chênh lệch là bao nhiêu, chỉ đọc số đã ghi.",
+])
+def test_summary_and_descriptive_requests_do_not_trigger_arithmetic(prompt):
+    assert not needs_source_calculation(prompt, has_evidence=True, output="chat")
+
+
 @pytest.mark.parametrize("answer, expressions", [
     ("{{calc:1}}", ["1+1"]),
     ("Kết quả 2", ["1+1"]),

@@ -272,20 +272,20 @@ export function LocalSourcesPage() {
 
       {pdfJobs.length ? <section className="readiness-panel" aria-labelledby="pdf-jobs-title">
         <h3 id="pdf-jobs-title">PDF · tiến độ theo trang</h3>
-        <p className="measurement-note">Chỉ hỗ trợ PDF có lớp văn bản; OCR/PDF scan nằm ngoài phạm vi. Xử lý tuần tự để giữ Chat nhẹ; checkpoint được lưu khi đóng tab. “Cần kiểm tra” không có nghĩa là toàn bộ PDF đã đọc thành công.</p>
+        <p className="measurement-note">Chỉ hỗ trợ PDF có văn bản, không đọc chữ trong ảnh. Xử lý lần lượt để giữ trò chuyện nhẹ; tiến độ được lưu khi đóng tab. “Cần kiểm tra” không có nghĩa là toàn bộ PDF đã đọc thành công.</p>
         {pdfJobs.map(job => <details className="readiness-gate" key={job.id}>
           <summary><span>{job.name}</span><strong>{({ queued: 'Đang xếp hàng', running: 'Đang đọc', completed: 'Đã trích xuất', needs_attention: 'Cần kiểm tra', cancelled: 'Đã hủy', failed: 'Lỗi xử lý' } as Record<string, string>)[job.status] ?? job.status}</strong></summary>
-          <p>{job.processed_pages}/{job.pages || '?'} trang · {job.stage === 'keyword_ready' ? 'Đã sẵn sàng tìm văn bản; chưa xác nhận chỉ mục semantic.' : 'Đang chuẩn bị/trích xuất nguồn.'}</p>
+          <p>{job.processed_pages}/{job.pages || '?'} trang · {job.stage === 'keyword_ready' ? 'Đã sẵn sàng tìm theo văn bản; chưa xác nhận tìm theo ý nghĩa.' : 'Đang chuẩn bị/trích xuất nguồn.'}</p>
           <progress aria-label={`Tiến độ ${job.name}`} max={job.pages || 1} value={job.processed_pages} />
-          {job.error_code ? <p role="status">Mã chẩn đoán: <code>{job.error_code}</code>. Trang scan không được dùng làm nguồn; hãy chọn bản PDF có lớp văn bản.</p> : null}
+          {job.error_code ? <p role="status">Mã chẩn đoán: <code>{job.error_code}</code>. Chỉ dùng những trang đọc được; hãy kiểm tra trang lỗi hoặc chọn bản có đủ văn bản.</p> : null}
           <div className="page-heading__actions">
             {['queued', 'running'].includes(job.status) ? <Button onClick={() => void jobAction(job, 'cancel')}>Hủy xử lý</Button> : null}
-            {['failed', 'cancelled', 'needs_attention'].includes(job.status) ? <Button onClick={() => void jobAction(job, 'resume')}>Tiếp tục từ checkpoint</Button> : null}
+            {['failed', 'cancelled', 'needs_attention'].includes(job.status) ? <Button onClick={() => void jobAction(job, 'resume')}>Tiếp tục từ tiến độ đã lưu</Button> : null}
             {job.status === 'completed' ? <Button onClick={() => void jobAction(job, 'reextract')}>Đọc lại từ tệp gốc</Button> : null}
             {job.source_id ? <Button onClick={() => handleChatNow(job.name)}>Hỏi phần đã đọc</Button> : null}
           </div>
           {job.status === 'completed' ? <p>Đọc lại dùng tệp đã lưu, không cần tải lên lần nữa. Bản văn bản hiện có vẫn được giữ đến khi xử lý lại thành công; không đọc chữ trong ảnh.</p> : null}
-          {job.page_results.map(page => <p key={page.page}>Trang {page.page}: {({ text: 'Có văn bản', ocr: 'OCR lịch sử — ngoài phạm vi hỗ trợ', unsupported_scan: 'Trang scan — không hỗ trợ OCR', needs_ocr: 'Trang scan — ngoài phạm vi', low_confidence: 'OCR lịch sử chưa tin cậy — không dùng làm nguồn', error: 'Lỗi đọc trang' } as Record<string, string>)[page.status] ?? page.status}{page.confidence == null ? '' : ` · confidence ${page.confidence.toFixed(1)}/100`}{page.error_code ? ` · ${page.error_code}` : ''}</p>)}
+          {job.page_results.map(page => <p key={page.page}>Trang {page.page}: {({ text: 'Có văn bản', ocr: 'Chữ đọc từ ảnh trước đây — ngoài phạm vi hỗ trợ', unsupported_scan: 'Không đủ văn bản để đọc — không đọc chữ từ ảnh', needs_ocr: 'Cần đọc chữ từ ảnh — ngoài phạm vi', low_confidence: 'Chữ đọc từ ảnh trước đây chưa tin cậy — không dùng làm nguồn', error: 'Lỗi đọc trang' } as Record<string, string>)[page.status] ?? 'Chưa xác định'}{page.confidence == null ? '' : ` · độ tin cậy ${page.confidence.toFixed(1)}/100`}{page.error_code ? ` · ${page.error_code}` : ''}</p>)}
         </details>)}
       </section> : null}
 

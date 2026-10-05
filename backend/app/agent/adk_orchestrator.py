@@ -8,6 +8,7 @@ import asyncio
 import json
 import re
 import time
+from collections.abc import Awaitable, Callable
 from datetime import UTC, datetime
 from typing import Any
 from weakref import WeakValueDictionary
@@ -59,8 +60,9 @@ from app.agent.routing import Route, route_request
 from app.auth.permissions import permissions_for_role
 from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Settings
 from app.core.security import redact
+from app.core.source_pages import explicit_page_numbers
 from app.db.framework_sessions import framework_engine_options, protect_framework_engine
-from app.db.models import Message, User
+from app.db.models import LocalSource, Message, User
 from app.db.session import SessionFactory
 from app.services.relational_circuit import circuit_store
 from app.services.relational_skills import skill_store
@@ -81,6 +83,8 @@ class GovernedAdkTool(BaseTool):
         semaphore: asyncio.Semaphore,
         signatures: set[str],
         tool_results: dict[str, dict[str, Any]] | None = None,
+        user_message: str = "",
+        local_reader: Callable[..., Awaitable[dict[str, Any]]] | None = None,
     ):
         super().__init__(name=definition.name, description=definition.description)
         self.definition, self.registry, self.settings = definition, registry, settings
@@ -88,6 +92,7 @@ class GovernedAdkTool(BaseTool):
         self.records, self.evidence = records, evidence
         self.semaphore, self.signatures = semaphore, signatures
         self.tool_results = tool_results if tool_results is not None else {}
+        self.user_message, self.local_reader = user_message, local_reader
 
     def _get_declaration(self) -> types.FunctionDeclaration:
         return types.FunctionDeclaration(
@@ -97,7 +102,19 @@ class GovernedAdkTool(BaseTool):
         )
 
     async def run_async(self, *, args: dict[str, Any], tool_context: Any) -> dict[str, Any]:
-        signature = self.name + json.dumps(args, sort_keys=True, ensure_ascii=False)
+        try:
+            explicit_pages = (
+                explicit_page_numbers(self.user_message)
+                if self.name == "local_source_read" and self.local_reader else ()
+            )
+        except ValueError:
+            return {"error": "Phạm vi trang không hợp lệ hoặc quá rộng.",
+                    "code": "source_page_limit"}
+        signature_args = (
+            {"source_id": args.get("source_id"), "page_numbers": explicit_pages}
+            if explicit_pages else args
+        )
+        signature = self.name + json.dumps(signature_args, sort_keys=True, ensure_ascii=False)
         async with self.semaphore:
             if signature in self.tool_results:
                 self.records.append(
@@ -121,18 +138,28 @@ class GovernedAdkTool(BaseTool):
                 record = {"stage": "tool", "tool": self.name, "status": "running"}
                 self.records.append(record)
                 try:
-                    result = await self.registry.execute(
-                        self.name,
-                        args,
-                        ToolContext(
-                            request_id=self.request_id,
-                            user=user,
-                            db=db,
-                            settings=self.settings,
-                            source="adk",
-                        ),
+                    context = ToolContext(
+                        request_id=self.request_id, user=user, db=db,
+                        settings=self.settings, source="adk",
                     )
-                    payload = result.model_dump(mode="json")
+                    if explicit_pages:
+                        # The current request owns the page constraint. Model
+                        # keywords, stale history, and a guessed page cannot
+                        # override it. Resolve only an actor-owned source.
+                        source_id = str(args.get("source_id", "")).removeprefix("local:").strip()
+                        source = await db.scalar(select(LocalSource).where(
+                            LocalSource.user_id == user.id,
+                            (LocalSource.id == source_id) | (LocalSource.name == source_id),
+                        ))
+                        if source is None:
+                            raise ToolError("Không tìm thấy tài liệu local của bạn.",
+                                            code="source_not_found")
+                        payload = await self.local_reader(
+                            {"id": source.id, "name": source.name}, self.user_message, context,
+                        )
+                    else:
+                        result = await self.registry.execute(self.name, args, context)
+                        payload = result.model_dump(mode="json")
                     self.tool_results[signature] = payload
                     self.evidence.append(
                         ToolMessage(
@@ -297,6 +324,8 @@ class AdkOrchestrator:
                     semaphore,
                     signatures,
                     tool_results,
+                    user_message=user_message,
+                    local_reader=self.compiler._read_local_evidence,
                 )
                 for d in available
                 if d.name in allowed_names

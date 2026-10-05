@@ -76,6 +76,126 @@ async def test_multi_local_retrieval_collects_pages_from_each_file(runtime, monk
     assert all(item["page_number"] == 3 for item in result.citations)
 
 
+@pytest.mark.parametrize("multiple_sources", [False, True])
+async def test_explicit_pdf_page_reads_requested_page_not_relevance_preview(
+    runtime, monkeypatch, multiple_sources,
+):
+    from app.db.models import LocalSource
+    from app.services.local_sources import hash_content, local_source_tool_definitions
+
+    runner, user, session_id = runtime
+    filenames = ["sector-review.pdf", "company-review.pdf"] if multiple_sources else [
+        "sector-review.pdf"
+    ]
+    content = "<!-- page:1 -->Introduction\n<!-- page:2 -->TARGET_ROW_WITH_COMMENTARY\n"
+    content += "<!-- page:11 -->" + "sector-review.pdf company-review.pdf repeated row " * 100
+    async with compiler.SessionFactory() as db:
+        for index, filename in enumerate(filenames):
+            body = content + str(index)
+            db.add(LocalSource(user_id=user.id, name=filename, content=body,
+                               content_hash=hash_content(body)))
+        await db.commit()
+    for definition in local_source_tool_definitions():
+        runner.registry.register(definition)
+
+    async def generate(self, request, stream=False):
+        prompt = str(request.contents)
+        assert "TARGET_ROW_WITH_COMMENTARY" in prompt
+        assert "repeated row" not in prompt
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
+            text='{"answer":"Nhận định cùng dòng [1]."}'
+        )]))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="explicit-page-review",
+        user_message=f"Đọc {' và '.join(filenames)}; đối chiếu dòng và nhận định ở trang 2.",
+        controls=ChatControls(source="local"),
+    )
+    assert result.citations
+    assert all(citation["page_number"] == 2 for citation in result.citations)
+
+
+async def test_exact_pdf_pages_follow_pagination_and_fail_closed_on_missing_page(
+    runtime,
+):
+    from app.db.models import LocalSource
+    from app.services.local_sources import hash_content, local_source_tool_definitions
+    from app.tools.contracts import ToolContext
+
+    runner, user, _ = runtime
+    content = "<!-- page:2 -->" + "x" * 12000 + "TAIL_COMMENTARY"
+    content += "<!-- page:3 -->SECOND_PAGE\n<!-- page:11 -->IRRELEVANT"
+    async with compiler.SessionFactory() as db:
+        source = LocalSource(user_id=user.id, name="report.pdf", content=content,
+                             content_hash=hash_content(content))
+        db.add(source)
+        await db.commit()
+        for definition in local_source_tool_definitions():
+            runner.registry.register(definition)
+        context = ToolContext(request_id="exact-pages", user=user, db=db,
+                              settings=runner.settings, source="compiler_gather")
+        source_ref = {"id": source.id, "name": source.name}
+        result = await runner._read_local_evidence(
+            source_ref, "Read pages 2-3", context,
+        )
+        assert "TAIL_COMMENTARY" in result["data"]["text"]
+        assert "SECOND_PAGE" in result["data"]["text"]
+        assert "IRRELEVANT" not in result["data"]["text"]
+        assert [item["page_number"] for item in result["data"]["citations"]] == [2, 2, 3]
+        with pytest.raises(ToolError) as error:
+            await runner._read_local_evidence(
+                source_ref, "Read page 4", context,
+            )
+        assert error.value.code == "source_page_not_found"
+        with pytest.raises(ToolError) as error:
+            await runner._read_local_evidence(
+                source_ref,
+                "Đọc a.pdf trang 2 và b.pdf trang 5.", context,
+            )
+        assert error.value.code == "source_page_scope_ambiguous"
+
+
+async def test_adk_model_page_cannot_override_current_request(runtime, monkeypatch):
+    import asyncio
+
+    from app.agent import adk_orchestrator
+    from app.db.models import LocalSource
+    from app.services.local_sources import hash_content, local_source_tool_definitions
+
+    runner, user, _ = runtime
+    monkeypatch.setattr(adk_orchestrator, "SessionFactory", compiler.SessionFactory)
+    body = "<!-- page:2 -->CURRENT_PAGE\n<!-- page:11 -->STALE_PAGE"
+    async with compiler.SessionFactory() as db:
+        source = LocalSource(user_id=user.id, name="report.pdf", content=body,
+                             content_hash=hash_content(body))
+        db.add(source)
+        await db.commit()
+    definitions = local_source_tool_definitions()
+    for definition in definitions:
+        runner.registry.register(definition)
+    tool = adk_orchestrator.GovernedAdkTool(
+        definitions[1], runner.registry, runner.settings, user.id, "adk-pages", [], [],
+        asyncio.Semaphore(2), set(), {}, user_message="Đọc trang 2; không đọc trang 11.",
+        local_reader=runner._read_local_evidence,
+    )
+    result = await tool.run_async(
+        args={"source_id": source.id, "page_number": 11, "query": "STALE_PAGE"},
+        tool_context=None,
+    )
+    assert "CURRENT_PAGE" in result["data"]["text"]
+    assert "STALE_PAGE" not in result["data"]["text"]
+    assert all(item["page_number"] == 2 for item in result["data"]["citations"])
+    cached = await tool.run_async(
+        args={"source_id": source.id, "page_number": 3, "query": "another stale guess"},
+        tool_context=None,
+    )
+    assert cached is result
+    assert tool.records[-1]["stage"] == "tool_cache"
+    missing = await tool.run_async(args={"source_id": "foreign-source"}, tool_context=None)
+    assert missing["code"] == "source_not_found"
+
+
 def test_schema_failure_diagnostic_never_includes_model_payload():
     private_content = "PRIVATE_QA_CANARY_EMAIL_BODY"
     with pytest.raises(ValueError) as error:

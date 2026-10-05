@@ -24,10 +24,47 @@ class CalculatedWireAnswer(WireAnswer):
 
 
 def needs_source_calculation(request: str, *, has_evidence: bool, output: str) -> bool:
-    return bool(has_evidence and output == "chat" and re.search(
+    if not has_evidence or output != "chat":
+        return False
+    # Match arithmetic requests, not the "tổng" in "tổng hợp" or the
+    # "tính" in "tính năng". Keep the existing evidence/output gates so
+    # broader wording still uses only the bounded source calculation route.
+    aggregate_term = r"(?:tổng\b(?!\s+hợp\b)|chênh\s+lệch|hiệu\s+số)"
+    arithmetic_term = (
+        r"(?:" + aggregate_term + r"|"
+        r"(?:điểm\s+)?phần\s+trăm|t[ỷỉ]\s+(?:lệ|số)|"
+        r"tốc\s+độ\s+tăng\s+trưởng|mức\s+(?:tăng|giảm)|"
+        r"trung\s+bình|bình\s+quân)"
+    )
+    computing_verb = r"(?:tính(?:\s+(?:toán|lại))?|cộng|trừ|nhân|chia|xác\s+định)"
+    # Percentages and ratios may already be reported in a source. Merely
+    # asking what they are must not force new arithmetic without a compute verb.
+    arithmetic_request = (
+        r"\b" + computing_verb + r"\s+" + arithmetic_term + r"\b|"
+        r"\bcho\s+biết\s+" + aggregate_term + r"\b|"
+        r"\b" + aggregate_term + r"\b[^.!?\n]{0,80}\bbao\s+nhiêu\b"
+    )
+    explicit_tool_request = (
         r"\b(?:tính(?:\s+lại)?\s+bằng\s+công\s+cụ|"
-        r"(?:gọi|dùng|sử dụng)\s+(?:công\s+cụ\s+)?calculate)\b", request, re.I
-    ))
+        r"(?:gọi|dùng|sử dụng)\s+(?:công\s+cụ\s+)?calculate)\b"
+    )
+    prohibition = (
+        r"\b(?:không(?!\s+chỉ\b)|đừng|chớ|tránh)\s+"
+        r"(?:(?:cần|phải|được|nên|thể)\s+)*"
+        r"(?:" + computing_verb + r"|gọi|dùng|sử\s+dụng|cho\s+biết)\b"
+    )
+    # Negation applies to its clause, so a separate positive calculation
+    # request still runs ("không tính tổng; tính chênh lệch").
+    clauses = re.split(
+        r"[.!?;,\n]+|\b(?:nhưng|còn|sau\s+đó|mà)\b|"
+        r"\bvà\s+(?=(?:hãy\s+)?(?:không|đừng|" + computing_verb + r")\b)",
+        request, flags=re.I,
+    )
+    return any(
+        not re.search(prohibition, clause, re.I)
+        and re.search(explicit_tool_request + "|" + arithmetic_request, clause, re.I)
+        for clause in clauses
+    )
 
 
 def validate_calculation_payload(raw: str) -> CalculatedWireAnswer:
