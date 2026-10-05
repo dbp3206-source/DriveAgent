@@ -16,6 +16,8 @@ Kiểm tra công cụ ngày 05/10/2026: chạy `python -m pytest backend/tests/t
 
 Schema ứng dụng hiện tại là `veridra_private`, gồm cả lịch sử, khóa đã mã hóa, bộ nhớ, kết quả, tác vụ và các bảng trạng thái vận hành. Không chỉ sao lưu bảng Chat. Các kiểu vector phụ thuộc phần mở rộng trong schema `extensions`.
 
+Kiểm tra project đang chạy ngày 05/10/2026 còn phát hiện lịch sử điều phối cũ tại năm bảng `public.adk_internal_metadata`, `public.app_states`, `public.user_states`, `public.sessions`, `public.events`. Quyền đọc qua API của các bảng này đã được khóa, nhưng dữ liệu chưa được chuyển hoặc xóa. Nếu nguồn còn các bảng này, phải xuất thêm cả năm bảng vào bản sao riêng bằng các lựa chọn `--table` tương ứng; ghi số hàng và phục hồi cùng bản schema riêng tư. Chỉ xuất `veridra_private` sẽ thiếu lịch sử điều phối cũ. Trước khi mở môi trường phục hồi, bật bảo vệ từng hàng và thu hồi toàn bộ quyền của `PUBLIC`, `anon`, `authenticated` trên các bảng cũ; không tạo chính sách cho phép đọc công khai.
+
 Với `pg_dump`, chọn định dạng riêng `--format=custom`, chọn schema `--schema=veridra_private`, xuất vào tệp mới và yêu cầu nhập mật khẩu `--password`. Giá trị host, port, username và database lấy nguyên từ Connect; không điền tên giả rồi coi là đã chạy. Ghi nhận mã thoát và cảnh báo. Bản chọn một schema không tự chứa mọi phụ thuộc: ghi riêng phiên bản/phần mở rộng đang dùng để chuẩn bị đích tương thích.
 
 Trong **Supabase → Storage**, mở đúng kho riêng tư, tải **mọi tệp trong mọi thư mục người dùng**, giữ nguyên đường dẫn `<người dùng>/<tác vụ>.pdf`. Không chỉ tải các PDF đang nhìn thấy ở trang đầu. Nếu số lượng vượt khả năng đối soát thủ công, dùng đường API có phân trang; không công nhận bản tải một phần.

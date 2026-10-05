@@ -44,6 +44,8 @@ Mỗi bước cập nhật trạng thái thật và phần cần người dùng 
 
 ## A — Nghiệp vụ và cách chấm (làm trước)
 
+Đối soát an toàn cloud ngày 05/10: đã khóa quyền đọc API trên năm bảng lịch sử điều phối cũ có dữ liệu trong `public`; quyền và số hàng được kiểm trực tiếp trước/sau. Kho tệp vẫn riêng tư, schema ứng dụng không mở cho vai trò API. [Bằng chứng kiểm quyền](../design-work/qa/CLOUD-SECURITY-20261005.md). Đây là phần đã hoàn thành của D1, không thay kiểm truy cập chéo, bốn người thật hoặc khôi phục độc lập. Project hiện chưa có `pg_cron`, nên luồng định kỳ khi Render ngủ chưa được nghiệm thu.
+
 Đối soát ngày 05/10: các sửa quy tắc chấm cấu trúc đã có trong mã và vượt qua 67 phép thử liên quan; không còn lấy nhãn nguồn/chữ chờ duyệt/số ví dụ làm chứng nhận nghiệp vụ. Bộ 60 ca kiểm nghiêm ngặt khớp ba nguồn và đáp án, nhưng không thay bộ 24 tác vụ/sáu PDF bắt buộc. [Hồ sơ cách chấm](../design-work/qa/SCORING-AUDIT-20261005.md). A1/A3 còn mở vì chưa có đối soát nội dung và quy trình thật đầy đủ; không cần sửa lại quy tắc đã được xác nhận chỉ để lặp tiến trình.
 
 - [ ] **A1. Chuẩn hóa bộ đo công ty.** Tách kiểm tra nguồn/nghiên cứu khỏi W1–W3 đầy đủ. Bỏ 12 nguồn và 42 giây như điều kiện bắt buộc từ số ví dụ; vẫn đo số nguồn/thời gian. Kiểm nhận định với nội dung nguồn, không chỉ nhãn dẫn chứng; nguồn mâu thuẫn phải được nêu và xử lý, không tự đánh trượt vì phát hiện mâu thuẫn. Không dùng số hành động trái phép bằng 0 gán sẵn hoặc chữ chờ duyệt làm bằng chứng an toàn. Thiếu dữ liệu phải hạ kết luận, không sửa đáp án để đạt. Hiện: quy tắc cấu trúc đã sửa và kiểm lại ngày 05/10; còn thiếu đối soát nhận định–nguồn và quy trình thật trước khi chứng nhận nghiệp vụ.

@@ -14,6 +14,55 @@ from app.services.skills import SkillSpec
 from app.tools.contracts import ToolError
 
 
+def test_legacy_adk_tables_deny_api_roles_without_removing_data():
+    from app.db.framework_security import LEGACY_ADK_TABLES, protect_legacy_framework_tables
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; not proof of cloud readiness")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("PostgreSQL contract only permits the isolated veridra_ci database")
+    engine = create_engine(url)
+    try:
+        with engine.connect() as connection:
+            transaction = connection.begin()
+            try:
+                for role in ("anon", "authenticated"):
+                    if connection.exec_driver_sql(
+                        f"SELECT 1 FROM pg_roles WHERE rolname = '{role}'"
+                    ).scalar_one_or_none() is None:
+                        connection.exec_driver_sql(f"CREATE ROLE {role} NOLOGIN")
+                for table in LEGACY_ADK_TABLES:
+                    assert connection.exec_driver_sql(
+                        f"SELECT to_regclass('public.{table}')"
+                    ).scalar_one_or_none() is None, "Fixture must not replace an existing table"
+                    connection.exec_driver_sql(f"CREATE TABLE public.{table} (id integer)")
+                    connection.exec_driver_sql(f"INSERT INTO public.{table} VALUES (1)")
+                    connection.exec_driver_sql(
+                        f"GRANT SELECT ON public.{table} TO PUBLIC, anon, authenticated"
+                    )
+                protect_legacy_framework_tables(connection)
+                for table in LEGACY_ADK_TABLES:
+                    assert connection.exec_driver_sql(
+                        f"SELECT relrowsecurity FROM pg_class "
+                        f"WHERE oid = 'public.{table}'::regclass"
+                    ).scalar_one() is True
+                    for role in ("anon", "authenticated"):
+                        assert connection.exec_driver_sql(
+                            f"SELECT has_table_privilege('{role}', 'public.{table}', 'SELECT')"
+                        ).scalar_one() is False
+                    assert connection.exec_driver_sql(
+                        f"SELECT count(*) FROM public.{table}"
+                    ).scalar_one() == 1
+                # Repeat protection safely; owner access and rows remain intact.
+                protect_legacy_framework_tables(connection)
+            finally:
+                transaction.rollback()
+    finally:
+        engine.dispose()
+
+
 def test_postgres_skills_owner_revision_concurrency_and_restart():
     url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
     if not url:
@@ -247,7 +296,7 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 4
+            )).scalar_one() == 5
             assert db.execute(text(
                 "SELECT has_schema_privilege('public', 'veridra_private', 'USAGE')"
             )).scalar_one() is False
