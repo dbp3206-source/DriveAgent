@@ -137,6 +137,8 @@ Ghi commit SHA, digest image, URL và thời điểm vào biên bản trước k
 
 ## 8. Rollback và backup
 
+Quy trình khôi phục tách biệt từng bước và điều kiện đối soát: [CLOUD-RECOVERY.md](CLOUD-RECOVERY.md). Hướng dẫn có sẵn không thay thế bằng chứng chạy trên project mới.
+
 - Rollback application: chọn digest SHA đã PASS trong GHCR/Render, không rebuild mã cũ.
 - Trước thay đổi cấu trúc dữ liệu: sao lưu PostgreSQL và các tệp Storage riêng tư,
   gồm danh sách đường dẫn, kích thước và mã kiểm tra SHA256. Không mặc định gói miễn phí
