@@ -168,6 +168,26 @@ def _compact_markdown_sections(text: str, max_words: int) -> str:
     return compacted
 
 
+def _canonical_citation_groups(text: str) -> str:
+    """Expand equivalent grouped citations without changing their positions.
+
+    Leave code, images and Markdown links intact: they are not source markers.
+    This only normalizes spelling; it does not validate claim/source semantics.
+    """
+    pattern = re.compile(
+        r"(?P<code>`+[^`]*(?:`+)|~~~[\s\S]*?~~~)"
+        r"|(?P<link>!?\[[^\]\n]*\]\([^\n]*?\))"
+        r"|(?P<group>(?<![!\\])\[(\s*\d+(?:\s*[,;]\s*\d+)*\s*)\](?!\())"
+    )
+
+    def replace(match: re.Match[str]) -> str:
+        if match.group("group"):
+            return "".join(f"[{number}]" for number in re.findall(r"\d+", match.group()))
+        return match.group()
+
+    return pattern.sub(replace, text)
+
+
 def _numeric_literals(text: str) -> set[str]:
     """Numbers in a format-only rewrite must already exist in the draft."""
 
@@ -586,11 +606,13 @@ async def enforce_presentation_contract(
     if candidate:
         remaining.extend(_explicit_action_violations(user_message, candidate))
         remaining.extend(_explicit_numeric_comparison_violations(candidate))
-    original_markers = re.findall(r"\[(\d+)\]", answer)
+    canonical_answer = _canonical_citation_groups(answer)
+    candidate = _canonical_citation_groups(candidate)
+    original_markers = re.findall(r"\[(\d+)\]", canonical_answer)
     candidate_markers = re.findall(r"\[(\d+)\]", candidate)
     if original_markers != candidate_markers:
         remaining.append("citation_markers_changed")
-    permitted_numbers = _numeric_literals(answer)
+    permitted_numbers = _numeric_literals(canonical_answer)
     if verified_calculations:
         permitted_numbers |= _numeric_literals(json.dumps(verified_calculations))
     if _numeric_literals(candidate) - permitted_numbers:

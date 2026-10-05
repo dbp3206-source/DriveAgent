@@ -198,3 +198,16 @@ Phép đọc Gmail được phép trên e03078b: 14,9 giây, một lượt mô h
 bốn thư được trình bày cùng bốn dẫn nguồn. Chưa có bằng chứng đủ để chứng nhận
 đã đọc đủ năm thư hoặc toàn hộp thư. Không lưu nội dung riêng trong hồ sơ Git.
 Không gửi thư và chưa có Google Doc được tạo trong lượt nghiệm thu này.
+
+## Khóa việc còn lại và sửa cách viết dẫn nguồn
+
+Danh sách điều hành cuối được ghi trong docs/RELEASE-CLOSURE.md theo sáu nhóm
+đã trình người dùng; không mở phạm vi. CI 37323704603 của 4a4577d thành công.
+
+Tái hiện bằng mô hình giả: bản sửa dùng [1, 2] thay [1][2] bị kiểm định dạng từ
+chối dù bộ xử lý nguồn chấp nhận dạng nhóm. Chuẩn hóa nhóm ngay tại vị trí cũ
+trước đối chiếu thứ tự/tần suất và số liệu; giữ nguyên mã, ảnh và liên kết Markdown.
+Không tự thêm dấu mất hoặc đổi nguồn. Bộ kiểm trình bày/nguồn: 104 đạt trong
+5,48 giây; Ruff và diff check đạt. Chưa khẳng định đây là dạng dấu cụ thể của
+lượt live trước vì dấu vết không lưu bản sửa bị từ chối. Chưa chứng nhận chất
+lượng ngữ nghĩa hay câu trả lời cloud từ phép kiểm mô hình giả.

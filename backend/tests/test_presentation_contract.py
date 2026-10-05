@@ -11,6 +11,53 @@ from app.agent.presentation import (
 from app.agent.source_calculations import SOURCE_NUMERIC_FIDELITY_INSTRUCTION
 
 
+@pytest.mark.parametrize("markers", ["[1, 2]", "[1;2]", "[1,2]", "[ 1 ][ 2 ]"])
+async def test_format_repair_accepts_equivalent_grouped_citations(markers):
+    original = "Nội dung nguồn [1][2]."
+    candidate = " ".join(["phân tích"] * 30) + f" {markers}."
+
+    class Models:
+        async def generate_content(self, **_kwargs):
+            return SimpleNamespace(text=candidate)
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Viết từ 50 đến 80 từ.",
+        answer=original,
+        model_name="gemini-3.8-flash",
+        fallback_model="gemini-3.5-flash-lite",
+        records=records,
+    )
+    assert "[1][2]" in result
+    assert not result.startswith(original)
+
+
+@pytest.mark.parametrize("markers", ["[1]", "[2,1]", "[1,3]", "[1,2,2]",
+                                      "[1,2](https://example.com)", "![1,2](image)",
+                                      "`[1,2]`"])
+async def test_format_repair_still_rejects_changed_or_non_citation_groups(markers):
+    original = "Nội dung nguồn [1][2]."
+
+    class Models:
+        async def generate_content(self, **_kwargs):
+            return SimpleNamespace(text=" ".join(["phân tích"] * 30) + f" {markers}.")
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Viết từ 50 đến 80 từ.",
+        answer=original,
+        model_name="gemini-3.8-flash",
+        fallback_model="gemini-3.5-flash-lite",
+        records=records,
+    )
+    assert result.startswith(original)
+    assert "citation_markers_changed" in records[-1]["violations"]
+
+
 def test_extracts_only_literal_measurable_contracts():
     contract = explicit_presentation_contract(
         "Giải thích trong khoảng 180-250 từ, có hai bullet và bảng so sánh."
