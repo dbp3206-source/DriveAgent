@@ -527,6 +527,7 @@ async def test_adk_sessions_persist_in_private_postgres_schema():
     from google.adk.sessions import DatabaseSessionService
 
     from app.core.config import Settings
+    from app.db.framework_sessions import framework_engine_options, protect_framework_engine
     from app.services.relational_state import prepare_state_schema
 
     url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
@@ -541,21 +542,24 @@ async def test_adk_sessions_persist_in_private_postgres_schema():
     settings = Settings(_env_file=None, database_url=parsed.update_query_dict(
         {"sslmode": "require"}).render_as_string(hide_password=False))
     session_url = make_url(settings.framework_session_database_url).difference_update_query(
-        ["sslmode"]).render_as_string(hide_password=False)
+        ["sslmode", "options"]).render_as_string(hide_password=False)
     sync_engine = create_engine(url)
     try:
         prepare_state_schema(sync_engine)
     finally:
         sync_engine.dispose()
     session_id = f"adk-{uuid4()}"
-    service = DatabaseSessionService(db_url=session_url)
+    # Do not rely on startup search_path: a real cloud pooler ignored it.
+    service = DatabaseSessionService(db_url=session_url, **framework_engine_options(session_url))
+    protect_framework_engine(service.db_engine)
     try:
         await service.create_session(
             app_name="drive_agent", user_id="owner-a", session_id=session_id
         )
     finally:
         await service.close()
-    reopened = DatabaseSessionService(db_url=session_url)
+    reopened = DatabaseSessionService(db_url=session_url, **framework_engine_options(session_url))
+    protect_framework_engine(reopened.db_engine)
     try:
         assert await reopened.get_session(
             app_name="drive_agent", user_id="owner-a", session_id=session_id
@@ -563,5 +567,12 @@ async def test_adk_sessions_persist_in_private_postgres_schema():
         assert await reopened.get_session(
             app_name="drive_agent", user_id="owner-b", session_id=session_id
         ) is None
+        async with reopened.db_engine.connect() as connection:
+            schema_result = await connection.exec_driver_sql("SELECT current_schema()")
+            assert schema_result.scalar_one() == "veridra_private"
+            table_result = await connection.exec_driver_sql(
+                "SELECT to_regclass('veridra_private.sessions') IS NOT NULL"
+            )
+            assert table_result.scalar_one() is True
     finally:
         await reopened.close()

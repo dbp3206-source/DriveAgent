@@ -278,8 +278,12 @@ class Settings(BaseSettings):
     report_export_max_characters: int = 100_000
     metrics_bearer_token: str = ""
     scheduler_bearer_token: SecretStr | None = None
-    gemini_input_usd_per_million: float = Field(default=0.0, ge=0)
-    gemini_output_usd_per_million: float = Field(default=0.0, ge=0)
+    gemini_input_usd_per_million: float | None = Field(
+        default=None, ge=0, allow_inf_nan=False
+    )
+    gemini_output_usd_per_million: float | None = Field(
+        default=None, ge=0, allow_inf_nan=False
+    )
 
     @property
     def is_local_environment(self) -> bool:

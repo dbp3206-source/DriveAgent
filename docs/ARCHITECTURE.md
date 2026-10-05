@@ -32,6 +32,16 @@ React UI
   hiệu năng vẫn phải được đo trên Render Free trước khi phát hành.
 - LangGraph SQLite checkpointer chỉ là backend so sánh local. Profile cloud bắt buộc ADK.
 
+Phiên ADK mới dùng schema rõ trong câu SQL và đặt `search_path` ở từng giao dịch,
+không chỉ dựa vào tham số khởi tạo URL mà đường gom kết nối cloud có thể bỏ qua.
+Năm bảng ADK cũ trong `public` được giữ để đối soát/quay lui, đã chặn quyền API;
+không tự xóa hoặc chuyển lịch sử. Cần đối chiếu sau triển khai để chứng nhận vị trí lưu thật.
+
+Số đo chi phí không mặc định bằng 0: thiếu giá hoặc thiếu dữ liệu token thì không
+xuất số ước tính. Hai giá cấu hình `DRIVE_AGENT_GEMINI_INPUT_USD_PER_MILLION` và
+`DRIVE_AGENT_GEMINI_OUTPUT_USD_PER_MILLION` là giá hiệu dụng do người vận hành xác
+nhận, không phải hóa đơn hoặc số dư của Google. Giá miễn phí bằng 0 phải được đặt rõ.
+
 ## Multi-user
 
 Chạy local không đồng nghĩa với thiết kế single-user. Các bảng dữ liệu riêng có `user_id`; mọi query đều filter server-side. Frontend không được quyền truyền `user_id` để tránh đọc dữ liệu của người khác.

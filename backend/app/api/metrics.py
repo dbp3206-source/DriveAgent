@@ -71,16 +71,6 @@ async def prometheus_metrics(request: Request) -> Response:
         "Assistant runs containing privacy-bounded telemetry.",
         registry=registry,
     )
-    estimated_cost = Gauge(
-        "drive_agent_model_estimated_cost_usd_total",
-        "Estimated model cost for retained traces using operator-configured prices.",
-        registry=registry,
-    )
-    cost_per_run = Gauge(
-        "drive_agent_model_estimated_cost_usd_per_run",
-        "Estimated model cost divided by observed run count.",
-        registry=registry,
-    )
     cache_hits = Gauge(
         "veridra_model_cache_hits_total",
         "Privacy-safe model/tool cache hit count in retained traces.",
@@ -97,6 +87,7 @@ async def prometheus_metrics(request: Request) -> Response:
         requests.labels(tool=row.tool_name, status=row.status).inc()
         latency.labels(tool=row.tool_name).inc(row.latency_ms or 0)
     run_count = 0
+    complete_usage_runs = 0
     prompt_tokens = output_tokens = cache_hit_count = 0
     for raw in traces:
         try:
@@ -104,6 +95,8 @@ async def prometheus_metrics(request: Request) -> Response:
         except (TypeError, json.JSONDecodeError):
             continue
         run_count += 1
+        has_usage = False
+        usage_complete = True
         for event in events if isinstance(events, list) else []:
             if not isinstance(event, dict):
                 continue
@@ -111,8 +104,19 @@ async def prometheus_metrics(request: Request) -> Response:
                 cache_hit_count += 1
             if event.get("stage") != "usage":
                 continue
+            has_usage = True
+            if not all(
+                isinstance(event.get(field), int)
+                and not isinstance(event.get(field), bool)
+                and event[field] >= 0
+                for field in ("prompt_token_count", "candidates_token_count")
+            ):
+                usage_complete = False
+                continue
             prompt_tokens += int(event.get("prompt_token_count") or 0)
             output_tokens += int(event.get("candidates_token_count") or 0)
+        if has_usage and usage_complete:
+            complete_usage_runs += 1
     runs.set(run_count)
     tokens.labels(kind="prompt").set(prompt_tokens)
     tokens.labels(kind="output").set(output_tokens)
@@ -122,12 +126,28 @@ async def prometheus_metrics(request: Request) -> Response:
         open_circuit_count, settings, now=datetime.now(UTC).timestamp()
     )
     circuits_open.set(open_count)
-    cost = (
-        prompt_tokens * settings.gemini_input_usd_per_million
-        + output_tokens * settings.gemini_output_usd_per_million
-    ) / 1_000_000
-    estimated_cost.set(cost)
-    cost_per_run.set(cost / run_count if run_count else 0)
+    # Missing prices are unknown, not zero. Publish only an explicitly priced
+    # estimate with observed runs; a free price of zero must be set deliberately.
+    if (
+        settings.gemini_input_usd_per_million is not None
+        and settings.gemini_output_usd_per_million is not None
+        and run_count > 0
+        and complete_usage_runs == run_count
+    ):
+        cost = (
+            prompt_tokens * settings.gemini_input_usd_per_million
+            + output_tokens * settings.gemini_output_usd_per_million
+        ) / 1_000_000
+        Gauge(
+            "drive_agent_model_estimated_cost_usd_total",
+            "Estimated cost using operator-configured effective prices, not a provider bill.",
+            registry=registry,
+        ).set(cost)
+        Gauge(
+            "drive_agent_model_estimated_cost_usd_per_run",
+            "Estimated model cost divided by observed run count.",
+            registry=registry,
+        ).set(cost / run_count)
     return Response(
         generate_latest(registry),
         media_type="text/plain; version=0.0.4; charset=utf-8",

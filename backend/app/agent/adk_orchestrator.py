@@ -59,6 +59,7 @@ from app.agent.routing import Route, route_request
 from app.auth.permissions import permissions_for_role
 from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Settings
 from app.core.security import redact
+from app.db.framework_sessions import framework_engine_options, protect_framework_engine
 from app.db.models import Message, User
 from app.db.session import SessionFactory
 from app.services.relational_circuit import circuit_store
@@ -163,9 +164,11 @@ class AdkOrchestrator:
         self.circuit = circuit_store(settings, settings.gemini_api_key)
 
     async def initialize(self) -> None:
+        session_url = self.settings.framework_session_database_url
         self.sessions = DatabaseSessionService(
-            db_url=self.settings.framework_session_database_url
+            db_url=session_url, **framework_engine_options(session_url)
         )
+        protect_framework_engine(self.sessions.db_engine)
         if self.settings.gemini_is_configured:
             self.client = genai.Client(
                 api_key=self.settings.gemini_api_key,
