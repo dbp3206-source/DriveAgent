@@ -60,6 +60,7 @@ from app.agent.response_guard import (
 )
 from app.agent.routing import Route, _rag_arguments, route_request
 from app.agent.source_calculations import (
+    SOURCE_CALCULATION_INSTRUCTION,
     CalculatedWireAnswer,
     needs_source_calculation,
     resolve_calculations,
@@ -1248,16 +1249,7 @@ class CompilerOrchestrator:
             )
         )
         if source_calculation:
-            instruction += (
-                "\nYêu cầu tính bằng công cụ: trả expressions gồm tối đa 12 biểu thức số "
-                "chỉ dùng + - * / và ngoặc, mỗi biểu thức tối đa 300 ký tự. "
-                "Chọn số từ dữ kiện đã đọc và thay đổi người dùng, tôn trọng bản sửa mới nhất. "
-                "Nêu căn cứ, đơn vị, giả thuyết; không tự tạo đầu vào. "
-                "Trong answer thay mọi kết quả tính bằng {{calc:0}}, {{calc:1}}, ... "
-                "theo chỉ số expressions. Mỗi biểu thức phải được tham chiếu. "
-                "Không tự điền kết quả, không tuyên bố công cụ đã chạy; máy chủ sẽ tính "
-                "và thay kết quả trước khi trả lời. proposals phải rỗng."
-            )
+            instruction += SOURCE_CALCULATION_INSTRUCTION
         await asyncio.to_thread(
             self.quota.reserve, "flash",
             conservative_tokens(prompt + instruction + json.dumps(wire_schema), 8192),

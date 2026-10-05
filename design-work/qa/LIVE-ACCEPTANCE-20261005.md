@@ -80,6 +80,28 @@ Render MCP trong My Workspace đọc d6ac259, instance `ndmpt`, từ 10:38Z tớ
 
 ### Sửa đọc bảng PDF — kiểm trước khi đẩy staging
 
+### Cloud 1629c45 — kiểm sau triển khai và đọc lại
+
+GitHub CI `37301982475` hoàn thành thành công cả postgres-state và verify. GHCR tag mã commit trả HTTP 200 và digest `sha256:c88dd5eeab99419d71a59cdcbec10252f9fe49b0e9db059a144351243048afeb`. Đã đổi nguồn Existing Image của dịch vụ Render hiện có, không đổi gói; deploy `dep-db1ojlgu01pc73fe0sv0` live 11:30:27Z. Health database/object storage đạt, runtime bắt đầu 11:30:17Z; các kết nối provider không được health kiểm. Logs mức error 11:28:26Z–11:35:46Z trả rỗng, không chứng nhận mọi thời điểm.
+
+Đọc lại từ tệp gốc qua UI thật: điện hoàn tất 13/13, ngân hàng 14/14. Cùng hai source_id được giữ, mã nội dung đổi tương ứng parser; nguồn điện 73.932 ký tự, ngân hàng 60.090. Supabase xác nhận tổng vẫn bảy nguồn/năm job/năm object và bucket không public. Đây là publish lại cùng nguồn từ original, không phải restore độc lập. Truy vấn đối soát đầu thiếu prefix `j.name` báo SQL ambiguous; đã sửa truy vấn chỉ đọc, không thay dữ liệu qua SQL.
+
+P04 kiểm trong phiên Chat mới, cùng câu hỏi khóa: đọc đúng trang 2, đúng bảng 5% và nhận định 16%, không tự chọn/đánh trung bình; 19,3 giây, một lượt mô hình. Phần lỗi số đã sửa trên cloud. Câu trả lời không ghi rõ ngày/dạng dự báo, nên chưa coi toàn bộ đáp án P04 đạt đủ mọi yêu cầu.
+
+P05 có số đúng ACB 4.324/17,6%, BID 7.574/27,2%, chênh 3.250 và 9,6 điểm phần trăm, nguồn trang 2; 12,3 giây, một lượt mô hình. Dấu vết sáu sự kiện có Tính toán. **FAIL giới hạn đơn vị:** câu trả lời tự gán tỷ đồng cho ACB và phép chênh dù bảng không ghi đơn vị chung; không nêu hạn chế như yêu cầu. Đang sửa chính sách diễn đạt có nguồn chung, không sửa oracle hoặc bỏ lỗi để chốt điểm.
+
+Sáu API đọc không cookie đều HTTP 401 trên bản này: memories/skills/artifacts/chat sessions/local sources/evaluation jobs, không gọi model hoặc ghi dữ liệu. Chưa thay phép truy cập chéo bốn người. Supabase đọc quyền: anon/authenticated không có USAGE schema riêng, cả mười quyền SELECT trên năm bảng điều phối lịch sử public đều false. Advisor chỉ trả năm INFO về RLS không policy của các bảng cũ bị khóa; không mở policy để xóa cảnh báo. pg_cron/pg_net chưa cài. Các ca này chưa thay bộ an toàn đầy đủ hoặc thử phục hồi môi trường mới.
+
+P06 13,3 giây, một lượt mô hình, đúng điện 7,2%/kế hoạch 7,5%/chênh 0,3 điểm phần trăm, hai nguồn riêng trang 1 và hai ngày báo cáo. **FAIL phạm vi:** câu trả lời viết lợi nhuận toàn ngành khoảng 20%, trong khi nguồn nói nhóm ngân hàng được theo dõi. Không đổi oracle để chấp nhận suy rộng. Bản sửa kế tiếp bổ sung quy tắc chung giữ tập mẫu, đơn vị đúng từng đối tượng và ngày/trạng thái dự báo; đây là hướng dẫn mô hình, chưa có xác minh ngữ nghĩa xác định từ schema biểu thức số.
+
+Đo mở Chat đã đăng nhập bằng browser thật, máy chủ đang thức: bốn mẫu đầy đủ tới khi có ô câu hỏi là 2.180/4.592/3.497/2.102 ms. Không đủ 20 mẫu để đóng tốc độ; không có mẫu cold. Bốn mẫu đầu dùng snapshot diff và vòng chờ quá ngắn đều chưa thấy ô câu hỏi nên không tính thành số đo usable; đã sửa cách đo dùng snapshot đầy đủ và giới hạn 10 giây. Không lấy thời gian HTTP HTML thay thời gian mở sản phẩm.
+
+### Bản sửa nghiệp vụ tiếp theo — chưa nghiệm thu cloud
+
+Đã sửa trước hẹn: mặc định chọn sự kiện trong 60 phút tới, có timezone rõ; không lấy quá khứ/all-day/cancelled. Job theo owner và fingerprint ID+revision provider+trường nguồn thay dedupe theo giờ. Khi chạy đọc lại Calendar trước nguồn khác: sự kiện đổi/hủy/dời không tiếp tục tạo báo cáo; không tạo chat rỗng. Payload hỏng có checkpoint lỗi an toàn, xóa lease và không cản job sau. Calendar lỗi riêng một owner không cản owner còn lại; lỗi giao dịch chung không bị nuốt. Giữ Google read-only, luồng sáng và quyền hiện có. Chưa có lịch thật dương, nguồn đánh thức ngoài hoặc pg_cron, nên không đóng toàn bộ quy trình trước hẹn.
+
+Kiểm bản sửa đơn vị/phạm vi và scheduler chung: 1.170 máy chủ đạt, 15 không chạy local, 186,13 giây; Ruff backend/scripts và diff check đạt. Scheduler focused 28 đạt; source-contract integration chỉ dùng provider giả, không thay câu trả lời live. Không thay đổi schema dữ liệu, không tăng quota, không tạo dịch vụ trả phí.
+
 Đọc theo tọa độ giữ toàn bộ văn bản gốc, bổ sung các dòng có ít nhất ba cột số căn lặp trên ít nhất ba dòng. Không tự gán tên chỉ tiêu; nhận định nhiều dòng chỉ ghép khi có ranh giới ngang quan sát được, không ghép văn xuôi gần đó theo suy đoán. Xử lý khoảng trắng vô hình chồng lên chữ số; số 0 không bị đổi thành ô rỗng. Phép đối chiếu local trang 2 điện cho dòng chứa HDG giữ `162 | 5% | -43% | 1,101 | 56%` và nhận định cùng dòng 16%. Nhãn dòng gồm cả tên nhóm ngành quan sát được, không chỉ ticker. Không OCR hoặc gửi nội dung mới ra ngoài trong kiểm parser.
 
 Kiểm toàn bộ máy chủ: **1.153 đạt, 15 không chạy, 202,70 giây**. Lệnh đầu chạy từ thư mục backend thiếu đường dẫn scripts, dừng ở bảy lỗi import khi thu thập; đã chạy lại từ gốc với `PYTHONPATH=backend;.`. Ruff phạm vi sửa và git diff --check đạt. Quét bí mật đạt 546 tệp Git-visible và 889 blob lịch sử có giới hạn; không chứng nhận mọi dữ liệu cá nhân. Phép kiểm trang thực đầu dùng đường dẫn tương đối sai trả trạng thái error; chạy lại đường dẫn tuyệt đối đúng trả text, 2,083 giây. Kiểm chuỗi nhãn chỉ `HDG` thất bại vì nhãn còn tên nhóm ngành; đối chiếu dòng thực xác nhận các giá trị, không đổi parser để ép khớp nhãn giả.

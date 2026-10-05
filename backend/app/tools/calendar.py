@@ -30,6 +30,9 @@ class CalendarEventView(BaseModel):
     all_day: bool
     location: str | None = None
     html_link: str | None = None
+    status: str | None = None
+    updated: str | None = None
+    etag: str | None = None
 
 
 class CalendarUpcomingOutput(BaseModel):
@@ -67,7 +70,7 @@ async def calendar_list_upcoming(
                 singleEvents=True,
                 orderBy="startTime",
                 q=payload.query,
-                fields="items(id,summary,start,end,location,htmlLink,status)",
+                fields="items(id,summary,start,end,location,htmlLink,status,updated,etag)",
             )
             .execute
         )
@@ -88,6 +91,9 @@ async def calendar_list_upcoming(
                 all_day=all_day,
                 location=item.get("location"),
                 html_link=item.get("htmlLink"),
+                status=item.get("status"),
+                updated=item.get("updated"),
+                etag=item.get("etag"),
             )
         )
     return CalendarUpcomingOutput(

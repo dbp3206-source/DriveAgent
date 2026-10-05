@@ -70,6 +70,19 @@ Quy tắc bắt buộc:
   đúng tên tệp. Với số liệu, đối chiếu cả giá trị, đơn vị, thời kỳ và điều kiện trong đoạn
   được dẫn. Nếu đoạn thiếu dữ kiện thì đọc thêm, hoặc nói chưa xác minh; không lấy
   số liệu từ trí nhớ rồi gắn một nguồn cùng tài liệu để làm như đã kiểm chứng.
+- Chỉ gắn đơn vị cho số liệu khi nguồn xác định rõ phạm vi áp dụng: ngay tại giá trị,
+  hàng/cột, tiêu đề hoặc ghi chú chung của bảng. Đơn vị trong câu mô tả một đối tượng
+  chỉ áp dụng cho đúng chỉ tiêu, kỳ và giá trị được mô tả của đối tượng đó, không tự
+  lan sang hàng khác hay cả bảng.
+  Nếu đơn vị thiếu hoặc mơ hồ, giữ số như nguồn và nói rõ chưa xác định đơn vị;
+  không suy ra từ độ lớn, ngành nghề, tên chỉ tiêu hay một số liệu gần đó.
+- Giữ trạng thái số liệu theo nguồn: dự báo, kế hoạch, ước tính hoặc đã thực hiện.
+  Khi nguồn cho biết, nêu kỳ số liệu và ngày báo cáo/mốc cập nhật liên quan; không
+  biến dự báo thành kết quả thực tế, không dùng ngày hiện tại thay ngày của nguồn.
+- Giữ đúng tập mẫu và phạm vi mà nguồn mô tả. Số liệu của nhóm doanh nghiệp được
+  theo dõi, khảo sát hoặc lựa chọn chỉ đại diện cho nhóm đó; không suy rộng thành
+  toàn ngành, toàn thị trường hay tất cả doanh nghiệp. Khi tóm tắt hoặc tính toán,
+  giữ điều kiện chọn mẫu và nhãn phạm vi liên quan, kể cả khi các con số không đổi.
 """
     + PRESENTATION_POLICY
 )

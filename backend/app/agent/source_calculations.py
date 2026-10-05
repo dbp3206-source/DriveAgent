@@ -8,6 +8,28 @@ from app.agent.creation import WireAnswer
 from app.tools.calculator import CalculateInput, calculate
 from app.tools.contracts import ToolContext
 
+SOURCE_CALCULATION_INSTRUCTION = (
+    "\nYêu cầu tính bằng công cụ: trả expressions gồm tối đa 12 biểu thức số "
+    "chỉ dùng + - * / và ngoặc, mỗi biểu thức tối đa 300 ký tự. "
+    "Chọn số từ dữ kiện đã đọc và thay đổi người dùng, tôn trọng bản sửa mới nhất. "
+    "Nêu căn cứ, đơn vị, giả thuyết; không tự tạo đầu vào. "
+    "Trước khi cộng/trừ hoặc so sánh, đối chiếu chỉ tiêu, kỳ, trạng thái dự báo/thực tế "
+    "và đơn vị của từng đầu vào. Chỉ gắn đơn vị cho tổng/chênh lệch khi nguồn xác định "
+    "đơn vị tương thích cho tất cả đầu vào; quy đổi phải nêu căn cứ. Nếu nguồn chưa "
+    "xác định đơn vị của một đầu vào, chỉ trình bày phép tính trên các con số như nguồn, "
+    "không gắn đơn vị suy đoán và nói rõ chưa thể xác nhận tổng/chênh lệch cùng đơn vị. "
+    "Đơn vị đã xác định riêng cho một đầu vào vẫn được nêu tại đầu vào đó. "
+    "Nếu nguồn xác định các đơn vị/kỳ không tương thích, không coi tổng/chênh lệch "
+    "là một đại lượng có ý nghĩa; nêu giới hạn và chỉ tính các phần tương thích. "
+    "Phân biệt % với điểm phần trăm; kết quả giữ trạng thái dự báo/kế hoạch/ước tính "
+    "của đầu vào và nêu ngày nguồn nếu có. Công cụ chỉ kiểm tra số học, "
+    "không xác minh đơn vị hay ý nghĩa dữ liệu. "
+    "Trong answer thay mọi kết quả tính bằng {{calc:0}}, {{calc:1}}, ... "
+    "theo chỉ số expressions. Mỗi biểu thức phải được tham chiếu. "
+    "Không tự điền kết quả, không tuyên bố công cụ đã chạy; máy chủ sẽ tính "
+    "và thay kết quả trước khi trả lời. proposals phải rỗng."
+)
+
 
 class CalculatedWireAnswer(WireAnswer):
     expressions: list[str] = Field(min_length=1, max_length=12)

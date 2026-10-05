@@ -41,6 +41,10 @@ async def enqueue_schedule(
     now = datetime.now(ZoneInfo(settings.local_timezone))
     slot = now.strftime("%Y-%m-%d") if payload.kind == "morning" else now.strftime("%Y-%m-%dT%H")
     result = await enqueue_for_invited_users(
-        db, settings, kind=payload.kind, dedupe_key=f"{payload.kind}:{slot}"
+        db,
+        settings,
+        kind=payload.kind,
+        dedupe_key=f"{payload.kind}:{slot}",
+        registry=request.app.state.registry,
     )
     return {"status": "accepted", "request_id": request.state.request_id, **result}

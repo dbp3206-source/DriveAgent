@@ -427,6 +427,74 @@ async def test_context_only_calculation_executes_without_reading_private_sources
     assert result.citations == [source]
 
 
+@pytest.mark.parametrize("table, answer, expected", [
+    (
+        "Hàng | Giá trị\nX | 12\nY | 8\nMô tả riêng: X đạt 12 nghìn đồng.",
+        "X: 12 nghìn đồng [1]; Y: 8, chưa xác định đơn vị [1]. "
+        "Tổng các số: {{calc:0}}; chưa thể xác nhận tổng cùng đơn vị.",
+        "Tổng các số: 20; chưa thể xác nhận tổng cùng đơn vị.",
+    ),
+    (
+        "Bảng: đơn vị giờ\nHàng | Giá trị\nX | 12\nY | 8",
+        "Tổng {{calc:0}} giờ [1].",
+        "Tổng 20 giờ.",
+    ),
+    (
+        "Báo cáo ngày 14/03/2025. Dự báo năm 2026, đơn vị tấn: X=12; Y=8.",
+        "Theo báo cáo ngày 14/03/2025, tổng dự báo năm 2026: {{calc:0}} tấn [1].",
+        "tổng dự báo năm 2026: 20 tấn.",
+    ),
+    (
+        "Trong nhóm doanh nghiệp được khảo sát có X=12 và Y=8; đơn vị triệu đồng.",
+        "Tổng của nhóm doanh nghiệp được khảo sát: {{calc:0}} triệu đồng [1].",
+        "Tổng của nhóm doanh nghiệp được khảo sát: 20 triệu đồng.",
+    ),
+])
+async def test_source_metadata_contract_reaches_calculation_provider(
+    runtime, monkeypatch, table, answer, expected,
+):
+    """Offline contract test, not a claim that a live model obeys semantic rules."""
+    from app.tools.calculator import CalculateInput, calculate
+
+    runner, user, session_id = runtime
+    source = {"file_id": "local:units", "file_name": "units.md", "chunk_index": 0,
+              "snippet": table, "score": 1.0}
+    async with compiler.SessionFactory() as db:
+        db.add(Message(user_id=user.id, session_id=session_id, role="assistant",
+                       content="Đã đọc bảng [1].", citations_json=json.dumps([source])))
+        await db.commit()
+    calls = []
+
+    async def generate(self, request, stream=False):
+        instruction = str(request.config.system_instruction)
+        assert "không tự lan sang hàng khác hay cả bảng" in " ".join(instruction.split())
+        assert "chưa thể xác nhận tổng/chênh lệch cùng đơn vị" in instruction
+        assert "không biến dự báo thành kết quả thực tế" in " ".join(instruction.split())
+        assert "không xác minh đơn vị hay ý nghĩa dữ liệu" in instruction
+        assert "Giữ đúng tập mẫu và phạm vi mà nguồn mô tả" in instruction
+        assert "không suy rộng thành toàn ngành" in " ".join(instruction.split())
+        payload = json.loads(request.contents[-1].parts[0].text)
+        assert table in [item["snippet"] for item in payload["source_references"]]
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
+            text=json.dumps({"answer": answer, "expressions": ["12+8"]}, ensure_ascii=False),
+        )]))
+
+    async def execute(name, arguments, context):
+        assert name == "calculate"
+        calls.append(arguments)
+        return calculate(CalculateInput.model_validate(arguments))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="metadata-calculation",
+        user_message="Chỉ dùng ngữ cảnh, tính tổng bằng calculate.", route_override=Route(),
+    )
+    assert expected in result.answer
+    assert calls == [{"operation": "expressions", "values": ["12+8"]}]
+    assert {"stage": "tool", "tool": "calculate", "status": "success"} in result.trace
+
+
 async def test_document_question_uses_live_source_synthesis_not_golden_answer(
     runtime, monkeypatch
 ):

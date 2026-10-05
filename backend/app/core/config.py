@@ -278,6 +278,7 @@ class Settings(BaseSettings):
     report_export_max_characters: int = 100_000
     metrics_bearer_token: str = ""
     scheduler_bearer_token: SecretStr | None = None
+    pre_meeting_lead_minutes: int = Field(default=60, ge=1, le=1440)
     gemini_input_usd_per_million: float | None = Field(
         default=None, ge=0, allow_inf_nan=False
     )

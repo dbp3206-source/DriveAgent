@@ -83,6 +83,8 @@ async def test_calendar_tool_is_read_only_and_omits_attendee_details():
         "location": "Meet",
         "htmlLink": "https://calendar.google.com/event?eid=1",
         "status": "confirmed",
+        "updated": "2026-09-25T08:00:00Z",
+        "etag": '"revision-1"',
         "attendees": [{"email": "private@example.com"}],
     }
     request = SimpleNamespace(execute=lambda: {"items": [event]})
@@ -101,6 +103,9 @@ async def test_calendar_tool_is_read_only_and_omits_attendee_details():
     ):
         result = await calendar_list_upcoming(CalendarUpcomingInput(days=7), context)
     assert result.events[0].title == "Trao đổi Acme"
+    assert result.events[0].updated == event["updated"]
+    assert result.events[0].etag == event["etag"]
+    assert result.events[0].status == "confirmed"
     assert "private@example.com" not in result.model_dump_json()
     assert events_api.list.__name__ == "<lambda>"
 
