@@ -6,9 +6,15 @@ Kiểm tra công cụ ngày 05/10/2026: chạy `python -m pytest backend/tests/t
 
 ## 1. Chuẩn bị và dừng ghi
 
+Ngày 05/10 đã tạo đích thử miễn phí được chủ sở hữu cho phép:
+`Veridra-restore-check-20261005` (`scsxkanbmtexylgbrsla`), khác project nguồn
+`ltvzdrvjmljvrnhwxade`. Chưa chuyển dữ liệu hoặc đóng điều kiện khôi phục.
+Máy có `pg_dump` và `pg_restore` 17.10 trong
+`C:/Program Files/PostgreSQL/17/bin`; cần gọi đường dẫn đầy đủ vì chưa có trên PATH.
+
 - Ghi lại phiên bản mã, mã ảnh Docker, phiên bản PostgreSQL, phiên bản di trú và tên kho tệp từ cấu hình Render. Mặc định kho là `veridra-private`; xác nhận giá trị thực tế trước khi dùng.
 - Chọn một khoảng bảo trì: ngừng nhận tác vụ mới, chờ tác vụ đang chạy kết thúc, dừng worker và nguồn tạo tác vụ định kỳ. Không chỉ đóng tab trình duyệt. Giữ nguyên trạng thái thao tác Google chưa rõ kết quả; không tự gửi lại sau khôi phục.
-- Dùng công cụ PostgreSQL cùng phiên bản lớn với máy chủ nguồn. Máy hiện tại chưa xác nhận có `pg_dump` / `pg_restore`; không chạy Docker nặng chỉ để có hai công cụ này.
+- Dùng công cụ PostgreSQL cùng phiên bản lớn với máy chủ nguồn. Đã xác nhận công cụ 17 ở đường dẫn trên; không chạy Docker nặng chỉ để có hai công cụ này.
 - Tạo thư mục riêng, ngoài Git, trên ổ mã hóa và chỉ tài khoản chủ sở hữu được truy cập. Kiểm đủ dung lượng trước khi tải. Bản sao và bản giải mã không được đưa vào GitHub, nhật ký CI hay Chat.
 - Kết nối bằng thông tin trong **Supabase → Connect → Direct → Session pooler**, hoặc kết nối trực tiếp nếu mạng hỗ trợ. Không dùng cổng gom kết nối theo giao dịch. Nhập mật khẩu qua lời nhắc của công cụ, không gắn vào URL hay câu lệnh.
 

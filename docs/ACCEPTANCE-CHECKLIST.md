@@ -31,6 +31,14 @@ Bảy nhóm người dùng nhắc lại có 61 tiêu chí; 29 tiêu chí còn l�
 
 ## Cách triển khai, không chỉ kiểm thử
 
+Đối soát mới nhất ngày 05/10: bản mã `d544a13` đã qua CI `37309375496` và chạy
+trên Render bằng đúng ảnh đã kiểm. Đơn vị chưa rõ trong P05 được giữ đúng, nhưng
+P06 còn suy rộng tập mẫu và diễn giải phép trừ sai thứ tự. Hai mươi lần mở Chat
+đều dùng được; phép đo bằng trình duyệt ghi p95 6,475 giây, có cả độ trễ công cụ,
+chưa chứng minh mốc 5 giây hoặc khởi động sau ngủ. Đích khôi phục miễn phí đã tạo
+theo phép chủ sở hữu; chưa chuyển hoặc kiểm dữ liệu. Không đóng cả nhóm hoặc gộp
+main từ các kết quả thành phần. [Bằng chứng cập nhật](../design-work/qa/LIVE-ACCEPTANCE-20261005.md).
+
 Mỗi điều kiện làm theo cùng một chu trình: **đối chiếu mã và tái hiện → xác định phần thiếu/nguyên nhân → sửa đúng phần cần thiết → kiểm tra tự động → chạy thao tác thật → ghi bằng chứng → đóng điều kiện**. Phần đã hoạt động không xây lại; phần không có tác động nghiệp vụ, không bắt buộc cuối khóa/an toàn/phát hành thì không thêm.
 
 1. **Chốt nghiệp vụ và mẫu:** định vị trợ lý chuẩn bị tư vấn khách hàng doanh nghiệp; ba quy trình W1–W3; đầu ra và phương pháp phân tích; chuẩn hóa bộ chấm. Đầu ra: hợp đồng nghiệp vụ, mẫu/đáp án và ma trận ProtonX.

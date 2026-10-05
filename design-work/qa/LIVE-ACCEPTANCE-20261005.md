@@ -98,6 +98,18 @@ P06 13,3 giây, một lượt mô hình, đúng điện 7,2%/kế hoạch 7,5%/c
 
 ### Bản sửa nghiệp vụ tiếp theo — chưa nghiệm thu cloud
 
+### Cloud d544a13 — đối soát sau triển khai
+
+CI `37309375496` thành công cho commit `d544a138447e285ee150404ad868a772b2017e73`. GHCR xác nhận HTTP 200, ảnh `sha256:e73f2d0a1227e41b75ac302ee2d6444544241105c44e65b0898583cb3b7009a9`. Render `dep-db1pl23ncjis73bra1u0` hiển thị Live lúc 19:41:30 giờ Việt Nam; khởi động 19:41:24, database/kho tệp xác nhận qua health. Không gộp main hoặc dùng health để chứng nhận chức năng Google/Gemini. Supabase đọc trực tiếp vẫn có năm object, bucket riêng tư, anon/authenticated không có USAGE schema ứng dụng; pg_cron/pg_net chưa có.
+
+P05 chạy trong phiên mới qua Chat thật: đúng 4.324/17,6%, 7.574/27,2%, chênh 3.250/9,6 điểm phần trăm; giữ số trần, nêu bảng thiếu đơn vị chung và ngày dự báo 30/03/2026, trang 2. 16,1 giây, một lượt mô hình, dấu vết có Tính toán. Lỗi tự gán đơn vị đã khắc phục trong lượt này. Chưa nêu riêng đơn vị tỷ đồng ở nhận định BID như oracle chi tiết, nên không chấm đủ toàn ca.
+
+P06 có đúng số, hai nguồn trang 1 và ngày riêng, 14,0 giây, một lượt mô hình. **Vẫn KHÔNG ĐẠT:** suy rộng nhóm ngân hàng MBS theo dõi thành toàn ngành; câu diễn giải viết 7,2 trừ 7,5 cho độ lớn dương 0,3, không rõ dấu/thứ tự. Công cụ tính toán không chứng minh diễn giải đúng. Không thay đáp án, không lấy kiểm thử provider giả làm bằng chứng ngữ nghĩa. Quy tắc nhắc mô hình chưa đủ để đóng lỗi này.
+
+Đo mở Chat đã đăng nhập trên cùng d544a13, máy chủ đang thức: 20/20 thấy ô câu hỏi. Mẫu ms: 2920, 5373, 5124, 6378, 5148, 3464, 4677, 5166, 5467, 5233, 5390, 4233, 2959, 5879, 6064, 3131, 5493, 5983, 6475, 6668. p50=5.303 ms; p95 nearest-rank=6.475 ms. Phương pháp đo từ trước reload tới snapshot đầy đủ thấy ô câu hỏi, gồm độ trễ điều khiển trình duyệt/đọc snapshot; không phải độ trễ mạng thuần hoặc phép phân tích nguyên nhân chậm. Chưa chứng minh mốc warm <=5 giây; chưa có ba mẫu khởi động sau ngủ. Không ghép bốn mẫu bản trước vào bộ này.
+
+Người dùng cho phép project khôi phục miễn phí trong tổ chức Veridra. Công cụ Supabase báo chi phí 0/tháng; đã tạo `Veridra-restore-check-20261005`, project `scsxkanbmtexylgbrsla`, riêng biệt nguồn `ltvzdrvjmljvrnhwxade`, PostgreSQL 17.11, trạng thái ACTIVE_HEALTHY. **Chưa sao chép/khôi phục dữ liệu**. Đã tìm thấy và chạy `pg_dump`/`pg_restore` 17.10 tại `C:/Program Files/PostgreSQL/17/bin`; nhận định trước đây không có công cụ trên PATH không còn đồng nghĩa chưa cài. Còn cần kết nối có mật khẩu và bí mật kho tệp được nhập an toàn, không ghi vào Chat/Git.
+
 Đã sửa trước hẹn: mặc định chọn sự kiện trong 60 phút tới, có timezone rõ; không lấy quá khứ/all-day/cancelled. Job theo owner và fingerprint ID+revision provider+trường nguồn thay dedupe theo giờ. Khi chạy đọc lại Calendar trước nguồn khác: sự kiện đổi/hủy/dời không tiếp tục tạo báo cáo; không tạo chat rỗng. Payload hỏng có checkpoint lỗi an toàn, xóa lease và không cản job sau. Calendar lỗi riêng một owner không cản owner còn lại; lỗi giao dịch chung không bị nuốt. Giữ Google read-only, luồng sáng và quyền hiện có. Chưa có lịch thật dương, nguồn đánh thức ngoài hoặc pg_cron, nên không đóng toàn bộ quy trình trước hẹn.
 
 Kiểm bản sửa đơn vị/phạm vi và scheduler chung: 1.170 máy chủ đạt, 15 không chạy local, 186,13 giây; Ruff backend/scripts và diff check đạt. Scheduler focused 28 đạt; source-contract integration chỉ dùng provider giả, không thay câu trả lời live. Không thay đổi schema dữ liệu, không tăng quota, không tạo dịch vụ trả phí.

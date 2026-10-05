@@ -104,11 +104,15 @@ gọi `POST https://<render-host>/api/internal/scheduler/enqueue`, header
 application/json`.
 
 - Buổi sáng: body `{"kind":"morning"}`, chạy một lần mỗi sáng theo giờ Việt Nam.
-- Trước cuộc họp: body `{"kind":"pre_meeting"}`, chạy mỗi giờ trong giờ làm việc.
+- Trước cuộc họp: body `{"kind":"pre_meeting"}`, chạy mỗi 5 phút trong giờ làm việc.
+  Mặc định chỉ chọn cuộc hẹn có giờ bắt đầu trong 60 phút tới;
+  `DRIVE_AGENT_PRE_MEETING_LEAD_MINUTES` điều chỉnh khoảng này từ 1 đến 1.440 phút.
 
 Token phải lưu trong Supabase Vault/secret của Cron, không viết vào repository hoặc báo cáo.
 Endpoint chỉ enqueue tối đa bốn user đã mời, đang hoạt động và đã kết nối Google. Dedupe theo
-ngày/giờ nên gọi lại không tạo bản trùng. Worker có lease 5 phút, tối đa ba attempt; kết quả
+ngày cho tác vụ sáng; tác vụ trước hẹn theo từng sự kiện và phiên bản nguồn nên gọi lại
+không tạo bản trùng. Trước khi xử lý, worker đọc lại lịch; hẹn đã đổi, hủy hoặc qua giờ
+không được tiếp tục với nội dung cũ. Worker có lease 5 phút, tối đa ba attempt; kết quả
 read-only được lưu thành phiên Chat. Tác vụ trước cuộc họp đọc Calendar, header Gmail liên
 quan và nguồn web mới có citation; lỗi một nguồn được ghi cảnh báo trong bản xem trước.
 
