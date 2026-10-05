@@ -68,6 +68,24 @@ Render MCP đọc trong My Workspace do người dùng xác nhận: 2026-10-05T1
 
 ## Kiểm mã bản sửa kế tiếp — chưa thay bằng chứng cloud
 
+### Đối soát cloud d6ac259 — không gộp với kết quả bản trước
+
+GitHub CI 37296955324 hoàn thành thành công, gồm PostgreSQL thật và kiểm image chạy. Render `dep-db1nrfqd0e5s738krf4g` đã live với đúng ảnh `sha256:e7a243642638e10cc8c05860f88cc99856427669807b1f4384c3d757a9dd3673`, hoàn tất 10:38:31Z. Health HTTP 200 xác nhận database và object storage; cấu hình Gemini toàn cục tắt là chủ đích khóa riêng, không phải phép kiểm khóa người dùng. Nhật ký mức lỗi trong khoảng 10:36:50Z–10:40:29Z trả rỗng; không suy ra không có lỗi mọi thời điểm.
+
+P02 kiểm lại qua Chat thật: đúng 5.671/23,8%, 4.230/31,1%, tổng 9.901 và chênh 7,3 điểm phần trăm, trích trang 2; 14,2 giây, hai lượt mô hình. Dấu vết bảy sự kiện có tìm tài liệu, đọc tài liệu và **Tính toán**. Ca này đạt đối soát kết quả và tuyến công cụ trên d6ac259, không thay điểm toàn bộ nhóm.
+
+P04 kiểm lại đã đọc đúng trang 2 nhưng trả **62%** thay vì **5%** trong bảng, so với 16% ở nhận định. Ca vẫn FAIL, 17,3 giây, một lượt mô hình. Đối chiếu trích xuất local cho thấy số 162 bị tách thành `1 62`, cột và nhận định chưa được tách đủ rõ. Đã sửa cách đọc theo tọa độ ký tự và dòng số căn cột; chưa xác nhận sửa thành công trên cloud. Nguồn đã lưu phải được đọc lại từ PDF gốc, không dùng câu trả lời cũ làm bằng chứng.
+
+Render MCP trong My Workspace đọc d6ac259, instance `ndmpt`, từ 10:38Z tới 11:07Z: RAM tối đa trong các mẫu phút là 215.797.760 byte (~205,8 MiB), so với giới hạn 536.870.900 byte (~512 MiB), khoảng 40,2%. CPU cao nhất ghi nhận 0,101141214/0,15 ở 10:39Z (~67,4%); sau đó các mẫu không vượt 0,0302986. Đây là mẫu quan sát một admin, không phải kiểm bốn người hoặc đỉnh giữa các mẫu. Độ trễ HTTP trả rỗng, không công bố p95 giả.
+
+### Sửa đọc bảng PDF — kiểm trước khi đẩy staging
+
+Đọc theo tọa độ giữ toàn bộ văn bản gốc, bổ sung các dòng có ít nhất ba cột số căn lặp trên ít nhất ba dòng. Không tự gán tên chỉ tiêu; nhận định nhiều dòng chỉ ghép khi có ranh giới ngang quan sát được, không ghép văn xuôi gần đó theo suy đoán. Xử lý khoảng trắng vô hình chồng lên chữ số; số 0 không bị đổi thành ô rỗng. Phép đối chiếu local trang 2 điện cho dòng chứa HDG giữ `162 | 5% | -43% | 1,101 | 56%` và nhận định cùng dòng 16%. Nhãn dòng gồm cả tên nhóm ngành quan sát được, không chỉ ticker. Không OCR hoặc gửi nội dung mới ra ngoài trong kiểm parser.
+
+Kiểm toàn bộ máy chủ: **1.153 đạt, 15 không chạy, 202,70 giây**. Lệnh đầu chạy từ thư mục backend thiếu đường dẫn scripts, dừng ở bảy lỗi import khi thu thập; đã chạy lại từ gốc với `PYTHONPATH=backend;.`. Ruff phạm vi sửa và git diff --check đạt. Quét bí mật đạt 546 tệp Git-visible và 889 blob lịch sử có giới hạn; không chứng nhận mọi dữ liệu cá nhân. Phép kiểm trang thực đầu dùng đường dẫn tương đối sai trả trạng thái error; chạy lại đường dẫn tuyệt đối đúng trả text, 2,083 giây. Kiểm chuỗi nhãn chỉ `HDG` thất bại vì nhãn còn tên nhóm ngành; đối chiếu dòng thực xác nhận các giá trị, không đổi parser để ép khớp nhãn giả.
+
+Chưa có bằng chứng câu trả lời cloud từ parser sửa này; phải triển khai ảnh đã qua CI và bấm đọc lại từ tệp gốc. Cùng nguồn_id được giữ qua cơ chế reextract đã có kiểm thử, không xóa nguồn người dùng hoặc nạp thành bản trùng.
+
 Đã sửa chung nhận diện yêu cầu số học có nguồn, đọc trang vật lý rõ ràng ở cả điều phối ADK và bước thu thập xác định, đọc tiếp có giới hạn và quyền chủ tài liệu. Không lấy snippet tìm kiếm trang khác làm citation của trang đã chọn. Phạm vi trang bị phủ định không tự được đọc; trang thiếu không chuyển sang tìm kiếm trang khác; yêu cầu nhiều tệp có phạm vi trang không rõ bị từ chối để làm rõ. Quy tắc tính toán không nhầm tóm tắt với tổng số hoặc bắt tính lại tỷ lệ đã được nguồn công bố khi người dùng chỉ hỏi đọc.
 
 Kiểm thực local: toàn bộ máy chủ 1.144 đạt, 15 không chạy, 216,50 giây; các phép PostgreSQL thật còn cần CI. Giao diện 176/176 đạt; thêm nhãn người dùng được kiểm lại 5/5; lint và TypeScript/Vite build đạt. Ruff dùng đúng cấu hình CI cho backend và scripts đều đạt. Lệnh gộp Ruff ban đầu dùng sai cấu hình cho scripts trả 21 lỗi; không sửa hàng loạt tệp không liên quan, đã chạy lại hai lệnh đúng cấu hình. Lần toàn bộ đầu tiên thu thập giữa lúc test đang viết gặp tên tham số `request` dành riêng của pytest; đã đổi tên và toàn bộ lần sau đạt.

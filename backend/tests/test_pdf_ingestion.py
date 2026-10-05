@@ -5,6 +5,7 @@ import pytest
 
 from app.services.pdf_ingestion import (
     PageExtraction,
+    aligned_numeric_rows,
     extract_page,
     native_page_text,
     parse_ocr_tsv,
@@ -24,6 +25,7 @@ def test_table_escapes_pipes_and_pads_rows():
     text = table_markdown([["Hạng mục", "Giá"], ["A|B", 120], ["Chưa có"]])
     assert "A\\|B" in text and "120" in text
     assert "| Chưa có |  |" in text
+    assert "| zero | 0 |" in table_markdown([["Metric", "Value"], ["zero", 0]])
 
 
 def test_tsv_ignores_nonwords_and_weights_confidence():
@@ -62,7 +64,8 @@ def test_historical_pdf_ocr_is_quarantined_without_deleting_source():
 
 def test_native_text_and_table_share_original_page(monkeypatch, tmp_path):
     page = SimpleNamespace(extract_text=lambda **kwargs: "Native document " * 8,
-                           extract_tables=lambda: [[["Metric", "Value"], ["Revenue", "100"]]])
+                           extract_tables=lambda **_kwargs: [
+                               [["Metric", "Value"], ["Revenue", "100"]]])
 
     class Pdf:
         pages = [page]
@@ -83,7 +86,8 @@ def test_native_text_and_table_share_original_page(monkeypatch, tmp_path):
 
 def test_empty_page_does_not_become_success_without_ocr(monkeypatch, tmp_path):
     class Pdf:
-        pages = [SimpleNamespace(extract_text=lambda **kwargs: "", extract_tables=lambda: [])]
+        pages = [SimpleNamespace(extract_text=lambda **kwargs: "",
+                                 extract_tables=lambda **_kwargs: [])]
 
         def __enter__(self):
             return self
@@ -104,7 +108,8 @@ def test_empty_page_does_not_become_success_without_ocr(monkeypatch, tmp_path):
 
 def test_language_only_tessdata_uses_renderer_flag_and_rejects_plain_text(monkeypatch, tmp_path):
     class Pdf:
-        pages = [SimpleNamespace(extract_text=lambda **kwargs: "", extract_tables=lambda: [])]
+        pages = [SimpleNamespace(extract_text=lambda **kwargs: "",
+                                 extract_tables=lambda **_kwargs: [])]
 
         def __enter__(self):
             return self
@@ -189,3 +194,75 @@ def test_prominent_lines_keep_cover_title_separate_from_column_labels(tmp_path):
     result = extract_page(path, 1, ocr_enabled=False)
     assert "Department one" in result.text
     assert lines in result.text
+
+
+def test_native_borderless_numeric_rows_preserve_values_and_multiline_comments(tmp_path):
+    from reportlab.pdfgen.canvas import Canvas
+
+    path = tmp_path / "borderless.pdf"
+    canvas = Canvas(str(path), pagesize=(600, 800))
+    canvas.setFont("Helvetica", 9)
+    canvas.drawString(20, 770, "Forecast values and source commentary")
+    canvas.drawString(110, 750, "Amount")
+    canvas.drawString(175, 750, "Growth")
+    canvas.drawString(235, 750, "Change")
+    for index, (amount, growth, change) in enumerate([
+        ("162", "5%", "-43%"), ("2,830", "11%", "10%"), ("0", "-50%", "129%"),
+    ]):
+        top = 730 - index * 70
+        canvas.setFillColorRGB(.9, .9, .9)
+        canvas.rect(20, top - 65, 550, 65, fill=1, stroke=0)
+        canvas.setFillColorRGB(0, 0, 0)
+        canvas.drawString(25, top - 32, f"Item{index}")
+        for value, x in zip((amount, growth, change), (150, 210, 270), strict=True):
+            canvas.drawRightString(x, top - 32, value)
+        # Invisible padding overlaps the first digit, as emitted by PDF producers.
+        canvas.drawString(150 - canvas.stringWidth(amount, "Helvetica", 9), top - 32, " ")
+        canvas.drawString(272, top - 15, f"Comment{index} expects 16% in its own text.")
+        canvas.drawString(272, top - 48, f"Continuation{index} belongs to this row.")
+    canvas.drawString(20, 460, "Unrelated footer remains searchable.")
+    canvas.save()
+    result = extract_page(path, 1, ocr_enabled=False)
+    assert result.status == "text"
+    assert "| Item0 | 162 | 5% | -43% | Comment0 expects 16%" in result.text
+    assert "Continuation0 belongs to this row." in result.text
+    row = next(line for line in result.text.splitlines() if line.startswith("| Item0"))
+    assert "Continuation0" in row and "Comment1" not in row
+    assert "| Item2 | 0 | -50% | 129% |" in result.text
+    assert "Amount" in result.text and "Unrelated footer remains searchable." in result.text
+
+
+def test_geometry_without_row_boundaries_does_not_assign_nearby_prose(tmp_path):
+    import pdfplumber
+    from reportlab.pdfgen.canvas import Canvas
+
+    path = tmp_path / "unruled.pdf"
+    canvas = Canvas(str(path), pagesize=(600, 800))
+    canvas.setFont("Helvetica", 10)
+    for index in range(3):
+        y = 700 - index * 40
+        canvas.drawString(25, y, f"Record{index}")
+        for value, x in zip(("162", "5%", "-43%"), (150, 210, 270), strict=True):
+            canvas.drawRightString(x, y, value)
+        canvas.drawString(300, y + 15, f"Unassociated comment {index}")
+    canvas.save()
+    with pdfplumber.open(path) as pdf:
+        rows = aligned_numeric_rows(pdf.pages[0])
+    assert "| Record0 | 162 | 5% | -43% |  |" in rows
+    assert "Unassociated comment" not in rows
+    assert "Unassociated comment" in extract_page(path, 1, ocr_enabled=False).text
+
+
+def test_numeric_prose_without_repeated_columns_is_not_a_table(tmp_path):
+    import pdfplumber
+    from reportlab.pdfgen.canvas import Canvas
+
+    path = tmp_path / "prose.pdf"
+    canvas = Canvas(str(path), pagesize=(600, 800))
+    canvas.setFont("Helvetica", 10)
+    for index in range(4):
+        canvas.drawString(25, 700 - index * 20,
+                          f"Paragraph {index} discussed a value of 162 and a change of 5%.")
+    canvas.save()
+    with pdfplumber.open(path) as pdf:
+        assert aligned_numeric_rows(pdf.pages[0]) == ""
