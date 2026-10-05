@@ -144,3 +144,37 @@ Nhãn giải thích dấu vết và tiến độ PDF được diễn đạt ti�
 Đã dùng thao tác thật trong trình duyệt thanh bên để lọc Drive, cập nhật nguồn ảnh Render, xem kết quả triển khai và gửi/đọc Chat. Supabase chỉ đọc quyền, số hàng, danh sách bảng và phiên bản di trú, không xuất nội dung hội thoại. Kiểm mã local toàn bộ trước lượt này: 1.068 đạt, 15 không chạy; GitHub đã kiểm PostgreSQL thật của bản e894fe8.
 
 Các mục còn chặn gồm bộ nghiệp vụ đủ mẫu, luồng đầu ngày/trước hẹn/duyệt và đọc lại, bộ nhớ đầy đủ, tốc độ khởi động/tài nguyên, khôi phục độc lập, bốn người thật và cùng phiên bản cuối. Không gộp nhánh chính hoặc tuyên bố sẵn sàng phát hành từ các kết quả thành phần ở trên.
+
+### Cloud e03078b và sửa lỗi độ dài — ngày 05/10
+
+CI `37314836461` thành công; ảnh được đối chiếu theo commit là
+`sha256:fde145ce1a5601fbd422097078ff9d927a73b3f808114d640202028f793de723`.
+Render `dep-db1q7vdg1s2s73bbkvm0` Live lúc 20:21:58 giờ Việt Nam.
+Đây chưa phải phiên bản được nghiệm thu toàn bộ.
+
+Trong phiên mới, báo cáo giả lập Minh Phát đọc đúng hai tệp, giữ bản sửa 24 người,
+tính 5.760 phút và tiết kiệm giả thuyết 1.152 phút; 17,0 giây, một lượt mô hình.
+**Không đạt độ dài:** yêu cầu khoảng 220 từ nhưng trả lời khoảng 90 từ, không có
+sự kiện kiểm định dạng. Đã xác định parser chỉ nhận khoảng hai số, không nhận
+mục tiêu một số. Sửa chung nhận diện độ dài với dung sai 10%, giữ nguyên giới hạn
+chính xác/tối đa/tối thiểu; không sửa riêng prompt hoặc bỏ yêu cầu nghiệm thu.
+80 phép kiểm trình bày đạt; toàn bộ backend **1.199 đạt, 15 bỏ qua local, 223,85 giây**.
+Ruff phạm vi sửa và diff check đạt. Quét bí mật trước push: 547 tệp và 910 blob lịch
+sử có giới hạn đạt; không phải chứng nhận mọi dữ liệu cá nhân.
+
+Hỏi tiếp trong phiên bằng giới hạn 200–240 từ: trả lại 24 người, 96 giờ/tháng,
+tiết kiệm giả thuyết 19,2 giờ, còn 76,8 giờ, ba câu hỏi và hai nguồn lịch sử;
+19,7 giây, hai lượt mô hình, 10 sự kiện. Đây là bằng chứng thành phần của ngữ cảnh
+và báo cáo, chưa đóng toàn bộ bộ nhớ hoặc quy trình. Chuẩn bị xuất Google Doc đã
+hiện bước xác nhận; sau duyệt bị chính sách chỉ đọc chặn, **chưa tạo tài liệu**.
+Chủ sở hữu xác nhận bật riêng quyền Doc quản trị; đã lưu
+`DRIVE_AGENT_BETA_OWNER_DOCUMENT_WRITES=true` bằng Save only trong Render.
+Chưa hiệu lực runtime cho tới triển khai; không đổi quyền gửi thư hoặc người khác.
+
+P06 trên e03078b: 12,9 giây, một lượt mô hình; đọc hai trang 1, phép trừ 7,5–7,2
+cho 0,3 đúng. **Vẫn không đạt phạm vi:** trả lợi nhuận toàn ngành thay nhóm ngân
+hàng MBS theo dõi; thiếu hai ngày nguồn trong nội dung. Hướng dẫn bảo toàn nguồn
+chưa đủ giải quyết lỗi ngữ nghĩa. Không đánh dấu đạt từ phép tính đúng.
+
+Chủ sở hữu xác nhận đã đặt và lưu mật khẩu project khôi phục thử.
+Chưa nhập mật khẩu vào Chat, chưa chuyển dữ liệu, chưa đóng điều kiện khôi phục.

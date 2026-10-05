@@ -61,6 +61,8 @@ class ExplicitPresentationContract:
                 )
         elif self.max_words is not None:
             parts.append(f"không quá {self.max_words} từ")
+        elif self.min_words is not None:
+            parts.append(f"ít nhất {self.min_words} từ")
         if self.min_bullets is not None:
             parts.append(f"ít nhất {self.min_bullets} bullet Markdown bắt đầu bằng '- '")
         if self.min_numbered_steps is not None:
@@ -124,6 +126,43 @@ def _depth_guidance(question: str) -> tuple[str, ...]:
     )
 
 
+def _single_word_length(question: str) -> tuple[int | None, int | None] | None:
+    """Recognize a requested word count, not an unqualified count in source data.
+
+    A target (including an unqualified requested target) permits +/- 10%, rounded
+    outward to whole words. ``đúng``/``chính xác`` is exact; explicit upper/lower
+    bounds are not widened. Counting follows presentation_contract_violations,
+    so Vietnamese whitespace-separated syllables count as words consistently.
+    """
+    match = re.search(r"(?<![\d.,])(\d{1,4})\s*(?:từ|words?)\b", question, re.I)
+    if not match:
+        return None
+    target = int(match.group(1))
+    if not 1 <= target <= 4000:
+        return None
+    prefix = question[:match.start()].casefold()
+    if re.search(r"\b(?:không cần|không yêu cầu)\s*$", prefix):
+        return None
+    if re.search(r"\b(?:không quá|tối đa|nhiều nhất|at most)\s*$", prefix):
+        return None, target
+    if re.search(r"\b(?:ít nhất|tối thiểu|at least)\s*$", prefix):
+        return target, None
+    if re.search(r"\b(?:đúng|chính xác|exactly)\s*$", prefix):
+        return target, target
+    if not (
+        re.search(r"\b(?:khoảng|xấp xỉ|tầm|around|about)\s*$", prefix)
+        or re.search(r"\b(?:độ dài|dài)\s*(?:là)?\s*$", prefix)
+        or re.search(r"\b(?:báo cáo|bản tóm tắt|bản tư vấn|câu trả lời)\s*$", prefix)
+        or re.search(
+            r"\b(?:viết|soạn|trả lời|tóm tắt|chuẩn bị|write|answer|summarize)\b[^.!?;]{0,80}$",
+            prefix,
+        )
+    ):
+        return None
+    # Integer arithmetic avoids floating-point boundary rounding.
+    return max(1, target * 9 // 10), min(4000, (target * 11 + 9) // 10)
+
+
 def explicit_presentation_contract(question: str) -> ExplicitPresentationContract:
     """Extract measurable constraints and honor natural-language depth requests."""
 
@@ -137,10 +176,13 @@ def explicit_presentation_contract(question: str) -> ExplicitPresentationContrac
     min_headings = None
     depth_profile = None
     depth_guidance: tuple[str, ...] = ()
+    single_word_length = _single_word_length(normalized) if not word_match else None
     if word_match:
         lower, upper = int(word_match.group(1)), int(word_match.group(2))
         if 1 <= lower <= upper <= 4000:
             min_words, max_words = lower, upper
+    elif single_word_length is not None:
+        min_words, max_words = single_word_length
     elif re.search(
         r"\b(?:trả\s+lời|giải\s+thích|nói|tóm\s+tắt)\s+(?:thật\s+)?ngắn\s+gọn\b",
         normalized,

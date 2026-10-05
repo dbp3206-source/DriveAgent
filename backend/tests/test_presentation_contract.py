@@ -41,6 +41,87 @@ def test_bounded_length_instruction_gives_generation_a_concrete_target():
     assert "nhắm khoảng 800 từ" in contract.instruction()
 
 
+@pytest.mark.parametrize("prompt", [
+    "Chuẩn bị báo cáo khoảng 220 từ bằng tiếng Việt.",
+    "Viết bản tư vấn xấp xỉ 220 từ.",
+    "Tóm tắt tầm 220 từ.",
+    "Soạn báo cáo 220 từ.",
+    "Trả lời với độ dài 220 từ.",
+    "Một báo cáo 220 từ, có trích dẫn nguồn.",
+    "Write a report of about 220 words.",
+])
+def test_single_requested_word_target_has_documented_ten_percent_tolerance(prompt):
+    contract = explicit_presentation_contract(prompt)
+    assert (contract.min_words, contract.max_words) == (198, 242)
+    assert contract.active is True
+    assert presentation_contract_violations("ý " * 197, contract) == [
+        "below_explicit_word_minimum"
+    ]
+    assert presentation_contract_violations("ý " * 198, contract) == []
+    assert presentation_contract_violations("ý " * 242, contract) == []
+    assert presentation_contract_violations("ý " * 243, contract) == [
+        "above_explicit_word_maximum"
+    ]
+
+
+@pytest.mark.parametrize("prompt, expected", [
+    ("Viết đúng 100 từ.", (100, 100)),
+    ("Trả lời không quá 100 từ.", (None, 100)),
+    ("Viết tối đa 100 từ.", (None, 100)),
+    ("Trả lời ít nhất 100 từ.", (100, None)),
+    ("Viết khoảng 13 từ.", (11, 15)),
+    ("Viết khoảng 4000 từ.", (3600, 4000)),
+    ("Viết ngắn gọn khoảng 220 từ.", (198, 242)),
+    ("Đào sâu trong khoảng 220 từ.", (198, 242)),
+    ("Viết khoảng 180-250 từ.", (180, 250)),
+])
+def test_explicit_word_targets_and_bounds_override_implicit_defaults(prompt, expected):
+    contract = explicit_presentation_contract(prompt)
+    assert (contract.min_words, contract.max_words) == expected
+    if expected == (100, None):
+        assert contract.instruction() == "ít nhất 100 từ"
+
+
+@pytest.mark.parametrize("prompt", [
+    "Tài liệu có 220 từ. Chủ đề chính là gì?",
+    "Có 220 từ khóa trong dữ liệu, hãy đếm nhóm.",
+    "Viết khoảng 0 từ.",
+    "Viết khoảng 5000 từ.",
+    "Viết khoảng 10000 từ.",
+    "Viết khoảng 1.220 từ.",
+    "Không cần 220 từ.",
+    "Viết trong 250-180 từ.",
+])
+def test_invalid_targets_and_source_counts_do_not_become_length_contracts(prompt):
+    contract = explicit_presentation_contract(prompt)
+    assert contract.min_words is None
+    assert contract.max_words is None
+
+
+async def test_approximate_word_count_activates_existing_bounded_repair_and_trace():
+    repaired = "ý " * 220
+    calls = []
+
+    class Models:
+        async def generate_content(self, **kwargs):
+            calls.append(kwargs)
+            return SimpleNamespace(text=repaired)
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Chuẩn bị báo cáo tư vấn khoảng 220 từ bằng tiếng Việt.",
+        answer="ý " * 90,
+        model_name="gemini-3.5-flash-lite",
+        fallback_model="gemini-3.5-flash-lite",
+        records=records,
+    )
+    assert result.strip() == repaired.strip()
+    assert len(calls) == 1
+    assert records[-1]["status"] == "corrected"
+
+
 def test_source_location_phrase_does_not_require_a_markdown_table():
     contract = explicit_presentation_contract("Giá trị ở ô A2 và N2 trong bảng Chi phí là gì?")
     assert contract.require_markdown_table is False
