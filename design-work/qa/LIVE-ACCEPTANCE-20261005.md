@@ -282,3 +282,30 @@ nghiệm thu thao tác thật trước khi triển khai.
 `backend/evals/release_acceptance.json` tập hợp đúng 24 đầu vào đã khóa:
 6 doanh nghiệp, 6 PDF, 6 quy trình và 6 câu hỏi thông tin cập nhật. Kết quả
 và điểm tổng vẫn để trống; không biến kiểm máy thành điểm chất lượng live.
+
+## Bản e0d1781 — kết quả thực, 06/10
+
+CI `37406191101` đạt cả hai nhóm kiểm PostgreSQL và ứng dụng. Bản triển khai
+`dep-db267gom7kps73dl4om0`, ảnh
+`sha256:0bb005ca5c85a028d086ba3a964660477a80ae451e62de4d9b1036ce26ca00af`
+Live lúc 10:00:06 giờ Việt Nam. Kiểm trên máy: 1.216 đạt, 15 bỏ qua; kiểm mã
+theo cấu hình CI đạt, quét 553 tệp Git không phát hiện bí mật.
+
+Ca A nguyên yêu cầu đã không còn chọn nhầm Gmail; đọc đúng hai nguồn và có
+phép tính 5.760/1.152 phút. Tuy nhiên câu trả lời 23,1 giây vượt yêu cầu
+200–240 từ, có nhãn bản nháp chưa đạt. A chưa đóng. Bản sửa tiếp chỉ làm rõ
+cách máy chủ đếm tiếng Việt và hướng rút gọn riêng khi quá dài, không thêm
+lượt gọi hay cắt mất câu hỏi/cuối báo cáo. 91 phép kiểm trình bày đạt.
+
+Bộ nhớ thử `QA-FINAL-8ad36c0` đã lưu trên màn hình, sửa ba mục thành bốn mục,
+rồi ở phiên Chat mới trả đúng bốn mục, dẫn nguồn và điều chưa biết (21,2 giây).
+Không sửa bộ nhớ thật; chưa chứng nhận toàn bộ chuỗi nhớ/quên khi chưa kiểm
+cất/xóa và đối soát ở phiên mới.
+
+Bản sao sạch `design-work/qa/private/clean-e0d1781`: setup cài 161 gói máy chủ
+và 474 gói giao diện, tạo secret riêng, dựng giao diện đạt. Không sao chép khóa,
+OAuth hoặc dữ liệu thật. Kiểm cấu hình báo thiếu Gemini/OAuth đúng dự kiến;
+khởi động kiểm máy riêng đạt, health trả cơ sở dữ liệu và kho tệp khả dụng.
+Đây chưa phải nghiệm thu đăng nhập Google trên máy sạch. Kiểm thư viện sản
+phẩm phát hiện hai cảnh báo mức thấp (KaTeX/Mermaid), không có mức cao hoặc
+nghiêm trọng; không dùng npm audit fix --force để đổi thư viện ngoài phạm vi.

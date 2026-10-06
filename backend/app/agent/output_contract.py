@@ -462,9 +462,19 @@ async def enforce_presentation_contract(
             "explicit_contract": contract.instruction(),
             "depth_requirements": list(contract.depth_guidance),
             "length_control": target_length,
+            "word_count_method": (
+                "Máy chủ đếm từng tiếng hoặc số tách biệt, không đếm từ ghép tiếng Việt "
+                "như một từ. Ví dụ: 'thời gian tổng hợp' được tính là 4 từ. "
+                "Giữ bản sửa gần điểm giữa khoảng yêu cầu theo cách đếm này."
+            ),
             "measured_draft_words": measured_words,
             "words_needed_to_minimum": max(0, (contract.min_words or 0) - measured_words),
             "revision_guidance": (
+                "Bản hiện tại quá dài. Rút gọn cách diễn đạt và bỏ câu diễn giải lặp, "
+                "không thêm phân tích để kéo dài. Giữ đủ dữ kiện, giả thuyết, điều chưa biết, "
+                "các câu hỏi hoặc việc tiếp theo đã được yêu cầu và mọi trích dẫn. "
+                "Dùng câu ngắn, trực tiếp; không thêm nhận định về hiệu quả chưa đo."
+                if "above_explicit_word_maximum" in initial else
                 "The server measured the draft, not the model. If short, explain additional "
                 "supported mechanisms, assumptions, trade-offs and verification steps to reach "
                 "the midpoint, not merely the minimum. Allocate space to each requested section. "
