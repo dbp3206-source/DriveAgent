@@ -13,7 +13,7 @@ from pydantic import Field
 
 from app.core.config import APPROVED_GEMINI_MODELS
 from app.services.quota import conservative_tokens
-from app.tools.contracts import ToolError
+from app.tools.contracts import ToolError, ToolScopeError
 
 
 class RecoverableGemini(Gemini):
@@ -25,22 +25,22 @@ class RecoverableGemini(Gemini):
     circuit: Any = Field(default=None, exclude=True)
     reserve_primary: bool = Field(default=False, exclude=True)
     enable_fallback: bool = Field(default=True, exclude=True)
+    known_tool_names: set[str] = Field(default_factory=set, exclude=True)
 
     def _validate_tool_calls(self, response: LlmResponse, request: LlmRequest) -> None:
         """Fail closed before ADK dispatches an invented or forbidden tool."""
         for part in getattr(response.content, "parts", None) or ():
             call = getattr(part, "function_call", None)
             if call is not None and call.name not in request.tools_dict:
+                failure = ToolScopeError(
+                    call.name, self.known_tool_names, set(request.tools_dict),
+                )
                 self.records.append({
                     "stage": "guardrail", "status": "blocked",
-                    "rule": "unavailable_tool", "tool": (call.name or "")[:80],
+                    "rule": "unavailable_tool", "tool": failure.blocked_tool,
+                    "offered_tools": failure.offered_tools,
                 })
-                raise ToolError(
-                    "Chưa xác minh được câu trả lời: công cụ cần dùng không có trong "
-                    "phạm vi đã cho phép. Yêu cầu của bạn được giữ nguyên; "
-                    "không có nguồn bị cấm nào được truy cập.",
-                    code="unavailable_tool",
-                )
+                raise failure
 
     async def generate_content_async(
         self,

@@ -31,7 +31,7 @@ from app.api.schemas import (
 from app.core.cursor import decode_cursor, encode_cursor
 from app.core.json_utils import json_list, json_object
 from app.db.models import AuditEvent, AuditStatus, ChatSession, CreationProposalRecord, Message
-from app.tools.contracts import ToolError
+from app.tools.contracts import ToolError, ToolScopeError
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
 logger = logging.getLogger(__name__)
@@ -139,6 +139,9 @@ def _failed_task_diagnostic(exc: BaseException, status: str) -> tuple[str, dict]
         return "Chưa cấu hình model để xử lý yêu cầu.", {"failure_category": "model_configuration"}
     if isinstance(exc, ToolError):
         result = {"failure_category": "application_guard"}
+        if isinstance(exc, ToolScopeError):
+            result["blocked_tool"] = exc.blocked_tool
+            result["offered_tools"] = exc.offered_tools
         if isinstance(exc.code, str) and re.fullmatch(r"[a-z][a-z0-9_]{0,63}", exc.code):
             result["error_code"] = exc.code
         return "Yêu cầu bị dừng bởi kiểm tra đầu vào, quyền hoặc công cụ.", result

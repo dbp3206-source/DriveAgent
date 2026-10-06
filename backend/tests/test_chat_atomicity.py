@@ -148,6 +148,25 @@ def test_failed_task_diagnostic_classifies_without_leaking_exception_text(error,
     assert "private-email-canary" not in json.dumps(data)
 
 
+@pytest.mark.parametrize("requested, expected", [
+    ("calculate", "calculate"),
+    ("transfer_to_agent", "transfer_to_agent"),
+    ("private-email-canary", "unknown"),
+])
+def test_scope_failure_keeps_only_registry_names(requested, expected):
+    from app.tools.contracts import ToolScopeError
+
+    error = ToolScopeError(
+        requested, {"calculate", "skill_run", "transfer_to_agent"},
+        {"skill_run", "private-email-canary"},
+    )
+    message, data = _failed_task_diagnostic(error, "failed")
+    assert data["error_code"] == "unavailable_tool"
+    assert data["blocked_tool"] == expected
+    assert data["offered_tools"] == ["skill_run"]
+    assert "private-email-canary" not in message + json.dumps(data)
+
+
 async def test_failed_new_turn_preserves_prompt_with_explicit_failed_status(tmp_path):
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'chat.db'}")
     async with engine.begin() as connection:

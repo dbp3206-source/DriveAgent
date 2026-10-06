@@ -71,3 +71,16 @@ chỉnh sửa; không mở thêm vòng hoàn thiện chung chung.
   báo, không tính thành công nghiệp vụ. Lỗi quyền, nguồn không an toàn và
   hết hạn mức vẫn bị chặn. 204 phép kiểm liên quan đạt; chưa kiểm live bản sửa.
 - `main` chưa gộp. Không công bố sẵn sàng phát hành khi các mục trên chưa đạt.
+
+### Chẩn đoán nguyên nhân trước khi sửa tiếp
+
+- Mã lỗi web thật được đọc từ Nhật ký: `web_source_transport_error`;
+  không suy ra hết hạn mức hoặc công cụ chưa được gọi.
+- Quy trình đổi đầu vào nạp thành công rồi bị chặn với `unavailable_tool`.
+  Nhật ký cũ không giữ tên công cụ bị chặn nên chưa đủ bằng chứng xác định
+  nguyên nhân dẫn đến lệnh sai. Không thêm ngoại lệ theo khách hàng kiểm thử.
+- Bổ sung chẩn đoán chỉ gồm tên công cụ khớp danh mục máy chủ và danh sách
+  công cụ được cấp; tên tự dựng thành `unknown`, không lưu đối số riêng.
+  Không nới quyền, không gọi lại, không đổi lỗi thành thành công.
+  72 phép kiểm ADK/hội thoại đạt; kiểm mã và khoảng trắng đạt.
+  Vẫn cần đọc bằng chứng của lần chạy trên bản triển khai trước khi đóng lỗi.

@@ -379,6 +379,8 @@ class AdkOrchestrator:
                 circuit=self.circuit,
                 reserve_primary=True,
                 enable_fallback=self.model_fallback_enabled,
+                known_tool_names={d.name for d in self.registry.definitions()}
+                | {"transfer_to_agent"},
             )
             model.records = records  # Pydantic sao chép list khi validate; giữ cùng trace run.
             selected_agent = "skill" if controls.skill_name else controls.effective_agent()

@@ -97,7 +97,7 @@ async def test_invented_tool_is_blocked_before_adk_dispatch(monkeypatch, fallbac
         _ = [reply async for reply in model.generate_content_async(request)]
     assert caught.value.code == 'unavailable_tool'
     assert model.records[-1]['rule'] == 'unavailable_tool'
-    assert model.records[-1]['tool'] == 'web_research'
+    assert model.records[-1]['tool'] == 'unknown'
 
 
 @pytest.mark.parametrize('tool_name', ['web_research', 'transfer_to_agent'])

@@ -58,6 +58,22 @@ class ToolError(RuntimeError):
         self.retryable = retryable
 
 
+class ToolScopeError(ToolError):
+    """A blocked model call with server-owned, content-free diagnostics."""
+
+    def __init__(self, requested: str | None, known: set[str], offered: set[str]):
+        super().__init__(
+            "Chưa xác minh được câu trả lời: công cụ cần dùng không có trong "
+            "phạm vi đã cho phép. Yêu cầu của bạn được giữ nguyên; "
+            "không có nguồn bị cấm nào được truy cập.",
+            code="unavailable_tool",
+        )
+        # A model can put private text in an invented function name. Only exact
+        # members of the server registry may reach persisted diagnostics.
+        self.blocked_tool = requested if requested in known else "unknown"
+        self.offered_tools = sorted(offered & known)
+
+
 class ToolNotFoundError(ToolError):
     def __init__(self, name: str):
         super().__init__(f"Tool không tồn tại: {name}", code="tool_not_found")
