@@ -2,6 +2,23 @@
 
 ## Đối soát mới nhất
 
+Bản 239317f đã qua CI 37485692007, triển khai Live trên Render bằng ảnh
+`sha256:c540782728f23f2a533af148781e93943e5fc41cf79a86b50a5424c1845471c3`,
+đợt `dep-db2h888m7kps73ervvn0`, 15:32:37 UTC ngày 06/10/2026. Phép kiểm
+Bosch sau sửa hoàn tất 29,8 giây: phần thân, bảng nguồn và thẻ liên kết khớp
+mã. Không coi cả hồ sơ đạt: tin chưa chứng minh liên quan Việt Nam, chưa tách
+ngày sự kiện và chưa có số liệu riêng của đơn vị Việt Nam.
+
+Vault đã được xác nhận tồn tại đúng tên, không đọc giá trị. Bật pg_cron 1.6.4
+và pg_net 0.20.4. Lịch thử tự tắt bằng cron.alter_job sau lần chạy thành công
+lúc 15:36 UTC; không có lịch lặp đang bật. Lần đầu dùng UPDATE cron.job bị
+chặn quyền, chưa phát sinh yêu cầu HTTP. Lần sau gọi HTTP nhưng nhận 403:
+“Yêu cầu ghi phải bắt nguồn từ giao diện Veridra.” Chưa đọc Gmail/Drive,
+chưa có tác vụ ứng dụng được tạo. Nguyên nhân: lớp kiểm nguồn trình duyệt
+áp nhầm vào điểm gọi máy chủ đã có xác thực bearer riêng. Sửa đúng một đường
+dẫn hẹn giờ; vẫn bắt buộc bearer, không miễn toàn bộ tiền tố API nội bộ.
+Chưa đóng mục hẹn giờ trước khi kiểm lại trên bản triển khai có sửa này.
+
 Bản `c27862b` đã qua CI `37482088860` và chạy Live trên Render. Lượt web
 `e4250a0b-245e-4db1-accb-5ce54611500e` hoàn tất 26,5 giây, tin đúng FPT;
 không còn dừng tất cả nguồn khi website bị chặn. Website chính vẫn chưa đọc

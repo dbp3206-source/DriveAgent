@@ -350,13 +350,15 @@ async def public_unsafe_request_middleware(request: Request, call_next):  # type
     """Apply the same browser-origin gate to every session-backed write API.
 
     Signed remote action tokens are deliberately independent of browser
-    sessions; MCP/A2A have their own protocol authorization. The Gmail webhook
+    sessions; the scheduler requires its own constant-time bearer check,
+    and MCP/A2A have their own protocol authorization. The Gmail webhook
     currently returns 501 and will need its own Google OIDC check if enabled.
     """
 
     path = request.url.path
     exempt = (
         path in {"/api/gmail/remote/action", "/api/gmail/remote/webhook"}
+        or path == "/api/internal/scheduler/enqueue"
         or path in {"/api/mcp", "/api/a2a"}
         or path.startswith(("/api/mcp/", "/api/a2a/"))
     )
