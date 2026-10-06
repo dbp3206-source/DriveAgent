@@ -25,6 +25,18 @@ Chỉ đóng mục hẹn giờ sáng; A/B/E/F toàn nhóm chưa đủ điều ki
 
 ### Bằng chứng bàn giao từ bản tải sạch
 
+**Đối soát xuất bản đã lưu trên fc4733d:** mở đúng kết quả giả lập Mộc An
+`5cbbce8b-70de-4fe6-8078-2ea3a474ce5d`, phiên bản 2, trên URL thật.
+Tải Markdown, DOCX và PDF bằng chính liên kết xuất của giao diện. Cả ba
+chứa đúng tiêu đề, ngân sách chưa xác nhận và đủ bốn câu hỏi của bản mới;
+không phải bản cũ ba câu hỏi. PDF một trang A4 được dựng bằng Poppler và
+kiểm trực quan: chữ tiếng Việt rõ, không cắt hoặc chồng chữ. Không gọi
+mô hình, không cập nhật bản lưu hoặc ghi Google trong lần đối soát này.
+DOCX mở và trích văn bản được nhưng chưa kiểm bố cục: trình dựng tài liệu
+đi kèm báo `LibreOffice soffice.exe was not found on PATH`. Không dùng
+kết quả PDF do Veridra xuất để thay bằng chứng bố cục DOCX. Đây là bằng
+chứng phần xuất/mở lại của W06; không tự coi toàn chuỗi W06 trên cùng bản đạt.
+
 Ngày 06/10/2026, tải nhánh thử nghiệm từ GitHub vào thư mục riêng rồi chọn
 đúng fc4733d. Trước cài đặt không có `.env` hoặc tệp OAuth; không sao chép
 khóa hay phiên đăng nhập của môi trường đang dùng.
