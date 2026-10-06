@@ -2,6 +2,18 @@
 
 ## Đối soát mới nhất
 
+**Hẹn giờ sáng thực tế đã đạt trên bản fc4733d.** CI 37489514010 thành công;
+Render dep-db2hgg7lot8c73f7miig Live lúc 15:50:13 UTC với ảnh
+`sha256:7ffdb94acb7929155bf212033468713d8ac8326660b203921b74eac57d7f1c10`.
+Cron kích hoạt lúc 15:51 UTC, tự tắt (active=false); HTTP trả 202.
+Tác vụ 38117567-629a-4e0f-aed0-2a6cfee07e44 hoàn tất trong lần đầu,
+không lỗi, đọc 5/5 cuộc trao đổi và metadata 5 tệp. Nhật ký gồm một lần
+liệt kê Gmail, năm lần đọc cuộc trao đổi và một lần liệt kê Drive, đều đạt;
+không gọi Gemini hay ghi Google. Lưu tại phiên
+c50be749-3206-4089-8adc-bb5d163ada36. Không lưu nội dung thư hoặc bí mật
+trong bằng chứng. Không bật lịch lặp dài hạn từ phép thử một lần này.
+Chỉ đóng mục hẹn giờ sáng; A/B/E/F toàn nhóm chưa đủ điều kiện đóng.
+
 Bản 239317f đã qua CI 37485692007, triển khai Live trên Render bằng ảnh
 `sha256:c540782728f23f2a533af148781e93943e5fc41cf79a86b50a5424c1845471c3`,
 đợt `dep-db2h888m7kps73ervvn0`, 15:32:37 UTC ngày 06/10/2026. Phép kiểm
