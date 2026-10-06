@@ -57,7 +57,7 @@ from app.agent.response_guard import (
     source_restriction_instruction,
 )
 from app.agent.routing import Route, route_request
-from app.agent.source_calculations import has_inline_calculation_data
+from app.agent.source_calculations import has_inline_calculation_data, needs_source_calculation
 from app.auth.permissions import permissions_for_role
 from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Settings
 from app.core.security import redact
@@ -313,6 +313,21 @@ class AdkOrchestrator:
                 [definition.name for definition in available],
                 skill_capabilities=skill_capabilities,
             )
+            if controls.skill_name and needs_source_calculation(
+                user_message,
+                has_evidence=controls.source not in {"auto", "general"}
+                or has_inline_calculation_data(user_message, output=controls.output),
+                output=controls.output,
+            ) and any(d.name == "calculate" for d in available):
+                allowed_names.add("calculate")
+            if controls.skill_name and controls.source == "local" and (
+                "local_source_read" not in allowed_names
+            ):
+                raise ToolError(
+                    "Quy trình chưa có quyền đọc tài liệu local đã chọn. "
+                    "Hãy kiểm tra nguồn trước khi chạy.",
+                    code="skill_source_unavailable",
+                )
             tools = [
                 GovernedAdkTool(
                     d,
@@ -503,6 +518,12 @@ class AdkOrchestrator:
                     code="empty_response",
                 )
             citations = AgentOrchestrator._collect_citations(evidence)
+            if controls.skill_name and controls.source == "local" and not citations:
+                raise ToolError(
+                    "Quy trình chưa đọc được tài liệu local đã chọn nên chưa thể tổng hợp kết quả. "
+                    "Hãy kiểm tra tài liệu; không dùng dữ kiện của lần chạy trước.",
+                    code="skill_source_not_read",
+                )
             reused_sources = not citations and bool(historical_citations)
             if reused_sources:
                 citations = historical_citations
@@ -546,6 +567,11 @@ class AdkOrchestrator:
                 model_name=resolved_model,
                 fallback_model=self.settings.gemini_fallback_model,
                 records=records,
+                source_evidence_untrusted=[
+                    {"tool": item.name, "result_untrusted": item.content}
+                    for item in evidence
+                ],
+                source_references_untrusted=source_references(citations),
             )
             if reused_sources:
                 answer = label_historical_sources(answer, citations)
@@ -809,7 +835,10 @@ class AdkOrchestrator:
                         "thiếu/không đọc được và dẫn nguồn cho nhận định. Nếu không đủ dữ liệu "
                         "hoặc tool không có sẵn, nói rõ giới hạn thay vì đoán."
                     ),
-                    tools=select(
+                    # The caller already applied role, source, exclusions and saved
+                    # capability policy. Do not discard an explicitly chosen source
+                    # a second time merely because the saved capability list is empty.
+                    tools=tools if selected_agent == "skill" else select(
                         "skill_",
                         *(
                             skill_prefixes[capability]

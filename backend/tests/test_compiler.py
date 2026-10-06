@@ -41,6 +41,11 @@ def test_local_controls_preserve_all_requested_sources():
 async def test_multi_local_retrieval_collects_pages_from_each_file(runtime, monkeypatch):
     runner, user, session_id = runtime
     calls = []
+    repair_inputs = []
+
+    async def repair(**kwargs):
+        repair_inputs.append(kwargs)
+        return kwargs["answer"]
 
     async def execute(name, arguments, context):
         calls.append((name, arguments))
@@ -64,6 +69,7 @@ async def test_multi_local_retrieval_collects_pages_from_each_file(runtime, monk
 
     monkeypatch.setattr(runner.registry, "execute", execute)
     monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(compiler, "enforce_presentation_contract", repair)
     result = await runner.run(
         user=user, session_id=session_id, request_id="multi-local-pages",
         user_message="So sánh tài liệu local bank.pdf và power.pdf",
@@ -74,6 +80,17 @@ async def test_multi_local_retrieval_collects_pages_from_each_file(runtime, monk
     ]
     assert len(result.citations) == 2
     assert all(item["page_number"] == 3 for item in result.citations)
+    assert len(repair_inputs) == 1
+    repair_input = repair_inputs[0]
+    evidence = repair_input["source_evidence_untrusted"]["sources"]
+    assert len(evidence) == 2
+    assert [item["data"]["data"]["citations"][0]["file_id"] for item in evidence] == [
+        "local:bank.pdf", "local:power.pdf",
+    ]
+    assert repair_input["source_references_untrusted"] == [
+        {"reference": index, **citation}
+        for index, citation in enumerate(result.citations, 1)
+    ]
 
 
 @pytest.mark.parametrize("multiple_sources", [False, True])

@@ -228,6 +228,12 @@ class ChatControls(BaseModel):
         if self.source != "auto":
             return self
         normalized = message.casefold()
+        if re.search(
+            r"(?<!không )(?<!đừng )\bchỉ\s+(?:dùng|sử\s+dụng)\b"
+            r"[^.!?\n]{0,120}\b(?:tài\s+liệu|tệp)\s+local\b",
+            normalized,
+        ):
+            return self.model_copy(update={"source": "local"})
         if "rag_search" in normalized or "chỉ dùng rag" in normalized or (
             "lập chỉ mục" in normalized and "chỉ" in normalized
         ):

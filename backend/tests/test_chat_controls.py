@@ -127,6 +127,27 @@ def test_explicit_message_does_not_override_slash_source():
     assert controls.source == "drive"
 
 
+def test_saved_skill_explicit_local_sources_use_local_boundary():
+    controls = ChatControls(skill_name="qa_final_tu_van").enforce_explicit_message_source(
+        "Chỉ dùng hai tài liệu local giả lập 01-yeu-cau.md và 02-dieu-chinh.md."
+    )
+    assert controls.source == "local"
+    assert controls.allowed_tool_names(TOOLS, skill_capabilities=frozenset()) == {
+        "local_source_search", "skill_run",
+    }
+
+
+@pytest.mark.parametrize("message", [
+    "Không chỉ dùng hai tài liệu local, hãy hỏi lại phạm vi.",
+    "Tài liệu local có sẵn nhưng chỉ dùng đầu vào trong câu này.",
+    "Không đọc tài liệu local; chỉ dùng đầu vào mới này.",
+])
+def test_mentioning_local_does_not_enable_saved_skill_sources(message):
+    controls = ChatControls(skill_name="qa_final_tu_van").enforce_explicit_message_source(message)
+    assert controls.source == "auto"
+    assert controls.allowed_tool_names(TOOLS, skill_capabilities=frozenset()) == {"skill_run"}
+
+
 def test_explicit_negative_sources_remove_tools_and_routes():
     message = (
         "Kiểm thử bằng dữ liệu giả; không truy cập Gmail/Drive và không ghi dữ liệu. "

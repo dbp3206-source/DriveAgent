@@ -6,6 +6,7 @@ import pytest
 from google import genai
 from google.adk.sessions import DatabaseSessionService
 from google.genai import types
+from langchain_core.messages import ToolMessage
 
 from app.agent.adk_orchestrator import (
     AdkOrchestrator,
@@ -516,6 +517,63 @@ def test_saved_skill_selects_dedicated_gmail_capability_agent():
     assert records[-1]["agent"] == "skill_agent"
 
 
+def test_saved_skill_preserves_already_governed_explicit_source_tools():
+    # This list represents the caller's filtered tools, not registry inventory.
+    tools = [SimpleNamespace(name="local_source_read"), SimpleNamespace(name="calculate")]
+    with patch("app.agent.adk_orchestrator.LlmAgent") as constructor:
+        constructor.side_effect = lambda **kwargs: SimpleNamespace(**kwargs)
+        agent = AdkOrchestrator._build_agent_tree(
+            RecoverableGemini(model="gemini-primary", fallback_model="gemini-fallback"),
+            tools, [], selected_agent="skill", skill_capabilities=frozenset(),
+        )
+    assert agent.name == "skill_agent"
+    assert agent.tools == tools
+
+
+@pytest.mark.parametrize("source_available", [False, True])
+async def test_saved_skill_cannot_complete_without_reading_selected_local_source(source_available):
+    from app.services.local_sources import local_source_tool_definitions
+    from app.tools.contracts import ToolError
+
+    class FakeSessions:
+        async def get_session(self, **kwargs):
+            return SimpleNamespace(id="existing")
+
+    class FakeRunner:
+        def __init__(self, **kwargs):
+            pass
+
+        async def run_async(self, **kwargs):
+            yield SimpleNamespace(
+                author="skill_agent", usage_metadata=None, is_final_response=lambda: True,
+                content=types.Content(parts=[types.Part(text="Khách hàng có dự án ERP.")]),
+            )
+
+    registry = ToolRegistry()
+    if source_available:
+        for definition in local_source_tool_definitions():
+            registry.register(definition)
+    orchestrator = AdkOrchestrator(Settings(_env_file=None, gemini_api_key="test-key"), registry)
+    orchestrator.client = genai.Client(api_key="test-key")
+    orchestrator.sessions = FakeSessions()
+    with (
+        patch("app.agent.adk_orchestrator.skill_store", return_value=SimpleNamespace(
+            get=lambda *_: {"active": True, "preferred_capabilities": []},
+        )),
+        patch("app.agent.adk_orchestrator.Runner", FakeRunner),
+        pytest.raises(ToolError) as caught,
+    ):
+        await orchestrator.run(
+            user=SimpleNamespace(id="user-a", role="editor"), session_id="session-a",
+            request_id="skill-evidence-required",
+            user_message="Chỉ dùng hai tài liệu local giả lập để tư vấn.",
+            controls=ChatControls(skill_name="qa_final_tu_van"),
+        )
+    assert caught.value.code == (
+        "skill_source_not_read" if source_available else "skill_source_unavailable"
+    )
+
+
 def test_forbidden_google_creation_does_not_disable_memory_agent_tools():
     from app.agent.routing import Route
 
@@ -742,6 +800,58 @@ async def test_adk_open_ended_run_records_session_handoff_usage_and_final_answer
     assert len(runner_models) == 1
     assert runner_models[0].reserve_primary is True
     assert runner_models[0].quota is orchestrator.compiler.quota
+
+
+async def test_adk_presentation_repair_receives_collected_tool_evidence_and_references():
+    citation = {"file_id": "local:sample", "file_name": "sample.md", "chunk_index": 0,
+                "snippet": "Nhóm khảo sát có 42 người.", "score": 1.0}
+    tool_content = json.dumps({"data": {"citations": [citation]}}, ensure_ascii=False)
+
+    class FakeSessions:
+        async def get_session(self, **_kwargs):
+            return SimpleNamespace(id="existing")
+
+    class FakeRunner:
+        def __init__(self, **kwargs):
+            # Replace only tool/provider execution; the outer ADK route still
+            # collects and forwards the same ToolMessages to presentation repair.
+            tools = kwargs["agent"].tools
+            tools[0].evidence.append(ToolMessage(
+                name="local_source_read", content=tool_content, tool_call_id="read-sample",
+            ))
+
+        async def run_async(self, **_kwargs):
+            yield SimpleNamespace(
+                author="report_agent", usage_metadata=None, is_final_response=lambda: True,
+                content=types.Content(parts=[types.Part(text="Nhóm có 42 người [1].")]),
+            )
+
+    registry = ToolRegistry()
+    for definition in calculator_tool_definitions():
+        registry.register(definition)
+    orchestrator = AdkOrchestrator(Settings(_env_file=None, gemini_api_key="test-key"), registry)
+    orchestrator.client = genai.Client(api_key="test-key")
+    orchestrator.sessions = FakeSessions()
+    repair = AsyncMock(side_effect=lambda **kwargs: kwargs["answer"])
+    with (
+        patch("app.agent.adk_orchestrator.Runner", FakeRunner),
+        patch.object(orchestrator, "_build_agent_tree",
+                     side_effect=lambda model, tools, records, **kwargs:
+                     SimpleNamespace(tools=tools)),
+        patch("app.agent.adk_orchestrator.enforce_presentation_contract", repair),
+    ):
+        result = await orchestrator.run(
+            user=SimpleNamespace(id="user-a", role="editor"), session_id="session-a",
+            request_id="repair-evidence", user_message="Giải thích cách cải thiện báo cáo",
+        )
+    assert result.citations == [citation]
+    repair.assert_awaited_once()
+    assert repair.await_args.kwargs["source_evidence_untrusted"] == [
+        {"tool": "local_source_read", "result_untrusted": tool_content},
+    ]
+    assert repair.await_args.kwargs["source_references_untrusted"] == [
+        {"reference": 1, **citation},
+    ]
 
 
 @pytest.mark.parametrize("existing", [False, True])

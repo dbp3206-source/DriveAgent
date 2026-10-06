@@ -455,3 +455,86 @@ mới sau bổ sung nhánh cấm web đạt. Ruff và kiểm khoảng trắng Gi
   lần đang chạy, bản 190fce0 trước vẫn Live. Không có log ứng dụng mới ngoài
   thông báo bắt đầu dịch vụ. Trang trạng thái công khai Render lúc đọc không
   báo sự cố; điều đó không xác định nguyên nhân riêng của lần triển khai này.
+
+## Kết quả đợt gộp trên URL thật — 0a86fe0, 06/10/2026
+
+- Lần triển khai 0daf5b5 `dep-db27cruk1f9s739d8330` kết thúc với
+  `Timed Out` sau 15 phút; log Python xuất hiện sau thời điểm hết hạn.
+  Chưa xác định nguyên nhân, không gán thành lỗi thiếu bộ nhớ hay lỗi Gemini.
+- Bản gộp `0a86fe094ec43b1cf9c1577253bb34ef683b7194` đã đẩy lên staging;
+  CI `37414077044` thành công. Ảnh thực:
+  `sha256:728b2de98549a56c241885f6a48a7337760fca7dfeb93604afe0b4c23dd00fc7`.
+  Render `dep-db27luom7kps73dqimmg` báo `Deploy succeeded / Live`,
+  11:39:10 +07, thời gian 1 phút 50 giây. Đã kiểm trong thanh bên, không Chrome.
+- W02, kiểm đúng lượt hỏi tiếp từng bị định tuyến nhầm: 20,5 giây, nhắc đúng
+  14/10/2026 lúc 09:00, ngân sách chưa xác nhận, ba câu hỏi tư vấn. Sáu sự kiện
+  cho thấy dùng ngữ cảnh và trợ lý bộ nhớ, không có công cụ web. **PASS sửa
+  định tuyến lượt hỏi tiếp**; không coi toàn chuỗi cũ có nhận định không nguồn
+  là đạt, cũng không coi đây là lần chạy mới trọn ba lượt.
+- A/W01, một lần kiểm báo cáo sau sửa: yêu cầu
+  `ee62abd3-966d-4652-826e-cf4dcee9a918`, 16,6 giây. Bản sao lấy qua nút
+  Sao chép có **217 từ** khi đếm theo khoảng trắng; giữ đúng hai nguồn [1] [2],
+  24 thay 30 người, 5.760 phút/tháng và 1.152 phút tiết kiệm giả thuyết 20%,
+  không gán ngân sách. Bốn lần tìm/đọc nguồn và công cụ Tính toán thành công;
+  bước kiểm đầu ra báo đã hiệu chỉnh từ lỗi thiếu số từ. Nút lưu/xuất không
+  còn bị khóa vì thiếu số từ. **PASS độ dài và bảo toàn ký hiệu nguồn**.
+  Bản sửa vẫn thêm nhận định “giảm quy mô nhân sự đòi hỏi ... tránh quá tải”
+  không được nguồn xác nhận, và số tính chỉ liên hệ với danh sách nguồn ở
+  đoạn đầu. Không dùng kết quả này để đóng độ trung thành toàn báo cáo.
+- W04, chuỗi ba lượt cùng phiên trên bản mới: **11,6 / 16,1 / 15,8 giây**.
+  Lượt đầu `042154c7-b842-44c3-8256-9f2bed60e07a` có Tính toán thật,
+  trả 30 triệu / 25,00%. Lượt sửa có Tính toán thật 569 ms, giữ tháng 1
+  120 triệu, đổi tháng 2 150 thành 144 triệu, trả 24 triệu / 20,00%.
+  Lượt cuối `ad9eabb5-a2e4-4d8b-ae9c-060de1053977` giữ 120/144 và
+  24/20,00% trong hai câu, không dùng số cũ. **PASS phép tính bằng công cụ,
+  sửa và nhớ số/đơn vị theo đáp án W04**. Lượt cuối gọi đại lượng là “doanh
+  thu” dù người dùng chỉ cung cấp số theo tháng: không chứng nhận nhãn này
+  là dữ kiện đã xác minh.
+- Khóa đang chọn đã từ 7 xuống **0/16 lượt mô hình** qua đợt gộp: hỏi tiếp 1,
+  báo cáo gồm sửa định dạng 2, W04 lần lượt 1/2/1. Không đặt lại bộ đếm,
+  không gọi vượt ngân sách và không dùng dịch vụ trả phí. Các ca E còn lại
+  không được đánh dấu đạt vì chưa chạy; chưa tính điểm tổng.
+- B, kiểm cấu hình hẹn giờ bằng truy vấn chỉ đọc Supabase trong project
+  đang chạy: `pg_extension` không có `pg_cron` hoặc `pg_net`. Chưa có
+  bằng chứng một lần chạy hẹn giờ thật. Không đọc bí mật Vault, không tạo
+  lịch hay gửi thêm thư. Xin phép đọc tối đa năm thư và lịch 24 giờ tới cho
+  lần kiểm gộp mới vẫn chưa được trả lời tại thời điểm ghi.
+- F: bản sao QA có nguồn Git là repo local, đã kéo nhanh tới 0a86fe0 và
+  nhập ứng dụng thành công. Đây là cập nhật bản sao kiểm, **không phải** bằng
+  chứng vừa clone GitHub trên máy sạch. Main vẫn chưa gộp vì A/B/E chưa đóng.
+  C/D giữ EXCLUDED; không ghi sản phẩm sẵn sàng phát hành.
+
+### Đợt tiếp theo: quy trình đã lưu và cài đặt từ GitHub
+
+- W05 trên 0a86fe0: yêu cầu `d6312bdb-54e9-45e0-90ad-0fbb2559958b`,
+  25,0 giây, ba lượt mô hình. Quy trình `qa_final_tu_van` đã được chọn nhưng
+  chỉ gọi công cụ lấy quy trình, không đọc hai tài liệu và không tính toán.
+  Câu trả lời tự dựng dự án ERP, thời gian và ngân sách không có trong nguồn.
+  **FAIL quy trình dùng nguồn**; không lưu hoặc dùng câu trả lời làm bằng chứng đạt.
+  Lượt đổi đầu vào sang An Bình, tám người, 16,7 giây, hai lượt mô hình,
+  không mang số liệu Minh Phát sang: chỉ đạt phần thay đầu vào, không đóng W05.
+- Sửa nguyên nhân: lựa chọn nguồn rõ ràng phải đi qua bộ công cụ đã lọc quyền;
+  trợ lý quy trình không lọc mất nguồn lần thứ hai vì danh sách khả năng lưu sẵn
+  trống. Chỉ cung cấp tính toán khi yêu cầu có phép tính; thiếu nguồn hoặc chưa
+  đọc nguồn thì báo lỗi, không trả kết quả dựng. Không mở rộng quyền Google.
+- Sửa báo cáo: bước chỉnh định dạng được nhận bằng chứng và danh sách nguồn đã
+  thu thập, thay vì chỉ nhìn bản nháp. Không thêm lần gọi mô hình hoặc đọc nguồn.
+  Hướng dẫn giữ phạm vi, đơn vị và không suy diễn nguyên nhân từ thay đổi số liệu.
+  Đây chưa phải bằng chứng kiểm ngữ nghĩa hoặc nghiệm thu A trên URL thật.
+- Kiểm tự động gộp trước triển khai: 248 phép kiểm đạt trong 73,30 giây;
+  thêm hai phép kiểm chặn hoàn thành khi chưa đọc nguồn, nhóm quy trình đã lưu
+  đạt 5 phép kiểm trong 7,21 giây. Kiểm quy tắc mã đạt. Không dùng các kết quả
+  máy này để thay số tác vụ thật trong E.
+- F: đã clone trực tiếp GitHub vào bản sao kiểm riêng, HEAD đúng 0a86fe0,
+  chạy `scripts/setup.ps1` thành công (môi trường Python, 161 gói khóa,
+  474 gói giao diện); dựng giao diện thành công, 4.491 mô-đun, 44,15 giây.
+  Khởi chạy ứng dụng thật và mở trang thiết lập ở localhost:8000 trong thanh bên.
+  Chưa cấu hình Google/Gemini ở bản sao sạch: trang báo thiếu đúng cấu hình,
+  không sao chép khóa riêng hoặc dữ liệu thật để tạo kết quả giả.
+  Kiểm gói chạy thực tế có hai cảnh báo mức thấp, không có mức cao/nghiêm trọng;
+  không tự đổi phiên bản lớn. Đây là kiểm cài đặt sạch trên cùng máy, không phải
+  xác nhận máy thứ hai hay toàn luồng đăng nhập. Main chưa gộp.
+- Trong phiên thanh bên mới, Cài đặt hiển thị cùng mã nhận diện khóa DriveAgent3,
+  0 lượt hôm nay, 16/16 còn lại. Không đặt lại bộ đếm. Lịch sử đang hiển thị
+  trống; chưa xác định nguyên nhân, chưa kết luận mất dữ liệu. Kết quả câu hỏi
+  FPT đã gửi trước khi phiên kiểm gián đoạn chưa lấy lại được, không ghi PASS.
