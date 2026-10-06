@@ -1,3 +1,4 @@
+import json
 from types import SimpleNamespace
 
 import pytest
@@ -299,7 +300,7 @@ async def test_contract_guard_repairs_once_and_revalidates():
 async def test_format_rewrite_receives_source_numeric_preservation_constraints(fallback):
     """Check both provider boundaries; this does not certify semantic compliance."""
     draft = "Nhóm doanh nghiệp khảo sát: 3.1 - 3.6 = -0.5 điểm phần trăm; "
-    draft += "dự báo năm 2027, nguồn ngày 12/02/2026."
+    draft += "dự báo năm 2027, nguồn ngày 12/02/2026 [2,1][2]."
     repaired = "- " + draft
     calls = []
 
@@ -307,6 +308,11 @@ async def test_format_rewrite_receives_source_numeric_preservation_constraints(f
         async def generate_content(self, **kwargs):
             calls.append(kwargs)
             assert SOURCE_NUMERIC_FIDELITY_INSTRUCTION in kwargs["config"].system_instruction
+            assert json.loads(kwargs["contents"])["required_citation_sequence"] == [
+                "[2]", "[1]", "[2]",
+            ]
+            assert "including repeated markers" in kwargs["config"].system_instruction
+            assert "same supported claim" in kwargs["config"].system_instruction
             assert "nhóm" in kwargs["contents"].casefold()
             if fallback and len(calls) == 1:
                 raise errors.APIError(504, {"error": {"message": "provider timeout"}})
@@ -320,8 +326,58 @@ async def test_format_rewrite_receives_source_numeric_preservation_constraints(f
         model_name="gemini-3.5-flash-lite", fallback_model="gemini-3.8-flash",
         records=records,
     )
-    assert result == repaired
+    assert result == repaired.replace("[2,1]", "[2][1]")
     assert len(calls) == (2 if fallback else 1)
+
+
+@pytest.mark.parametrize("markers, added_number, violation", [
+    ("[2][1][2]", "", None),
+    ("[1][2][2]", "", "citation_markers_changed"),
+    ("[2][1]", "", "citation_markers_changed"),
+    ("[2][1][2][2]", "", "citation_markers_changed"),
+    ("[2][1][2]", " 99", "numeric_claims_added"),
+])
+async def test_short_sourced_repair_retains_occurrences_and_numeric_guard(
+    markers, added_number, violation,
+):
+    draft = "Nhóm khảo sát có 24 người [2]; tổng hợp mất 96 giờ [1][2]."
+    candidate = (
+        "Nhóm khảo sát có 24 người " + markers[:3] + ". "
+        "Phạm vi này chỉ mô tả nhóm được khảo sát, "
+        "chưa đủ căn cứ để đại diện cho toàn ngành. Tổng hợp mất 96 giờ "
+        + markers[3:] + "; "
+        "cần giữ nguyên phạm vi khảo sát khi diễn giải kết quả và tránh suy rộng "
+        "sang các nhóm chưa được nguồn xác nhận. "
+        + added_number
+    ).strip()
+    calls = []
+
+    class Models:
+        async def generate_content(self, **kwargs):
+            calls.append(kwargs)
+            return SimpleNamespace(text=candidate)
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Viết từ 50 đến 80 từ.",
+        answer=draft,
+        model_name="gemini-3.8-flash",
+        fallback_model="gemini-3.5-flash-lite",
+        records=records,
+    )
+    assert len(calls) == 1
+    assert json.loads(calls[0]["contents"])["required_citation_sequence"] == [
+        "[2]", "[1]", "[2]",
+    ]
+    assert records[-1]["repair_calls"] == 1
+    if violation:
+        assert result.startswith(draft)
+        assert violation in records[-1]["violations"]
+    else:
+        assert result == candidate
+        assert records[-1]["status"] == "corrected"
 
 
 async def test_contract_guard_repairs_a_concise_answer_over_the_word_limit():

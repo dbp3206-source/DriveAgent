@@ -6,12 +6,43 @@ from app.agent.source_calculations import (
     SOURCE_CALCULATION_INSTRUCTION,
     SOURCE_NUMERIC_FIDELITY_INSTRUCTION,
     CalculatedWireAnswer,
+    has_inline_calculation_data,
     needs_source_calculation,
     resolve_calculations,
     validate_calculation_payload,
 )
 from app.tools.calculator import CalculateInput, calculate
 from app.tools.contracts import ToolError
+
+
+@pytest.mark.parametrize("prompt", [
+    "Dữ liệu giả lập: tháng 1 là 120 triệu đồng, tháng 2 là 150 triệu đồng. "
+    "Chỉ dùng dữ liệu này, tính chênh lệch và tăng trưởng bằng công cụ, không ghi dữ liệu.",
+    "Nhóm A có 40 người, nhóm B có 55 người. Tính tổng hai nhóm bằng công cụ.",
+    "Chi phí 1.200 USD và 1.500 USD. Tính chênh lệch bằng công cụ.",
+])
+def test_inline_user_quantities_select_calculation_without_document(prompt):
+    from app.agent.adk_orchestrator import AdkOrchestrator
+    from app.agent.controls import ChatControls
+    from app.agent.routing import Route
+
+    assert has_inline_calculation_data(prompt)
+    assert AdkOrchestrator._should_use_compiler(ChatControls(), Route(), prompt)
+    assert not has_inline_calculation_data(prompt, output="spreadsheet")
+    assert not AdkOrchestrator._should_use_compiler(
+        ChatControls(skill_name="saved_workflow"), Route(), prompt,
+    )
+
+
+@pytest.mark.parametrize("prompt", [
+    "Tháng 1 và tháng 2: tính chênh lệch bằng công cụ, chưa có số liệu.",
+    "Tháng 1 là 120 triệu đồng. Tính chênh lệch bằng công cụ.",
+    "Có 120 triệu đồng và 150 triệu đồng. Không tính chênh lệch, chỉ nhắc lại.",
+    "Có 120 triệu đồng và 150 triệu đồng. Tóm tắt số đã cung cấp.",
+    "Ngày 12/10 và 14/10: giải thích lịch hẹn, không ghi dữ liệu.",
+])
+def test_inline_calculation_does_not_invent_operands_or_ignore_prohibition(prompt):
+    assert not has_inline_calculation_data(prompt)
 
 
 def test_calculation_contract_requires_signed_formula_and_population_fidelity():

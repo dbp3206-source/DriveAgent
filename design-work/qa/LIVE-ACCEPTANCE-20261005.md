@@ -412,3 +412,46 @@ mới sau bổ sung nhánh cấm web đạt. Ruff và kiểm khoảng trắng Gi
   script của repo, bị dừng khi thu thập 7 bộ kiểm; chạy lại từ gốc repo với
   cả gốc và backend trong PYTHONPATH hoàn tất. Đây là sửa cách chạy kiểm,
   không phải bỏ qua các bộ kiểm thất bại. Kiểm mã và khoảng trắng Git đạt.
+
+## Triển khai bản sửa ngữ cảnh 0daf5b5 — 06/10/2026
+
+- Mã đầy đủ `0daf5b5faf2e3a136240178e193b9998ca389bc1` đã đẩy lên staging;
+  worktree sạch. CI `37412492693` hoàn tất thành công, bao gồm kiểm PostgreSQL,
+  máy chủ, giao diện và ảnh chạy thực tế. Không gộp main khi A/B/E chưa đạt.
+- Đọc mã ảnh từ kho công khai theo chính SHA trên:
+  `sha256:8f1f5f2158cc8a2e8044cd233e92244101012fa9df6fb2b423f61761ebd6b6fe`.
+- Người dùng mở lại Settings trong thanh bên. Trang xác nhận bản 190fce0
+  trước đó đã Live đúng ảnh `d4c42a3…`, giải quyết điểm chưa đối chiếu trên
+  trang quản trị ở biên bản trên; không thay đổi kết quả các tác vụ thất bại.
+- Đã chọn ảnh mới trên Render; lần triển khai `dep-db27cruk1f9s739d8330`,
+  bắt đầu 11:17:51 +07. Tại thời điểm ghi mục này vẫn đang khởi động;
+  chưa đổi nhãn thành Live hoặc coi lượt hỏi tiếp đã đạt.
+
+## Đợt sửa gộp A/B sau đối soát — 06/10/2026
+
+- A: yêu cầu sửa định dạng trước đây nói giữ nguyên ký hiệu dẫn nguồn nhưng
+  chưa truyền thứ tự và số lần xuất hiện mà bộ kiểm thực sự bắt buộc. Nay
+  truyền danh sách bất biến vào bản sửa, dùng chung cho mô hình chính/dự phòng
+  và tính đủ phần hướng dẫn trong ngân sách. Không nới bộ kiểm, giảm số từ,
+  thêm lần gọi mô hình hoặc chèn đoạn văn mẫu. 84 phép kiểm định dạng đạt.
+- B/W04: tuyến tính xác định trước đây chỉ nhận số từ tài liệu đã đọc. Nay
+  nhận thêm ít nhất hai đại lượng có đơn vị do người dùng nhập và có yêu cầu
+  tính dương; vẫn từ chối ép tính khi thiếu toán hạng, chỉ có nhãn tháng/ngày,
+  chỉ yêu cầu nhắc lại hoặc cấm tính. Quy trình đã lưu vẫn đi qua điều phối
+  riêng; không chuyển sang tuyến khác. Bộ kiểm đầu vào/tuyến: 62 đạt.
+- Phép kiểm tích hợp không gọi Gemini chứng minh câu hỏi 120/150 triệu nhận
+  cấu trúc biểu thức, gọi công cụ thực, trả 30 triệu và 25,00%, không nguồn
+  bịa hay đề xuất ghi. Kết quả ban đầu chưa đạt vì đáp án kiểm chờ `25%`
+  trong khi công cụ giữ hai chữ số thập phân; sửa kỳ vọng định dạng, không
+  thay phép tính hoặc mã công cụ. Lần kiểm bị dừng sớm để không chạy toàn bộ
+  với đáp án kiểm sai. Một lỗi thu thập trước đó dùng tên tham số pytest dành
+  riêng `request`, và tên quy trình mẫu sai dạng, đều đã sửa trong testcase.
+- Các sửa trên chưa được nghiệm thu live; không đổi A/B thành PASS từ kết quả
+  mô phỏng. Đợt chạy tổng được thực hiện sau khi đã sửa các lỗi testcase.
+- Bộ kiểm tổng của đợt gộp: **1.239 đạt, 15 bỏ qua, 174,20 giây**;
+  Ruff và kiểm khoảng trắng Git đạt. Phép kiểm tích hợp 120/150 chạy thành
+  công trong bộ tổng, không có yêu cầu tới nhà cung cấp.
+- Render 0daf5b5 vẫn báo đang triển khai sau 12 phút; danh sách chỉ có một
+  lần đang chạy, bản 190fce0 trước vẫn Live. Không có log ứng dụng mới ngoài
+  thông báo bắt đầu dịch vụ. Trang trạng thái công khai Render lúc đọc không
+  báo sự cố; điều đó không xác định nguyên nhân riêng của lần triển khai này.

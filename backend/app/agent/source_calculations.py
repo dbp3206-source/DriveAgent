@@ -103,6 +103,23 @@ def needs_source_calculation(request: str, *, has_evidence: bool, output: str) -
     )
 
 
+def has_inline_calculation_data(request: str, *, output: str = "chat") -> bool:
+    """User-supplied measured values are also evidence for requested arithmetic.
+
+    Require two explicit quantities with units, not two date/month labels or a
+    request merely mentioning a calculator. Missing operands still stay in the
+    ordinary clarification path. The existing negation and output gates apply.
+    """
+    quantities = re.findall(
+        r"(?<![\w.])\d+(?:[.,]\d+)*\s*"
+        r"(?:triệu|tỷ|nghìn|ngàn|đồng|usd|eur|phút|giờ|người|sản phẩm|%)"
+        r"(?=\W|$)", request, re.I,
+    )
+    return len(quantities) >= 2 and needs_source_calculation(
+        request, has_evidence=True, output=output,
+    )
+
+
 def validate_calculation_payload(raw: str) -> CalculatedWireAnswer:
     wire = CalculatedWireAnswer.model_validate_json(raw)
     indices = set(re.findall(r"\{\{calc:(\d+)\}\}", wire.answer))

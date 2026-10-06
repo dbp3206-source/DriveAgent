@@ -62,6 +62,7 @@ from app.agent.routing import Route, _rag_arguments, route_request
 from app.agent.source_calculations import (
     SOURCE_CALCULATION_INSTRUCTION,
     CalculatedWireAnswer,
+    has_inline_calculation_data,
     needs_source_calculation,
     resolve_calculations,
     validate_calculation_payload,
@@ -1194,7 +1195,10 @@ class CompilerOrchestrator:
         history_data = conversation_context(history, user_message)
         source_calculation = needs_source_calculation(
             user_message,
-            has_evidence=context_data is not None or reused_sources,
+            has_evidence=(
+                context_data is not None or reused_sources
+                or has_inline_calculation_data(user_message, output=controls.output)
+            ),
             output=controls.output,
         )
         wire_schema = (

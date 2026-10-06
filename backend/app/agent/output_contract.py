@@ -39,6 +39,17 @@ _VIOLATION_LABELS = {
     "numeric_comparison_inconsistent": "có phép so sánh số học không nhất quán",
 }
 
+_REPAIR_CITATION_INSTRUCTION = (
+    "Preserve the complete citation occurrence sequence supplied in "
+    "required_citation_sequence, including repeated markers, in the same order. "
+    "Do not add, remove, duplicate or reorder an occurrence, even when expanding "
+    "a short draft or splitting prose into bullets. Keep each occurrence attached "
+    "to the same supported claim; expand that claim's explanation in place, "
+    "without extending the source's scope. Do not repeat a claim and its citation "
+    "in another section to reach the word target. If these constraints cannot "
+    "be satisfied, preserve the evidence rather than inventing content. "
+)
+
 
 def _best_effort_answer(answer: str, violations: list[str]) -> str:
     """Return useful content with an honest, compact format warning.
@@ -424,6 +435,8 @@ async def enforce_presentation_contract(
             return compacted
 
     target_length = ""
+    canonical_answer = _canonical_citation_groups(answer)
+    original_markers = re.findall(r"\[(\d+)\]", canonical_answer)
     measured_words = len(re.findall(r"\b\w+\b", answer, flags=re.UNICODE))
     if contract.min_words is not None and contract.max_words is not None:
         midpoint = (contract.min_words + contract.max_words) // 2
@@ -462,6 +475,7 @@ async def enforce_presentation_contract(
             "explicit_contract": contract.instruction(),
             "depth_requirements": list(contract.depth_guidance),
             "length_control": target_length,
+            "required_citation_sequence": [f"[{marker}]" for marker in original_markers],
             "word_count_method": (
                 "Máy chủ đếm từng tiếng hoặc số tách biệt, không đếm từ ghép tiếng Việt "
                 "như một từ. Ví dụ: 'thời gian tổng hợp' được tính là 4 từ. "
@@ -489,11 +503,16 @@ async def enforce_presentation_contract(
         },
         ensure_ascii=False,
     )
+    repair_system_instruction = (
+        "Only repair presentation; preserve the draft's factual qualifications. "
+        + _REPAIR_CITATION_INSTRUCTION
+        + SOURCE_NUMERIC_FIDELITY_INSTRUCTION
+    )
     try:
         await asyncio.to_thread(
             quota.reserve,
             "flash",
-            conservative_tokens(prompt + SOURCE_NUMERIC_FIDELITY_INSTRUCTION, 6144),
+            conservative_tokens(prompt + repair_system_instruction, 6144),
         )
     except Exception as exc:
         if (
@@ -532,10 +551,7 @@ async def enforce_presentation_contract(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.1,
-                system_instruction=(
-                    "Only repair presentation; preserve the draft's factual qualifications. "
-                    + SOURCE_NUMERIC_FIDELITY_INSTRUCTION
-                ),
+                system_instruction=repair_system_instruction,
                 max_output_tokens=6144,
                 automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             ),
@@ -565,7 +581,7 @@ async def enforce_presentation_contract(
             await asyncio.to_thread(
                 quota.reserve,
                 "flash",
-                conservative_tokens(prompt + SOURCE_NUMERIC_FIDELITY_INSTRUCTION, 6144),
+                conservative_tokens(prompt + repair_system_instruction, 6144),
             )
         except Exception as quota_exc:
             records.append(
@@ -587,10 +603,7 @@ async def enforce_presentation_contract(
                 contents=prompt,
                 config=types.GenerateContentConfig(
                     temperature=0.1,
-                    system_instruction=(
-                        "Only repair presentation; preserve the draft's factual qualifications. "
-                        + SOURCE_NUMERIC_FIDELITY_INSTRUCTION
-                    ),
+                    system_instruction=repair_system_instruction,
                     max_output_tokens=6144,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
                 ),
@@ -616,9 +629,7 @@ async def enforce_presentation_contract(
     if candidate:
         remaining.extend(_explicit_action_violations(user_message, candidate))
         remaining.extend(_explicit_numeric_comparison_violations(candidate))
-    canonical_answer = _canonical_citation_groups(answer)
     candidate = _canonical_citation_groups(candidate)
-    original_markers = re.findall(r"\[(\d+)\]", canonical_answer)
     candidate_markers = re.findall(r"\[(\d+)\]", candidate)
     if original_markers != candidate_markers:
         remaining.append("citation_markers_changed")

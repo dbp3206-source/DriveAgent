@@ -57,6 +57,7 @@ from app.agent.response_guard import (
     source_restriction_instruction,
 )
 from app.agent.routing import Route, route_request
+from app.agent.source_calculations import has_inline_calculation_data
 from app.auth.permissions import permissions_for_role
 from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Settings
 from app.core.security import redact
@@ -563,6 +564,7 @@ class AdkOrchestrator:
         return bool(
             route.direct
             or inventory_facts(user_message) is not None
+            or has_inline_calculation_data(user_message, output=controls.output)
             # Gather explicit document IDs through the compiler to preserve grounding.
             or route.tool == "drive_read_file"
             # Keep local search then read as an observable, deterministic sequence.

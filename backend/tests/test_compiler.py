@@ -495,6 +495,45 @@ async def test_source_metadata_contract_reaches_calculation_provider(
     assert {"stage": "tool", "tool": "calculate", "status": "success"} in result.trace
 
 
+async def test_inline_user_data_executes_calculator_before_returning_answer(runtime, monkeypatch):
+    runner, user, session_id = runtime
+    calls = []
+
+    async def generate(self, request, stream=False):
+        assert "expressions" in request.config.response_json_schema["required"]
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
+            text=json.dumps({
+                "answer": "Chênh lệch {{calc:0}} triệu đồng; tăng trưởng {{calc:1}}%.",
+                "expressions": ["150-120", "(150-120)/120*100"],
+            }, ensure_ascii=False),
+        )]))
+
+    async def execute(name, arguments, context):
+        from app.tools.calculator import CalculateInput, calculate
+
+        assert name == "calculate"
+        calls.append(arguments)
+        return calculate(CalculateInput.model_validate(arguments))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="inline-calculation",
+        user_message=(
+            "Dữ liệu giả lập: tháng 1 là 120 triệu đồng, tháng 2 là 150 triệu đồng. "
+            "Chỉ dùng dữ liệu này, tính chênh lệch và tăng trưởng bằng công cụ, "
+            "không ghi dữ liệu."
+        ), route_override=Route(),
+    )
+    assert result.answer == "Chênh lệch 30 triệu đồng; tăng trưởng 25.00%."
+    assert calls == [{"operation": "expressions", "values": [
+        "150-120", "(150-120)/120*100",
+    ]}]
+    assert {"stage": "tool", "tool": "calculate", "status": "success"} in result.trace
+    assert result.citations == []
+    assert result.proposals == []
+
+
 async def test_document_question_uses_live_source_synthesis_not_golden_answer(
     runtime, monkeypatch
 ):
