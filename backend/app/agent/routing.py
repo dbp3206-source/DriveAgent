@@ -182,6 +182,16 @@ def _gmail_full_read_route(
 
 def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
     text = message.strip().rstrip(".?!")
+    # A prohibition names a source without requesting it. Mask those names
+    # before keyword routing, while keeping the original request for synthesis.
+    # Import here because controls only imports Route inside its filter method.
+    from app.agent.controls import ChatControls
+
+    exclusions = ChatControls().enforce_explicit_source_exclusions(text).excluded_sources
+    if "gmail" in exclusions:
+        text = re.sub(r"\b(?:gmail|e-?mail|mail|hộp thư|thư chưa đọc)\b", " ", text, flags=re.I)
+    if "drive" in exclusions:
+        text = re.sub(r"\b(?:google\s+drive|drive)\b", " ", text, flags=re.I)
     if needs_public_evidence(text):
         arguments = {"question": text[:800], "timezone": timezone}
         # Preserve the public page the user explicitly selected for evidence.

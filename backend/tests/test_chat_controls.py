@@ -188,6 +188,21 @@ def test_source_exclusion_stops_at_a_contrast_or_positive_source_action():
     }
 
 
+def test_source_prohibition_does_not_include_sources_named_before_it():
+    controls = ChatControls().enforce_explicit_source_exclusions(
+        "Chỉ đọc hai tài liệu local và trả lời, không Gmail, Drive, lịch, web."
+    )
+    assert controls.excluded_sources == {"gmail", "drive"}
+    assert "local_source_search" in controls.allowed_tool_names(TOOLS)
+
+
+def test_short_source_prohibition_preserves_positive_request_after_contrast():
+    controls = ChatControls().enforce_explicit_source_exclusions(
+        "Không Gmail, nhưng đọc tài liệu local."
+    )
+    assert controls.excluded_sources == {"gmail"}
+
+
 def test_typed_slash_commands_set_controls_and_strip_only_leading_prefix():
     controls, message = ChatControls().parse_leading_commands(
         "/drive /research Liệt kê 3 tệp gần đây; giữ 1/2 trong nội dung."

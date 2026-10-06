@@ -241,3 +241,25 @@ và toán tử hỗ trợ. Yêu cầu báo cáo có phép tính ở giữa tiế
 Hai kiểm hồi quy mới khóa đúng lỗi; bộ routing/compiler/trình bày liên quan **255
 đạt**, Ruff và diff check đạt. Cần CI, triển khai và chạy lại ca báo cáo/PDF trước
 khi đóng toàn nhóm A.
+
+## Bản 590afaa — ngày 06/10
+
+CI 37404026093 đạt đầy đủ; ảnh
+`sha256:25da5405f34ebd889c2fb4ce27d65a57c92eecb4b4eb3f507369ffe836ebf150`
+được đưa lên Render bằng giao diện đã đăng nhập, lần triển khai
+`dep-db25rpui0phs73ddqtm0` Live lúc 09:34:55 giờ Việt Nam. Bước tự triển khai
+trong CI bị bỏ qua do chưa có secret kết nối; không ghi là đã chạy tự động.
+
+Ca báo cáo trên URL thật mất 14,1 giây rồi trả không tìm thấy email, dù yêu cầu
+chỉ đọc hai tài liệu local và có câu “không Gmail”. Không có lượt mô hình được
+tính thêm trong ngân sách hiển thị. Ca A vẫn KHÔNG ĐẠT. Nguyên nhân tái hiện
+bằng bộ điều phối: phủ định không kèm động từ chưa được nhận diện, từ Gmail
+ở cuối câu chiếm tuyến trước hai tên tệp local. Sửa nhận diện phủ định ngắn,
+chỉ áp dụng cho tên nguồn phía sau phủ định và bỏ tên nguồn bị cấm khỏi phần
+chọn tuyến. Giữ nguyên nội dung yêu cầu khi tổng hợp. Kiểm đúng lỗi và các
+tuyến đang dùng: 155 đạt; Ruff và kiểm chênh lệch đạt. Chưa chứng nhận sửa
+live trước khi triển khai.
+
+Tài liệu công khai đã được đồng bộ về phạm vi A, B, E, F; bộ 90 mục cũ được
+đánh dấu tham chiếu lịch sử. C/D không được đổi thành PASS; kiểm bốn người
+vẫn chưa có bằng chứng và chỉ tài khoản quản trị thuộc phạm vi demo.

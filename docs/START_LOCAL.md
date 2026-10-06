@@ -16,6 +16,9 @@ powershell -ExecutionPolicy Bypass -File scripts/setup.ps1
 
 Nhánh trên là bản thử, chưa thay thế bản phát hành đã nghiệm thu. Khi có phiên bản được chốt, dùng đúng mã phiên bản ghi trong biên bản thay vì tự chọn bản mới nhất. Không sao chép `.env`, cơ sở dữ liệu hoặc tài khoản Google của người khác.
 
+### Ghi chú riêng cho máy phát triển hiện tại
+
+Đường dẫn dưới đây chỉ dành cho máy của chủ dự án, không phải bước setup máy mới.
 Trên máy đang dùng trong dự án, mở PowerShell và chạy:
 
 ```powershell

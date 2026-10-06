@@ -9,6 +9,20 @@ def test_named_local_documents_are_all_required():
     assert all(source.read_match for source in route.sources)
 
 
+def test_local_report_with_short_source_prohibition_keeps_both_documents():
+    route = route_request(
+        "Đọc hai tài liệu local first.md và second.md, giải thích phép tính "
+        "trong báo cáo 200–240 từ. Không Gmail, Drive, lịch hoặc web."
+    )
+    assert route.required_sources == ("local",)
+    assert [source.arguments["query"] for source in route.sources] == ["first.md", "second.md"]
+
+
+def test_negative_gmail_mention_does_not_trigger_inbox_read():
+    route = route_request("Đọc bảng số liệu tôi cung cấp, không dùng Gmail hoặc Drive.")
+    assert route.tool is None
+
+
 def test_simple_routes_need_no_generation():
     assert route_request("Liệt kê file Drive.").direct
     found = route_request("Tìm file tên proposal.")

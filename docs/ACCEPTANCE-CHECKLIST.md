@@ -1,4 +1,10 @@
-# Veridra — checklist hiện hành theo xương sống sản phẩm
+# Veridra — bộ kiểm đầy đủ để tham chiếu
+
+> Phạm vi đợt demo được chủ sở hữu cập nhật ngày 06/10/2026 tại
+> [RELEASE-CLOSURE.md](RELEASE-CLOSURE.md): chỉ A, B, E, F còn bắt buộc;
+> C và D được loại khỏi đợt này. Các yêu cầu toàn diện bên dưới là lịch sử,
+> không dùng để mở lại phạm vi đã loại. Bốn người thật vẫn chưa kiểm chứng;
+> đợt hiện tại chỉ kiểm tài khoản quản trị và không chứng nhận bốn người.
 
 Ngày chốt: 01/10/2026. Nguồn định hướng: [PRODUCT-FOUNDATION.md](PRODUCT-FOUNDATION.md). Quản lý bằng **18 điều kiện nghiệm thu trong 6 nhóm**, triển khai và đối soát bằng [90 tiêu chí chi tiết hiện hành](ACCEPTANCE-DETAILS.md). Hai cấp cùng bắt buộc: gom nhóm không có nghĩa cắt bỏ yêu cầu. Bản cũ trong thư mục QA chỉ là lịch sử; bộ nhớ là phần bổ sung, không thay phạm vi toàn sản phẩm.
 

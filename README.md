@@ -4,7 +4,7 @@
 
 Đối tượng chính là chuyên viên tư vấn giải pháp AI/phần mềm trước bán hàng. Sản phẩm đang được chuẩn hóa theo ba quy trình: đọc yêu cầu khách hàng, chuẩn bị báo cáo trước cuộc hẹn, phản hồi và lưu kết quả sau khi duyệt. Gmail, Drive/tài liệu riêng, thông tin doanh nghiệp và Calendar là nguồn; Gemini hỗ trợ phân tích và tổng hợp. Mọi công cụ đi qua kiểm tra đầu vào, xác thực, phân quyền, hạn mức và nhật ký.
 
-Định vị và phương pháp đã chốt tại [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md); các hành vi chưa được triển khai/kiểm chứng không được coi là đã hoàn thiện chỉ vì có trong tài liệu. Dùng [checklist nghiệm thu hiện hành](docs/ACCEPTANCE-CHECKLIST.md) thay cho quản lý 90 đầu việc riêng lẻ.
+Định vị và phương pháp đã chốt tại [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md); các hành vi chưa được triển khai/kiểm chứng không được coi là đã hoàn thiện chỉ vì có trong tài liệu. Đợt demo hiện tại dùng [bốn nhóm nghiệm thu A, B, E, F](docs/RELEASE-CLOSURE.md). [Bộ kiểm đầy đủ trước đó](docs/ACCEPTANCE-CHECKLIST.md) được giữ để tham chiếu lịch sử.
 
 **Trạng thái phát hành: chưa nghiệm thu toàn bộ.** Đã có URL thử nghiệm
 [Veridra trên Render](https://veridra-closed-beta.onrender.com), nhưng chưa đủ bằng chứng

@@ -159,8 +159,12 @@ Quy trình khôi phục tách biệt từng bước và điều kiện đối so
 
 ## 9. Điều kiện đổi trạng thái phát hành
 
-Chỉ công bố nghiệm thu khi: CI của đúng commit xanh; digest triển khai khớp;
-PostgreSQL contract chạy thật; OAuth/BYOK chạy qua HTTPS; owner isolation và bốn-user test
-đạt; redeploy + restore đạt; benchmark live đủ mẫu số và không còn P0/P1. Render/Supabase
-Free có cold-start, quota và khả năng pause; đây là giới hạn công bố của closed beta, không
-phải cam kết uptime thương mại.
+Đợt demo ngày 06/10/2026 áp dụng [RELEASE-CLOSURE.md](RELEASE-CLOSURE.md):
+A, B, E và F phải có bằng chứng; CI của đúng mã xanh và ảnh triển khai khớp;
+bộ đo trực tiếp đủ mẫu theo phạm vi đã chốt và không còn lỗi nghiêm trọng.
+C và D, gồm đo tốc độ đầy đủ, khôi phục độc lập và quan sát mở rộng, đã được
+chủ sở hữu loại khỏi đợt này. Các bước 7–8 ở trên giữ để tham khảo vận hành,
+không được ghi là đã đạt khi chưa chạy. Bốn người thật chưa kiểm chứng;
+phạm vi chứng nhận hiện tại chỉ tài khoản quản trị.
+Render/Supabase Free có thời gian đánh thức, hạn mức và khả năng tạm dừng;
+đây là giới hạn công bố, không phải cam kết luôn sẵn sàng.

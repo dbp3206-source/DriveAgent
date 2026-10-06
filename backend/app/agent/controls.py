@@ -254,6 +254,9 @@ class ChatControls(BaseModel):
             r"(?:(?:trực\s+tiếp|truy\s+cập|truy\s+cap|dùng|dung|đọc|doc|"
             r"tra\s+cứu|tra\s+cuu|tìm\s+kiếm|tim\s+kiem|lấy|lay|"
             r"access|use|read|search|query|fetch|look\s+up)\s+){1,4}"
+            r"|\b(?:không|khong|đừng|no)\s+"
+            r"(?=(?:gmail|e-?mail|mail|hộp\s+thư|google\s+drive|drive|"
+            r"tài\s+liệu\s+local|local\s+files?|bộ\s+nhớ|memory)\b)"
             r"|\b(?:do\s+not|don't|dont|without)\s+"
             r"(?:(?:directly|access|accessing|use|using|read|reading|search|"
             r"query|fetch|looking\s+up)\s+){1,4})",
@@ -276,12 +279,14 @@ class ChatControls(BaseModel):
                 flags=re.I,
             )
             for scoped_clause in scoped_clauses:
-                if not negative_action.search(scoped_clause):
+                prohibition = negative_action.search(scoped_clause)
+                if prohibition is None:
                     continue
+                prohibited_scope = scoped_clause[prohibition.end():]
                 exclusions.update(
                     source
                     for source, pattern in source_patterns.items()
-                    if pattern.search(scoped_clause)
+                    if pattern.search(prohibited_scope)
                 )
         if exclusions == set(self.excluded_sources):
             return self
