@@ -67,9 +67,10 @@ class RecoverableGemini(Gemini):
                 await asyncio.to_thread(self.circuit.before_request, primary_capability)
             if self.quota is not None and self.reserve_primary:
                 await asyncio.to_thread(
-                    self.quota.reserve,
+                    self.quota.reserve_with_wait,
                     "flash",
                     conservative_tokens(serialized_request, 8192),
+                    max_wait_seconds=60,
                 )
             async for response in super().generate_content_async(llm_request, stream=False):
                 self._validate_tool_calls(response, llm_request)

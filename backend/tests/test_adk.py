@@ -201,6 +201,10 @@ async def test_fallback_reserves_quota_for_every_real_provider_attempt(
         def reserve(self, bucket, tokens):
             reservations.append((bucket, tokens))
 
+        def reserve_with_wait(self, bucket, tokens, *, max_wait_seconds):
+            assert max_wait_seconds == 60
+            self.reserve(bucket, tokens)
+
     async def generate(self, request, stream=False):
         attempts.append(self.model)
         if self.model == "gemini-primary":
@@ -223,6 +227,34 @@ async def test_fallback_reserves_quota_for_every_real_provider_attempt(
     assert attempts == ["gemini-primary", "gemini-fallback"]
     assert len(reservations) == expected_calls
     assert all(bucket == "flash" and tokens >= 8192 for bucket, tokens in reservations)
+
+
+@pytest.mark.parametrize("code", ["quota_daily_exhausted", "quota_minute_exhausted"])
+async def test_adk_bounded_quota_wait_never_calls_provider_without_reservation(monkeypatch, code):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+
+    from app.tools.contracts import ToolError
+
+    attempts, waits = [], []
+
+    class Quota:
+        def reserve_with_wait(self, bucket, tokens, *, max_wait_seconds):
+            waits.append((bucket, max_wait_seconds))
+            raise ToolError("limit reached", code=code)
+
+    async def generate(self, request, stream=False):
+        attempts.append(self.model)
+        yield  # pragma: no cover
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    model = RecoverableGemini(
+        model="gemini-primary", fallback_model="gemini-fallback", quota=Quota(), reserve_primary=True,
+    )
+    with pytest.raises(ToolError, match="limit reached"):
+        [response async for response in model.generate_content_async(LlmRequest())]
+    assert waits == [("flash", 60)]
+    assert not attempts
 
 
 async def test_primary_circuit_does_not_block_fallback_model(monkeypatch):
