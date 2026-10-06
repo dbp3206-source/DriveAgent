@@ -215,7 +215,7 @@ async def test_public_source_bundle_uses_official_page_and_news_fallback(tmp_pat
     )
 
     async def fake_fetch(_client, url, _maximum):
-        if "example.com" in url:
+        if url == "https://example.com":
             return (
                 b"<html><body>Official company overview with enough readable detail "
                 b"for the source-bundle contract.</body></html>"

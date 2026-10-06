@@ -335,7 +335,17 @@ async def collect_public_source_bundle(
     """
 
     official_url = _normalized_public_url(payload.domain) if payload.domain else None
-    news_query = payload.news_query or payload.company_name or payload.question
+    # Deterministic company routing deliberately omits private contact text.
+    # Its generic overview question is not a useful news query. Anchor discovery
+    # to the selected public host instead of fetching unrelated general news.
+    if payload.news_query:
+        news_query = payload.news_query
+    elif official_url:
+        news_query = f"site:{urlsplit(official_url).hostname}"
+        if payload.company_name:
+            news_query = f"{payload.company_name} {news_query}"
+    else:
+        news_query = payload.company_name or payload.question
     encoded_query = quote_plus(f"{news_query} when:30d")
     news_urls = [
         f"https://news.google.com/rss/search?q={encoded_query}&hl=vi&gl=VN&ceid=VN:vi",

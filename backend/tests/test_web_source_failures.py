@@ -109,3 +109,26 @@ async def test_no_readable_sources_retains_precise_http_error(monkeypatch, tmp_p
     with pytest.raises(ToolError) as error:
         await collect_public_source_bundle(WebResearchInput(domain="https://example.com"), context)
     assert error.value.code == "web_source_http_403"
+
+
+async def test_generic_company_brief_discovers_news_for_public_host_not_private_text(
+    monkeypatch, tmp_path,
+):
+    from urllib.parse import parse_qs, urlsplit
+
+    queries = []
+
+    async def fetch(_client, url, _maximum):
+        if url == "https://example.com":
+            return b"<html>" + b"Public company overview " * 8 + b"</html>"
+        queries.append(parse_qs(urlsplit(url).query)["q"][0])
+        return b"<rss><channel></channel></rss>"
+
+    monkeypatch.setattr("app.tools.web_research._fetch_with_retry", fetch)
+    context = ToolContext(request_id="query-scope", user=SimpleNamespace(id="u"),
+                          db=SimpleNamespace(), settings=Settings(_env_file=None,
+                          database_url=f"sqlite+aiosqlite:///{tmp_path / 'state.db'}"))
+    await collect_public_source_bundle(WebResearchInput(
+        domain="https://example.com", question="Generic overview. Private contact context"
+    ), context)
+    assert queries == ["site:example.com when:30d", "site:example.com when:30d"]
