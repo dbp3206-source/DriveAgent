@@ -574,6 +574,49 @@ async def test_saved_skill_cannot_complete_without_reading_selected_local_source
     )
 
 
+@pytest.mark.parametrize("calculator_available", [False, True])
+async def test_saved_skill_cannot_silently_omit_requested_calculation(calculator_available):
+    from app.tools.contracts import ToolError
+
+    class FakeSessions:
+        async def get_session(self, **kwargs):
+            return SimpleNamespace(id="existing")
+
+    class FakeRunner:
+        def __init__(self, **kwargs):
+            assert "calculate" in {tool.name for tool in kwargs["agent"].tools}
+
+        async def run_async(self, **kwargs):
+            yield SimpleNamespace(
+                author="skill_agent", usage_metadata=None, is_final_response=lambda: True,
+                content=types.Content(parts=[types.Part(text="Có 24 người trong nhóm.")]),
+            )
+
+    registry = ToolRegistry()
+    if calculator_available:
+        for definition in calculator_tool_definitions():
+            registry.register(definition)
+    orchestrator = AdkOrchestrator(Settings(_env_file=None, gemini_api_key="test-key"), registry)
+    orchestrator.client = genai.Client(api_key="test-key")
+    orchestrator.sessions = FakeSessions()
+    with (
+        patch("app.agent.adk_orchestrator.skill_store", return_value=SimpleNamespace(
+            get=lambda *_: {"active": True, "preferred_capabilities": []},
+        )),
+        patch("app.agent.adk_orchestrator.Runner", FakeRunner),
+        pytest.raises(ToolError) as caught,
+    ):
+        await orchestrator.run(
+            user=SimpleNamespace(id="user-a", role="editor"), session_id="session-a",
+            request_id="skill-calculation-required",
+            user_message="Dữ liệu giả lập: 24 người, 12 phút/người. Tính thời gian bằng công cụ.",
+            controls=ChatControls(skill_name="qa_final_tu_van"),
+        )
+    assert caught.value.code == (
+        "skill_calculation_not_run" if calculator_available else "skill_calculation_unavailable"
+    )
+
+
 def test_forbidden_google_creation_does_not_disable_memory_agent_tools():
     from app.agent.routing import Route
 

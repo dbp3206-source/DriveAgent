@@ -77,6 +77,8 @@ def test_calculation_trigger_requires_user_request_and_read_evidence():
 
 @pytest.mark.parametrize("prompt", [
     "Tính tổng hai nhóm và chênh lệch tốc độ tăng trưởng bằng điểm phần trăm",
+    "Tính thời gian bằng công cụ và đưa ba câu hỏi cần xác nhận.",
+    "Tính điện thấp hơn kế hoạch bao nhiêu điểm phần trăm.",
     "TÍNH LẠI TỔNG doanh thu của hai nhóm.",
     "Cộng tổng giờ từ hai tệp.",
     "Tính chênh lệch giữa năm 2024 và 2025.",
@@ -114,6 +116,8 @@ def test_arithmetic_intents_require_evidence_and_chat(prompt):
     "Tóm tắt tỷ lệ và tốc độ tăng trưởng đã ghi trong PDF.",
     "Tổng hợp chênh lệch giữa hai báo cáo.",
     "Giải thích tính năng tổng hợp báo cáo.",
+    "Giải thích tính năng so sánh tỷ lệ trong báo cáo.",
+    "Không tính thời gian bằng công cụ, chỉ đọc nguồn.",
     "Giới thiệu cộng đồng người dùng.",
     "Đọc báo cáo tăng trưởng.",
     "Tỷ lệ nhóm A so với nhóm B là bao nhiêu?",

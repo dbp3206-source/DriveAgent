@@ -313,12 +313,18 @@ class AdkOrchestrator:
                 [definition.name for definition in available],
                 skill_capabilities=skill_capabilities,
             )
-            if controls.skill_name and needs_source_calculation(
+            skill_calculation_required = bool(controls.skill_name) and needs_source_calculation(
                 user_message,
                 has_evidence=controls.source not in {"auto", "general"}
                 or has_inline_calculation_data(user_message, output=controls.output),
                 output=controls.output,
-            ) and any(d.name == "calculate" for d in available):
+            )
+            if skill_calculation_required:
+                if not any(d.name == "calculate" for d in available):
+                    raise ToolError(
+                        "Quy trình chưa có công cụ tính toán được yêu cầu.",
+                        code="skill_calculation_unavailable",
+                    )
                 allowed_names.add("calculate")
             if controls.skill_name and controls.source == "local" and (
                 "local_source_read" not in allowed_names
@@ -523,6 +529,14 @@ class AdkOrchestrator:
                     "Quy trình chưa đọc được tài liệu local đã chọn nên chưa thể tổng hợp kết quả. "
                     "Hãy kiểm tra tài liệu; không dùng dữ kiện của lần chạy trước.",
                     code="skill_source_not_read",
+                )
+            if skill_calculation_required and not any(
+                item.name == "calculate" for item in evidence
+            ):
+                raise ToolError(
+                    "Quy trình đã dừng vì chưa thực hiện phép tính bằng công cụ như bạn yêu cầu. "
+                    "Không coi phần tổng hợp này là kết quả hoàn tất.",
+                    code="skill_calculation_not_run",
                 )
             reused_sources = not citations and bool(historical_citations)
             if reused_sources:

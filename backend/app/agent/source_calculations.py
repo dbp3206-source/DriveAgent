@@ -77,11 +77,14 @@ def needs_source_calculation(request: str, *, has_evidence: bool, output: str) -
     # asking what they are must not force new arithmetic without a compute verb.
     arithmetic_request = (
         r"\b" + computing_verb + r"\s+" + arithmetic_term + r"\b|"
+        r"\btính(?:\s+(?:toán|lại))?\s+(?!năng\b|tổng\s+hợp\b)"
+        r"[^.!?;\n]{0,80}?\b" + arithmetic_term + r"\b|"
         r"\bcho\s+biết\s+" + aggregate_term + r"\b|"
         r"\b" + aggregate_term + r"\b[^.!?\n]{0,80}\bbao\s+nhiêu\b"
     )
     explicit_tool_request = (
-        r"\b(?:tính(?:\s+lại)?\s+bằng\s+công\s+cụ|"
+        r"\b(?:tính(?:\s+lại)?\s+(?!năng\b|tổng\s+hợp\b)"
+        r"(?:[^.!?;,\n]{0,60}?\s+)?bằng\s+công\s+cụ|"
         r"(?:gọi|dùng|sử dụng)\s+(?:công\s+cụ\s+)?calculate)\b"
     )
     prohibition = (
