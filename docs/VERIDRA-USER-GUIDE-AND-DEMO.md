@@ -14,6 +14,13 @@ Phiên bản hướng dẫn: 04/10/2026. Dành cho chuyên viên chuẩn bị t�
 
 ### 2. Chuẩn bị trước cuộc hẹn
 
+Để kiểm gộp trong phạm vi nhỏ, dùng: “Đọc tối đa 5 thư Gmail và lịch 24 giờ tới.
+Tóm tắt việc cần chú ý đầu ngày, rồi chuẩn bị câu hỏi cho cuộc hẹn gần nhất nếu
+có. Phân biệt dữ kiện, đề xuất và điều chưa biết. Không mở Drive, tài liệu local,
+web hoặc bộ nhớ; không gửi thư, không tạo hoặc sửa dữ liệu Google.” Hai nguồn
+phải có dấu vết đọc trước khi tổng hợp. Không có lịch phù hợp thì không tự dựng
+cuộc hẹn. Đây là câu hỏi kiểm chứng, chưa phải biên bản nghiệm thu đạt.
+
 1. Chuẩn bị sẵn một sự kiện thử trong Google Calendar bằng giao diện Google. Veridra chỉ đọc lịch, không tạo hoặc sửa sự kiện.
 2. Trong cùng cuộc trò chuyện, chỉ rõ sự kiện, ngày và múi giờ; chỉ định thư cùng tài liệu Drive/local liên quan. Không có sự kiện phù hợp thì kết quả đúng là báo chưa tìm thấy, không tự tạo lịch.
 3. Gửi: “Chuẩn bị cuộc hẹn [tên] ngày [ngày giờ]. Dùng [thư/tài liệu]. Viết mục tiêu trao đổi, dữ kiện có nguồn, điều chưa biết, câu hỏi cần xác nhận và việc cần chuẩn bị. Phân biệt nhận định với dữ kiện.”

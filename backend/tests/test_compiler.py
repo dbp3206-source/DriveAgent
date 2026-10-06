@@ -968,6 +968,57 @@ async def test_cross_source_compare_reads_both_gmail_and_drive_before_synthesis(
     assert "## So sánh" in result.answer
 
 
+async def test_combined_brief_reads_bounded_mail_and_calendar_before_one_synthesis(
+    runtime, monkeypatch
+):
+    calls, prompts = [], []
+
+    class ToolResult:
+        def __init__(self, data):
+            self.data = data
+
+        def model_dump(self, mode="json"):
+            return self.data
+
+    async def execute(name, arguments, _context):
+        calls.append((name, arguments))
+        if name == "gmail_read_matching_messages":
+            return ToolResult({"messages": [{
+                "id": "mail-123", "thread_id": "thread-123", "subject": "Hồ sơ",
+                "body": "MAIL_EVIDENCE", "body_available": True,
+            }]})
+        assert name == "calendar_list_upcoming"
+        return ToolResult({"events": [{
+            "id": "event-123", "title": "CALENDAR_EVIDENCE",
+            "start": "2026-10-06T18:00:00+07:00", "end": "2026-10-06T19:00:00+07:00",
+            "all_day": False, "html_link": "https://calendar.google.com/calendar/event?eid=123",
+        }]})
+
+    async def generate(self, request, stream=False):
+        prompts.append(request)
+        yield LlmResponse(content=types.Content(
+            role="model", parts=[types.Part(text='{"answer":"Thư [1] và cuộc hẹn [2]."}')]
+        ))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    runner, user, session_id = runtime
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="bounded-inbox-calendar",
+        user_message="Đọc 5 thư Gmail và lịch 24 giờ tới. Không mở Drive, local hoặc web.",
+    )
+    assert calls == [
+        ("gmail_read_matching_messages", {"query": "in:inbox", "max_results": 5}),
+        ("calendar_list_upcoming", {"days": 1, "max_results": 20}),
+    ]
+    assert len(prompts) == 1
+    assert "MAIL_EVIDENCE" in str(prompts[0].contents)
+    assert "CALENDAR_EVIDENCE" in str(prompts[0].contents)
+    assert [citation["file_id"] for citation in result.citations] == [
+        "mail-123", "calendar:event-123"
+    ]
+
+
 async def test_cross_source_compare_stops_if_drive_source_is_ambiguous(runtime, monkeypatch):
     calls = []
 

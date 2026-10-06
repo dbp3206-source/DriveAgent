@@ -580,6 +580,22 @@ class AgentOrchestrator:
                 ]
             if message.name == "local_source_read":
                 payload = payload.get("data", {})
+            if message.name == "calendar_list_upcoming":
+                payload["citations"] = [
+                    {
+                        "file_id": f"calendar:{item['id']}",
+                        "file_name": item.get("title") or "Cuộc hẹn không có tiêu đề",
+                        "chunk_index": 0,
+                        "snippet": (
+                            f"{item.get('title', '')}; bắt đầu {item.get('start', '')}; "
+                            f"kết thúc {item.get('end', '')}; "
+                            f"cả ngày: {item.get('all_day', False)}"
+                        )[:500],
+                        "web_view_link": item.get("html_link"),
+                        "score": 1.0,
+                    }
+                    for item in payload.get("events", []) if item.get("id")
+                ]
             if message.name == "local_source_search":
                 data = payload.get("data", payload)
                 payload = data

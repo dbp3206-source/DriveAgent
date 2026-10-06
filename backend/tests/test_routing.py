@@ -1,6 +1,41 @@
 from app.agent.routing import extract_explicit_file_id, route_request
 
 
+def test_inbox_and_next_day_calendar_are_gathered_together_with_bounded_mail():
+    route = route_request(
+        "Đọc tối đa 5 thư Gmail và lịch 24 giờ tới, chuẩn bị đầu ngày và trước hẹn. "
+        "Không mở Drive, local hoặc web."
+    )
+    assert route.required_sources == ("gmail", "calendar")
+    assert [source.tool for source in route.sources] == [
+        "gmail_read_matching_messages", "calendar_list_upcoming"
+    ]
+    assert route.sources[0].arguments == {"query": "in:inbox", "max_results": 5}
+    assert route.sources[1].arguments == {"days": 1, "max_results": 20}
+
+
+def test_next_day_calendar_does_not_read_explicitly_forbidden_gmail():
+    route = route_request("Đọc lịch 24 giờ tới. Không dùng Gmail hoặc Drive.")
+    assert [source.tool for source in route.sources] == ["calendar_list_upcoming"]
+
+
+def test_forbidden_calendar_does_not_trigger_upcoming_read():
+    route = route_request("Đọc 5 thư Gmail. Không đọc lịch 24 giờ tới.")
+    assert not any(source.tool == "calendar_list_upcoming" for source in route.sources)
+
+
+def test_calendar_prohibition_in_a_source_list_is_respected():
+    route = route_request("Đọc Gmail. Không mở Drive, local hoặc lịch 24 giờ tới.")
+    assert not any(source.tool == "calendar_list_upcoming" for source in route.sources)
+
+
+def test_combined_today_brief_keeps_single_bounded_page():
+    route = route_request("Đọc 5 thư Gmail hôm nay và lịch 24 giờ tới.")
+    assert route.sources[0].arguments["max_results"] == 5
+    assert "day_scope" not in route.sources[0].arguments
+    assert route.sources[0].arguments["local_date"] is not None
+
+
 def test_company_website_is_gathered_without_contact_context_in_web_query():
     route = route_request(
         'Chuẩn bị hồ sơ doanh nghiệp từ website chính thức https://example.org. '

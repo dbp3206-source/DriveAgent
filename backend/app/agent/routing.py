@@ -183,6 +183,35 @@ def _gmail_full_read_route(
 
 def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
     text = message.strip().rstrip(".?!")
+    # Upcoming private appointments are not public current-affairs queries.
+    # Gather them deterministically, together with a bounded inbox page when
+    # requested, rather than letting the Gmail specialist omit Calendar.
+    calendar_requested = bool(re.search(
+        r"\b(?:google\s+calendar|calendar|lịch(?:\s+hẹn)?|cuộc hẹn)\b", text, re.I
+    ))
+    calendar_forbidden = bool(re.search(
+        r"\b(?:không|đừng|chưa)\s+[^.;!?\n]{0,100}?"
+        r"(?:google\s+calendar|calendar|lịch)\b", text, re.I
+    ))
+    next_day = bool(re.search(r"\b24\s*(?:giờ|h)\s*(?:tới|tiếp theo)\b", text, re.I))
+    if calendar_requested and next_day and not calendar_forbidden:
+        from app.agent.controls import ChatControls
+
+        exclusions = ChatControls().enforce_explicit_source_exclusions(text).excluded_sources
+        calendar_source = Route("calendar_list_upcoming", {"days": 1, "max_results": 20})
+        if "gmail" not in exclusions and re.search(r"\b(?:gmail|hộp thư|email)\b", text, re.I):
+            gmail_source = _gmail_full_read_route(
+                text, query="in:inbox", timezone=timezone
+            )
+            # day_scope=today otherwise scans up to five pages to exhaust the
+            # local day. This combined brief must respect the requested count.
+            if gmail_source.arguments.get("day_scope") == "today":
+                gmail_source.arguments.pop("day_scope")
+                gmail_source.arguments["local_date"] = datetime.now(ZoneInfo(timezone)).date()
+            return Route(
+                sources=(gmail_source, calendar_source), required_sources=("gmail", "calendar")
+            )
+        return Route(sources=(calendar_source,), required_sources=("calendar",))
     # The freshness guard must see the complete request: masking an excluded
     # source first would break its strict, standalone prohibition grammar.
     if needs_public_evidence(text):
