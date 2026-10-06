@@ -151,7 +151,10 @@ jobs:
           printf '%s@%s\n' "${IMAGE}" "${DIGEST}" > release-image-digest.txt
 
       - name: Deploy the exact verified image to Render
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && env.RENDER_DEPLOY_HOOK != ''
+        if: >-
+          github.event_name == 'push' &&
+          (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/staging/')) &&
+          env.RENDER_DEPLOY_HOOK != ''
         env:
           RENDER_DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK }}
         shell: bash

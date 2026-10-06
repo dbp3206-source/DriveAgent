@@ -52,14 +52,16 @@ lên cloud. Chỉ xác nhận hoàn tất sau mục kiểm chứng cuối tài l
 
 1. Push branch cần phát hành lên repository `dbp3206-source/DriveAgent`.
 2. Mở **Actions → CI**. PostgreSQL contract phải xanh trước job verify.
-3. Với push vào `staging/*`, workflow xuất commit SHA và `staging`; không triển khai
-   production hoặc thay tag `closed-beta`. Chỉ push vào `main` mới xuất tag `closed-beta`.
+3. Với push vào `staging/*`, workflow xuất commit SHA và `staging`, rồi dùng Deploy
+   Hook để cập nhật dịch vụ nghiệm thu hiện có bằng đúng digest đã kiểm tra; không
+   thay tag `closed-beta`. Chỉ push vào `main` mới xuất tag `closed-beta`.
    Artifact `release-image-digest.txt` chứa tham chiếu bất biến `image@sha256:...`.
 4. Package có thể để private. Trong Render tạo registry credential `veridra-ghcr` bằng
    GitHub username và PAT chỉ có quyền tối thiểu đọc Packages. Không paste PAT vào source.
-5. Tùy chọn sau khi có service Render: copy Deploy Hook vào GitHub repository secret
-   `RENDER_DEPLOY_HOOK`. Workflow sẽ yêu cầu Render triển khai **đúng digest đã kiểm tra**.
-   Không có secret này thì deploy thủ công từ dashboard và phải đối chiếu digest.
+5. Sau khi có service Render, copy Deploy Hook vào GitHub repository secret
+   `RENDER_DEPLOY_HOOK`. Workflow sẽ yêu cầu Render triển khai **đúng digest đã kiểm tra**
+   cho cả candidate `staging/*` và bản `main`. Không có secret này thì deploy thủ công
+   từ dashboard và phải đối chiếu digest.
 
 ## 5. Render Blueprint
 
