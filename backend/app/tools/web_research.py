@@ -527,13 +527,13 @@ async def web_research(payload: WebResearchInput, context: ToolContext) -> WebRe
             code="ungrounded_web_research",
         )
     supported = _supported_claims(response, sources)
-    if not payload.company_name and not supported:
+    if not supported:
         raise ToolError(
             "Nguồn web chưa hỗ trợ nhận định cụ thể; chưa thể xác minh thông tin cập nhật.",
             code="ungrounded_web_research",
         )
     return WebResearchOutput(
-        summary=supported or text,
+        summary=supported,
         sources=sources,
         observed_at=datetime.now(UTC),
         model=context.settings.gemini_web_research_model,

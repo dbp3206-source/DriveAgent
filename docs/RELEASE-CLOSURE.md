@@ -2,6 +2,19 @@
 
 ## Đối soát mới nhất
 
+**Sửa chung bộ nhận bằng chứng web, chưa triển khai:** nhánh trả lời công ty
+trước đây cho phép dùng nguyên văn mô hình nếu có liên kết nhưng không có
+đoạn nhận định được nhà cung cấp đối chiếu. Câu hỏi thời sự đã chặn trường
+hợp này, còn công ty bị ngoại lệ `company_name`. Bỏ ngoại lệ và chỉ chuyển
+các đoạn có đối chiếu nguồn sang bước tổng hợp. Kiểm cả “không nguồn”,
+“có liên kết nhưng không đoạn hỗ trợ” và “có đoạn hỗ trợ lẫn câu không nguồn”:
+71 phép kiểm web/thông tin cập nhật đạt, kiểm mã đạt. Lần đầu ca giả lập
+“đạt” cũ chỉ có liên kết nên bị chặn đúng; bổ sung dữ liệu hỗ trợ nguồn cho
+ca dương và kiểm câu ngoài bằng chứng không lọt qua. Không gọi Gemini thật.
+Không coi thay đổi này đã chứng minh sáu báo cáo doanh nghiệp đạt, hoặc
+đã khắc phục đầy đủ phạm vi Việt Nam và ngày sự kiện. Bản cloud vẫn fc4733d
+cho tới khi xác nhận triển khai một ảnh mới.
+
 **Hẹn giờ sáng thực tế đã đạt trên bản fc4733d.** CI 37489514010 thành công;
 Render dep-db2hgg7lot8c73f7miig Live lúc 15:50:13 UTC với ảnh
 `sha256:7ffdb94acb7929155bf212033468713d8ac8326660b203921b74eac57d7f1c10`.

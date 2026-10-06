@@ -110,12 +110,21 @@ async def test_calendar_tool_is_read_only_and_omits_attendee_details():
     assert events_api.list.__name__ == "<lambda>"
 
 
-async def test_web_research_fails_closed_without_grounded_sources(tmp_path):
+@pytest.mark.parametrize("with_source", [False, True])
+async def test_web_research_fails_closed_without_grounded_sources(tmp_path, with_source):
+    # A provider link alone does not support its surrounding prose, including
+    # for company reports. This exercises the actual tool, not just extraction.
+    candidates = [SimpleNamespace(grounding_metadata=SimpleNamespace(
+        grounding_chunks=[SimpleNamespace(web=SimpleNamespace(
+            uri="https://example.com", title="Official website"
+        ))],
+        grounding_supports=[],
+    ))] if with_source else []
     fake_client = SimpleNamespace(
         aio=SimpleNamespace(
             models=SimpleNamespace(
                 generate_content=AsyncMock(
-                    return_value=SimpleNamespace(text="Claim", candidates=[])
+                    return_value=SimpleNamespace(text="Claim", candidates=candidates)
                 )
             ),
             aclose=AsyncMock(),
@@ -137,7 +146,7 @@ async def test_web_research_fails_closed_without_grounded_sources(tmp_path):
         patch("app.tools.web_research.genai.Client", return_value=fake_client),
         patch("app.services.quota.QuotaGuard.reserve", return_value={}),
     ):
-        with pytest.raises(ToolError, match="grounding") as raised:
+        with pytest.raises(ToolError) as raised:
             await web_research(WebResearchInput(company_name="Acme"), context)
     assert raised.value.code == "ungrounded_web_research"
 
@@ -242,11 +251,15 @@ async def test_web_research_accepts_grounded_provider_response(tmp_path):
                         SimpleNamespace(
                             web=SimpleNamespace(uri="https://example.com/about", title="Official")
                         )
-                    ]
+                    ],
+                    grounding_supports=[SimpleNamespace(
+                        segment=SimpleNamespace(text="Acme là doanh nghiệp phần mềm."),
+                        grounding_chunk_indices=[0],
+                    )],
                 )
             )
         ],
-        text="Acme là doanh nghiệp phần mềm. [S1]",
+        text="Acme là doanh nghiệp phần mềm. [S1] Quy mô chưa có nguồn.",
     )
     fake_client = SimpleNamespace(
         aio=SimpleNamespace(
@@ -274,6 +287,7 @@ async def test_web_research_accepts_grounded_provider_response(tmp_path):
             WebResearchInput(company_name="Acme", domain="https://example.com"), context
         )
     assert result.sources[0].url == "https://example.com/about"
+    assert result.summary == "Acme là doanh nghiệp phần mềm. [1]"
     assert result.model == settings.gemini_web_research_model
     assert fake_client.aio.models.generate_content.call_args.kwargs["model"] == "gemini-2.5-flash"
 
