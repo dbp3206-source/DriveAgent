@@ -249,7 +249,8 @@ async def test_adk_bounded_quota_wait_never_calls_provider_without_reservation(m
 
     monkeypatch.setattr(Gemini, "generate_content_async", generate)
     model = RecoverableGemini(
-        model="gemini-primary", fallback_model="gemini-fallback", quota=Quota(), reserve_primary=True,
+        model="gemini-primary", fallback_model="gemini-fallback",
+        quota=Quota(), reserve_primary=True,
     )
     with pytest.raises(ToolError, match="limit reached"):
         [response async for response in model.generate_content_async(LlmRequest())]
