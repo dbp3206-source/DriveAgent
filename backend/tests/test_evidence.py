@@ -73,6 +73,32 @@ def test_generated_answer_without_reference_does_not_expose_retrieval_candidates
     assert selected == []
 
 
+def test_mixed_web_source_labels_share_the_numeric_renumbering_map():
+    sources = [{"file_id": "a"}, {"file_id": "b"}, {"file_id": "c"}]
+    answer, selected = retain_referenced_citations(
+        "First claim [3]. Second claim [1].\nSources:\n[S1] A\n[S2] B\n[S3] C",
+        sources,
+    )
+    assert answer == "First claim [1]. Second claim [2].\nSources:\n[2] A\n[3] B\n[1] C"
+    assert selected == [sources[2], sources[0], sources[1]]
+
+
+def test_web_marker_groups_and_invalid_slots_follow_evidence_rules():
+    sources = [{"file_id": "a"}, {"file_id": "b"}]
+    answer, selected = retain_referenced_citations(
+        "Evidence [S2; 1; s2]. Unsupported [S99].", sources
+    )
+    assert answer == "Evidence [1, 2]. Unsupported ."
+    assert selected == [sources[1], sources[0]]
+
+
+def test_web_markers_do_not_convert_markdown_links_or_images_to_evidence():
+    text = "[S2](https://example.com) ![S1](image.png) and claim [S1]."
+    answer, selected = retain_referenced_citations(text, [{"file_id": "a"}])
+    assert answer == "[S2](https://example.com) ![S1](image.png) and claim [1]."
+    assert selected == [{"file_id": "a"}]
+
+
 def test_production_auto_reference_keeps_verified_evidence_when_model_omits_marker():
     answer, selected = retain_referenced_citations(
         "Mã kiểm thử là LOCAL-STUDY-2026.",

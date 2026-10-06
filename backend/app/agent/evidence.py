@@ -172,7 +172,13 @@ def retain_referenced_citations(
                     normalize_page_reference, answer, flags=re.I)
     answer = _align_explicit_page_markers(answer, citations)
     valid_order: list[int] = []
-    citation_pattern = re.compile(r"(?<!\!)\[(\s*\d+(?:\s*[,;]\s*\d+)*\s*)\](?!\()")
+    # Web summaries use [S1] while other tools use [1]. Both identify the
+    # same server evidence slot: renumber them together, including source
+    # definitions, so a mixed-format answer cannot leave its bibliography
+    # pointing at the pre-renumbering source order.
+    citation_pattern = re.compile(
+        r"(?<!\!)\[(\s*S?\d+(?:\s*[,;]\s*S?\d+)*\s*)\](?!\()", re.I
+    )
     for match in citation_pattern.finditer(answer):
         for num_str in re.findall(r"\d+", match.group(1)):
             number = int(num_str)

@@ -1,5 +1,27 @@
 # Đợt nghiệm thu cuối — chốt phạm vi 06/10/2026
 
+## Đối soát mới nhất
+
+Bản `c27862b` đã qua CI `37482088860` và chạy Live trên Render. Lượt web
+`e4250a0b-245e-4db1-accb-5ce54611500e` hoàn tất 26,5 giây, tin đúng FPT;
+không còn dừng tất cả nguồn khi website bị chặn. Website chính vẫn chưa đọc
+được nên hồ sơ đầy đủ chưa đạt. Hỏi tiếp sau mở lại hội thoại, lượt
+`a62f6689-21bb-4fe5-bee1-9129e4f7ee12`, giữ đúng ngày 14/10/2026, 09:00,
+ngân sách chưa xác nhận và ba câu hỏi; 16,8 giây, không tìm web.
+
+Ca đối chứng Bosch `d4cc10b8-5a17-4303-abbe-fddb1b13ab9d` đã đọc website,
+28,6 giây, nhưng bảng nguồn có mã `[S#]` không khớp phần thân `[n]` sau đánh
+lại số. Nguyên nhân chung: bộ đánh lại số chỉ nhận `[n]`, không nhận `[S#]`
+do công cụ web cung cấp. Sửa chung để hai dạng dùng cùng ánh xạ; không đổi
+nội dung nguồn, không gắn ngoại lệ theo công ty. 77 phép kiểm nguồn, trích
+dẫn theo trang và điều phối đạt; kiểm mã và khoảng trắng đạt. Bản sửa này
+chưa được xác nhận trên URL thật, không coi Bosch đã đạt toàn bộ nghiệp vụ.
+
+Hẹn giờ: project đang chạy chưa có pg_cron/pg_net hoặc cron.job; kiểm lại
+Vault vẫn chưa có tên `veridra_scheduler_bearer_token`. Chỉ kiểm sự tồn tại,
+không đọc giá trị bí mật. Chưa tạo lịch thử khi thiếu bí mật; chưa coi hẹn
+giờ đạt. P06 tiếp tục hoãn; E chưa đủ mẫu; F chưa gộp main.
+
 Danh sách điều hành được người dùng yêu cầu tinh gọn. Đợt demo chỉ còn bốn nhóm
 bắt buộc A, B, E và F. Nhóm C và D được chủ sở hữu loại khỏi đợt nghiệm thu này
 ngày 06/10/2026 để tránh kéo dài tiến độ. Không thêm tính năng hoặc thiết kế lại.
