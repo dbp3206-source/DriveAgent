@@ -211,3 +211,33 @@ Không tự thêm dấu mất hoặc đổi nguồn. Bộ kiểm trình bày/ngu
 5,48 giây; Ruff và diff check đạt. Chưa khẳng định đây là dạng dấu cụ thể của
 lượt live trước vì dấu vết không lưu bản sửa bị từ chối. Chưa chứng nhận chất
 lượng ngữ nghĩa hay câu trả lời cloud từ phép kiểm mô hình giả.
+
+CI 37333982226 của 3b3afbc02880b76b3635f97d8c8fb4cf5187a157 đã thành công.
+Kho GHCR trả ảnh sha256:13546369e918ebba41fb621aad27c77b8c2e2d9da279b301684e8f6ca8ccb0c7.
+Đã cập nhật nguồn ảnh dịch vụ Render hiện có; lần triển khai
+dep-db1sandg1s2s73bj3chg bắt đầu 22:42:25 ngày 05/10 giờ Việt Nam,
+hoàn tất Live lúc 22:44:16. Không dùng trạng thái Live để thay nghiệm thu chức năng.
+
+## Phạm vi chốt và nhóm A — ngày 06/10
+
+Chủ sở hữu loại nhóm C (tốc độ/khả dụng mở rộng) và D (khôi phục/quan sát/an toàn
+nâng cao) khỏi đợt demo. Hai nhóm giữ nhãn `EXCLUDED`, không tính điểm và không
+được đổi thành đạt. Đợt chốt chỉ còn A, B, E, F; lỗi nghiêm trọng về quyền, mất dữ
+liệu hoặc ghi thiếu duyệt nếu phát hiện vẫn chặn phát hành.
+
+Trên đúng cloud `3b3afbc`, bản xem trước Google Doc hết hạn được nhận diện; nút
+**Tạo lại bản xem trước** tạo khóa mới, sau đó vẫn yêu cầu một lần xác nhận riêng.
+Chủ sở hữu đã cho phép đúng một tài liệu giả lập. Sau xác nhận, giao diện báo
+"Google Doc đã được tạo và đọc lại thành công" và trả liên kết tài liệu
+`1D2AjL-9R8Ho5Tn0logDock0oUQUkO9NJytFfZeKZT9A`. Không gửi thư, không đổi quyền
+chia sẻ và không tạo lại lần hai. Nhánh phục hồi bản xem trước của A đạt.
+
+Ca báo cáo 200–240 từ trên cùng cloud lại lộ lỗi điều phối: cụm mô tả
+"phép tính 24 × 12..." bị tuyến tính toán bắt giữa câu rồi cắt còn số 24, kết quả
+chỉ là `24 = 24`, một sự kiện công cụ. Đây là lỗi thật, không dùng câu trả lời cũ
+để lấp. Sửa tuyến chung: chỉ đi thẳng vào máy tính khi yêu cầu bắt đầu bằng mệnh
+lệnh tính hoặc gọi rõ công cụ calculate, đồng thời phải có ít nhất hai toán hạng
+và toán tử hỗ trợ. Yêu cầu báo cáo có phép tính ở giữa tiếp tục qua tổng hợp nguồn.
+Hai kiểm hồi quy mới khóa đúng lỗi; bộ routing/compiler/trình bày liên quan **255
+đạt**, Ruff và diff check đạt. Cần CI, triển khai và chạy lại ca báo cáo/PDF trước
+khi đóng toàn nhóm A.

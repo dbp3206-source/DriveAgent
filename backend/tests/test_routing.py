@@ -112,6 +112,23 @@ def test_explicit_compound_calculation_uses_safe_direct_route():
     }
 
 
+def test_report_with_labelled_calculation_is_not_reduced_to_one_number():
+    route = route_request(
+        "Viết báo cáo 200–240 từ. Nêu đúng 24 người; phép tính 24 × 12 phút "
+        "× 20 ngày = 5.760 phút và giữ dẫn nguồn [1][2]."
+    )
+
+    assert route.tool is None
+    assert route.direct is False
+
+
+def test_direct_calculation_requires_two_operands_and_operator():
+    route = route_request("Tính 24")
+
+    assert route.tool is None
+    assert route.direct is False
+
+
 def test_gmail_summary_routes_to_a_fresh_bounded_read():
     route = route_request("Tổng hợp 5 email chưa đọc gần đây nhất thành ba nhóm")
 

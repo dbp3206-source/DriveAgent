@@ -407,7 +407,8 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
     # Explicit arithmetic requests can safely bypass an expensive ReAct loop.  The
     # calculator parses a tiny grammar and never passes the expression to eval/shell.
     expression = re.search(
-        r"\b(?:tính|calculate)\s+((?:(?:\d+(?:[.,]\d+)?)|[()+*/\-]|cộng|trừ|nhân|chia|\s)+)",
+        r"(?:^\s*(?:tính|calculate)|\bdùng\s+(?:công cụ\s+)?calculate\s+(?:để\s+)?tính)"
+        r"\s+((?:(?:\d+(?:[.,]\d+)?)|[()+*/\-]|cộng|trừ|nhân|chia|\s)+)",
         text,
         re.I,
     )
@@ -418,7 +419,14 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
         value = re.sub(r"\bnhân\b", "*", value, flags=re.I)
         value = re.sub(r"\bchia\b", "/", value, flags=re.I)
         value = re.sub(r"(?<=\d),(?=\d)", ".", value)
-        return Route("calculate", {"operation": "expression", "values": [value]}, True)
+        # A prose request can mention a labelled "phép tính 24 × ..." while its
+        # primary job is still a sourced report. Do not cut such a request at
+        # the first number and turn the whole turn into the identity `24 = 24`.
+        # The direct route is reserved for an imperative calculation and must
+        # contain at least two operands plus a supported binary operator.
+        operands = re.findall(r"(?<![\w.])-?\d+(?:\.\d+)?(?![\w.])", value)
+        if len(operands) >= 2 and re.search(r"[+*/\-]", value):
+            return Route("calculate", {"operation": "expression", "values": [value]}, True)
     if re.search(r"(?:bộ nhớ|sở thích|memory)", text, re.I):
         return Route("memory_search", {"query": text[:2000], "limit": 4})
     return Route()

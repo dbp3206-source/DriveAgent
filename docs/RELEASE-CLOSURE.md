@@ -1,19 +1,20 @@
-# Đợt nghiệm thu cuối — 05/10/2026
+# Đợt nghiệm thu cuối — chốt phạm vi 06/10/2026
 
-Danh sách điều hành được người dùng yêu cầu tinh gọn. Sáu nhóm dưới đây gom
-checklist hiện hành, không bỏ các yêu cầu bắt buộc trong ACCEPTANCE-CHECKLIST.md.
-Không thêm tính năng hoặc thiết kế lại. Tiêu chí chưa có bằng chứng giữ chưa đạt.
+Danh sách điều hành được người dùng yêu cầu tinh gọn. Đợt demo chỉ còn bốn nhóm
+bắt buộc A, B, E và F. Nhóm C và D được chủ sở hữu loại khỏi đợt nghiệm thu này
+ngày 06/10/2026 để tránh kéo dài tiến độ. Không thêm tính năng hoặc thiết kế lại.
+Tiêu chí chưa có bằng chứng giữ chưa đạt.
 
 | Nhóm | Việc còn lại | Điều kiện đóng |
 |---|---|---|
 | A | Độ dài báo cáo, bảo toàn dẫn nguồn, phạm vi số liệu PDF, bản xem trước Doc hết hạn | Ca lỗi đã tái hiện đạt trên URL thật; duyệt và đọc lại đúng, không trùng |
 | B | Ba quy trình đầu ngày, trước hẹn, hoàn thiện/lưu; ghép kiểm nguồn, hỏi tiếp, quy trình đã lưu, nhớ/sửa/quên | Hoàn thành xuyên suốt, bảy vai trò và kiểm soát công cụ có dấu vết; hẹn giờ có lần chạy thật |
-| C | Tốc độ mở khi đang chạy/sau ngủ, đăng nhập, đổi khóa, hết hạn mức, lỗi mạng; giao diện và ảnh/bộ lọc đã yêu cầu | Số đo theo ngưỡng đã khóa; không chờ vô hạn hoặc mất việc; thao tác chính dùng được |
-| D | Quyền, chỉ dẫn độc hại, duyệt; tiếp tục sau triển khai; khôi phục DB và tệp sang đích riêng; quan sát đã cam kết | Không lộ/ghi trái quyền/trùng; đối soát bản khôi phục và truy nguyên thật |
+| C | **LOẠI KHỎI ĐỢT DEMO** — tốc độ mở/sau ngủ, đăng nhập, đổi khóa, lỗi mạng và kiểm lại toàn bộ giao diện | Không tính điểm và không dùng để chứng nhận; giữ giới hạn Render Free đã công bố |
+| D | **LOẠI KHỎI ĐỢT DEMO** — khôi phục độc lập, quan sát mở rộng và bộ kiểm an toàn nâng cao | Không tính điểm và không dùng để chứng nhận; lỗi nghiêm trọng về quyền, mất dữ liệu hoặc ghi thiếu duyệt nếu phát hiện vẫn chặn phát hành |
 | E | Hoàn thành 24 tác vụ đã khóa, ca bộ nhớ, đối chứng và lỗi giả lập hiện có | Tổng >=8,7/10; nguồn/nghiệp vụ/tin cậy >=9; đủ mẫu, không lỗi nghiêm trọng hoặc quy trình chính thất bại |
 | F | Máy sạch, hướng dẫn, demo 10 phút, tài liệu đúng khả năng, CI, main, Render, quay lui | Cùng bản đã nghiệm thu; URL và hướng dẫn dùng được |
 
-Thứ tự A, sau đó B/C/D song song theo khả năng, E và F cuối. Mỗi mục đạt được
+Thứ tự cố định A, B, E rồi F. Mỗi mục đạt được
 đóng; chỉ kiểm lại khi thay đổi ảnh hưởng trực tiếp. Sửa lỗi theo ca liên quan;
 chạy toàn bộ kiểm máy ở bản chốt. Không gọi mô hình lặp để chọn câu trả lời đẹp.
 Chỉnh thẩm mỹ nhỏ và tiện ích phụ được để bản sau, không chặn phát hành.
@@ -25,14 +26,16 @@ PDF có văn bản vẫn trong phạm vi.
 
 ## Điểm bắt đầu có bằng chứng
 
-- Staging 4a4577d: CI 37323704603 thành công; bản sửa phục hồi bản xem trước có
-  187 phép kiểm giao diện đạt, kiểm mã/dựng ứng dụng đạt. Chưa nghiệm thu cloud
-  của thay đổi này trong hồ sơ hiện tại.
-- Cloud d319f1d: còn báo cáo ngắn, bản sửa định dạng bị từ chối; chưa có Doc tạo
-  thành công trong đợt kiểm hiện tại. Không dùng trạng thái máy chủ khỏe để đóng A/B.
-- Project khôi phục riêng đã tạo; chưa có bằng chứng dữ liệu đã khôi phục.
+- Staging `3b3afbc`: CI `37333982226` thành công; ảnh
+  `sha256:13546369e918ebba41fb621aad27c77b8c2e2d9da279b301684e8f6ca8ccb0c7`
+  đang chạy Live trên Render. Bản sửa phục hồi bản xem trước có 187 phép kiểm
+  giao diện đạt; sửa bảo toàn dẫn nguồn có 104 phép kiểm đạt. Vẫn cần nghiệm thu
+  hai ca này trên URL thật để đóng A.
+- Cloud d319f1d là bằng chứng lịch sử: còn báo cáo ngắn, bản sửa định dạng bị từ
+  chối và chưa tạo Doc. Không đổi nhãn kết quả cũ thành bằng chứng bản chốt.
 - Hồ sơ lịch sử: design-work/qa/LIVE-ACCEPTANCE-20261005.md. Không đổi nhãn các
   phép đo cũ thành bằng chứng bản mới.
 
-Kết thúc khi sáu nhóm và điều kiện áp dụng có đủ bằng chứng. Khi đó đóng phiên
-bản và dừng chỉnh sửa; không mở thêm vòng hoàn thiện chung chung.
+Kết thúc khi bốn nhóm A, B, E và F có đủ bằng chứng. C và D giữ nhãn `EXCLUDED`
+trong báo cáo cuối, không được đổi thành `PASS`. Khi đó đóng phiên bản và dừng
+chỉnh sửa; không mở thêm vòng hoàn thiện chung chung.
