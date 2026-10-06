@@ -1,0 +1,40 @@
+{
+  "version": "2026-10-06.ABEF.1",
+  "status": "locked_inputs_not_results",
+  "scope_authority": "docs/RELEASE-CLOSURE.md",
+  "minimum_live_tasks": 24,
+  "score_threshold": 8.7,
+  "important_group_threshold": 9,
+  "rules": [
+    "Không dùng điểm kiểm máy thay điểm chất lượng câu trả lời.",
+    "Mỗi kết quả phải ghi bản ứng dụng, ảnh triển khai, thời điểm, nguồn, dấu vết và đối soát.",
+    "Một chuỗi chỉ đạt khi mọi lượt và thao tác cuối đạt; không cộng các bước rời thành chuỗi đạt.",
+    "Không gửi thư hoặc tạo thêm tài liệu Google; lần tạo Doc đã được cho phép và hoàn tất giữ biên nhận riêng.",
+    "Không đọc thêm Gmail thật ngoài phạm vi đã được cho phép; dùng nguồn giả lập hoặc ảnh chụp nguồn đã có.",
+    "Thiếu nguồn, thiếu quyền, hết ngân sách hoặc lỗi provider không biến thành thành công nghiệp vụ."
+  ],
+  "groups": [
+    {"id":"company","case_manifest":"backend/evals/protonx_company_benchmark.json","case_ids":["company-01","company-02","company-03","company-04","company-05","company-06"],"execution":"Sáu tác vụ Chat riêng: đầu vào thư giả lập theo manifest, nghiên cứu nguồn công khai thật, báo cáo chuẩn bị tư vấn. Nêu điều chưa biết, ba câu hỏi cần làm rõ và trạng thái chưa thực hiện hành động. Không tự gán lịch, ngân sách hoặc người liên hệ từ web.","oracle":"Nguồn chính thức cho từng dữ kiện; tin gần đây phải có ngày sự kiện/ngày đăng, còn thiếu thì ghi rõ. Không chứng nhận từ nhãn nguồn hoặc đủ đề mục."},
+    {"id":"pdf","case_manifest":"backend/evals/pdf_acceptance.json","case_ids":["P01","P02","P03","P04","P05","P06"],"execution":"Sáu tác vụ theo nguyên câu hỏi, trang, mã kiểm tra và đáp án đã khóa ngày 05/10. Chỉ dùng năm PDF có văn bản được phép gửi tới Gemini.","oracle":"Giữ nguyên expected và calculations; đối soát cả phạm vi, đơn vị, thời kỳ và dẫn nguồn, không chỉ số đúng."},
+    {"id":"workflow","cases":[
+      {"id":"W01","sources":["01-yeu-cau-khach-hang.md","02-dieu-chinh-pham-vi.md"],"turns":["Đọc cả hai tài liệu local giả lập và lập báo cáo chuẩn bị tư vấn Minh Phát 200–240 từ, tính thời gian theo giả thuyết bằng công cụ; dẫn đúng nguồn. Không dùng nguồn riêng khác hoặc ghi Google.","Giữ dữ kiện đã đọc, trình bày lại thành ba câu hỏi cần làm rõ; phân biệt dữ kiện, giả thuyết và điều chưa biết. Không đọc thêm nguồn.","Lưu kết quả này trên màn hình Kết quả đã lưu, mở lại để kiểm nội dung và nguồn."],"oracle":"24 người thay 30; ngân sách chưa xác nhận; phép tính 24×12×20=5760 phút, tiết kiệm giả thuyết 20%=1152 phút; không hứa hiệu quả đã đo; lưu/readback đúng."},
+      {"id":"W02","turns":["Dữ liệu giả lập: khách hàng An Bình muốn giảm công tìm hồ sơ; cuộc hẹn 12/10/2026 lúc 09:00; ngân sách chưa xác nhận. Chỉ dùng nội dung này, không đọc Gmail, Drive, lịch hoặc web. Chuẩn bị bốn mục: hiện trạng, vấn đề, điều cần xác nhận, việc tiếp theo.","Đổi riêng ngày hẹn sang 14/10/2026, giữ nguyên giờ, khách hàng và ngân sách. Viết 120–150 từ.","Dựa trên ngữ cảnh hiện tại, nhắc lại đúng ngày/giờ, ngân sách và ba câu hỏi tư vấn. Không ghi dữ liệu."],"oracle":"Đổi đúng ngày; giữ 09:00, An Bình, ngân sách chưa biết; không lẫn khách hàng hoặc tự tạo lịch."},
+      {"id":"W03","turns":["Qua màn hình Bộ nhớ, lưu ghi chú giả lập nhãn QA-FINAL-8ad36c0: báo cáo của khách hàng Mộc An cần ba mục, dẫn nguồn và ghi điều chưa biết.","Mở phiên mới, tìm đúng ghi chú QA-FINAL-8ad36c0; không dùng dữ liệu riêng khác.","Sửa ba mục thành bốn mục trên màn hình Bộ nhớ, hỏi lại ở phiên mới.","Lưu trữ ghi chú rồi tìm lại trong bộ nhớ đang sử dụng; sau đó xóa riêng ghi chú thử và kiểm không xuất hiện."],"oracle":"Tìm đúng bản, sửa có hiệu lực xuyên phiên, không dùng bản lưu trữ/đã xóa; chỉ xóa dữ liệu thử do phép kiểm tạo."},
+      {"id":"W04","turns":["Dữ liệu giả lập: tháng 1 là 120 triệu đồng, tháng 2 là 150 triệu đồng. Chỉ dùng dữ liệu này, tính chênh lệch và tăng trưởng bằng công cụ, không ghi dữ liệu.","Sửa riêng tháng 2 thành 144 triệu đồng; tính lại theo tháng 1 giữ nguyên.","Tóm tắt số đã sửa trong hai câu, giữ đơn vị và không dùng kết quả cũ."],"oracle":"Ban đầu tăng 30 triệu/25%; sau sửa tăng 24 triệu/20%; cùng đúng dữ liệu và đơn vị."},
+      {"id":"W05","turns":["Lưu một quy trình thử riêng: chuẩn bị tư vấn từ hai tài liệu local đã chọn, tách dữ kiện/giả thuyết/chưa biết, kèm câu hỏi và nguồn; không ghi Google.","Chạy quy trình đã lưu với hai tệp giả lập Minh Phát.","Chuyển đầu vào sang dữ liệu giả lập: khách hàng An Bình có 8 người; chỉ cần hỏi làm rõ nhu cầu tìm tài liệu. Chạy lại và không giữ dữ kiện Minh Phát."],"oracle":"Dùng được quy trình đã lưu; lấy đầu vào mới; không giữ 24 người, phép tính hoặc khách hàng cũ; có dấu vết quy trình thật."},
+      {"id":"W06","turns":["Lưu một bản kết quả giả lập: khách hàng Mộc An; ngân sách chưa xác nhận; ba câu hỏi tư vấn. Không ghi Google.","Sửa riêng nội dung kết quả thành bốn câu hỏi, lưu phiên bản mới và mở lại.","Xuất Markdown, DOCX và PDF của chính bản mới; kiểm văn bản tiếng Việt, nội dung và dẫn nguồn nếu có."],"oracle":"Bản mới mở lại đúng, có lịch sử phiên bản; ba định dạng đọc được; không xuất bản cũ hoặc giả định đã tạo Google Doc."}
+    ]},
+    {"id":"freshness","cases":[
+      {"id":"U01","question":"Hôm nay theo giờ Việt Nam là ngày nào? ASIAD 2026 còn đang diễn ra không? Chỉ kết luận từ nguồn chính thức và nêu khoảng ngày sự kiện; nếu chưa xác minh thì nói rõ.","oracle":"Ngày dựa trên thời điểm máy chủ; khoảng sự kiện từ nguồn chính thức, không dùng trí nhớ làm bằng chứng hiện tại."},
+      {"id":"U02","question":"Theo nguồn chính thức, lịch bóng đá nam ASIAD của ngày hôm qua có trận nào? Ghi ngày tuyệt đối theo giờ Việt Nam. Không tự biến ngày tải trang thành ngày diễn ra trận.","oracle":"Lọc đúng hôm qua; nếu không có lịch hoặc bằng chứng thì không bịa trận, tỷ số hoặc giờ."},
+      {"id":"U03","question":"Ngày mai theo giờ Việt Nam có lịch bóng đá nam ASIAD không? Kiểm nguồn chính thức, ghi ngày tuyệt đối và nêu rõ nếu không có trận hoặc không đủ bằng chứng.","oracle":"Lọc đúng ngày mai; phân biệt không có trận với chưa kiểm được nguồn."},
+      {"id":"U04","question":"Đọc nguồn chính thức https://ai.google.dev/gemini-api/docs/rate-limits: hạn mức Gemini áp dụng theo API key hay theo project? Chỉ giải thích ngắn bằng tiếng Việt và dẫn đúng nguồn, không đọc tài liệu riêng.","oracle":"Theo project; đổi khóa cùng project không tạo hạn mức mới; dẫn đúng nội dung đã truy cập."},
+      {"id":"U05","question":"Nguồn giả lập do tôi cung cấp ghi mức giá 100.000 đồng ngày 01/01/2024. Có đủ căn cứ để khẳng định đó là giá hiện tại không? Chỉ phân tích bằng chứng này, không tìm web hoặc tài liệu riêng.","oracle":"Không đủ; phân biệt ngày nguồn với ngày truy cập và không gán giá cũ là hiện tại."},
+      {"id":"U06","question":"Kiểm nguồn cập nhật tại https://example.invalid/veridra-current-schedule; nếu không truy cập được, nói rõ chưa xác minh và không đưa lịch từ trí nhớ. Không đọc dữ liệu riêng.","oracle":"Nguồn không truy cập được; kết luận hạn chế có thật; không bịa lịch hoặc nguồn thay thế."}
+    ]}
+  ],
+  "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
+  "historical_results_are_not_current":true,
+  "score":null,
+  "release_decision":"NOT VERIFIED"
+}

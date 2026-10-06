@@ -263,3 +263,22 @@ live trước khi triển khai.
 Tài liệu công khai đã được đồng bộ về phạm vi A, B, E, F; bộ 90 mục cũ được
 đánh dấu tham chiếu lịch sử. C/D không được đổi thành PASS; kiểm bốn người
 vẫn chưa có bằng chứng và chỉ tài khoản quản trị thuộc phạm vi demo.
+
+## Kiểm hồi quy trước triển khai tiếp — 06/10
+
+CI của `8ad36c0`, lần chạy `37405251442`, chưa đạt: 6 ca định tuyến thông tin
+công khai thất bại, 1.212 ca đạt, 13 ca bỏ qua. Nguyên nhân là lọc nguồn bị
+cấm trước khi nhận diện câu hỏi cần bằng chứng công khai. Sửa thứ tự: nhận
+diện thông tin công khai trên yêu cầu gốc, sau đó mới lọc nguồn ở tuyến riêng.
+Đồng thời nhận diện danh sách phủ định ngắn “không Gmail”. Bộ kiểm liên quan
+đến điều phối, nguồn mới và ADK: 144 đạt; Ruff đạt. Không triển khai bản CI lỗi.
+
+Màn hình Bộ nhớ được nối với chức năng sửa đã có ở máy chủ, giữ nguyên mẫu
+giao diện hiện tại; khóa gửi lặp khi đang lưu và giữ nội dung khi có lỗi. Bỏ
+nhãn “tin cậy cao” và thanh 100% vì chưa có phép đo xác thực cho chúng.
+187 phép kiểm giao diện đạt, kiểm mã và dựng giao diện đạt. Chưa đổi thành
+nghiệm thu thao tác thật trước khi triển khai.
+
+`backend/evals/release_acceptance.json` tập hợp đúng 24 đầu vào đã khóa:
+6 doanh nghiệp, 6 PDF, 6 quy trình và 6 câu hỏi thông tin cập nhật. Kết quả
+và điểm tổng vẫn để trống; không biến kiểm máy thành điểm chất lượng live.

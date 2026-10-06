@@ -18,6 +18,7 @@ import {
   Add24Regular,
   Archive24Regular,
   Delete24Regular,
+  Edit20Regular,
   Search24Regular,
   Dismiss16Regular,
   Copy16Regular,
@@ -234,7 +235,6 @@ function MemoryVisualizationDashboard({ items }: { items: MemoryItem[] }) {
 function MemorySummaryBar({ items }: { items: MemoryItem[] }) {
   const activeCount = items.filter((item) => !item.is_archived).length
   const kinds = new Set(items.map((item) => item.kind)).size
-  const highConf = items.filter((item) => (item.confidence ?? 1) >= 0.8).length
 
   return (
     <div
@@ -255,9 +255,6 @@ function MemorySummaryBar({ items }: { items: MemoryItem[] }) {
       <span className="memory-stat-pill">
         <strong>{kinds}</strong> phân loại
       </span>
-      <span className="memory-stat-pill">
-        <strong>{highConf}</strong> tin cậy cao
-      </span>
     </div>
   )
 }
@@ -270,6 +267,8 @@ export function MemoryPage() {
   const [query, setQuery] = useState('')
   const [filterKind, setFilterKind] = useState<string>('all')
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [saving, setSaving] = useState(false)
   const [kind, setKind] = useState<MemoryKind>('fact')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
@@ -314,24 +313,38 @@ export function MemoryPage() {
 
   async function save(event: FormEvent) {
     event.preventDefault()
+    if (saving) return
+    setSaving(true)
+    setError('')
     try {
-      await api<MemoryItem>('/api/memories', {
-        method: 'POST',
+      await api<MemoryItem>(editingId ? `/api/memories/${editingId}` : '/api/memories', {
+        method: editingId ? 'PATCH' : 'POST',
         body: JSON.stringify({
-          kind,
-          content,
+          ...(!editingId ? { kind, confidence: 1 } : {}),
+          content: content.trim(),
           tags: tags.split(',').map((item) => item.trim()).filter(Boolean),
-          confidence: 1,
         }),
       })
       setDialogOpen(false)
       setContent('')
       setTags('')
-      setNotice('Đã lưu mục bộ nhớ mới thành công!')
+      setNotice(editingId ? 'Đã cập nhật bộ nhớ. Những lần tìm sau dùng nội dung mới.' : 'Đã lưu mục bộ nhớ mới thành công!')
+      setEditingId(null)
       await load()
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : 'Không thể lưu bộ nhớ.')
+    } finally {
+      setSaving(false)
     }
+  }
+
+  function openEditor(item?: MemoryItem) {
+    setEditingId(item?.id ?? null)
+    setKind(item?.kind ?? 'fact')
+    setContent(item?.content ?? '')
+    setTags(item?.tags.join(', ') ?? '')
+    setError('')
+    setDialogOpen(true)
   }
 
   async function addQuickStarter(preset: typeof STARTER_PRESETS[0]) {
@@ -408,7 +421,7 @@ export function MemoryPage() {
             </ul>
           </div>
         </div>
-        <Button appearance="primary" icon={<Add24Regular />} onClick={() => setDialogOpen(true)}>
+        <Button appearance="primary" icon={<Add24Regular />} onClick={() => openEditor()}>
           Thêm bộ nhớ mới
         </Button>
       </div>
@@ -548,7 +561,6 @@ export function MemoryPage() {
         )}
 
         {filteredItems.map((item) => {
-          const conf = Math.round((item.confidence ?? 1) * 100)
           return (
             <article
               key={item.id}
@@ -567,19 +579,6 @@ export function MemoryPage() {
                   )}
                 </div>
 
-                {/* Confidence Meter */}
-                <div className="confidence-meter" title={`Độ tin cậy của bộ nhớ: ${conf}%`}>
-                  <div className="confidence-track">
-                    <div
-                      className="confidence-fill"
-                      style={{
-                        width: `${conf}%`,
-                        background: conf >= 80 ? '#10b981' : conf >= 50 ? '#f59e0b' : '#ef4444',
-                      }}
-                    />
-                  </div>
-                  <span className="confidence-label">{conf}%</span>
-                </div>
               </div>
 
               <div className="memory-card-v2__body">
@@ -604,6 +603,15 @@ export function MemoryPage() {
                       icon={copiedId === item.id ? <Checkmark16Regular /> : <Copy16Regular />}
                       onClick={() => copyMemory(item)}
                       aria-label="Sao chép"
+                    />
+                  </Tooltip>
+                  <Tooltip content="Sửa nội dung và nhãn" relationship="label">
+                    <Button
+                      size="small"
+                      appearance="subtle"
+                      icon={<Edit20Regular />}
+                      onClick={() => openEditor(item)}
+                      aria-label="Sửa bộ nhớ"
                     />
                   </Tooltip>
                   <Tooltip content={item.is_archived ? 'Khôi phục' : 'Lưu trữ / Cất'} relationship="label">
@@ -632,18 +640,20 @@ export function MemoryPage() {
       </div>
 
       {/* Manual Add Dialog */}
-      <Dialog open={dialogOpen} onOpenChange={(_, data) => setDialogOpen(data.open)}>
+      <Dialog open={dialogOpen} onOpenChange={(_, data) => { if (!saving) setDialogOpen(data.open) }}>
         <DialogSurface>
           <form onSubmit={save}>
             <DialogBody>
-              <DialogTitle>Thêm bộ nhớ có kiểm soát</DialogTitle>
+              <DialogTitle>{editingId ? 'Sửa bộ nhớ' : 'Thêm bộ nhớ có kiểm soát'}</DialogTitle>
               <DialogContent className="dialog-form">
+                {error && <p role="alert">{error}</p>}
                 <Field label="Loại bộ nhớ" required>
                   <Dropdown
                     id="memory-kind"
                     name="kind"
                     value={kindLabels[kind]}
                     selectedOptions={[kind]}
+                    disabled={Boolean(editingId) || saving}
                     onOptionSelect={(_, data) => setKind(data.optionValue as MemoryKind)}
                   >
                     {Object.entries(kindLabels).map(([value, label]) => (
@@ -662,28 +672,30 @@ export function MemoryPage() {
                     id="memory-content"
                     name="content"
                     value={content}
-                    placeholder="Ví dụ: Tôi thích tóm tắt bằng bảng và trích dẫn chuẩn Antigravity..."
+                    placeholder="Ví dụ: Khi chuẩn bị tư vấn, tách dữ kiện, điều chưa biết và việc tiếp theo."
                     onChange={(_, data) => setContent(data.value)}
                     resize="vertical"
                     rows={4}
+                    disabled={saving}
                   />
                 </Field>
-                <Field label="Nhãn phân loại (Tags)" hint="Phân tách bằng dấu phẩy, ví dụ: cong_viec, email, phong_cach">
+                <Field label="Nhãn phân loại" hint="Phân tách bằng dấu phẩy, ví dụ: cong_viec, email, phong_cach">
                   <Input
                     id="memory-tags"
                     name="tags"
                     value={tags}
                     placeholder="cong_viec, email"
                     onChange={(_, data) => setTags(data.value)}
+                    disabled={saving}
                   />
                 </Field>
               </DialogContent>
               <DialogActions>
-                <Button appearance="secondary" onClick={() => setDialogOpen(false)}>
+                <Button appearance="secondary" disabled={saving} onClick={() => setDialogOpen(false)}>
                   Hủy
                 </Button>
-                <Button appearance="primary" type="submit" disabled={!content.trim()}>
-                  Lưu vào bộ nhớ
+                <Button appearance="primary" type="submit" disabled={content.trim().length < 2 || saving}>
+                  {saving ? 'Đang lưu…' : editingId ? 'Lưu thay đổi' : 'Lưu vào bộ nhớ'}
                 </Button>
               </DialogActions>
             </DialogBody>

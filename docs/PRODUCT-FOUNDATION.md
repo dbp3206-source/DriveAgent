@@ -1,6 +1,6 @@
 # Veridra — nền tảng sản phẩm đã chốt
 
-Phiên bản định hướng: 01/10/2026. Đây là bản chuẩn về đối tượng, nghiệp vụ, phương pháp và giá trị; không phải chứng nhận mọi hành vi đã được triển khai hoặc nghiệm thu. Danh sách triển khai hiện hành: [ACCEPTANCE-CHECKLIST.md](ACCEPTANCE-CHECKLIST.md).
+Phiên bản định hướng: 01/10/2026. Đây là bản chuẩn về đối tượng, nghiệp vụ, phương pháp và giá trị; không phải chứng nhận mọi hành vi đã được triển khai hoặc nghiệm thu. Danh sách nghiệm thu hiện hành: [RELEASE-CLOSURE.md](RELEASE-CLOSURE.md).
 
 ## 1. Một định vị duy nhất
 

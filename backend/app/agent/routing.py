@@ -182,6 +182,14 @@ def _gmail_full_read_route(
 
 def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
     text = message.strip().rstrip(".?!")
+    # The freshness guard must see the complete request: masking an excluded
+    # source first would break its strict, standalone prohibition grammar.
+    if needs_public_evidence(text):
+        arguments = {"question": text[:800], "timezone": timezone}
+        public_url = re.search(r"https://[^\s<>`\"']+", text, re.I)
+        if public_url:
+            arguments["domain"] = public_url[0].rstrip(".,;:!?)]}")
+        return Route("web_research", arguments, direct=True)
     # A prohibition names a source without requesting it. Mask those names
     # before keyword routing, while keeping the original request for synthesis.
     # Import here because controls only imports Route inside its filter method.
@@ -192,14 +200,6 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
         text = re.sub(r"\b(?:gmail|e-?mail|mail|hộp thư|thư chưa đọc)\b", " ", text, flags=re.I)
     if "drive" in exclusions:
         text = re.sub(r"\b(?:google\s+drive|drive)\b", " ", text, flags=re.I)
-    if needs_public_evidence(text):
-        arguments = {"question": text[:800], "timezone": timezone}
-        # Preserve the public page the user explicitly selected for evidence.
-        # The tool still validates HTTPS/DNS and rejects private destinations.
-        public_url = re.search(r"https://[^\s<>`\"']+", text, re.I)
-        if public_url:
-            arguments["domain"] = public_url[0].rstrip(".,;:!?)]}")
-        return Route("web_research", arguments, direct=True)
     is_gmail_request = bool(re.search(r"\b(?:gmail|email|mail|hộp thư|thư chưa đọc)\b", text, re.I))
     is_drive_request = bool(re.search(r"\b(?:drive|docs?|tài liệu|tệp|file)\b", text, re.I))
     asks_to_compare_sources = bool(

@@ -23,7 +23,7 @@ def needs_public_evidence(message: str) -> bool:
     # remain in the guard below, so their contents cannot become web queries.
     source = r"(?:tài\s+liệu\s+local|gmail|drive|calendar|local|lịch|bộ nhớ|memory)"
     text = re.sub(
-        r"(?:^|[.!?;,])\s*không\s+(?:đọc|dùng|truy cập|tìm trong)\s+"
+        r"(?:^|[.!?;,])\s*không\s+(?:(?:đọc|dùng|truy cập|tìm trong)\s+)?"
         + source
         + r"(?:(?:\s*,\s*|\s+(?:hay|hoặc|và)\s+)" + source
         + r")*\s*(?=[.!?;]|,\s*không\s+ghi\b|$)",
