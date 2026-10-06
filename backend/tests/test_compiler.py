@@ -38,6 +38,54 @@ def test_local_controls_preserve_all_requested_sources():
     assert selected.sources == route.sources
 
 
+@pytest.mark.parametrize("code", [
+    "ungrounded_web_research", "web_research_provider_error", "web_source_dns_error",
+    "web_source_transport_error", "official_source_empty", "news_sources_empty",
+    "news_feed_invalid",
+])
+async def test_unverified_public_source_is_reported_without_synthesis(runtime, monkeypatch, code):
+    runner, user, session_id = runtime
+    calls = []
+
+    async def execute(name, arguments, context):
+        calls.append(name)
+        raise ToolError("Untrusted provider detail", code=code)
+
+    async def forbidden_model(*args, **kwargs):
+        raise AssertionError("No answer may be synthesized without public evidence")
+
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    monkeypatch.setattr(Gemini, "generate_content_async", forbidden_model)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="unverified-public",
+        user_message="Kiểm nguồn cập nhật tại https://example.invalid/schedule",
+    )
+    assert calls == ["web_research"]
+    assert "Chưa xác minh" in result.answer
+    assert "Untrusted provider detail" not in result.answer
+    assert result.citations == []
+    assert result.trace[-2] == {
+        "stage": "tool", "tool": "web_research", "status": "error", "error_code": code,
+    }
+    assert result.trace[-1]["status"] == "unverified"
+
+
+@pytest.mark.parametrize("code", ["permission_denied", "unsafe_web_source", "quota_exhausted"])
+async def test_public_source_authority_and_quota_failures_remain_errors(runtime, monkeypatch, code):
+    runner, user, session_id = runtime
+
+    async def execute(*args, **kwargs):
+        raise ToolError("blocked", code=code)
+
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    with pytest.raises(ToolError) as caught:
+        await runner.run(
+            user=user, session_id=session_id, request_id="blocked-public",
+            user_message="Kiểm nguồn cập nhật tại https://example.invalid/schedule",
+        )
+    assert caught.value.code == code
+
+
 async def test_multi_local_retrieval_collects_pages_from_each_file(runtime, monkeypatch):
     runner, user, session_id = runtime
     calls = []

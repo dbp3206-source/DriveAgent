@@ -715,6 +715,10 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
             and event.get("status") in {"degraded", "failed"}
             for event in result.trace
         )
+        source_unverified = any(
+            event.get("stage") == "source_selection" and event.get("status") == "unverified"
+            for event in result.trace
+        )
         if result.proposals and not output_contract_incomplete:
             # Treat the HTTP persistence boundary as the final fidelity guard.
             # Orchestrators normally normalize creation specs themselves, but no
@@ -895,7 +899,9 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
         await db.flush()
         response_proposals.append({"id": proposal.id, **spec})
     task_audit.status = (
-        AuditStatus.WARNING.value if output_contract_incomplete else AuditStatus.SUCCESS.value
+        AuditStatus.WARNING.value
+        if output_contract_incomplete or source_unverified
+        else AuditStatus.SUCCESS.value
     )
     task_audit.result_json = json.dumps(
         {

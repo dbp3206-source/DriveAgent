@@ -5,6 +5,7 @@ người dùng đọc hội thoại cũ. Không diễn giải checkpoint của f
 """
 
 import asyncio
+import hashlib
 import json
 import re
 import time
@@ -69,6 +70,12 @@ from app.services.relational_circuit import circuit_store
 from app.services.relational_skills import skill_store
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 from app.tools.registry import ToolRegistry
+
+
+def scoped_execution_session(session_id: str, agent: str, tool_names: set[str]) -> str:
+    """Keep tool-event history within its current authority, not the UI conversation."""
+    scope = json.dumps([agent, sorted(tool_names)], separators=(",", ":"))
+    return session_id + "--" + hashlib.sha256(scope.encode()).hexdigest()[:16]
 
 
 class GovernedAdkTool(BaseTool):
@@ -400,8 +407,14 @@ class AdkOrchestrator:
                 skill_capabilities=skill_capabilities or frozenset(),
                 max_output_tokens=response_token_budget,
             )
+            # Previous tool calls are not valid examples after the user narrows
+            # sources or changes the specialist. Canonical Message history still
+            # supplies short-term conversation memory across these execution scopes.
+            execution_session_id = scoped_execution_session(
+                session_id, selected_agent, {tool.name for tool in tools}
+            )
             existing = await self.sessions.get_session(
-                app_name="drive_agent", user_id=user.id, session_id=session_id
+                app_name="drive_agent", user_id=user.id, session_id=execution_session_id
             )
             restored_history = []
             historical_citations = []
@@ -434,7 +447,7 @@ class AdkOrchestrator:
                 restored_history = conversation_context(rows, user_message)
             if existing is None:
                 await self.sessions.create_session(
-                    app_name="drive_agent", user_id=user.id, session_id=session_id
+                    app_name="drive_agent", user_id=user.id, session_id=execution_session_id
                 )
             if restored_history:
                 records.append(
@@ -477,7 +490,7 @@ class AdkOrchestrator:
                 )
             async for event in runner.run_async(
                 user_id=user.id,
-                session_id=session_id,
+                session_id=execution_session_id,
                 new_message=types.Content(
                     role="user",
                     parts=[types.Part(text=request_text)],

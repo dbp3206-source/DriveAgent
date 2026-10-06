@@ -51,3 +51,23 @@ PDF có văn bản vẫn trong phạm vi.
 Kết thúc khi bốn nhóm A, B, E và F có đủ bằng chứng. C và D giữ nhãn `EXCLUDED`
 trong báo cáo cuối, không được đổi thành `PASS`. Khi đó đóng phiên bản và dừng
 chỉnh sửa; không mở thêm vòng hoàn thiện chung chung.
+
+## Đối soát cuối ngày 06/10 — chưa đóng phát hành
+
+- Render đã phục vụ `89f9c82`, ảnh `sha256:a970c8dbef2300d1a0167269655ce76e10870649ff76484554ff95d3d960e1c3`;
+  CI `37449967840` đạt. Đây không phải xác nhận đủ A/B/E/F.
+- B: đọc gộp tối đa năm thư và lịch 24 giờ hoàn tất trong 25,2 giây,
+  một lần gọi mô hình; lưu và mở lại giữ dẫn nguồn. Lịch trống nên chưa
+  chứng nhận chuẩn bị cho một cuộc hẹn thực tế có dữ liệu.
+- Quy trình Minh Phát đọc hai tệp và tính toán hoàn tất 41,7 giây.
+  Bước đổi sang An Bình bị chặn khi mô hình gọi công cụ không được cung cấp;
+  giữ chưa đạt, không nới quyền để lấy kết quả đẹp.
+- Nguồn web không truy cập được đã gọi công cụ thật nhưng chưa có câu trả
+  lời hữu ích. Số học PDF đúng nhưng phạm vi dự báo ngân hàng vẫn diễn giải
+  sai; A còn chờ. E chưa đủ bộ 24 tác vụ và chưa có điểm tổng hợp lệ.
+- Sửa tiếp: lịch sử gọi công cụ được tách theo trợ lý và tập công cụ hiện tại;
+  lịch sử hội thoại chính vẫn được nạp đúng người và đúng cuộc trò chuyện.
+  Khi công cụ web không trả bằng chứng đủ, trả rõ chưa xác minh và ghi cảnh
+  báo, không tính thành công nghiệp vụ. Lỗi quyền, nguồn không an toàn và
+  hết hạn mức vẫn bị chặn. 204 phép kiểm liên quan đạt; chưa kiểm live bản sửa.
+- `main` chưa gộp. Không công bố sẵn sàng phát hành khi các mục trên chưa đạt.

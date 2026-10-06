@@ -355,6 +355,39 @@ async def test_chat_boundary_applies_typed_commands_and_persists_clean_message(t
     await engine.dispose()
 
 
+async def test_unverified_source_answer_is_kept_but_not_counted_as_business_success(tmp_path):
+    class UnverifiedOrchestrator:
+        async def run(self, **kwargs):
+            return AgentRunResult(
+                answer="Chưa xác minh được nguồn web.", plan=[], citations=[],
+                trace=[{"stage": "source_selection", "status": "unverified"}],
+            )
+
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'unverified.db'}")
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with factory() as db:
+            user = User(email="unverified@example.com", display_name="Test", role="editor")
+            db.add(user)
+            await db.commit()
+            request = SimpleNamespace(
+                state=SimpleNamespace(request_id="unverified-request"),
+                app=SimpleNamespace(state=SimpleNamespace(orchestrator=UnverifiedOrchestrator())),
+            )
+            response = await chat(ChatRequest(message="Kiểm nguồn web."), request, user, db)
+            assert response.answer == "Chưa xác minh được nguồn web."
+            assert response.citations == []
+            assert response.proposals == []
+            audit = await db.scalar(select(AuditEvent))
+            assert audit.status == "warning"
+            assistant = await db.scalar(select(Message).where(Message.role == "assistant"))
+            assert assistant.content == response.answer
+    finally:
+        await engine.dispose()
+
+
 async def test_explicit_output_contract_miss_is_persisted_as_incomplete_not_success(tmp_path):
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'chat-incomplete.db'}")
     async with engine.begin() as connection:

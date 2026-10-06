@@ -12,6 +12,7 @@ from app.agent.adk_orchestrator import (
     AdkOrchestrator,
     GovernedAdkTool,
     RecoverableGemini,
+    scoped_execution_session,
 )
 from app.agent.compiler import deterministic_static_answer
 from app.agent.controls import ChatControls
@@ -20,6 +21,21 @@ from app.agent.routing import route_request
 from app.core.config import Settings
 from app.tools.calculator import calculator_tool_definitions
 from app.tools.registry import ToolRegistry
+
+
+def test_execution_history_scope_changes_without_changing_canonical_conversation():
+    broad = scoped_execution_session("conversation-a", "skill", {
+        "skill_run", "local_source_search", "local_source_read", "calculate",
+    })
+    narrow = scoped_execution_session("conversation-a", "skill", {"skill_run"})
+    assert broad != narrow
+    assert narrow == scoped_execution_session("conversation-a", "skill", {"skill_run"})
+    assert narrow != scoped_execution_session("conversation-b", "skill", {"skill_run"})
+    assert narrow != scoped_execution_session("conversation-a", "research", {"skill_run"})
+    assert broad.startswith("conversation-a--")
+    assert broad == scoped_execution_session("conversation-a", "skill", {
+        "calculate", "local_source_read", "skill_run", "local_source_search",
+    })
 
 
 def test_official_web_question_routes_to_specialist_with_actual_web_tool():
@@ -939,6 +955,7 @@ async def test_adk_restores_owner_scoped_canonical_history(existing, with_source
 
     class FakeSessions:
         async def get_session(self, **kwargs):
+            captured["execution_session"] = kwargs["session_id"]
             return SimpleNamespace(last_update_time=1.0) if existing else None
 
         async def create_session(self, **kwargs):
@@ -964,6 +981,7 @@ async def test_adk_restores_owner_scoped_canonical_history(existing, with_source
             pass
 
         async def run_async(self, **kwargs):
+            captured["runner_session"] = kwargs["session_id"]
             captured["request"] = kwargs["new_message"].parts[0].text
             yield SimpleNamespace(
                 author="report_agent", usage_metadata=None,
@@ -994,6 +1012,8 @@ async def test_adk_restores_owner_scoped_canonical_history(existing, with_source
     assert "42 nhân viên" in captured["request"]
     assert "owner-a" in captured["query"].values()
     assert "session-a" in captured["query"].values()
+    assert captured["runner_session"] == captured["execution_session"]
+    assert captured["runner_session"].startswith("session-a--")
     assert "Asia/Bangkok" in captured["request"]
     if existing:
         assert "session" not in captured

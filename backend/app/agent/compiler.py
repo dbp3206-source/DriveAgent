@@ -841,17 +841,43 @@ class CompilerOrchestrator:
                     citations=[],
                 )
             if route.tool:
-                result = await self.registry.execute(
-                    route.tool,
-                    route.arguments or {},
-                    ToolContext(
-                        request_id=request_id,
-                        user=user,
-                        db=db,
-                        settings=self.settings,
-                        source="compiler_gather",
-                    ),
-                )
+                try:
+                    result = await self.registry.execute(
+                        route.tool,
+                        route.arguments or {},
+                        ToolContext(
+                            request_id=request_id,
+                            user=user,
+                            db=db,
+                            settings=self.settings,
+                            source="compiler_gather",
+                        ),
+                    )
+                except ToolError as exc:
+                    # Lack of public evidence is an explicit outcome, not a
+                    # license to synthesize current facts or hide tool failure.
+                    if route.tool != "web_research" or exc.code not in {
+                        "ungrounded_web_research", "web_research_provider_error",
+                        "web_source_dns_error", "web_source_transport_error",
+                        "official_source_empty", "news_sources_empty", "news_feed_invalid",
+                    }:
+                        raise
+                    return AgentRunResult(
+                        answer=(
+                            "Chưa xác minh được thông tin từ nguồn web. "
+                            "Công cụ kiểm nguồn đã được gọi nhưng không trả về "
+                            "bằng chứng đủ dùng; tôi không đưa lịch hoặc dữ kiện "
+                            "mới từ trí nhớ. Bạn có thể cung cấp một nguồn khác "
+                            "để đối chiếu."
+                        ),
+                        plan=[],
+                        trace=trace + [
+                            {"stage": "tool", "tool": "web_research", "status": "error",
+                             "error_code": exc.code},
+                            {"stage": "source_selection", "status": "unverified"},
+                        ],
+                        citations=[],
+                    )
                 context_data = result.model_dump(mode="json")
                 if route.tool == "gmail_read_matching_messages":
                     messages = context_data.get("messages", [])
