@@ -78,6 +78,28 @@ def test_public_question_with_explicit_private_source_exclusion_still_routes_web
     )
 
 
+@pytest.mark.parametrize("source", [
+    "tài liệu riêng", "tài liệu cá nhân", "tệp nội bộ", "file local",
+])
+def test_negative_private_document_clause_keeps_explicit_public_source(source):
+    from app.agent.adk_orchestrator import AdkOrchestrator
+
+    question = (
+        "Đọc nguồn chính thức https://example.com/reference: giải thích ngắn, "
+        f"không đọc {source}."
+    )
+    assert needs_public_evidence(question)
+    assert route_request(question).tool == "web_research"
+    assert AdkOrchestrator._auto_agent_for_request(question) == "research"
+    # Positive private content must remain protected, including after a denial.
+    assert not needs_public_evidence(
+        f"Đối chiếu tài liệu khách hàng với tin hôm nay. Không đọc {source}."
+    )
+    assert not needs_public_evidence(
+        "Tin hôm nay? Không đọc tài liệu riêng, nội dung email khách hàng là bí mật."
+    )
+
+
 @pytest.mark.parametrize("exclusion", [
     "Không đọc Gmail, Drive, lịch hoặc bộ nhớ, không ghi dữ liệu.",
     "Không đọc Gmail, Drive, lịch hoặc bộ nhớ.",

@@ -5,6 +5,35 @@ bắt buộc A, B, E và F. Nhóm C và D được chủ sở hữu loại khỏ
 ngày 06/10/2026 để tránh kéo dài tiến độ. Không thêm tính năng hoặc thiết kế lại.
 Tiêu chí chưa có bằng chứng giữ chưa đạt.
 
+## Chốt thứ tự theo yêu cầu mới ngày 06/10/2026
+
+Không tiếp tục vòng sửa hoặc gọi mô hình để kiểm PDF trong đợt này. Ca P06
+được **để bản sau**, không đổi thành đạt và không xóa kết quả trước đó.
+Không mở thêm hạng mục; ưu tiên web, đối soát A/B rồi E/F. Một mục để sau
+không đồng nghĩa cả nhóm hoặc toàn sản phẩm đã đạt nghiệm thu.
+
+| Nhóm | Trạng thái đối soát | Bước còn lại, không mở rộng |
+|---|---|---|
+| A | Ca đổi đầu vào An Bình đã đạt; PDF P06 để sau; báo cáo/dẫn nguồn/bản xem trước chưa đủ bằng chứng đóng toàn nhóm | Không chạy lại PDF; giữ các mục chưa đạt trong biên bản |
+| B | Có đọc đầu ngày, lưu/đọc lại, quy trình đã lưu và kiểm nhớ/sửa/xóa; lịch trống; chưa có lần hẹn giờ thật | Kiểm đúng một bản tin đã được cho phép; không coi bấm tạo thủ công là hẹn giờ đạt |
+| E | Chưa đủ 24 tác vụ và chưa có điểm tổng hợp hợp lệ | Chỉ tổng hợp bộ đã khóa; kết quả lỗi/thiếu dữ liệu không được chấm đạt |
+| F | Bản 947d8ae đã qua CI và chạy Live; hướng dẫn và mẫu có sẵn; main chưa gộp | Chốt tài liệu đúng phạm vi; chỉ gộp bản đã đủ điều kiện, không gọi bản demo hạn chế là production-ready |
+
+Web trên 947d8ae: yêu cầu `1c5cfadf-82d3-4cd7-895f-83ac592697c1`
+bị chặn `unavailable_tool`: công cụ `web_research` không nằm trong tập công
+cụ được cung cấp. Đã tái hiện độc lập với URL khác: thêm câu phủ định
+“không đọc tài liệu riêng” làm bộ phân loại chọn trợ lý bộ nhớ thay vì
+nghiên cứu web. Nguyên nhân là bộ lọc bảo vệ nguồn riêng chưa nhận diện
+đúng cụm phủ định này, không phải đã chứng minh website nguồn mất kết nối.
+Sửa chung chỉ nhận diện các cụm phủ định hoàn chỉnh; dữ liệu riêng được
+nêu khẳng định vẫn chặn tìm web. 230 phép kiểm định tuyến, quyền công cụ,
+hội thoại và xử lý câu trả lời đạt; kiểm mã đạt. Chưa kiểm live sau sửa,
+không gửi lại cùng câu hỏi trên bản chưa đổi.
+
+Ảnh Live 947d8ae: `sha256:6c9b6e6177d08f760a7911a717da32ed4c1bfe10cb6743fc29560aab5a06f5b5`;
+CI `37459390271` thành công; Render `dep-db2e5t3ncjis73ed0jt0` Live lúc
+12:02:49 UTC. Đây là bằng chứng triển khai, không thay thế điểm nghiệp vụ.
+
 | Nhóm | Việc còn lại | Điều kiện đóng |
 |---|---|---|
 | A | Độ dài báo cáo, bảo toàn dẫn nguồn, phạm vi số liệu PDF, bản xem trước Doc hết hạn | Ca lỗi đã tái hiện đạt trên URL thật; duyệt và đọc lại đúng, không trùng |
