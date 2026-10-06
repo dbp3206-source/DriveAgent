@@ -6,6 +6,7 @@ cookies*.txt
 data/
 .local-backups/
 .runtime/
+.qa_clean_*/
 ops/secrets/
 tools/Docker Desktop Installer.exe
 tools/tesseract-*/

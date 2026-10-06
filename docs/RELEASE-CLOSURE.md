@@ -14,6 +14,43 @@ c50be749-3206-4089-8adc-bb5d163ada36. Không lưu nội dung thư hoặc bí m�
 trong bằng chứng. Không bật lịch lặp dài hạn từ phép thử một lần này.
 Chỉ đóng mục hẹn giờ sáng; A/B/E/F toàn nhóm chưa đủ điều kiện đóng.
 
+### Trạng thái còn lại sau lần kiểm hẹn giờ
+
+| Nhóm | Phần còn thiếu |
+|---|---|
+| A | Hồ sơ chưa đủ đối soát nguồn/tin hiện tại; chuỗi xem trước → duyệt → đọc lại chưa đóng toàn bộ. P06 đã hoãn, không kiểm lại. |
+| B | Hẹn giờ sáng đã đạt; lịch hiện trống nên chưa chứng minh chuẩn bị cuộc hẹn có dữ liệu thật; chưa đủ dấu vết toàn bộ bảy vai trò trong chuỗi nghiệp vụ. |
+| E | Chưa đủ kết quả đạt của 24 tác vụ; không có điểm tổng hợp hợp lệ. Ngân sách mô hình hiện đã hết; không đặt lại bộ đếm hoặc yêu cầu thêm khóa. |
+| F | Đã kiểm tải mới, cài đặt và dựng giao diện của fc4733d; có kịch bản 10 phút và bộ mẫu/đáp án. Đăng nhập Google và khóa riêng trên bản tải sạch chưa kiểm đủ. Chưa gộp main khi A/B/E còn thiếu. |
+
+### Bằng chứng bàn giao từ bản tải sạch
+
+Ngày 06/10/2026, tải nhánh thử nghiệm từ GitHub vào thư mục riêng rồi chọn
+đúng fc4733d. Trước cài đặt không có `.env` hoặc tệp OAuth; không sao chép
+khóa hay phiên đăng nhập của môi trường đang dùng.
+
+- `scripts/setup.ps1` hoàn tất: tạo môi trường Python riêng, cài từ bản khóa
+  phụ thuộc, chạy `npm ci`, tạo cấu hình local và bí mật ngẫu nhiên.
+- `npm run build --prefix frontend` thành công, dựng 4.491 mô-đun.
+- Kiểm cấu hình xác nhận phần local hợp lệ nhưng báo thiếu khóa Gemini và
+  OAuth. Đây là phần chưa hoàn tất, không phải bằng chứng đăng nhập đạt.
+- Không dựng Docker trên máy. Ổ C còn khoảng 11,77 GB sau cài đặt.
+- Bộ cài phát hiện cảnh báo thư viện: `source-map-js` mức cao nằm trong
+  công cụ dựng, không được đưa vào ảnh máy chủ; KaTeX/Mermaid mức thấp
+  còn cần đánh giá. Không sửa cưỡng bức phụ thuộc hoặc tuyên bố đã sạch
+  cảnh báo chỉ vì dựng được giao diện.
+
+Kịch bản trình bày: [DEMO-10-PHUT.md](DEMO-10-PHUT.md). Bộ mẫu và đáp án
+độc lập: [manifest.json](demo/manifest.json). Hai tệp mẫu có mã SHA-256 được
+đối chiếu; toàn bộ dữ kiện khách hàng trong bộ này là giả lập. Phương án
+xem lại khi hết hạn mức được ghi rõ, không thay cho một phép kiểm mới.
+
+### Lịch sử đối soát trước đó
+
+Các đoạn dưới giữ bằng chứng tại thời điểm của từng bản, không thay trạng thái
+mới nhất ở trên. Nhận xét “chưa triển khai”, “chưa có Vault” hoặc “chưa có lịch”
+trong lịch sử không mô tả hiện trạng sau fc4733d.
+
 Bản 239317f đã qua CI 37485692007, triển khai Live trên Render bằng ảnh
 `sha256:c540782728f23f2a533af148781e93943e5fc41cf79a86b50a5424c1845471c3`,
 đợt `dep-db2h888m7kps73ervvn0`, 15:32:37 UTC ngày 06/10/2026. Phép kiểm

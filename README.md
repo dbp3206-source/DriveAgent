@@ -126,6 +126,8 @@ Kiểm thử live Google Drive cần API key và OAuth client của chính bạn
 
 ## Tài liệu
 
+- [Kịch bản trình bày 10 phút và phương án khi dịch vụ lỗi](docs/DEMO-10-PHUT.md)
+- [Bộ mẫu giả lập và đáp án đối chiếu](docs/demo/README.md)
 - [Thiết lập Google và Gemini](docs/SETUP_GOOGLE.md)
 - [Triển khai closed beta Render + Supabase](docs/DEPLOY_CLOSED_BETA.md)
 - [Kiến trúc](docs/ARCHITECTURE.md)
@@ -135,4 +137,4 @@ Kiểm thử live Google Drive cần API key và OAuth client của chính bạn
 - [Bảo mật](docs/SECURITY.md)
 - [Dependency và giấy phép](docs/THIRD_PARTY_LICENSES.md)
 - [Evaluation Harness](backend/evals/README.md)
-- [QA report mới nhất](design-work/qa/qa-report.md)
+- [Biên bản nghiệm thu và giới hạn còn lại](docs/RELEASE-CLOSURE.md)
