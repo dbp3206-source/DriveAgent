@@ -94,3 +94,32 @@ chỉnh sửa; không mở thêm vòng hoàn thiện chung chung.
   Không xóa lịch sử hiển thị hoặc bộ nhớ dài hạn. Câu phủ định/trích dẫn
   không tự trở thành lệnh bỏ ngữ cảnh. 169 phép kiểm liên quan đạt; kiểm
   riêng các ranh giới ngữ cảnh đạt. Chưa chứng nhận ca live đã hết lỗi.
+
+### Bằng chứng mới và nguyên nhân phạm vi PDF — 06/10/2026
+
+- Bản `37fb6d3` chạy đúng ảnh `sha256:40b4ab7341844a82482bfa553a3749b67d31f28399966f325f2a868fde979b27`,
+  CI `37457008642` đạt, Render `dep-db2dqqrncjis73ebrm0g` Live.
+- Đổi An Bình trong chính hội thoại Minh Phát: lượt
+  `6f88a691-2ceb-4dbb-ad6a-2d29fc6e584e`, 25,8 giây, giữ 8 người và ba câu
+  hỏi làm rõ, có `skill_run`; không mang số liệu, dẫn nguồn hoặc phép tính cũ
+  vào câu trả lời, không gọi công cụ nguồn bị cấm. Đạt ca đổi đầu vào đã tái hiện.
+- Web không truy cập được: `a0916d11-571a-46e5-9dda-70684e529234`, 11,2 giây,
+  có `web_research` lỗi và trả rõ chưa xác minh, không bịa lịch hoặc dẫn nguồn.
+  Đạt cách xử lý thiếu bằng chứng, không phải đã tìm được thông tin.
+- Bản kết quả giả lập Mộc An `5cbbce8b-70de-4fe6-8078-2ea3a474ce5d` mở lại
+  trên bản này vẫn v2, bốn câu hỏi, 62 từ/260 ký tự. Không gọi lại mô hình hoặc
+  ghi lại kết quả để tạo bằng chứng mới.
+- Đối chiếu trực tiếp chữ nguồn ngân hàng trang 1: tiêu đề và phần giải thích
+  dùng phạm vi không đồng nhất. Nhãn phạm vi hẹp ở vị trí 539, chi tiết ở 1689;
+  đoạn trích 500 ký tự mất cả hai, trong khi phần văn bản đầy đủ vẫn có.
+  Đây là lỗi bảo toàn bằng chứng có thể tái hiện, không phải căn cứ khẳng định
+  mọi câu dùng nhãn rộng đều do mô hình tự bịa.
+- Sửa chung giữ phần thân trang tới 3.000 ký tự trong trích dẫn trang cụ thể,
+  giữ chữ cỡ lớn khi có trong giới hạn 4.000 ký tự; không lấy trang kế tiếp.
+  Yêu cầu đối chiếu tiêu đề với phần giải thích, công bố phạm vi không thống
+  nhất thay vì âm thầm chọn một nhãn. Không đổi oracle hoặc gắn ngoại lệ theo tệp.
+  181 phép kiểm liên quan đạt; sau bổ sung kiểm qua công cụ đọc thật với nguồn
+  giả lập, 19 phép kiểm nguồn/trích dẫn đạt. Chưa coi P06 đã đạt live sau sửa này.
+- A/B/E/F chưa đóng: còn phạm vi PDF trên URL sau sửa, các chuỗi nghiệp vụ đủ
+  bước, hẹn giờ chạy thật, bộ 24 tác vụ đủ bằng chứng và bàn giao cùng bản.
+  Giữ main chưa gộp; không dùng CI xanh làm chứng nhận chất lượng trả lời.

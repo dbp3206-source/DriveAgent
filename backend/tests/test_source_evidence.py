@@ -34,3 +34,25 @@ def test_typography_budget_and_page_boundary_are_bounded():
 def test_plain_page_preserves_previous_excerpt_limits():
     assert page_evidence_excerpt("x" * 10000) == "x" * 500
     assert page_evidence_excerpt("x" * 10000, plain_limit=3000) == "x" * 3000
+
+
+def test_explicit_page_excerpt_keeps_body_qualification_not_only_broad_heading():
+    heading = "Báo cáo doanh số thị trường: dự báo tăng 12%.\n"
+    qualification = "Chỉ các cửa hàng trong mẫu khảo sát được dự báo tăng 12%."
+    page = heading + "Nội dung bối cảnh. " * 50 + qualification
+    for typography in ("", "\n\n" + PROMINENT_LINES_LABEL + "\n- Dự báo doanh số"):
+        excerpt = page_evidence_excerpt(page + typography, plain_limit=3000)
+        assert heading.strip() in excerpt
+        assert qualification in excerpt
+        assert len(excerpt) <= 4000
+
+
+def test_larger_body_budget_keeps_typography_within_same_page():
+    page = "Bối cảnh. " * 340 + PROMINENT_LINES_LABEL + "\n- Mục chính"
+    excerpt = page_evidence_excerpt(
+        page + "\n<!-- page:2 -->Không thuộc trang này", plain_limit=3000,
+    )
+    assert PROMINENT_LINES_LABEL in excerpt
+    assert "Mục chính" in excerpt
+    assert "Không thuộc trang này" not in excerpt
+    assert len(excerpt) <= 4000

@@ -245,7 +245,7 @@ async def read_local(payload: LocalReadInput, context: ToolContext) -> LocalOutp
             "citations": [{
                 "file_id": f"local:{row.id}", "file_name": row.name,
                 "chunk_index": start, "page_number": page_number,
-                "snippet": page_evidence_excerpt(text), "score": 1.0,
+                "snippet": page_evidence_excerpt(text, plain_limit=3000), "score": 1.0,
                 "web_view_link": (
                     f"{context.settings.public_base_url}/api/local-sources/{row.id}/text"
                 ),

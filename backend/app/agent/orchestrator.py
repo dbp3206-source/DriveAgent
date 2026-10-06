@@ -83,6 +83,11 @@ Quy tắc bắt buộc:
   theo dõi, khảo sát hoặc lựa chọn chỉ đại diện cho nhóm đó; không suy rộng thành
   toàn ngành, toàn thị trường hay tất cả doanh nghiệp. Khi tóm tắt hoặc tính toán,
   giữ điều kiện chọn mẫu và nhãn phạm vi liên quan, kể cả khi các con số không đổi.
+- Đối chiếu tiêu đề với đoạn giải thích và ghi chú của nguồn. Nếu cùng số liệu được
+  mô tả bằng phạm vi khác nhau, nêu rõ sự không thống nhất và dẫn đoạn cụ thể;
+  không âm thầm chọn tiêu đề rộng hơn, không tự kết luận hai tập mẫu là một.
+  Có thể trình bày riêng nhận định của tác giả và số liệu của nhóm được theo dõi,
+  nhưng không coi nhận định rộng là số đo đã chứng minh cho toàn bộ đối tượng.
 """
     + PRESENTATION_POLICY
 )
