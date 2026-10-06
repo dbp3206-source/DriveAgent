@@ -152,3 +152,26 @@ chỉnh sửa; không mở thêm vòng hoàn thiện chung chung.
 - A/B/E/F chưa đóng: còn phạm vi PDF trên URL sau sửa, các chuỗi nghiệp vụ đủ
   bước, hẹn giờ chạy thật, bộ 24 tác vụ đủ bằng chứng và bàn giao cùng bản.
   Giữ main chưa gộp; không dùng CI xanh làm chứng nhận chất lượng trả lời.
+
+### Ưu tiên web, tạm gác PDF — 06/10/2026
+
+- Theo quyết định mới, không tiếp tục dùng lượt mô hình để sửa/kiểm P06; mục này
+  được hoãn, không ghi đạt. Không mở thêm phạm vi nghiệm thu.
+- Bản `d514dc9`: CI `37461715990` đạt, ảnh
+  `sha256:bf34cacbd523a69795c91cc276327556c2a25e7f91439a2dee37053752d6ff3a`
+  chạy trên Render `dep-db2eeurbc2fs738b5hl0`. Câu hỏi web U04
+  `ddc79210-a062-4b19-a0b2-c18eacac5263` đạt: đọc đúng trang Google,
+  trả lời hạn mức theo dự án và dẫn nguồn; 32,7 giây. Bước tìm lại ghi chú đã
+  quên W03 `1f0b2787-cb91-420a-97af-6adbfe9b0d76` đạt, 30,5 giây.
+- Ca FPT `d6ba9fe9-85af-4a9c-8aed-16fb06a8f432` chưa đạt. Nhật ký Render
+  xác nhận website trả HTTP 403 ba lần lúc 12:27:32–12:27:33 UTC. Không phải
+  lỗi DNS hay hết hạn mức đã được chứng minh: cơ chế bắt mọi HTTPError thành
+  lỗi truyền tải, thử lại lỗi bị từ chối và để một website làm dừng toàn bộ
+  việc thu thập nguồn. Không tuyên bố đã đọc trang bị chặn.
+- Sửa cơ chế chung: 403/404 không thử lại; 408/429/5xx vẫn thử lại có giới hạn.
+  Thu thập website và tin công khai độc lập, đồng thời. Chỉ tạo dẫn nguồn cho
+  dữ liệu thực sự đã đọc; nguồn tin còn dùng được giữ lại cùng cảnh báo chưa
+  đọc được website. Tiêu đề tin không được biến thành dữ kiện toàn văn.
+  Chặn địa chỉ mạng nội bộ vẫn giữ nguyên; không vượt bảo vệ website.
+- Chưa đóng A/B/E/F hoặc gộp main từ các kết quả riêng này. Cần kiểm bản sửa
+  web trên URL sau triển khai và hoàn tất các mục còn lại đã khóa.

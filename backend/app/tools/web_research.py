@@ -162,6 +162,14 @@ async def _fetch_with_retry(client: httpx.AsyncClient, url: str, maximum: int) -
             if not exc.retryable:
                 raise
             last_error = exc
+        except httpx.HTTPStatusError as exc:
+            status = exc.response.status_code
+            if status not in {408, 429} and status < 500:
+                raise ToolError(
+                    f"Nguồn web từ chối yêu cầu hoặc không tồn tại (HTTP {status}).",
+                    code=f"web_source_http_{status}",
+                ) from exc
+            last_error = exc
         except (httpx.HTTPError, OSError) as exc:
             last_error = exc
         if attempt < 2:
@@ -341,55 +349,58 @@ async def collect_public_source_bundle(
         )
     }
     async with httpx.AsyncClient(timeout=timeout, headers=headers) as http:
-        try:
-            official_raw = (await _fetch_with_retry(http, official_url, 600_000)
-                            if official_url else b"")
-        except (httpx.HTTPError, OSError) as exc:
-            raise ToolError(
-                "Không thể đọc source bundle công khai.",
-                code="web_source_transport_error",
-                retryable=True,
-            ) from exc
-        news_results = await asyncio.gather(
+        results = await asyncio.gather(
+            *([_fetch_with_retry(http, official_url, 600_000)] if official_url else []),
             *(_fetch_with_retry(http, url, 700_000) for url in news_urls),
             return_exceptions=True,
         )
+    official_result = results[0] if official_url else b""
+    if isinstance(official_result, ToolError) and official_result.code == "unsafe_web_source":
+        raise official_result
+    official_raw = official_result if isinstance(official_result, bytes) else b""
+    news_results = results[1:] if official_url else results
     news_payloads = [result for result in news_results if isinstance(result, bytes)]
-    if not news_payloads and not official_url:
+    official_text = _html_text(official_raw)
+    official_available = bool(official_url and len(official_text) >= 80)
+    if not news_payloads and not official_available:
+        if isinstance(official_result, ToolError):
+            raise official_result
         raise ToolError(
             "Không thể đọc nguồn Google News sau ba lần thử.",
             code="web_source_transport_error",
             retryable=True,
         )
-    official_text = _html_text(official_raw)
-    if official_url and len(official_text) < 80:
-        raise ToolError(
-            "Website chính thức không cung cấp đủ nội dung có thể đọc.",
-            code="official_source_empty",
-        )
     maximum = min(payload.max_sources, context.settings.web_research_max_sources)
     news: list[tuple[WebSource, str]] = []
     seen_news: set[str] = set()
     for news_raw in news_payloads:
-        for source, snippet in _news_items(news_raw, max(1, maximum - bool(official_url))):
+        for source, snippet in _news_items(news_raw, max(1, maximum - official_available)):
             key = re.sub(r"\s+", " ", source.title).strip().casefold()
             if key in seen_news:
                 continue
             seen_news.add(key)
             news.append((source, snippet))
-            if len(news) >= maximum - bool(official_url):
+            if len(news) >= maximum - official_available:
                 break
-        if len(news) >= maximum - bool(official_url):
+        if len(news) >= maximum - official_available:
             break
-    if not news and not official_url:
+    if not news and not official_available:
+        if isinstance(official_result, ToolError):
+            raise official_result
         raise ToolError("Không có nguồn tin tức để đối chiếu.", code="news_sources_empty")
     sources = ([WebSource(title=f"Website chính thức — {payload.company_name or 'nguồn cung cấp'}",
-                         url=official_url)] if official_url else [])
-    blocks = [f"[S1] WEBSITE CHÍNH THỨC\n{official_text}"] if official_url else []
+                         url=official_url)] if official_available else [])
+    blocks = [f"[S1] WEBSITE CHÍNH THỨC\n{official_text}"] if official_available else []
+    if official_url and not official_available:
+        blocks.append(
+            "GIỚI HẠN THU THẬP: Chưa đọc được website chính thức. Không được nói đã đọc "
+            "website này, không trích dẫn nó, không suy ra tổng quan hay quy mô từ trí nhớ. "
+            "Các nguồn dưới đây chỉ chứng minh tiêu đề và ngày đăng; không phải toàn văn."
+        )
     sources.extend(item[0] for item in news)
     blocks.extend(
         f"[S{index}] GOOGLE NEWS RSS\n{snippet}"
-        for index, (_source, snippet) in enumerate(news, start=2 if official_url else 1)
+        for index, (_source, snippet) in enumerate(news, start=2 if official_available else 1)
     )
     return sources, blocks
 
