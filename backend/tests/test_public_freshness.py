@@ -40,6 +40,10 @@ def test_public_freshness_requires_tool(question):
     "tạo dữ liệu. Không cần tính toán.",
     "Giữ bản nháp hiện tại, chỉ sửa độ dài.",
     "Tiếp nối ngữ cảnh vừa rồi và trình bày ngắn hơn.",
+    "Dựa trên ngữ cảnh hiện tại, nhắc lại đúng ngày/giờ, ngân sách và ba câu hỏi tư vấn. "
+    "Không ghi dữ liệu.",
+    "Theo cuộc trò chuyện hiện tại, khách hàng nào và ngân sách đã xác nhận chưa?",
+    "Dựa trên bản nháp mới nhất, sửa riêng cách trình bày, không đọc nguồn mới.",
 ])
 def test_conversation_state_updates_are_not_public_news(question):
     assert not needs_public_evidence(question)

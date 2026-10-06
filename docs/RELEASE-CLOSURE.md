@@ -14,10 +14,22 @@ Tiêu chí chưa có bằng chứng giữ chưa đạt.
 | E | Hoàn thành 24 tác vụ đã khóa, ca bộ nhớ, đối chứng và lỗi giả lập hiện có | Tổng >=8,7/10; nguồn/nghiệp vụ/tin cậy >=9; đủ mẫu, không lỗi nghiêm trọng hoặc quy trình chính thất bại |
 | F | Máy sạch, hướng dẫn, demo 10 phút, tài liệu đúng khả năng, CI, main, Render, quay lui | Cùng bản đã nghiệm thu; URL và hướng dẫn dùng được |
 
-Thứ tự cố định A, B, E rồi F. Mỗi mục đạt được
+Thứ tự A, B, E rồi F; mục A còn lỗi được giữ chờ để tiếp tục B/E/F,
+không lặp vô hạn và không đổi nhãn thành đạt. Mỗi mục đạt được
 đóng; chỉ kiểm lại khi thay đổi ảnh hưởng trực tiếp. Sửa lỗi theo ca liên quan;
 chạy toàn bộ kiểm máy ở bản chốt. Không gọi mô hình lặp để chọn câu trả lời đẹp.
 Chỉnh thẩm mỹ nhỏ và tiện ích phụ được để bản sau, không chặn phát hành.
+
+### Cách kiểm gộp đã chốt
+
+- Gom các sửa chữa liên quan vào một bản; kiểm tự động đầy đủ một lần trước triển khai.
+- Trên URL thật, kiểm một lần mỗi ca bị ảnh hưởng. Giữ kết quả không đạt để xử lý
+  theo nguyên nhân; không gửi lại cùng câu hỏi để chọn một câu trả lời đẹp.
+- Dùng một chuỗi nghiệp vụ để đồng thời kiểm chọn nguồn, tính toán, hỏi tiếp,
+  nhớ điều đã sửa và lưu/đọc lại. Không chạy lại các thao tác đã có bằng chứng
+  khi phần mã tương ứng không thay đổi.
+- Chỉ đóng phát hành sau khi các lỗi còn chờ được giải quyết; tiến sang nhóm sau
+  không có nghĩa là A đã đạt hoặc sản phẩm đã sẵn sàng phát hành.
 
 Bốn người thật hiện thiếu ba người: giữ CHƯA KIỂM CHỨNG, không chứng nhận từ
 tài khoản quản trị. Render miễn phí ngủ khi không hoạt động; không hứa luôn bật.

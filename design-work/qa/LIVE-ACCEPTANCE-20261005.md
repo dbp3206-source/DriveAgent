@@ -370,3 +370,45 @@ Kiểm toàn bộ máy chủ sau sửa hướng dẫn độ dài: 1.219 đạt, 
 website có bộ kiểm riêng và vẫn phải qua CI toàn bộ trước triển khai.
 Kiểm định tuyến/nguồn mới/compiler: 153 đạt; kiểm lại 73 ca định tuyến/nguồn
 mới sau bổ sung nhánh cấm web đạt. Ruff và kiểm khoảng trắng Git đạt.
+
+## Kiểm gộp sau triển khai 190fce0 — 06/10/2026
+
+- CI `37409939842` đạt toàn bộ; ảnh đã chọn trên Render:
+  `sha256:d4c42a3b3e49b6041de17138a4cd25e561d2355a4a1849497548dbc85194aeba`.
+  Lần triển khai `dep-db26u27lot8c73e33ak0`; health xác nhận tiến trình mới
+  bắt đầu 10:48:07 +07, cơ sở dữ liệu và kho tệp hoạt động. Trang quản trị
+  Render mất kết nối nên chưa đối chiếu nhãn Live cuối cùng trên trang đó.
+- A kiểm đúng một lần: mã `a730e650`, 20,5 giây. Đọc đúng hai tệp, tính
+  5760 và 1152 phút, giữ hai nguồn; vẫn ngắn hơn 200 từ, bản sửa bị chặn
+  vì thay trích dẫn. **FAIL**, không tiếp tục lặp để chọn câu trả lời đạt.
+- E/FPT: mã `f36d9e95-e5f5-40dd-89b7-e4f51648311a`, công cụ web đã
+  thực sự được chọn; nhật ký ghi `web_research` lỗi sau 5,14 giây, toàn lượt
+  7,22 giây. Không có hồ sơ hoàn thành. **FAIL**, không suy ra nguyên nhân
+  provider từ thông báo lỗi chung.
+- Chuyển sang B/W04 theo yêu cầu, không giữ các nhóm sau chờ A vô hạn.
+  Khóa DriveAgent2 đã hết ngân sách; đổi sang khóa DriveAgentProject đã lưu,
+  còn 16 lượt. Không đặt lại bộ đếm, không dùng tuyến trả phí.
+- Một lần gửi đồng thời cùng tài khoản bị từ chối do đang có yêu cầu chạy;
+  tiếp tục các lượt Chat tuần tự. Không tính lần từ chối thành tác vụ thành công.
+- B/W04: chuỗi ba lượt hoàn tất, 17,5 / 19,1 / 10,9 giây. Ban đầu đúng
+  30 triệu và 25%; sửa 150 thành 144 giữ tháng 1 là 120, đúng 24 triệu và
+  20%; hỏi tiếp giữ đúng số mới và đơn vị. Tuy nhiên lượt đầu không có sự kiện
+  Tính toán, chỉ lượt sửa có công cụ thật (561 ms). PASS nhớ/sửa/số học,
+  **FAIL toàn chuỗi theo yêu cầu tính bằng công cụ**, không gộp thành đạt.
+- E/U05: 12,4 giây, kết luận đúng chưa đủ căn cứ dùng giá 01/01/2024 làm giá
+  hiện tại, phân biệt thời điểm nguồn với tháng 10/2026; không đọc nguồn riêng
+  hoặc tìm web. PASS ca này, không suy ra cả bộ thông tin cập nhật đạt.
+- B/W02: ba lượt 12,6 / 12,6 / 12,6 giây. Hai lượt đầu giữ đúng An Bình,
+  09:00 và ngân sách chưa xác nhận, đổi 12/10 thành 14/10. Có nhận định
+  lưu trữ thủ công không có trong dữ liệu người dùng. Lượt cuối bị định tuyến
+  nhầm sang web do cụm “ngữ cảnh hiện tại”, trả tin RSS không liên quan thay
+  vì nhắc lại lịch hẹn. **FAIL toàn chuỗi**.
+- Sửa chính sách nguồn mới cho các yêu cầu dựa trên/nhắc lại/theo ngữ cảnh,
+  bản nháp hoặc cuộc trò chuyện hiện tại; không tắt nguồn mới cho câu hỏi về
+  bối cảnh kinh tế hiện tại. 76 ca định tuyến/nguồn mới đạt, Ruff đạt sau sửa
+  độ dài dòng kiểm thử. Chưa dùng kết quả kiểm mã để chứng nhận lượt live.
+- Kiểm toàn bộ máy chủ của bản sửa nguồn hội thoại: **1.225 đạt, 15 bỏ qua,
+  209,66 giây**. Lần đầu chạy từ thư mục backend thiếu đường dẫn nhập các
+  script của repo, bị dừng khi thu thập 7 bộ kiểm; chạy lại từ gốc repo với
+  cả gốc và backend trong PYTHONPATH hoàn tất. Đây là sửa cách chạy kiểm,
+  không phải bỏ qua các bộ kiểm thất bại. Kiểm mã và khoảng trắng Git đạt.

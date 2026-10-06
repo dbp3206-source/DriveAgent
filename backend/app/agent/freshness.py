@@ -12,8 +12,8 @@ def needs_public_evidence(message: str) -> bool:
     # Keep the guard specific to preserving conversation state: a question
     # about the current economic context must still require public evidence.
     if re.search(
-        r"\b(?:giữ|giữ nguyên|giữ lại|tiếp nối)\s+(?:nguyên\s+)?"
-        r"(?:bối cảnh|ngữ cảnh|bản nháp|câu trả lời|yêu cầu)\s+"
+        r"\b(?:giữ|giữ nguyên|giữ lại|tiếp nối|dựa trên|theo|nhắc lại)\s+(?:nguyên\s+)?"
+        r"(?:bối cảnh|ngữ cảnh|bản nháp|câu trả lời|yêu cầu|cuộc trò chuyện)\s+"
         r"(?:mới nhất|hiện tại|vừa rồi|trước đó)\b",
         text,
     ):
