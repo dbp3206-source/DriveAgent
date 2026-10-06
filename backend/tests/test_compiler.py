@@ -27,6 +27,36 @@ from app.tools.gmail import (
 from app.tools.registry import ToolRegistry
 
 
+@pytest.mark.parametrize("reset", [
+    "Nguồn duy nhất cho lần này là dữ liệu trong lượt hiện tại: nhóm mới có 8 người.",
+    "Chỉ dùng nội dung tin nhắn này: nhóm mới có 11 người.",
+    "Only use the current message: the new team has 6 people.",
+])
+def test_evidence_reset_excludes_old_facts_and_survives_followup(reset):
+    old = SimpleNamespace(role="assistant", content="Nhóm trước: 24 người, 5760 phút.")
+    current = SimpleNamespace(role="user", content=reset)
+    new_answer = SimpleNamespace(role="assistant", content="Cần hỏi nhóm mới về nhu cầu.")
+    assert compiler.conversation_context([old], reset) == []
+    followup = compiler.conversation_context([new_answer, current, old], "Hỏi rõ thêm.")
+    assert len(followup) == 2
+    assert all("5760" not in item["text"] for item in followup)
+    assert compiler.scoped_conversation_history([new_answer, current, old], "Hỏi rõ thêm.") == [
+        new_answer, current,
+    ]
+
+
+def test_normal_followup_and_source_selection_keep_short_term_memory():
+    old = SimpleNamespace(role="user", content="Nhóm có 24 người.")
+    for question in [
+        "Hỏi rõ thêm.", "Chỉ dùng web để kiểm tra nhận định trước.",
+        "Không chỉ dùng nội dung tin nhắn này; hãy dùng cả trao đổi trước.",
+        "Giải thích câu 'Chỉ dùng nội dung tin nhắn này' trong tài liệu.",
+    ]:
+        assert compiler.conversation_context([old], question) == [
+            {"role": "user", "text": old.content},
+        ]
+
+
 def test_local_controls_preserve_all_requested_sources():
     route = Route(sources=(
         Route("local_source_search", {"query": "bank.pdf"}, read_match=True),

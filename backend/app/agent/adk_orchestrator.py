@@ -28,6 +28,7 @@ from app.agent.compiler import (
     CompilerOrchestrator,
     conversation_context,
     deterministic_static_answer,
+    scoped_conversation_history,
 )
 from app.agent.controls import ChatControls
 from app.agent.evidence import (
@@ -72,9 +73,11 @@ from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 from app.tools.registry import ToolRegistry
 
 
-def scoped_execution_session(session_id: str, agent: str, tool_names: set[str]) -> str:
+def scoped_execution_session(
+    session_id: str, agent: str, tool_names: set[str], request_id: str | None = None,
+) -> str:
     """Keep tool-event history within its current authority, not the UI conversation."""
-    scope = json.dumps([agent, sorted(tool_names)], separators=(",", ":"))
+    scope = json.dumps([agent, sorted(tool_names), request_id], separators=(",", ":"))
     return session_id + "--" + hashlib.sha256(scope.encode()).hexdigest()[:16]
 
 
@@ -409,11 +412,12 @@ class AdkOrchestrator:
                 skill_capabilities=skill_capabilities or frozenset(),
                 max_output_tokens=response_token_budget,
             )
-            # Previous tool calls are not valid examples after the user narrows
-            # sources or changes the specialist. Canonical Message history still
-            # supplies short-term conversation memory across these execution scopes.
+            # Each request owns its tool events. Reusing an execution session can
+            # replay an earlier skill input even when tools remain unchanged.
+            # Canonical messages provide bounded conversation memory; evidence
+            # resets filter that history without deleting the UI conversation.
             execution_session_id = scoped_execution_session(
-                session_id, selected_agent, {tool.name for tool in tools}
+                session_id, selected_agent, {tool.name for tool in tools}, request_id,
             )
             existing = await self.sessions.get_session(
                 app_name="drive_agent", user_id=user.id, session_id=execution_session_id
@@ -428,7 +432,9 @@ class AdkOrchestrator:
                         .order_by(Message.created_at.desc())
                         .limit(32)
                     ))
-                historical_citations = prior_turn_sources(source_history, user_message)
+                historical_citations = prior_turn_sources(
+                    scoped_conversation_history(source_history, user_message), user_message,
+                )
             last_update = getattr(existing, "last_update_time", None)
             # A compiler turn does not append an ADK event. Bridge canonical
             # messages newer than the last ADK event, including corrections,

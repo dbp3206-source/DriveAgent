@@ -84,3 +84,13 @@ chỉnh sửa; không mở thêm vòng hoàn thiện chung chung.
   Không nới quyền, không gọi lại, không đổi lỗi thành thành công.
   72 phép kiểm ADK/hội thoại đạt; kiểm mã và khoảng trắng đạt.
   Vẫn cần đọc bằng chứng của lần chạy trên bản triển khai trước khi đóng lỗi.
+
+- Tái hiện độc lập bằng hàm ngữ cảnh: yêu cầu chỉ dùng lượt hiện tại vẫn nạp
+  hai lượt cũ và số liệu cũ. Nguyên nhân nằm ở việc giới hạn độ dài lịch sử
+  nhưng không giới hạn lịch sử theo phạm vi bằng chứng người dùng yêu cầu.
+  Sửa cơ chế chung: mỗi yêu cầu có phiên công cụ riêng; hội thoại chuẩn vẫn
+  giữ ngữ cảnh ngắn hạn. Khi có chỉ dẫn rõ chỉ dùng đầu vào hiện tại, loại
+  dữ kiện và dẫn nguồn trước mốc đó khỏi ngữ cảnh thực thi, kể cả hỏi tiếp.
+  Không xóa lịch sử hiển thị hoặc bộ nhớ dài hạn. Câu phủ định/trích dẫn
+  không tự trở thành lệnh bỏ ngữ cảnh. 169 phép kiểm liên quan đạt; kiểm
+  riêng các ranh giới ngữ cảnh đạt. Chưa chứng nhận ca live đã hết lỗi.

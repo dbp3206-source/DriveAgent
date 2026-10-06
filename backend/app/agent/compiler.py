@@ -81,13 +81,36 @@ from app.tools.registry import ToolRegistry
 _logger = logging.getLogger(__name__)
 
 
+def current_input_only(request: str) -> bool:
+    """Recognize explicit evidence resets, not ordinary source selections."""
+    return bool(re.search(
+        r"(?:^|[.;\n])\s*(?:nguồn duy nhất[^.;\n]{0,100}(?:thông tin|nội dung|dữ liệu)"
+        r"[^.;\n]{0,70}(?:vừa cung cấp|lượt hiện tại|lần này)|"
+        r"chỉ (?:dùng|sử dụng)[^.;\n]{0,90}(?:lượt hiện tại|tin nhắn này)|"
+        r"only use[^.;\n]{0,90}(?:current message|current turn|this message))",
+        request, re.I,
+    ))
+
+
+def scoped_conversation_history(history: list[Message], current_request: str) -> list[Message]:
+    """Keep a source reset across follow-ups without deleting UI history."""
+    if current_input_only(current_request):
+        return []
+    rows = []
+    for row in history:  # newest first
+        rows.append(row)
+        if row.role == "user" and current_input_only(row.content):
+            break
+    return rows
+
+
 def conversation_context(history: list[Message], current_request: str) -> list[dict[str, str]]:
     """Bound context without silently discarding the end of long instructions.
 
     Rows arrive newest first. Keep recent turns within a total character budget;
     an explicit marker tells the model when older text is unavailable.
     """
-    rows = list(history)
+    rows = scoped_conversation_history(history, current_request)
     if rows and rows[0].role == "user" and rows[0].content == current_request:
         rows.pop(0)
     remaining = 64000
@@ -1111,6 +1134,7 @@ class CompilerOrchestrator:
                     .limit(32)
                 )
             )
+        history = scoped_conversation_history(history, user_message)
         citations = AgentOrchestrator._collect_citations(evidence)
         reused_sources = False
         if not citations and not route.direct:

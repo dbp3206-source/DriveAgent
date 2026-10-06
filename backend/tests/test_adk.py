@@ -33,6 +33,12 @@ def test_execution_history_scope_changes_without_changing_canonical_conversation
     assert narrow != scoped_execution_session("conversation-b", "skill", {"skill_run"})
     assert narrow != scoped_execution_session("conversation-a", "research", {"skill_run"})
     assert broad.startswith("conversation-a--")
+    assert scoped_execution_session("conversation-a", "skill", {"skill_run"}, "turn-1") != (
+        scoped_execution_session("conversation-a", "skill", {"skill_run"}, "turn-2")
+    )
+    assert scoped_execution_session("conversation-a", "skill", {"skill_run"}, "turn-1") == (
+        scoped_execution_session("conversation-a", "skill", {"skill_run"}, "turn-1")
+    )
     assert broad == scoped_execution_session("conversation-a", "skill", {
         "calculate", "local_source_read", "skill_run", "local_source_search",
     })
