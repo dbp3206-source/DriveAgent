@@ -40,7 +40,7 @@ def needs_public_evidence(message: str) -> bool:
         return False
     explicit = re.search(
         r"\b(?:hôm nay|hôm qua|ngày mai|mới nhất|hiện tại|gần đây|"
-        r"today|yesterday|tomorrow|latest|currently)\b",
+        r"cập nhật|today|yesterday|tomorrow|latest|currently)\b",
         text,
     )
     unstable = re.search(
@@ -48,7 +48,12 @@ def needs_public_evidence(message: str) -> bool:
         r"phiên bản mới|chính sách mới|đương nhiệm|ceo|tổng thống|thủ tướng)\b",
         text,
     )
-    return bool(explicit or unstable)
+    selected_public_source = bool(
+        re.search(r"https://[^\s<>]+", text)
+        and re.search(r"\b(?:kiểm nguồn|đọc nguồn|kiểm chứng|xác minh|đọc trang)\b", text)
+        and not re.search(r"\b(?:không|đừng)\s+(?:đọc|dùng|truy cập|tìm)\s+web\b", text)
+    )
+    return bool(explicit or unstable or selected_public_source)
 
 
 def server_time_context(timezone: str = "Asia/Bangkok") -> dict[str, str]:

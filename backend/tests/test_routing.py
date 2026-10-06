@@ -36,6 +36,22 @@ def test_combined_today_brief_keeps_single_bounded_page():
     assert route.sources[0].arguments["local_date"] is not None
 
 
+def test_explicit_updated_public_source_is_actually_checked():
+    route = route_request(
+        "Kiểm nguồn cập nhật tại https://example.invalid/current; nếu không truy cập được, "
+        "nói rõ chưa xác minh. Không đọc dữ liệu riêng."
+    )
+    assert route.tool == "web_research"
+    assert route.arguments["domain"] == "https://example.invalid/current"
+
+
+def test_selected_public_source_does_not_send_private_mail_context_to_web():
+    route = route_request(
+        "Đọc nguồn https://example.org/report; thư Gmail của tôi chứa dữ liệu riêng."
+    )
+    assert route.tool != "web_research"
+
+
 def test_company_website_is_gathered_without_contact_context_in_web_query():
     route = route_request(
         'Chuẩn bị hồ sơ doanh nghiệp từ website chính thức https://example.org. '
