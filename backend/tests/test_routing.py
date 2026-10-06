@@ -1,6 +1,37 @@
 from app.agent.routing import extract_explicit_file_id, route_request
 
 
+def test_company_website_is_gathered_without_contact_context_in_web_query():
+    route = route_request(
+        'Chuẩn bị hồ sơ doanh nghiệp từ website chính thức https://example.org. '
+        'Thư giả lập: khách hàng bí mật có ngân sách 12345. Không đọc Gmail hoặc Drive thật.'
+    )
+    assert route.required_sources == ("web",)
+    assert route.tool is None  # one gather, followed by grounded synthesis
+    assert len(route.sources) == 1
+    source = route.sources[0]
+    assert source.tool == "web_research"
+    assert source.arguments["domain"] == "https://example.org"
+    assert "12345" not in source.arguments["question"]
+    assert "bí mật" not in source.arguments["question"]
+
+
+def test_private_google_document_is_not_a_company_website_source():
+    route = route_request(
+        "Chuẩn bị hồ sơ doanh nghiệp từ website chính thức "
+        "https://docs.google.com/document/d/private. Không đọc Drive hoặc Gmail."
+    )
+    assert not any(source.tool == "web_research" for source in route.sources)
+
+
+def test_explicit_web_prohibition_blocks_company_website_gather():
+    route = route_request(
+        "Hồ sơ doanh nghiệp có website chính thức https://example.org. "
+        "Chỉ dùng dữ liệu giả lập tôi cung cấp, không truy cập web."
+    )
+    assert not any(source.tool == "web_research" for source in route.sources)
+
+
 def test_named_local_documents_are_all_required():
     route = route_request("So sánh hai tài liệu local banking.pdf và power.pdf theo nguồn.")
     assert [source.arguments["query"] for source in route.sources] == [

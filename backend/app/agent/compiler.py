@@ -1222,7 +1222,7 @@ class CompilerOrchestrator:
         action_constraint = proactive_action_instruction(user_message)
         response_contract = explicit_presentation_contract(user_message)
         response_contract_instruction = (
-            f"\nRàng buộc độ dài/độ sâu bắt buộc: {response_contract.instruction()}."
+            f"\nRàng buộc độ dài/độ sâu bắt buộc: {response_contract.generation_instruction()}."
             if response_contract.active
             else ""
         )

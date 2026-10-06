@@ -4,6 +4,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from typing import Any
+from urllib.parse import urlsplit
 from zoneinfo import ZoneInfo
 
 from app.agent.freshness import needs_public_evidence
@@ -190,6 +191,34 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
         if public_url:
             arguments["domain"] = public_url[0].rstrip(".,;:!?)]}")
         return Route("web_research", arguments, direct=True)
+    # A company brief may combine a public website with a simulated or private
+    # contact context. Gather only the explicitly selected website; never put
+    # the surrounding email, meeting or document content into a search query.
+    website = re.search(
+        r"\b(?:website|trang web)\s+chính thức\s*:?\s*(https://[^\s<>`\"']+)",
+        text, re.I,
+    )
+    web_forbidden = re.search(
+        r"\b(?:không|đừng|chưa)\s+(?:(?:đọc|dùng|truy cập|tìm|tìm kiếm)\s+)?"
+        r"(?:web|internet|website|trang web)\b", text, re.I,
+    )
+    if (website and not web_forbidden
+            and re.search(r"\b(?:hồ sơ|doanh nghiệp|công ty)\b", text, re.I)):
+        selected_url = website[1].rstrip(".,;:!?)]}")
+        parsed = urlsplit(selected_url)
+        if parsed.hostname and not parsed.username and parsed.hostname not in {
+            "docs.google.com", "drive.google.com", "mail.google.com",
+        }:
+            public_source = Route("web_research", {
+                "question": (
+                    "Đọc website chính thức được chọn: tổng quan doanh nghiệp, ngành, "
+                    "sản phẩm, quy mô và tin gần đây có ngày nguồn. Dẫn nguồn; "
+                    "ghi rõ phần chưa xác minh, không trả từ trí nhớ."
+                ),
+                "domain": selected_url,
+                "timezone": timezone,
+            })
+            return Route(sources=(public_source,), required_sources=("web",))
     # A prohibition names a source without requesting it. Mask those names
     # before keyword routing, while keeping the original request for synthesis.
     # Import here because controls only imports Route inside its filter method.

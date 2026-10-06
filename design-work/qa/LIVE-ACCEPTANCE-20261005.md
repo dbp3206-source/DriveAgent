@@ -309,3 +309,64 @@ khởi động kiểm máy riêng đạt, health trả cơ sở dữ liệu và 
 Đây chưa phải nghiệm thu đăng nhập Google trên máy sạch. Kiểm thư viện sản
 phẩm phát hiện hai cảnh báo mức thấp (KaTeX/Mermaid), không có mức cao hoặc
 nghiêm trọng; không dùng npm audit fix --force để đổi thư viện ngoài phạm vi.
+
+## Bản 1d84b13 — kiểm tiếp trên URL thật, 06/10
+
+CI `37407453248` thành công. Render `dep-db26emjbc2fs73fe8fb0` Live,
+ảnh `sha256:68d1213bd73f7c9cb9610321d09eaaa5737034c55a206a99b40b40c35af76a4b`.
+Không dùng query `release` trên URL làm bằng chứng phiên bản; đối chiếu triển khai.
+
+### A — chưa đóng
+
+- Lượt hỏi tiếp bản nháp lịch sử có 238 từ, hai nguồn và ba câu hỏi, nhưng không
+  được thay cho phép kiểm phiên sạch. Phiên sạch đầu trả bản ngắn, 16,6 giây,
+  mã lượt `e450e8ae-7c64-403c-8b5c-dc36ee84c857`: FAIL độ dài.
+- Đổi sang khóa đã lưu còn ngân sách, không đặt lại bộ đếm; kiểm đúng một lần
+  nữa cùng yêu cầu ở phiên mới. 17,2 giây, kết quả vẫn ngắn; bản sửa bị từ chối
+  do thay đổi trích dẫn và thêm số liệu. Không kết luận nguyên nhân là hết quota.
+  Không nới kiểm bảo toàn nguồn để lấy PASS.
+- P06 phiên sạch, 13,4 giây: điện 7,2%, kế hoạch 7,5%, chênh 0,3 điểm phần trăm
+  và dẫn đúng hai trang 1. Tuy nhiên 20% ngân hàng chưa ghi rõ phạm vi các ngân
+  hàng MBS theo dõi. FAIL bảo toàn phạm vi, không chứng nhận số học là toàn bộ
+  chất lượng câu trả lời.
+- Sửa tiếp cách hướng dẫn lượt tổng hợp ban đầu: giải thích cách đếm tiếng Việt
+  và nhắm điểm giữa cả khoảng độ dài hẹp. Cả hai lớp điều phối dùng chung;
+  không thêm vòng gọi, không đổi ngưỡng hoặc bỏ kiểm trích dẫn. 94 ca trình bày
+  đạt; kiểm mã đạt. Chưa phải bằng chứng live của bản sửa này.
+
+### B — bằng chứng thành phần, chưa đóng cả nhóm
+
+- Bộ nhớ giả lập `QA-FINAL-8ad36c0`: sửa ba thành bốn mục; phiên mới nhớ đúng,
+  sau cất thì phiên mới không tìm thấy trong bộ nhớ đang dùng (18,9 giây).
+  Không xóa dữ liệu và không đánh dấu toàn chuỗi xóa/khôi phục đã kiểm.
+- Quy trình giả lập `qa_final_tu_van`, bản v2: đổi đầu vào Minh Phát sang An Bình,
+  nạp đúng khách hàng mới. Thực thi trong Chat với dữ liệu giả lập riêng:
+  20,8 giây, có sự kiện `skill_run`, tách dữ kiện/giả thuyết/chưa biết và ba câu
+  hỏi; không dùng nguồn khách hàng cũ hoặc ghi Google. Hỏi tiếp 14,7 giây nhớ
+  đúng An Bình và ngân sách chưa xác nhận. Đây không phải bằng chứng đủ bảy
+  vai trò hay quy trình hẹn giờ.
+- Bản lưu giả lập `5cbbce8b-70de-4fe6-8078-2ea3a474ce5d`, v2: đọc lại đúng
+  bốn câu hỏi, 62 từ, 260 ký tự sau triển khai. Xuất Markdown, Word và PDF thật.
+  Markdown và cấu trúc Word đúng nội dung; PDF được dựng bằng pypdfium2 và
+  kiểm ảnh một trang, không cắt chữ. Dựng Word bằng `render_docx.py` thất bại
+  vì thiếu LibreOffice trong môi trường đi kèm; chưa chứng nhận hình thức Word.
+
+### E — chưa chốt điểm
+
+- U01 21,5 giây: ngày hệ thống đúng, nhưng tìm kiếm rơi về tin RSS và không
+  xác minh được lịch ASIAD từ nguồn chính thức. Câu trả lời nói rõ chưa xác minh;
+  đạt nhánh không bịa, chưa đạt hoàn thành yêu cầu có bằng chứng chính thức.
+- U04 15,5 giây: đọc nguồn Google chính thức về hạn mức; trả đúng áp theo dự
+  án, không suy ra số dư người dùng, có liên kết và thời điểm kiểm tra.
+- Chưa đủ 24 tác vụ cùng bản. Không có điểm tổng, không nhãn sẵn sàng phát hành.
+- Ca FPT Software đầu tiên, 13,7 giây: không lấy nguồn web, trả mô tả doanh nghiệp
+  không có trích dẫn dù người dùng chọn website chính thức. FAIL. Nguyên nhân
+  định tuyến được kiểm trong mã: ngữ cảnh thư giả lập chặn toàn bộ yêu cầu web.
+  Bản sửa lấy riêng URL website chính thức rồi tổng hợp, truy vấn công khai cố
+  định không chứa nội dung thư/ngân sách. Không nới quy tắc gửi dữ liệu riêng.
+
+Kiểm toàn bộ máy chủ sau sửa hướng dẫn độ dài: 1.219 đạt, 15 bỏ qua trong
+200,85 giây. Lần chạy này bắt đầu trước sửa định tuyến website, nên phần sửa
+website có bộ kiểm riêng và vẫn phải qua CI toàn bộ trước triển khai.
+Kiểm định tuyến/nguồn mới/compiler: 153 đạt; kiểm lại 73 ca định tuyến/nguồn
+mới sau bổ sung nhánh cấm web đạt. Ruff và kiểm khoảng trắng Git đạt.

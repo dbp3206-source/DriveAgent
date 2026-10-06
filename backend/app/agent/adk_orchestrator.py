@@ -435,7 +435,8 @@ class AdkOrchestrator:
                 + (f"\n{source_constraint}" if source_constraint else "")
                 + (f"\n{action_constraint}" if action_constraint else "")
                 + (
-                    f"\nRàng buộc độ dài/độ sâu bắt buộc: {response_contract.instruction()}."
+                    "\nRàng buộc độ dài/độ sâu bắt buộc: "
+                    f"{response_contract.generation_instruction()}."
                     if response_contract.active
                     else ""
                 )

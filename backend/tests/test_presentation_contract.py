@@ -68,6 +68,22 @@ def test_extracts_only_literal_measurable_contracts():
     assert contract.require_markdown_table is True
 
 
+@pytest.mark.parametrize("question,target", [
+    ("Báo cáo 200–240 từ", 220),
+    ("Trả lời 50–60 từ", 55),
+])
+def test_initial_generation_gets_narrow_range_target_and_vietnamese_count(question, target):
+    instruction = explicit_presentation_contract(question).generation_instruction()
+    assert f"nhắm khoảng {target} từ" in instruction
+    assert "'thời gian tổng hợp' tính là 4 từ" in instruction
+    assert "không tính dữ liệu JSON" in instruction
+
+
+def test_shape_only_contract_does_not_introduce_a_word_count():
+    instruction = explicit_presentation_contract("Trình bày hai bullet").generation_instruction()
+    assert "đếm từng tiếng" not in instruction
+
+
 def test_explicit_action_trigger_request_frontloads_the_business_deliverable():
     instruction = proactive_action_instruction(
         "Đề xuất hành động khả thi và trigger định lượng cho tồn kho."

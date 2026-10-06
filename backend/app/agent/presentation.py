@@ -53,12 +53,11 @@ class ExplicitPresentationContract:
         parts: list[str] = []
         if self.min_words is not None and self.max_words is not None:
             parts.append(f"từ {self.min_words} đến {self.max_words} từ")
-            if self.max_words - self.min_words >= 80:
-                target = (self.min_words + self.max_words) // 2
-                parts.append(
-                    f"nhắm khoảng {target} từ trước khi gửi; không lặp lại dữ kiện "
-                    "ở nhiều mục để đạt độ dài"
-                )
+            target = (self.min_words + self.max_words) // 2
+            parts.append(
+                f"nhắm khoảng {target} từ trước khi gửi; không lặp lại dữ kiện "
+                "ở nhiều mục để đạt độ dài"
+            )
         elif self.max_words is not None:
             parts.append(f"không quá {self.max_words} từ")
         elif self.min_words is not None:
@@ -77,6 +76,17 @@ class ExplicitPresentationContract:
                 "không lặp ý, không kéo dài bằng câu chung chung, không thêm dữ kiện thiếu căn cứ"
             )
         return "; ".join(parts)
+
+    def generation_instruction(self) -> str:
+        """Explain the server's count before generation, not only during repair."""
+        instruction = self.instruction()
+        if self.min_words is not None or self.max_words is not None:
+            instruction += (
+                "; đếm từng tiếng hoặc số tách biệt, không gộp từ ghép tiếng Việt; "
+                "ví dụ 'thời gian tổng hợp' tính là 4 từ; độ dài áp dụng cho phần "
+                "trả lời hiển thị, không tính dữ liệu JSON truyền nội bộ"
+            )
+        return instruction
 
 
 def _count_value(raw: str) -> int | None:
