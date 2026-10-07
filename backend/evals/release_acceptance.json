@@ -39,6 +39,13 @@
     "release_commit": "ef04f0154bfce4b74d7ffaadd1d2f4f49db93001",
     "image_digest": "sha256:0f26be48e572d73e98a237ab5675952774bfe7f0abd309be1554f2d1d07a1f59",
     "observed_date": "2026-10-07",
+    "artifact_readback": {
+      "artifact_id": "5cbbce8b-70de-4fe6-8078-2ea3a474ce5d",
+      "version": 2,
+      "status": "PASS_READBACK_ONLY",
+      "observed": "Mộc An, dữ liệu giả lập, ngân sách chưa xác nhận và đủ bốn câu hỏi trên màn hình bản lưu; không tạo/sửa/xuất mới, không chứng nhận toàn W06",
+      "evidence": "design-work/qa/acceptance-ef04f01/stored-result-readback.jpg"
+    },
     "cases": {
       "W02": {
         "status": "FAIL",

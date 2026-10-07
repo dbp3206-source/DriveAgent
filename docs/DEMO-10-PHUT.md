@@ -2,6 +2,9 @@
 
 ## Điều kiện trước buổi trình bày
 
+- Đây là kịch bản chuẩn bị, chưa phải biên bản nghiệm thu. Chỉ dùng bản
+  phát hành đã đóng A/B/E/F cho buổi demo chính thức; không nói các mục chưa
+  đạt đã hoàn tất. Xem trạng thái trong `docs/FINAL-FIVE-STEPS.md`.
 - Mở https://veridra-closed-beta.onrender.com và đăng nhập tài khoản được mời.
 - Không chia sẻ màn hình khóa, biến cấu hình, thư thật hoặc tài liệu riêng.
 - Chuẩn bị hai nguồn giả lập tại `docs/demo/`, đọc đáp án trong `docs/demo/README.md`.
@@ -57,7 +60,11 @@ Mở hồ sơ Bosch đã kiểm, mở liên kết website và các tin được 
 - Ngày đăng tin không phải ngày sự kiện; nguồn tin tóm lược chưa phải toàn văn.
 - Thông tin chưa có phải ghi chưa xác nhận, không tự gán ngân sách/chức danh.
 
-Nói rõ đây là kết quả lần kiểm ngày 06/10/2026, không phải tin vừa được tìm lại.
+Chọn đúng hội thoại Bosch của lần kiểm 07/10/2026 trên ef04f01, mã lượt
+`773e348f-8b36-4f7b-9dc4-eb1ff1303efb`. Nói rõ đây là xem lại, không phải
+tin vừa được tìm lại. Ca này đọc web thật và đủ ba câu hỏi, nhưng còn thuật
+ngữ tiếng Anh; chưa được chứng nhận đạt toàn bộ báo cáo. Sau nghiệm thu
+bản cuối, thay bằng đúng biên nhận đã đạt của bản đó, không dùng ngày mặc định.
 Nếu đủ ngân sách và muốn tìm mới, chỉ dùng câu hỏi đã chuẩn bị; không đưa nội
 dung thư riêng vào truy vấn công khai. Mở Nhật ký để đối chiếu lần dùng công cụ
 thật; có công cụ chạy thành công chưa chứng minh mọi kết luận đều đúng.
@@ -75,6 +82,8 @@ biên nhận đủ bằng chứng, chỉ giới thiệu bước xem trước và
 
 Mở Kết quả đã lưu → `QA-FINAL — Mộc An — dữ liệu giả lập`, bản 2. Cho thấy bốn
 câu hỏi và ngân sách chưa xác nhận. Bản lưu trong Veridra không tự thành Google Doc.
+Nội dung bốn câu hỏi đã được mở lại trên ef04f01 ngày 07/10/2026; đây là
+kiểm mở bản lưu, không phải lần tạo/sửa/xuất mới trên bản đó.
 
 Mở Bộ nhớ để giải thích: nội dung đang sử dụng, đã cất và đã xóa là ba trạng
 thái khác nhau. Không lưu khóa, mật khẩu hoặc thông tin nhạy cảm để minh họa.

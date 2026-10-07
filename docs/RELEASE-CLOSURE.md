@@ -2,6 +2,15 @@
 
 ## Đối soát mới nhất
 
+**Chuẩn bị E, không tiêu lượt mô hình:** trên ef04f01 đã mở lại kết quả
+Mộc An 5cbbce8b-70de-4fe6-8078-2ea3a474ce5d, bản 2, ngân sách chưa xác nhận
+và đúng bốn câu hỏi; không sửa/lưu mới/xuất mới. Ảnh
+acceptance-ef04f01/stored-result-readback.jpg. Bài demo đã sửa ngày và mã
+lượt Bosch đúng 07/10, chỉ rõ báo cáo này còn chưa đạt đầy đủ, không gán
+trạng thái thành công từ bằng chứng lịch sử. Không thay thế W06 toàn chuỗi
+hay điểm E bằng việc mở lại này. Giữ bài demo ở trạng thái chuẩn bị cho
+đến khi bản cuối đóng A/B/E/F.
+
 **B — W02 chưa đạt trên ef04f01:** ba lượt thật eab49d78/2a2dc0a6/21a918dd
 (13,6 / 14,7 / 10,9 giây). Hai lượt đầu giữ An Bình, ngân sách chưa xác nhận
 và đổi riêng ngày hẹn từ 12/10 sang 14/10/2026, giờ 09:00. Lượt hai sau
