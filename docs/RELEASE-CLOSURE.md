@@ -8,10 +8,12 @@ Lượt 37583117325 hoàn tất thành công, gồm PostgreSQL, backend, giao di
 dựng ảnh, kiểm đóng gói và xuất PDF tiếng Việt. Mã ảnh công khai đọc theo
 đúng thẻ commit:
 sha256:4b0016d9dd4414f6490749e1126ca544a8141d901ae18913e8495b1d09a42c89.
-Bước tự triển khai Render có kết luận skipped. Kết nối Render đọc được
-dịch vụ đang ghim ảnh ef04f01; chưa ghi bản mới đã chạy. Công cụ điều khiển
-trình duyệt thanh bên không được cung cấp trong phiên hiện tại; đã mở
-Settings và hướng dẫn người dùng đổi đúng nguồn ảnh, không đổi secrets.
+Bước tự triển khai Render có kết luận skipped. Người dùng đã đổi nguồn ảnh;
+Render xác nhận dep-db2urke7bikc73b3l220 Live lúc 07:01:44 UTC ngày 07/10,
+đúng mã ảnh trên. /api/health trả status=ok, database=true,
+object_storage=true; runtime_started_at=2026-10-07T14:01:34.354062+07:00.
+Đóng bước 1, không coi đây là bằng chứng đạt các ca câu trả lời A/B.
+Công cụ điều khiển trình duyệt thanh bên chưa được cung cấp trong phiên này.
 Đây là bước triển khai trong năm bước đã khóa, không thêm hạng mục hoặc
 dùng bộ kiểm mã để cấp điểm chất lượng. Mục tiêu vẫn chưa hoàn tất.
 

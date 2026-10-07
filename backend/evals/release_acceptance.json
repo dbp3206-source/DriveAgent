@@ -36,6 +36,23 @@
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
   "current_results": {
+    "release_commit": "35183a5d611f5f4ba3957f9e25b2f57a00c38d32",
+    "image_digest": "sha256:4b0016d9dd4414f6490749e1126ca544a8141d901ae18913e8495b1d09a42c89",
+    "observed_date": "2026-10-07",
+    "deployment": {
+      "ci_run_id": "37583117325",
+      "ci_status": "success",
+      "render_deploy_id": "dep-db2urke7bikc73b3l220",
+      "render_status": "live",
+      "finished_at": "2026-10-07T07:01:44.17975Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"status": "ok", "database": true, "object_storage": true},
+      "scope": "Deployment and public health only; no answer quality inferred"
+    },
+    "cases": {},
+    "unlisted_cases": "NOT VERIFIED on this release; authenticated answer checks pending; no score inferred from historical or automated results"
+  },
+  "previous_release_results": {
     "release_commit": "ef04f0154bfce4b74d7ffaadd1d2f4f49db93001",
     "image_digest": "sha256:0f26be48e572d73e98a237ab5675952774bfe7f0abd309be1554f2d1d07a1f59",
     "observed_date": "2026-10-07",
