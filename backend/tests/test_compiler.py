@@ -107,6 +107,8 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
     assert len(result.citations) == 1
     assert result.citations[0]["evidence_kind"] == "headline"
     assert result.citations[0]["event_date"] is None
+    assert "Chỉ đọc tiêu đề, chưa đọc toàn văn" in result.answer
+    assert "Tin được đăng ngày 05/10" not in result.answer
     assert "## Câu hỏi cần làm rõ" in result.answer
     assert "3. Kết quả mong muốn được đánh giá bằng cách nào?" in result.answer
 

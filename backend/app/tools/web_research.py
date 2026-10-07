@@ -202,6 +202,12 @@ def _news_items(payload: bytes, maximum: int) -> list[tuple[WebSource, str]]:
         published = (item.findtext("pubDate") or "").strip()
         if not title or not link.startswith("https://news.google.com/"):
             continue
+        # Search indexes can publish placeholder product pages as "news".
+        # Ignore missing-title sentinels, including a date and publisher suffix.
+        title_core = re.sub(r"\s+-\s+[^\n]+$", "", title)
+        title_core = re.sub(r"\s*\([^)]*\)\s*$", "", title_core).strip().casefold()
+        if title_core in {"undefined", "null", "none", "untitled", "n/a", "không có tiêu đề"}:
+            continue
         date_label = published
         published_at: datetime | None = None
         if published:

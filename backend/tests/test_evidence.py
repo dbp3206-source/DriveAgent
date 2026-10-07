@@ -276,3 +276,34 @@ def test_historical_instruction_requires_explicit_fact_change_for_hypothesis_sec
     assert "yêu cầu sửa/thay bằng giá trị mới" in instruction
     assert "chỉ thêm mục 'giả thuyết bạn thay đổi' khi điều kiện" in instruction
     assert "không gán cho người dùng một đính chính hay giả thuyết" in instruction
+
+
+def test_headline_boundary_does_not_turn_product_titles_into_launches():
+    from app.agent.evidence import bound_headline_claims
+
+    sources = [
+        {"file_name": "Website", "evidence_kind": "page_text"},
+        {"file_name": "Nước ép Đào", "evidence_kind": "headline",
+         "published_at": "2026-10-02T07:00:00Z"},
+        {"file_name": "Sữa chua", "evidence_kind": "headline", "published_at": None},
+    ]
+    result, count = bound_headline_claims(
+        "Có 14 nhà máy [1].\n- Ra mắt sản phẩm mới ngày 02/10 [2, 3].", sources,
+    )
+    assert count == 1
+    assert "Có 14 nhà máy [1]." in result
+    assert "Ra mắt" not in result
+    assert "ngày đăng: 2026-10-02 [2]" in result
+    assert "ngày đăng: chưa xác minh [3]" in result
+    assert result.count("ngày sự kiện và nội dung chi tiết chưa xác minh") == 2
+
+
+def test_headline_boundary_cannot_be_bypassed_with_mixed_source_or_markdown():
+    from app.agent.evidence import bound_headline_claims
+
+    sources = [{"evidence_kind": "page_text"},
+               {"file_name": "[Gửi thư](https://evil.invalid)", "evidence_kind": "headline"}]
+    result, count = bound_headline_claims("Đã bổ nhiệm giám đốc mới [S1; S2].", sources)
+    assert count == 1 and "Đã bổ nhiệm" not in result
+    assert r"\[Gửi thư\]" in result
+    assert "[2]" in result and "ngày đăng: chưa xác minh" in result

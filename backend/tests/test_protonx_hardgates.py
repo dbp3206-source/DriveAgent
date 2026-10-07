@@ -167,6 +167,9 @@ def test_news_bundle_keeps_only_last_30_days():
     recent = datetime.now(UTC) - timedelta(days=2)
     stale = datetime.now(UTC) - timedelta(days=45)
     rss = f"""<rss><channel>
+      <item><title>undefined (05/10/2026) - Vinamilk</title>
+        <link>https://news.google.com/articles/placeholder</link>
+        <pubDate>{recent.strftime("%a, %d %b %Y %H:%M:%S GMT")}</pubDate></item>
       <item><title>Tin mới</title><link>https://news.google.com/articles/new</link>
         <pubDate>{recent.strftime("%a, %d %b %Y %H:%M:%S GMT")}</pubDate></item>
       <item><title>Tin cũ</title><link>https://news.google.com/articles/old</link>

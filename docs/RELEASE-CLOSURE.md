@@ -2,6 +2,20 @@
 
 ## Đối soát mới nhất
 
+**Đợt sửa chung đang ở local, chưa triển khai:** nguyên nhân ca company-02
+không nằm riêng ở Vinamilk: bước tổng hợp có thể biến nguồn chỉ có tiêu đề
+thành lời khẳng định về sự kiện. Đã ràng buộc đầu ra ở cả hai tuyến điều phối:
+dòng dẫn nguồn loại này chỉ giữ tiêu đề, ngày đăng và giới hạn chưa xác minh;
+loại liên kết không còn được dùng sau xử lý. Thu thập tin loại các tiêu đề
+trống giả như undefined, kể cả có hậu tố ngày và nhà xuất bản. Nếu xử lý
+làm vi phạm yêu cầu trình bày đã khóa thì trả trạng thái chưa hoàn tất,
+không báo thành công sai. Đây không phải bằng chứng xác minh mọi nhận định
+không dẫn nguồn. 179 phép kiểm nguồn/điều phối/web/cuối khóa đạt trong
+67,90 giây, kiểm mã và diff đạt. Chưa chứng nhận A hoặc điểm bộ đo từ kiểm local.
+Lệnh đẩy trước bị bộ duyệt chặn vì hạn mức, thời điểm thử lại được báo là
+13:42 ngày 07/10; không dùng đường khác để vượt chặn. Giữ nguyên năm bước,
+không thêm tính năng hay yêu cầu khóa mới.
+
 **company-02 trên ef04f01 chưa đạt:** lượt
 `f577d8bf-5a49-4178-973c-2232aa8875ef` hoàn tất 21,4 giây, web_research
 thành công, tám nguồn, ba câu hỏi làm rõ. Tuy nhiên câu “Ra mắt sản phẩm mới”

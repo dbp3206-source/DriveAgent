@@ -36,6 +36,7 @@ from app.agent.creation import (
 )
 from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
+    bound_headline_claims,
     label_historical_sources,
     prior_turn_sources,
     retain_referenced_citations,
@@ -54,6 +55,7 @@ from app.agent.presentation import (
     normalize_adaptive_framework,
     normalize_markdown_boundaries,
     normalize_math_notation,
+    presentation_contract_violations,
 )
 from app.agent.quantitative import inventory_facts
 from app.agent.recoverable_model import RecoverableGemini
@@ -1645,6 +1647,21 @@ class CompilerOrchestrator:
         # The bounded model rewrite can restore inline headings/steps or TeX
         # that were already cleaned in the first pass. Apply only content-neutral
         # boundary normalization; do not synthesize new answer sections here.
+        answer, headline_lines = bound_headline_claims(answer, citations)
+        if headline_lines:
+            answer, citations = retain_referenced_citations(answer, citations)
+            trace.append({
+                "stage": "output_guard", "status": "corrected",
+                "rule": "headline_evidence_boundary", "affected_lines": headline_lines,
+                "note": "Chỉ hiển thị tiêu đề/ngày đăng; chưa xác minh sự kiện.",
+            })
+            if response_contract.active and presentation_contract_violations(
+                answer, response_contract,
+            ):
+                raise ToolError(
+                    "Nguồn chỉ có tiêu đề chưa đủ cho báo cáo đúng yêu cầu trình bày; "
+                    "chưa thực hiện thao tác ghi.", code="incomplete_source_report",
+                )
         answer = normalize_math_notation(answer)
         answer, _ = normalize_markdown_boundaries(answer)
         if reused_sources:

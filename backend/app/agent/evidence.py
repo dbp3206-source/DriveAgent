@@ -78,6 +78,45 @@ def source_references(citations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{"reference": index, **citation} for index, citation in enumerate(citations, start=1)]
 
 
+def bound_headline_claims(answer: str, citations: list[dict[str, Any]]) -> tuple[str, int]:
+    """Render headline evidence as metadata, never inferred events or page facts.
+
+    A title alone cannot establish a launch, price change, appointment or event
+    date. Apply after synthesis/rewrites so prose cannot upgrade evidence type.
+    Mixed-source lines are conservatively replaced too: a page citation beside
+    a headline is not proof that the page supports the inferred news claim.
+    """
+    marker = re.compile(r"\[(\s*S?\d+(?:\s*[,;]\s*S?\d+)*\s*)\]", re.I)
+    corrected = []
+    affected = 0
+    for line in answer.splitlines():
+        indices = list(dict.fromkeys(
+            int(number) for match in marker.finditer(line)
+            for number in re.findall(r"\d+", match[1])
+        ))
+        headlines = [index for index in indices if 1 <= index <= len(citations)
+                     and citations[index - 1].get("evidence_kind") == "headline"]
+        if not headlines:
+            corrected.append(line)
+            continue
+        affected += 1
+        for index in headlines:
+            source = citations[index - 1]
+            title = re.sub(r"[\r\n]+", " ", str(source.get("file_name") or "Chưa có tiêu đề"))
+            # Neutralize Markdown metacharacters; title remains quoted source data.
+            title = re.sub(r"([\\`*_{}\[\]<>])", r"\\\1", title)
+            published = str(source.get("published_at") or "")
+            date = published[:10] if re.match(r"^\d{4}-\d{2}-\d{2}(?:T|$)", published) else (
+                "chưa xác minh"
+            )
+            corrected.append(
+                f'- Tiêu đề nguồn: “{title}”; ngày đăng: {date} [{index}]. '
+                "Chỉ đọc tiêu đề, chưa đọc toàn văn; "
+                "ngày sự kiện và nội dung chi tiết chưa xác minh."
+            )
+    return "\n".join(corrected), affected
+
+
 def label_historical_sources(answer: str, citations: list[dict[str, Any]]) -> str:
     """Present reused sources as context, never as newly validated claim support.
 
