@@ -27,6 +27,53 @@ from app.tools.gmail import (
 from app.tools.registry import ToolRegistry
 
 
+async def test_company_compiler_receives_separate_web_evidence_and_date_contract(
+    runtime, monkeypatch,
+):
+    from datetime import UTC, datetime
+
+    from app.tools.web_research import WebResearchOutput, WebSource
+
+    runner, user, session_id = runtime
+    calls = []
+
+    async def execute(name, arguments, context):
+        calls.append(name)
+        return WebResearchOutput(
+            summary="Dữ kiện doanh nghiệp [S1]. Tiêu đề tin [S2].",
+            sources=[
+                WebSource(title="Công ty", url="https://example.org/company",
+                          evidence_kind="page_text", evidence_excerpt="Dữ kiện doanh nghiệp."),
+                WebSource(title="Tiêu đề tin", url="https://news.google.com/articles/new",
+                          evidence_kind="headline", evidence_excerpt="Chỉ tiêu đề tin.",
+                          published_at=datetime(2026, 10, 5, tzinfo=UTC)),
+            ], observed_at=datetime.now(UTC), model="test-boundary",
+        )
+
+    async def generate(self, request, stream=False):
+        prompt = str(request.contents)
+        instruction = str(request.config.system_instruction)
+        assert 'headline' in prompt and 'published_at' in prompt and 'event_date' in prompt
+        assert "Chỉ tiêu đề tin." in prompt
+        assert "không khẳng định ngày sự kiện" in instruction
+        assert "chưa gửi thư/tạo tài liệu/đặt lịch" in instruction
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
+            text=json.dumps({"answer": "Tin được đăng ngày 05/10; ngày sự kiện chưa xác minh [2]."})
+        )]))
+
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="company-source-contract",
+        user_message="Dữ liệu giả lập: khách hàng An Bình. Báo cáo tư vấn từ website "
+                     "chính thức https://example.org/company. Không đọc Gmail hoặc Drive.",
+    )
+    assert calls == ["web_research"]
+    assert len(result.citations) == 1
+    assert result.citations[0]["evidence_kind"] == "headline"
+    assert result.citations[0]["event_date"] is None
+
+
 @pytest.mark.parametrize("reset", [
     "Nguồn duy nhất cho lần này là dữ liệu trong lượt hiện tại: nhóm mới có 8 người.",
     "Chỉ dùng nội dung tin nhắn này: nhóm mới có 11 người.",

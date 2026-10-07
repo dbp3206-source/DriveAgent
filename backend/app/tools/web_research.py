@@ -13,6 +13,7 @@ import socket
 from datetime import UTC, datetime, timedelta
 from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
+from typing import Literal
 from urllib.parse import quote_plus, urljoin, urlsplit
 from xml.etree import ElementTree
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -56,6 +57,8 @@ class WebSource(BaseModel):
     url: str
     published_at: datetime | None = None
     event_date: str | None = None
+    evidence_kind: Literal["page_text", "headline", "provider_grounded"] = "provider_grounded"
+    evidence_excerpt: str | None = Field(default=None, max_length=9000)
     accessed_at: datetime = Field(default_factory=lambda: datetime.now(UTC))
 
 
@@ -209,8 +212,15 @@ def _news_items(payload: bytes, maximum: int) -> list[tuple[WebSource, str]]:
                 continue
         if published_at is None or published_at < datetime.now(UTC) - timedelta(days=30):
             continue
-        source = WebSource(title=title[:240], url=link, published_at=published_at)
-        results.append((source, f"{title[:500]} — {date_label}".strip(" —")))
+        snippet = (
+            f"Tiêu đề tin: {title[:500]}; ngày đăng: {date_label}; "
+            "ngày sự kiện: chưa xác minh. Chỉ đọc tiêu đề, chưa đọc toàn văn."
+        )
+        source = WebSource(
+            title=title[:240], url=link, published_at=published_at,
+            evidence_kind="headline", evidence_excerpt=snippet,
+        )
+        results.append((source, snippet))
         if len(results) >= maximum:
             break
     return results
@@ -399,7 +409,8 @@ async def collect_public_source_bundle(
             raise official_result
         raise ToolError("Không có nguồn tin tức để đối chiếu.", code="news_sources_empty")
     sources = ([WebSource(title=f"Website chính thức — {payload.company_name or 'nguồn cung cấp'}",
-                         url=official_url)] if official_available else [])
+                         url=official_url, evidence_kind="page_text",
+                         evidence_excerpt=official_text[:9000])] if official_available else [])
     blocks = [f"[S1] WEBSITE CHÍNH THỨC\n{official_text}"] if official_available else []
     if official_url and not official_available:
         blocks.append(
@@ -454,6 +465,11 @@ def _supported_claims(response: object, sources: list[WebSource]) -> str:
                 if url in reference and reference[url] not in numbers:
                     numbers.append(reference[url])
             if text and numbers:
+                for number in numbers:
+                    source = sources[number - 1]
+                    excerpt = source.evidence_excerpt or ""
+                    if text not in excerpt:
+                        source.evidence_excerpt = (excerpt + "\n" + text).strip()[:9000]
                 claim = text + " " + " ".join(f"[{number}]" for number in numbers)
                 if claim not in claims:
                     claims.append(claim)

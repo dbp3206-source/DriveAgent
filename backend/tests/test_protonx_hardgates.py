@@ -174,6 +174,11 @@ def test_news_bundle_keeps_only_last_30_days():
     </channel></rss>""".encode()
     items = _news_items(rss, 10)
     assert [item[0].title for item in items] == ["Tin mới"]
+    assert items[0][0].evidence_kind == "headline"
+    assert items[0][0].event_date is None
+    assert "ngày đăng:" in items[0][1]
+    assert "ngày sự kiện: chưa xác minh" in items[0][1]
+    assert "chưa đọc toàn văn" in items[0][1]
 
 
 def test_html_text_discards_instructions_and_grounds_visible_copy():
@@ -240,6 +245,10 @@ async def test_public_source_bundle_uses_official_page_and_news_fallback(tmp_pat
     assert sources[0].url == "https://example.com"
     assert blocks[0].startswith("[S1] WEBSITE CHÍNH THỨC")
     assert blocks[1].startswith("[S2] GOOGLE NEWS RSS")
+    assert sources[0].evidence_kind == "page_text"
+    assert "Official company overview" in sources[0].evidence_excerpt
+    assert sources[1].evidence_kind == "headline"
+    assert "Official company overview" not in sources[1].evidence_excerpt
 
 
 async def test_web_research_accepts_grounded_provider_response(tmp_path):

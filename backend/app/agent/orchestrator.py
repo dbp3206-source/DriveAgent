@@ -70,6 +70,15 @@ Quy tắc bắt buộc:
   đúng tên tệp. Với số liệu, đối chiếu cả giá trị, đơn vị, thời kỳ và điều kiện trong đoạn
   được dẫn. Nếu đoạn thiếu dữ kiện thì đọc thêm, hoặc nói chưa xác minh; không lấy
   số liệu từ trí nhớ rồi gắn một nguồn cùng tài liệu để làm như đã kiểm chứng.
+- Với nguồn web, published_at là ngày đăng, event_date là ngày sự kiện;
+  accessed_at chỉ là thời điểm kiểm tra. Giá trị thiếu phải nói chưa xác minh,
+  không thay bằng ngày khác. Nguồn evidence_kind=headline chỉ chứng minh tiêu đề
+  và ngày đăng; trình bày là tin được đăng, không khẳng định ngày sự kiện,
+  không coi là đã đọc toàn văn hoặc một thay đổi kinh doanh đã được xác nhận.
+- Khi chuẩn bị báo cáo tư vấn doanh nghiệp, phân biệt quy mô tập đoàn với đơn vị
+  khách hàng. Nêu câu hỏi cần làm rõ hiện trạng/nhu cầu và trạng thái hành động:
+  báo cáo chuẩn bị chỉ đọc, chưa gửi thư/tạo tài liệu/đặt lịch, không cần duyệt
+  thao tác đọc. Chỉ nói đã duyệt hoặc thực thi khi có biên nhận tương ứng.
 - Chỉ gắn đơn vị cho số liệu khi nguồn xác định rõ phạm vi áp dụng: ngay tại giá trị,
   hàng/cột, tiêu đề hoặc ghi chú chung của bảng. Đơn vị trong câu mô tả một đối tượng
   chỉ áp dụng cho đúng chỉ tiêu, kỳ và giá trị được mô tả của đối tượng đó, không tự
@@ -686,7 +695,11 @@ class AgentOrchestrator:
                         "file_id": source["url"],
                         "file_name": source["title"],
                         "chunk_index": 0,
-                        "snippet": payload.get("summary", "")[:500],
+                        "snippet": str(source.get("evidence_excerpt") or source["title"])[:9000],
+                        "evidence_kind": source.get("evidence_kind", "provider_grounded"),
+                        "published_at": source.get("published_at"),
+                        "event_date": source.get("event_date"),
+                        "accessed_at": source.get("accessed_at"),
                         "web_view_link": source["url"],
                         "score": 1.0,
                     }

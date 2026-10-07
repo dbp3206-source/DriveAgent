@@ -308,3 +308,25 @@ async def test_langgraph_run_builds_plan_and_final_response_through_real_nodes()
     assert result.answer == "Câu trả lời đã kiểm chứng."
     assert result.plan == ["Tìm bằng chứng", "Tổng hợp"]
     assert result.trace[0]["stage"] == "planning"
+def test_web_citations_preserve_source_evidence_and_date_semantics():
+    payload = {
+        "summary": "Doanh thu tập đoàn 91 tỷ euro [S1]. Tiêu đề tin [S2].",
+        "sources": [
+            {"url": "https://example.org/company", "title": "Công ty",
+             "evidence_excerpt": "Nguồn ghi doanh thu 91 tỷ euro toàn cầu.",
+             "evidence_kind": "page_text", "published_at": None, "event_date": None},
+            {"url": "https://news.google.com/articles/item", "title": "Tiêu đề tin",
+             "evidence_excerpt": "Tiêu đề tin; ngày đăng: 2026-10-05; ngày sự kiện chưa xác minh.",
+             "evidence_kind": "headline", "published_at": "2026-10-05T00:00:00Z",
+             "event_date": None},
+        ],
+    }
+    rows = AgentOrchestrator._collect_citations([
+        HumanMessage(content="Chuẩn bị báo cáo tư vấn."),
+        ToolMessage(content=json.dumps(payload), name="web_research", tool_call_id="web"),
+    ])
+    assert rows[0]["snippet"] == payload["sources"][0]["evidence_excerpt"]
+    assert "91 tỷ" not in rows[1]["snippet"]
+    assert rows[1]["published_at"] == "2026-10-05T00:00:00Z"
+    assert rows[1]["event_date"] is None
+    assert rows[1]["evidence_kind"] == "headline"

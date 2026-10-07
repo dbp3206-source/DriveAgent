@@ -2,6 +2,20 @@
 
 ## Đối soát mới nhất
 
+**Nguyên nhân và sửa gộp bằng chứng web sau 9169e79:** bộ tạo dẫn chứng gán
+cùng 500 ký tự đầu của tóm tắt cho mọi URL và bỏ các trường ngày nguồn.
+Kiểm xác định với hai nguồn khác nhau thất bại đúng ở đoạn trích trùng nhau.
+Sửa chung: nguồn trang giữ văn bản đã đọc; tin dạng tiêu đề giữ riêng tiêu đề,
+ngày đăng và giới hạn chưa đọc toàn văn/chưa xác minh ngày sự kiện; nguồn do
+nhà cung cấp đối chiếu giữ riêng đoạn được hỗ trợ, không cả văn bản không nguồn.
+Dẫn chứng bảo toàn loại bằng chứng, ngày đăng/ngày sự kiện/thời điểm kiểm tra;
+không dùng tóm tắt chung làm bằng chứng cho mọi liên kết. Bổ sung quy tắc tổng
+hợp phân biệt các ngày, phạm vi tập đoàn/đơn vị, câu hỏi cần làm rõ và trạng thái
+hành động chỉ đọc/chưa thực thi. Không tự thêm biên nhận duyệt hoặc thao tác ghi.
+172 phép kiểm định tuyến/web/dẫn chứng/tổng hợp đạt, gồm một ca qua bộ điều phối
+thực với ranh giới mô hình thay thế; kiểm mã và bí mật đạt. Chưa kiểm live bản
+sửa này, không ghi company-06 hoặc điểm nghiệp vụ đạt từ kết quả tự động.
+
 **9169e79 đã triển khai và kiểm URL thật:** CI 37559845504 thành công.
 Render dep-db2qikss728c73a9i3m0 Live lúc 02:09:00 UTC ngày 07/10, ảnh
 `sha256:e5af206ec2fdc2ecb41d9de2866c986128bf8c54d38d3b337209e2dd1bad3af2`.
