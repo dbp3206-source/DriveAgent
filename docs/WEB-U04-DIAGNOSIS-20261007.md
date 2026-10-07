@@ -125,3 +125,14 @@ giữ cấu hình lần chính, giới hạn lượt dự phòng, giữ cấu tr
 Lần kiểm đầu có hai lỗi thiếu import trong phép kiểm mới (192 đạt, 2 lỗi);
 đã sửa import và chạy lại đủ cả ba tệp, không ghi lần lỗi là đạt.
 Ruff đạt. Đây là bằng chứng sửa mã, không thay bằng chứng câu trả lời thật.
+
+SDK Google thật với MockTransport cũng đã chạy: giới hạn 25/10 giây
+ghi đúng vào X-Server-Timeout và giới hạn kết nối; không gửi mạng Google.
+Bản sửa 1baf5e6be152958189b74d3afa8c042b81e3293a đã đẩy staging;
+CI 37637232987 completed/success cho postgres-state và verify.
+GHCR HEAD đúng nhãn mã nguồn trả HTTP 200, ảnh bất biến:
+ghcr.io/dbp3206-source/veridra@sha256:f406f454137b66958baa8bdea33fe7806845c0fbdb6112ddf7071a1e07675d0a.
+Đã thực sự gọi render_get_service theo hướng dẫn render-docker: nguồn
+dịch vụ vẫn là ảnh 3abd78d3... của 5267996. Không kích hoạt lại ảnh cũ;
+cần đổi nguồn ảnh trong dịch vụ hiện có. Chưa xác nhận triển khai hoặc
+company-02 đạt sau sửa; main chưa gộp.
