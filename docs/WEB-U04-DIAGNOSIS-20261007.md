@@ -21,17 +21,38 @@ Nguyên nhân không thể chẩn đoán chính xác từ biên nhận hiện c�
 mã HTTP/loại lỗi gốc, chỉ giữ source_bundle_summary_failed. Không suy đoán sửa cấu trúc,
 đổi mô hình hoặc yêu cầu đổi khóa khi chưa có bằng chứng.
 
+## Lỗi cấu hình xác định thêm sau đối soát
+
+Đã đọc mô tả API công khai của Google tại
+https://generativelanguage.googleapis.com/$discovery/rest?version=v1beta:
+Schema của responseSchema không có additionalProperties. SDK thật gửi
+additional_properties=false vào responseSchema từ PublicAnswer(extra='forbid').
+Đây là lệch định dạng xác định được bằng dữ liệu gửi thật và hợp đồng API,
+không phải lỗi chuyển đổi cục bộ. Phần compiler của sản phẩm đã dùng
+response_json_schema vì chính ràng buộc này. Tuy nhiên biên nhận U04 cũ không
+giữ mã lỗi máy chủ, nên chưa thể chứng minh đây là nguyên nhân duy nhất của lượt đó.
+
+Đã chuyển tổng hợp web sang response_json_schema, giữ đầy đủ kiểm trích đoạn
+và kiểm dữ liệu cục bộ. Không đổi mô hình, không gọi thêm lượt, không bỏ bước
+suy luận. Phép kiểm mới dùng SDK thật và MockTransport để xác nhận trường
+responseJsonSchema có ràng buộc đúng, không gửi responseSchema cũ.
+
 ## Thay đổi giới hạn
 
 Giữ mã HTTP thuộc danh sách cố định hoặc loại lỗi cấu hình/dịch vụ trong mã lỗi công cụ.
 Không lưu thông báo thô từ nhà cung cấp, nội dung nguồn, khóa, hoặc mật khẩu.
 Không tự thử lại lỗi 400/404 không thể khắc phục bằng chờ. Không tăng hạn mức,
 không gọi thêm nguồn hoặc mở rộng bộ kiểm. Đây là chẩn đoán, chưa phải sửa nguyên nhân
-thất bại U04. Chưa đóng A/E/F hoặc gộp main.
+thất bại U04. Bản sửa lệch định dạng nêu trên vẫn cần kiểm trên sản phẩm.
+Chưa đóng A/E/F hoặc gộp main.
 
-## Kiểm chứng bản chẩn đoán
+## Kiểm chứng bản chẩn đoán và sửa định dạng
 
-59 phép kiểm đạt trong test_web_reasoning.py và test_public_freshness.py.
+59 phép kiểm đạt cho bản chẩn đoán ban đầu. Sau sửa định dạng, 85 phép kiểm
+đạt trong test_web_reasoning.py, test_public_freshness.py,
+test_web_source_failures.py và test_protonx_hardgates.py (17,32 giây).
+Lần gọi đầu bộ kiểm mở rộng không chạy được vì tên test_protonx_tools.py không tồn tại;
+đã chọn đúng test_protonx_hardgates.py rồi chạy đầy đủ, không tính lần sai là đạt.
 Ruff và git diff --check đạt. Các ca mới kiểm mã 400/404/429/503, tính có thể
 thử lại và không lộ nội dung riêng. Không phép nào gọi Gemini thật.
 

@@ -403,7 +403,12 @@ async def _reason_over_sources(
             contents=prompt,
             config=types.GenerateContentConfig(
                 temperature=0.0, max_output_tokens=3072,
-                response_mime_type="application/json", response_schema=PublicAnswer,
+                # extra='forbid' emits additionalProperties, which is not part
+                # of legacy responseSchema. Use the JSON Schema wire dialect,
+                # as the conversation compiler does; keep local validation.
+                response_mime_type="application/json",
+                response_json_schema=PublicAnswer.model_json_schema(),
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),
             ),
         )
     except Exception as exc:

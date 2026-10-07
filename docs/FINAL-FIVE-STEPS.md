@@ -26,7 +26,10 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   căn cứ và đã Live. U04 vừa chạy chưa đạt: trang chính thức HTTP 200 nhưng
   bước tổng hợp lỗi source_bundle_summary_failed; chưa có câu trả lời để chấm.
   Mã lỗi gốc chưa được giữ lại, nên chưa kết luận nguyên nhân hoặc hết hạn mức.
-  Đã chuẩn bị chẩn đoán mã lỗi an toàn, chưa tuyên bố sửa xong. Tự tìm nguồn chính thức khi tìm kiếm
+  Đã xác định lệch định dạng gửi cấu trúc: ràng buộc cấm trường thừa không
+  thuộc định dạng cũ. Bản sửa dùng định dạng JSON Schema như phần trò chuyện,
+  qua 85 phép kiểm gồm SDK thật với kết nối giả lập; chưa kiểm trên sản phẩm.
+  Giữ mã lỗi an toàn để phân biệt nguyên nhân nếu còn lỗi. Tự tìm nguồn chính thức khi tìm kiếm
   hết hạn mức vẫn còn hạn chế. Hồ sơ doanh nghiệp chưa đủ kết quả đạt.
 - B: W02 đạt đủ chuỗi. Có biên nhận lịch sử cho tính toán, đổi đầu vào quy
   trình, nhớ/quên, lưu/xuất và bản tin; không chạy lại chỉ để tăng số mẫu.
