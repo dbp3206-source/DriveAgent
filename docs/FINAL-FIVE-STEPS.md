@@ -14,6 +14,11 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái lúc khóa
 
+- Bản mới nhất đang chạy: 42d7865, CI 37590312321 thành công. Render
+  dep-db2vpo67bikc73b6p4k0 live lúc 15:05:38 giờ Việt Nam ngày 07/10,
+  đúng ảnh sha256:0a02c6a7dfe2c21570e9e3e06c389a329f5040e8c45f8fb30d9d886e24ac786d.
+  Kiểm kết nối công khai đạt. Bước 1 đóng; các kết quả câu trả lời trên bản
+  trước vẫn giữ lịch sử, không tự tính điểm cho bản này.
 - Cập nhật bản đang chạy: 2f0183a có cả hai sửa chung, CI 37587663500 đạt.
   Render dep-db2vdb0m7kps73cfms9g live lúc 07:39:01.145447 UTC ngày 07/10,
   mã ảnh sha256:d33051adc30ea6ff64b766958ef50943f7b52d020bdafe0dc2b7ec45c68dd953.
@@ -60,7 +65,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Phần còn lại, không mở rộng
 
-1. Đã đóng: ảnh 2f0183a đã qua kiểm và chạy đúng mã ảnh trên Render.
+1. Đã đóng: ảnh 42d7865 đã qua kiểm và chạy đúng mã ảnh trên Render.
 2. Đóng A bằng các ca còn thiếu trong bộ đã khóa; gộp kiểm web, nội dung và
    tiếng Việt. Không chạy lại ca đã đạt nếu mã sửa không ảnh hưởng.
 3. Đóng B bằng các đoạn quy trình còn thiếu; đối soát lại biên nhận lưu,

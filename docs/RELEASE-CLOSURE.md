@@ -2,14 +2,25 @@
 
 ## Đối soát mới nhất
 
-**42d7865 đã qua CI — chờ đổi nguồn Render:** CI `37590312321` completed /
+**42d7865 đã qua CI và chạy đúng trên Render:** CI `37590312321` completed /
 success cho đúng `42d78654a506c5b519fdce1750a28ae9083626ac`, gồm kiểm PostgreSQL,
 máy chủ, giao diện, đóng gói/chạy ứng dụng trong ảnh và xuất PDF tiếng Việt.
 Ảnh công khai đã đọc HEAD HTTP 200 theo thẻ commit, mã cố định:
 `ghcr.io/dbp3206-source/veridra@sha256:0a02c6a7dfe2c21570e9e3e06c389a329f5040e8c45f8fb30d9d886e24ac786d`.
-Bước tự triển khai Render skipped; chưa coi bản này đang chạy hoặc chuyển
-kết quả Vinamilk sang đạt. Cần đổi Existing Image trong Settings đúng dịch vụ
-hiện có. Không gộp main trước nghiệm thu A/B/E/F.
+Bước tự triển khai Render skipped; người dùng đã đổi đúng nguồn ảnh.
+Render xác nhận dep-db2vpo67bikc73b6p4k0 live lúc 15:05:38 giờ Việt Nam ngày
+07/10, đúng mã ảnh trên; /api/health trả status=ok, database=true và
+object_storage=true. Đổi current_results sang đúng bản, giữ ca Vinamilk
+2f0183a trong lịch sử, không chuyển thành đạt sau sửa mà chưa kiểm thật.
+Không gộp main trước nghiệm thu A/B/E/F.
+
+Đối soát B sau triển khai, không gọi mô hình: bản kết quả thử Mộc An
+5cbbce8b-70de-4fe6-8078-2ea3a474ce5d còn revision 2, chưa cất, đủ bốn câu
+hỏi và ngân sách chưa xác nhận. Đây là đọc lại trong cơ sở dữ liệu riêng của
+quản trị, không phải kiểm mở/xuất trên giao diện; không đóng toàn W06.
+Bộ đếm bảo vệ đọc cùng đợt cho khóa đang dùng: 7/16 lượt, còn 9 lượt trong
+ngày bảo vệ hiện tại. Đây không phải hạn mức còn lại do Google xác nhận.
+Không đọc giá trị khóa, không đặt lại bộ đếm; không yêu cầu thêm khóa.
 
 **Sửa chung kiểm số liệu web — local đạt, chưa triển khai:** sau khi đối soát
 ca Vinamilk, thêm kiểm ranh giới số liệu ở cả ba tuyến tổng hợp, sau lần viết
