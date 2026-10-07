@@ -33,6 +33,16 @@ bộ đạt như trên. Đây là kiểm hợp đồng mã, không phải điể
 Trong phiên này, apply_patch của ứng dụng lỗi đường dẫn; đã dùng chính
 apply_patch qua bộ máy Codex trực tiếp, không sửa tệp bằng lệnh ghi khác.
 
+CI 37626892424 của 8c4de13b3e5a4bce2c76a25b9c706abf98f2ebd7 đã hoàn tất
+thành công: PostgreSQL, máy chủ, giao diện, kiểm đánh giá ngoại tuyến, ảnh
+chạy được và xuất PDF tiếng Việt. Đã công bố ảnh; đối chiếu HEAD HTTP 200
+theo thẻ commit, mã cố định:
+ghcr.io/dbp3206-source/veridra@sha256:aed79992105db137f087fab7b8287db2189f148b96e9436eb6de70693071600b.
+Bước tự triển khai Render skipped. Chưa chứng nhận URL đang chạy bản sửa;
+current_results giữ bản đã kiểm thật 42d7865, U01 vẫn chưa đạt. Áp dụng
+hướng dẫn render-docker để dùng mã ảnh cố định, không dùng thẻ latest hoặc
+coi một lần triển khai ảnh cũ thành đã triển khai bản mới.
+
 **W02 trên 42d7865 — đạt đủ chuỗi đã khóa:** đối soát ba câu người dùng đã
 chạy trong phiên 057479cd bằng Supabase chỉ đọc. Mã lượt:
 9c7f2c7d-65fd-4e53-9399-77d4514e4b8c,

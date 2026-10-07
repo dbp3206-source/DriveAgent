@@ -15,8 +15,10 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 ## Trạng thái hiện hành — 07/10/2026
 
 - Bản đang chạy vẫn là 42d7865. Bản sửa bước suy luận web 8c4de13 đã lên
-  staging; CI 37626892424 đang dựng ảnh sau khi kiểm PostgreSQL, máy chủ và
-  giao diện. Chưa triển khai; bước 1 cần đóng lại bằng đúng ảnh mới.
+  staging; CI 37626892424 đã hoàn tất thành công, gồm PostgreSQL, máy chủ,
+  giao diện, dựng/chạy ảnh và xuất PDF tiếng Việt. Ảnh theo commit được đọc
+  HEAD HTTP 200: sha256:aed79992105db137f087fab7b8287db2189f148b96e9436eb6de70693071600b.
+  Bước tự triển khai skipped. Chưa triển khai; bước 1 cần đóng bằng đúng ảnh mới.
 - A: U01 trên 42d7865 chưa đạt vì không trả ngày hiện tại/khoảng sự kiện,
   chỉ có tám tiêu đề tin. Bản sửa mới thêm bước suy luận có trích đoạn và
   căn cứ, nhưng chưa kiểm thật; tự tìm nguồn chính thức khi công cụ tìm kiếm
