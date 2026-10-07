@@ -2,6 +2,19 @@
 
 ## Đối soát mới nhất
 
+**company-02 trên ef04f01 chưa đạt:** lượt
+`f577d8bf-5a49-4178-973c-2232aa8875ef` hoàn tất 21,4 giây, web_research
+thành công, tám nguồn, ba câu hỏi làm rõ. Tuy nhiên câu “Ra mắt sản phẩm mới”
+dẫn [5,6] là các nguồn loại headline chỉ ghi tên sản phẩm và ngày đăng,
+không chứng minh hành động ra mắt. Danh sách còn tiêu đề undefined [8].
+Nguyên nhân cần xử lý chung: thu thập RSS chưa loại tiêu đề rác; kiểu nguồn
+được giữ trong bằng chứng nhưng chưa ràng buộc được cách diễn giải tiêu đề
+trong câu trả lời tự do. Nhắc bằng prompt chưa đủ chứng minh chặn suy diễn.
+Không ghi PASS hoặc điểm thật từ việc đủ đề mục. Không gọi nguồn riêng/ghi
+Google. Khóa Veridra2 hoạt động, sau ca này còn 13/16; không phải đang bị
+chặn do không có ngân sách. Giữ lượt cho kiểm sau sửa, không lặp các ca cùng lỗi.
+Ảnh: `design-work/qa/acceptance-ef04f01/vinamilk-web-trace.jpg`.
+
 **B — W04 đạt trọn ba lượt trên ef04f01:** đầu vào tháng 1 là 120 triệu,
 tháng 2 là 150 triệu → chênh 30 triệu, tăng 25%; sửa riêng tháng 2 thành 144
 → chênh 24 triệu, tăng 20%, giữ tháng 1; lượt cuối hai câu giữ đúng số đã

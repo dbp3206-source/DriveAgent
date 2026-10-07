@@ -56,6 +56,13 @@
         "latency_seconds": [28.5],
         "observed": "Đọc web thật, sáu nguồn, đủ ba câu hỏi, ngày và phạm vi phân biệt, trạng thái chỉ đọc; còn thuật ngữ tiếng Anh trong giải thích",
         "quality_score": null
+      },
+      "company-02": {
+        "status": "PARTIAL",
+        "run_ids": ["f577d8bf-5a49-4178-973c-2232aa8875ef"],
+        "latency_seconds": [21.4],
+        "observed": "Đọc web, tám nguồn, đủ mục và ba câu hỏi; suy diễn ra mắt sản phẩm mới từ nguồn chỉ có tiêu đề; có nguồn tiêu đề undefined",
+        "quality_score": null
       }
     },
     "unlisted_cases": "NOT VERIFIED on this release; no score inferred from historical or automated results"
