@@ -57,6 +57,12 @@ khóa hay phiên đăng nhập của môi trường đang dùng.
 - `scripts/setup.ps1` hoàn tất: tạo môi trường Python riêng, cài từ bản khóa
   phụ thuộc, chạy `npm ci`, tạo cấu hình local và bí mật ngẫu nhiên.
 - `npm run build --prefix frontend` thành công, dựng 4.491 mô-đun.
+- Ngày 07/10, khởi động chính backend bản tải sạch ở cổng thử 8012.
+  Hoàn tất khởi động; `/` và `/api/health` trả HTTP 200, cơ sở dữ liệu và
+  kho vector riêng được khởi tạo. Sức khỏe báo đúng Google/Gemini chưa
+  cấu hình, không coi là đã thử kết nối hai dịch vụ. Lần gọi trước khi
+  khởi động hoàn tất bị từ chối kết nối; lần sau mới đạt. Đã dừng tiến
+  trình thử riêng, không đụng tiến trình local đang dùng của người dùng.
 - Kiểm cấu hình xác nhận phần local hợp lệ nhưng báo thiếu khóa Gemini và
   OAuth. Đây là phần chưa hoàn tất, không phải bằng chứng đăng nhập đạt.
 - Không dựng Docker trên máy. Ổ C còn khoảng 11,77 GB sau cài đặt.
