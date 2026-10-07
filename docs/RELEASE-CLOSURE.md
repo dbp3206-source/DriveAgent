@@ -2,6 +2,15 @@
 
 ## Đối soát mới nhất
 
+**42d7865 đã qua CI — chờ đổi nguồn Render:** CI `37590312321` completed /
+success cho đúng `42d78654a506c5b519fdce1750a28ae9083626ac`, gồm kiểm PostgreSQL,
+máy chủ, giao diện, đóng gói/chạy ứng dụng trong ảnh và xuất PDF tiếng Việt.
+Ảnh công khai đã đọc HEAD HTTP 200 theo thẻ commit, mã cố định:
+`ghcr.io/dbp3206-source/veridra@sha256:0a02c6a7dfe2c21570e9e3e06c389a329f5040e8c45f8fb30d9d886e24ac786d`.
+Bước tự triển khai Render skipped; chưa coi bản này đang chạy hoặc chuyển
+kết quả Vinamilk sang đạt. Cần đổi Existing Image trong Settings đúng dịch vụ
+hiện có. Không gộp main trước nghiệm thu A/B/E/F.
+
 **Sửa chung kiểm số liệu web — local đạt, chưa triển khai:** sau khi đối soát
 ca Vinamilk, thêm kiểm ranh giới số liệu ở cả ba tuyến tổng hợp, sau lần viết
 lại cuối. Nếu số trong dòng khẳng định không có trong chính đoạn trang web
