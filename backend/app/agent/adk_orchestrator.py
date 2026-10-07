@@ -33,6 +33,7 @@ from app.agent.compiler import (
 from app.agent.controls import ChatControls
 from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
+    bound_headline_claims,
     context_only_followup,
     label_historical_sources,
     prior_turn_sources,
@@ -50,6 +51,7 @@ from app.agent.output_contract import enforce_presentation_contract, proactive_a
 from app.agent.presentation import (
     explicit_presentation_contract,
     normalize_adaptive_framework,
+    normalize_markdown_boundaries,
     normalize_math_notation,
 )
 from app.agent.quantitative import inventory_facts
@@ -608,6 +610,17 @@ class AdkOrchestrator:
                 ],
                 source_references_untrusted=source_references(citations),
             )
+            # A model rewrite can collapse Markdown that was normalized above.
+            # Apply content-neutral boundary repair after the last model call.
+            answer = normalize_math_notation(answer)
+            answer, _ = normalize_markdown_boundaries(answer)
+            answer, headline_lines = bound_headline_claims(answer, citations)
+            if headline_lines:
+                answer, citations = retain_referenced_citations(answer, citations)
+                records.append({
+                    "stage": "output_guard", "status": "corrected",
+                    "rule": "headline_evidence_boundary", "affected_lines": headline_lines,
+                })
             if reused_sources:
                 answer = label_historical_sources(answer, citations)
             return AgentRunResult(

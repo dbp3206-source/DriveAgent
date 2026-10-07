@@ -2,6 +2,28 @@
 
 ## Đối soát mới nhất
 
+**B — W02 chưa đạt trên ef04f01:** ba lượt thật eab49d78/2a2dc0a6/21a918dd
+(13,6 / 14,7 / 10,9 giây). Hai lượt đầu giữ An Bình, ngân sách chưa xác nhận
+và đổi riêng ngày hẹn từ 12/10 sang 14/10/2026, giờ 09:00. Lượt hai sau
+viết lại bị dính tiêu đề; lượt cuối trả thời điểm máy chủ thay ngày giờ cuộc
+hẹn. Không có công cụ đọc nguồn riêng hoặc ghi Google trong dấu vết.
+Không ghi đạt từ việc hai lượt đầu đúng. Ngân sách khóa còn 9/16; không
+chạy lặp cùng ca trước triển khai sửa. Ảnh w02-turn1/2/3.jpg trong
+acceptance-ef04f01.
+
+Nguyên nhân cấu trúc được xác định trong mã: tuyến ADK chuẩn hóa trước
+nhưng không sau lượt viết lại. Đã dùng cùng phép chuẩn hóa không đổi dữ kiện
+sau lượt cuối, đồng thời thêm ràng buộc nguồn chỉ có tiêu đề cho tuyến ADK.
+48 phép kiểm ADK đạt, gồm ca viết lại làm dính tiêu đề và ca suy diễn ra mắt.
+Về ngày hẹn: có ghi nhận nạp hội thoại nhưng đầu vào còn gắn đồng hồ máy chủ
+chưa nói rõ phạm vi sử dụng. Bổ sung quy tắc dùng đồng hồ chỉ cho ngày tương
+đối, không thay ngày sự kiện trong hội thoại. Đây là hướng sửa cần kiểm thật
+sau triển khai, chưa chứng minh riêng lời nhắc này đủ đóng lỗi nhớ ngày.
+94 phép kiểm ADK/thông tin thời gian đạt sau bổ sung quy tắc này, gồm kiểm
+đầu vào thực của tuyến điều phối có quy tắc phân biệt đồng hồ/ngày hẹn.
+Đợt sửa web đầu đã lưu local tại 64c5fe0; kiểm cuối nguồn/điều phối 138 phép
+đạt trong 94,52 giây; quét 557 tệp không phát hiện bí mật. Chưa đẩy lên cloud.
+
 **Đợt sửa chung đang ở local, chưa triển khai:** nguyên nhân ca company-02
 không nằm riêng ở Vinamilk: bước tổng hợp có thể biến nguồn chỉ có tiêu đề
 thành lời khẳng định về sự kiện. Đã ràng buộc đầu ra ở cả hai tuyến điều phối:

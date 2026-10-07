@@ -60,4 +60,14 @@ def needs_public_evidence(message: str) -> bool:
 
 
 def server_time_context(timezone: str = "Asia/Bangkok") -> dict[str, str]:
-    return {"now": datetime.now(ZoneInfo(timezone)).isoformat(), "timezone": timezone}
+    return {
+        "now": datetime.now(ZoneInfo(timezone)).isoformat(),
+        "timezone": timezone,
+        "usage_policy": (
+            "Đây chỉ là đồng hồ máy chủ để hiểu hôm nay/hôm qua/ngày mai. "
+            "Không thay ngày giờ cuộc hẹn, hạn chót hoặc sự kiện trong hội thoại bằng đồng hồ này. "
+            "Khi người dùng nhắc lại theo ngữ cảnh hiện tại, giữ dữ kiện hội thoại sau "
+            "đính chính mới nhất; không hiểu ngữ cảnh hiện tại là yêu cầu đọc đồng hồ. "
+            "Nếu không xác định được ngày giờ của sự kiện thì hỏi lại, không dùng giờ máy chủ."
+        ),
+    }

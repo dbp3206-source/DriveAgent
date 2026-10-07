@@ -40,6 +40,16 @@
     "image_digest": "sha256:0f26be48e572d73e98a237ab5675952774bfe7f0abd309be1554f2d1d07a1f59",
     "observed_date": "2026-10-07",
     "cases": {
+      "W02": {
+        "status": "FAIL",
+        "run_ids": ["eab49d78-b0f7-419e-a3f4-9b8d831de653", "2a2dc0a6-0441-43f4-abe3-f249e55c7288", "21a918dd-ddcc-4bf1-8c81-128ae4dad027"],
+        "latency_seconds": [13.6, 14.7, 10.9],
+        "observed": "Lượt đầu giữ An Bình, 12/10/2026 09:00 và ngân sách chưa xác nhận. Lượt hai đổi đúng 14/10/2026, giữ dữ kiện khác nhưng tiêu đề bị dính vào nội dung sau viết lại. Lượt cuối trả giờ máy chủ thay ngày giờ cuộc hẹn; không đủ điều kiện đạt chuỗi.",
+        "private_source_reads": false,
+        "google_writes": false,
+        "evidence_directory": "design-work/qa/acceptance-ef04f01",
+        "quality_score": null
+      },
       "W04": {
         "status": "PASS",
         "run_ids": ["7671705c-ba12-4e42-ace2-6d51a51e3ba3", "6f818d40-b986-4e13-9590-5d709103117a", "efa16082-c7f4-42a8-9470-933921b50afe"],

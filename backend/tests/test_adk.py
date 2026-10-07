@@ -900,9 +900,13 @@ async def test_adk_open_ended_run_records_session_handoff_usage_and_final_answer
     assert runner_models[0].quota is orchestrator.compiler.quota
 
 
-async def test_adk_presentation_repair_receives_collected_tool_evidence_and_references():
+@pytest.mark.parametrize("repair_mode", ["unchanged", "collapsed", "headline"])
+async def test_adk_presentation_repair_receives_collected_tool_evidence_and_references(repair_mode):
     citation = {"file_id": "local:sample", "file_name": "sample.md", "chunk_index": 0,
                 "snippet": "Nhóm khảo sát có 42 người.", "score": 1.0}
+    if repair_mode == "headline":
+        citation.update(file_name="Sản phẩm mẫu", evidence_kind="headline",
+                        published_at="2026-10-02T07:00:00Z")
     tool_content = json.dumps({"data": {"citations": [citation]}}, ensure_ascii=False)
 
     class FakeSessions:
@@ -930,7 +934,14 @@ async def test_adk_presentation_repair_receives_collected_tool_evidence_and_refe
     orchestrator = AdkOrchestrator(Settings(_env_file=None, gemini_api_key="test-key"), registry)
     orchestrator.client = genai.Client(api_key="test-key")
     orchestrator.sessions = FakeSessions()
-    repair = AsyncMock(side_effect=lambda **kwargs: kwargs["answer"])
+    def revised_answer(**kwargs):
+        if repair_mode == "collapsed":
+            return "## Hiện trạng\nNhóm có 42 người [1]. ## Việc tiếp theo\nHỏi ngân sách."
+        if repair_mode == "headline":
+            return "Đã ra mắt sản phẩm mới ngày 02/10 [1]."
+        return kwargs["answer"]
+
+    repair = AsyncMock(side_effect=revised_answer)
     with (
         patch("app.agent.adk_orchestrator.Runner", FakeRunner),
         patch.object(orchestrator, "_build_agent_tree",
@@ -943,6 +954,14 @@ async def test_adk_presentation_repair_receives_collected_tool_evidence_and_refe
             request_id="repair-evidence", user_message="Giải thích cách cải thiện báo cáo",
         )
     assert result.citations == [citation]
+    if repair_mode == "collapsed":
+        assert "[1].\n\n## Việc tiếp theo" in result.answer
+        assert "Nhóm có 42 người" in result.answer
+    if repair_mode == "headline":
+        assert "Đã ra mắt" not in result.answer
+        assert "ngày đăng: 2026-10-02 [1]" in result.answer
+        assert "ngày sự kiện và nội dung chi tiết chưa xác minh" in result.answer
+        assert any(item.get("rule") == "headline_evidence_boundary" for item in result.trace)
     repair.assert_awaited_once()
     assert repair.await_args.kwargs["source_evidence_untrusted"] == [
         {"tool": "local_source_read", "result_untrusted": tool_content},
@@ -1021,6 +1040,8 @@ async def test_adk_restores_owner_scoped_canonical_history(existing, with_source
     assert captured["runner_session"] == captured["execution_session"]
     assert captured["runner_session"].startswith("session-a--")
     assert "Asia/Bangkok" in captured["request"]
+    assert "Không thay ngày giờ cuộc hẹn" in captured["request"]
+    assert "giữ dữ kiện hội thoại sau đính chính mới nhất" in captured["request"]
     if existing:
         assert "session" not in captured
         assert any(hasattr(value, "year") for value in captured["query"].values())

@@ -30,7 +30,11 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   hai tuyến điều phối. Chưa kiểm thật sau sửa, chưa đủ các ca còn lại,
   chưa đóng A. Sửa này không chứng minh mọi nhận định không dẫn nguồn đều đúng.
 - Bước 3: W04 đạt đủ ba lượt tính/sửa/nhớ trên ef04f01; đã đối soát mở bản
-  lưu và tìm ghi chú đã xóa. Hẹn giờ và xuất có biên nhận lịch sử; chưa đóng toàn B.
+  lưu và tìm ghi chú đã xóa. W02 kiểm đủ ba lượt: đổi ngày đúng ở lượt hai,
+  nhưng lượt cuối trả giờ máy chủ thay giờ cuộc hẹn; chuỗi chưa đạt.
+  Đã sửa local khâu định dạng sau viết lại và làm rõ phạm vi dùng đồng hồ;
+  94 phép kiểm ADK/thông tin thời gian đạt, chưa kiểm thật sau triển khai.
+  Hẹn giờ và xuất có biên nhận lịch sử; chưa đóng toàn B.
 - Bước 4 chưa đủ bộ kết quả/điểm hợp lệ. Không công bố điểm tổng hiện tại.
 - Bước 5 chưa gộp main; phải chờ các bước trên.
 
