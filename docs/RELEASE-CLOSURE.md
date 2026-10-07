@@ -2,6 +2,17 @@
 
 ## Đối soát mới nhất
 
+**Ảnh gộp sẵn sàng triển khai — cloud chưa đổi:** commit
+`2f0183a9e605da922065d55474d0549a6f4e23c4` có cả sửa ranh giới dữ kiện
+và nhận diện nguồn công khai. 252 phép kiểm liên quan đạt trong 49,42 giây;
+kiểm mã đạt. CI `37587663500` hoàn tất success, gồm PostgreSQL, backend,
+giao diện, đóng gói ảnh và xuất PDF tiếng Việt. Mã ảnh đọc trực tiếp từ GHCR
+theo thẻ commit, HTTP 200:
+`ghcr.io/dbp3206-source/veridra@sha256:d33051adc30ea6ff64b766958ef50943f7b52d020bdafe0dc2b7ec45c68dd953`.
+Bước triển khai Render skipped; cần đổi nguồn ảnh trong Settings.
+Không đổi current_results hoặc ghi lỗi Vinamilk đã hết trên cloud trước khi
+triển khai và đối soát thật. Không triển khai ảnh trung gian 0ae3dcb.
+
 **Vinamilk trên 35183a5 — lỗi định tuyến đã xác định:** lượt
 `c848fa59-415c-4f0e-97b1-1f805b20b71c` thất bại lần xử lý đầu, không có
 câu trả lời. Supabase audit ghi ToolScopeError / unavailable_tool:
