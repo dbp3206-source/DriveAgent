@@ -2,6 +2,20 @@
 
 ## Đối soát mới nhất
 
+**W02 trên 35183a5 — đã đối soát ba lượt người dùng chạy:** đọc riêng phiên
+`d3bbbdd9-98b5-4dc2-a7ff-d588711c540b` qua Supabase, không chạy lại mô hình.
+Mã lượt: `aee053c7-99e2-42bd-882d-e36cf235cb97`,
+`e6f75b57-b183-45fa-9467-4164065e0894`,
+`9a6fc289-ad50-4a02-805c-c566de9bfa08`. Lượt cuối giữ đúng An Bình,
+14/10/2026 09:00, ngân sách chưa xác nhận, đủ ba câu hỏi; không trả giờ máy chủ.
+Lượt hai có bốn đề mục xuống dòng riêng, 143 từ tách bằng khoảng trắng.
+Đạt phần ghi nhớ/định dạng; chưa kiểm trực quan thanh bên. Hai lượt đầu khẳng
+định quy trình thủ công, thiếu phân loại/công cụ tra cứu khi đầu vào chưa có
+bằng chứng đó. Đây là hạn chế nội dung, không đổi toàn chuỗi thành đạt.
+Các dấu vết lưu không có lượt gọi công cụ nguồn hay ghi Google.
+Không cấp điểm E từ kết quả riêng này. Phép đọc dữ liệu thay cho việc chờ
+công cụ thanh bên đã tháo điểm chặn thu thập kết quả W02.
+
 **35183a5 đã lên GitHub và qua toàn bộ kiểm:** lúc 13:43 ngày 07/10 đã
 đẩy staging từ 2418357 đến 35183a5d611f5f4ba3957f9e25b2f57a00c38d32.
 Lượt 37583117325 hoàn tất thành công, gồm PostgreSQL, backend, giao diện,

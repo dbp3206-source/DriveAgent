@@ -49,7 +49,23 @@
       "health": {"status": "ok", "database": true, "object_storage": true},
       "scope": "Deployment and public health only; no answer quality inferred"
     },
-    "cases": {},
+    "cases": {
+      "W02": {
+        "status": "PARTIAL",
+        "memory_sequence": "PASS",
+        "factual_scope": "FAIL_UNSUPPORTED_ASSUMPTIONS",
+        "session_id": "d3bbbdd9-98b5-4dc2-a7ff-d588711c540b",
+        "run_ids": ["aee053c7-99e2-42bd-882d-e36cf235cb97", "e6f75b57-b183-45fa-9467-4164065e0894", "9a6fc289-ad50-4a02-805c-c566de9bfa08"],
+        "assistant_message_ids": ["1ebf5d74-0182-42a9-8b6d-ef802e9d178a", "0758d4ce-d31f-412b-8088-256748f5b0ee", "bb6ebf57-4ab5-4731-b232-5a192c1adb51"],
+        "observed_at_utc": ["2026-10-07T07:08:49.170753Z", "2026-10-07T07:09:05.157705Z", "2026-10-07T07:12:03.520979Z"],
+        "latency_seconds": [18.793, 8.429, 9.876],
+        "whitespace_word_counts": [191, 143, 85],
+        "observed": "Three user-executed turns read back from persistent DB. Final answer preserves An Bình, 14/10/2026 09:00, unknown budget and three questions. Turn 2 keeps four separate headings and 143 whitespace-separated words. Turns 1/2 assert manual processing, absent classification and inadequate search without those facts in the input; not a full answer-quality PASS.",
+        "tools_in_stored_trace": [],
+        "evidence_method": "Supabase read-only query, exact admin owner, session and request IDs; not sidebar visual verification",
+        "quality_score": null
+      }
+    },
     "unlisted_cases": "NOT VERIFIED on this release; authenticated answer checks pending; no score inferred from historical or automated results"
   },
   "previous_release_results": {

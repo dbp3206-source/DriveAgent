@@ -35,10 +35,12 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   hai tuyến điều phối. Chưa kiểm thật sau sửa, chưa đủ các ca còn lại,
   chưa đóng A. Sửa này không chứng minh mọi nhận định không dẫn nguồn đều đúng.
 - Bước 3: W04 đạt đủ ba lượt tính/sửa/nhớ trên ef04f01; đã đối soát mở bản
-  lưu và tìm ghi chú đã xóa. W02 kiểm đủ ba lượt: đổi ngày đúng ở lượt hai,
-  nhưng lượt cuối trả giờ máy chủ thay giờ cuộc hẹn; chuỗi chưa đạt.
-  Đã sửa local khâu định dạng sau viết lại và làm rõ phạm vi dùng đồng hồ;
-  94 phép kiểm ADK/thông tin thời gian đạt, chưa kiểm thật sau triển khai.
+  lưu và tìm ghi chú đã xóa. W02 trên 35183a5: người dùng chạy ba lượt,
+  đối soát đúng phiên d3bbbdd9 qua Supabase chỉ đọc. Lượt cuối giữ An Bình,
+  14/10/2026 09:00 và ngân sách chưa xác nhận; lượt hai giữ bốn đề mục,
+  143 từ tách bằng khoảng trắng. Đóng riêng lỗi nhớ giờ/định dạng.
+  Hai lượt đầu vẫn khẳng định quy trình thủ công/thiếu phân loại dù đầu vào
+  chưa có dữ kiện này; giữ PARTIAL cho chất lượng toàn chuỗi, không cấp điểm.
   Hẹn giờ và xuất có biên nhận lịch sử; chưa đóng toàn B.
 - Bước 4 chưa đủ bộ kết quả/điểm hợp lệ. Không công bố điểm tổng hiện tại.
 - Bước 5 chưa gộp main; phải chờ các bước trên.
