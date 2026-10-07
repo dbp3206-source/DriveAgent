@@ -2,6 +2,17 @@
 
 ## Đối soát mới nhất
 
+**Sửa giới hạn suy diễn sau W02 — chưa chứng nhận câu trả lời thật:** dấu vết
+ba lượt xác nhận đúng dữ kiện/ngày giờ, không gọi nguồn ngoài. Lượt đầu tự thêm
+hiện trạng thiếu phân loại/công cụ; lượt hai giữ suy diễn đó trong khi chỉ đổi
+ngày. Quy tắc chung trước đây yêu cầu tách giả định nhưng chưa chỉ rõ mục tiêu
+không chứng minh nguyên nhân và câu trả lời trợ lý không phải nguồn xác nhận.
+Bổ sung hai ranh giới này trong SYSTEM_PROMPT dùng chung cho các tuyến điều phối,
+không thay đáp án hoặc lọc từ riêng An Bình. 65 phép kiểm ADK/LangGraph đạt;
+kiểm mã và diff đạt. Phép kiểm mới chỉ chứng minh mọi vai trò nhận quy tắc,
+không chứng minh mô hình luôn tuân thủ. Bản cloud vẫn là 35183a5; chưa triển khai
+sửa này hoặc đổi W02 thành đạt toàn bộ.
+
 **W02 trên 35183a5 — đã đối soát ba lượt người dùng chạy:** đọc riêng phiên
 `d3bbbdd9-98b5-4dc2-a7ff-d588711c540b` qua Supabase, không chạy lại mô hình.
 Mã lượt: `aee053c7-99e2-42bd-882d-e36cf235cb97`,

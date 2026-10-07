@@ -79,6 +79,20 @@ def test_official_web_question_routes_to_specialist_with_actual_web_tool():
     assert [tool.name for tool in agent.tools] == ['web_research']
 
 
+def test_every_specialist_inherits_customer_fact_provenance_policy():
+    agent = AdkOrchestrator._build_agent_tree(
+        RecoverableGemini(model='gemini-primary', fallback_model='gemini-fallback'),
+        [], [],
+    )
+    for specialist in [agent, *agent.sub_agents]:
+        assert 'Nhu cầu hay mục tiêu không chứng minh hiện trạng hoặc nguyên nhân' in (
+            specialist.instruction
+        )
+        assert 'Câu trả lời trước của trợ lý không phải nguồn xác nhận độc lập' in (
+            specialist.instruction
+        )
+
+
 @pytest.mark.parametrize('fallback', [False, True])
 async def test_invented_tool_is_blocked_before_adk_dispatch(monkeypatch, fallback):
     from google.adk.models import Gemini
