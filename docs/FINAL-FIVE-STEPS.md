@@ -6,7 +6,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 | Bước | Làm gì | Điều kiện đóng |
 |---|---|---|
-| 1 — Khóa bản | Dùng fea3e65 đã qua CI và triển khai đúng ảnh; giữ cố định bản nghiệm thu. | CI đạt, dịch vụ Live đúng ảnh; không dùng trạng thái Live của bản cũ. |
+| 1 — Khóa bản | Dùng ef04f01 đã qua CI và triển khai đúng ảnh; giữ cố định bản nghiệm thu. | CI đạt, dịch vụ Live đúng ảnh; không dùng trạng thái Live của bản cũ. |
 | 2 — Đóng A | Kiểm lại tuyến website bằng một ca hồ sơ doanh nghiệp sau sửa; đối soát từng nhận định với nguồn đã đọc, phạm vi doanh nghiệp và ngày tin. Hoàn tất các ca hồ sơ/thông tin cập nhật còn thiếu trong bộ đã khóa. | Có lần đọc web thật; dẫn nguồn hỗ trợ kết luận; không bịa lịch/ngân sách hoặc coi thiếu bằng chứng là đạt. |
 | 3 — Đóng B | Hoàn tất phần còn thiếu của ba quy trình: đầu ngày, chuẩn bị tư vấn, xem trước/duyệt/đọc lại; kiểm hỏi tiếp đổi phạm vi, quy trình đã lưu, nhớ/quên và kết quả xuất. Dùng lại biên nhận hợp lệ, không tạo thêm tài liệu Google hoặc đọc thêm thư ngoài phép. | Chuỗi đủ bước, đầu vào mới không lẫn dữ kiện cũ; lưu/mở lại đúng; ghi rõ lịch trống và dấu vết vai trò thực sự có. |
 | 4 — Đóng E | Đối soát kết quả 24 tác vụ đã khóa, P06 giữ hoãn; không chạy thêm mẫu ngoài bộ. Chỉ tính số đo từ bằng chứng thật, công bố mẫu số/ngoại lệ và kết quả chưa đạt. Chốt hướng dẫn và bài demo 10 phút bằng các kết quả này. | Đủ bằng chứng cho các tác vụ áp dụng; điểm theo ngưỡng đã khóa, không có điểm giả hoặc lỗi chức năng chính bị bỏ qua. Không dùng kết quả lịch sử khác bản như phép kiểm mới. |
@@ -14,13 +14,14 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái lúc khóa
 
-- Bước 1 đạt: CI 37561245089 thành công; fea3e65 chạy đúng ảnh trên Render,
-  đợt dep-db2qrvcs728c73aakps0 Live lúc 02:28:54 UTC ngày 07/10.
-  Ảnh: sha256:1e4e73a294e45da394bbcf5f7ba9e908bdbe43d5c6c46e4a9dd93f7497fefa54.
-- Bước 2: ca Bosch trên fea3e65 hoàn tất 27,3 giây, đọc web thành công,
-  phân biệt giới hạn tin và trạng thái chỉ đọc. Chưa đạt toàn bộ vì thiếu
-  ba câu hỏi làm rõ; còn thuật ngữ tiếng Anh. Chưa đủ các ca còn lại.
-- Bước 3 có bằng chứng hẹn giờ và kết quả lưu/xuất; chưa đủ đối soát toàn chuỗi cùng bản.
+- Bước 1 đạt: CI 37563231626 thành công; ef04f01 chạy đúng ảnh trên Render,
+  đợt dep-db2r5dks728c73abmc6g Live lúc 02:49:04 UTC ngày 07/10.
+  Ảnh: sha256:0f26be48e572d73e98a237ab5675952774bfe7f0abd309be1554f2d1d07a1f59.
+- Bước 2: ca Bosch trên ef04f01 hoàn tất 28,5 giây, đọc web thành công,
+  phân biệt ngày/phạm vi/trạng thái và đủ ba câu hỏi làm rõ. Đóng riêng lỗi
+  bỏ câu hỏi; còn thuật ngữ tiếng Anh. Chưa đủ các ca còn lại, chưa đóng A.
+- Bước 3: W04 đạt đủ ba lượt tính/sửa/nhớ trên ef04f01; đã đối soát mở bản
+  lưu và tìm ghi chú đã xóa. Hẹn giờ và xuất có biên nhận lịch sử; chưa đóng toàn B.
 - Bước 4 chưa đủ bộ kết quả/điểm hợp lệ. Không công bố điểm tổng hiện tại.
 - Bước 5 chưa gộp main; phải chờ các bước trên.
 

@@ -2,11 +2,35 @@
 
 ## Đối soát mới nhất
 
+**B — W04 đạt trọn ba lượt trên ef04f01:** đầu vào tháng 1 là 120 triệu,
+tháng 2 là 150 triệu → chênh 30 triệu, tăng 25%; sửa riêng tháng 2 thành 144
+→ chênh 24 triệu, tăng 20%, giữ tháng 1; lượt cuối hai câu giữ đúng số đã
+sửa và đơn vị, không quay về 150/30/25 hoặc tự gán tên chỉ tiêu kinh doanh.
+Ba lượt đều dùng calculate; không đọc nguồn riêng hoặc ghi Google. Định danh:
+7671705c-ba12-4e42-ace2-6d51a51e3ba3 (12,7 giây),
+6f818d40-b986-4e13-9590-5d709103117a (20,9 giây),
+efa16082-c7f4-42a8-9470-933921b50afe (21,9 giây).
+Ghi kết quả thật vào manifest đã khóa, không thêm ca; không đóng toàn B/E
+từ một chuỗi. Ảnh w04-turn1/2/3.jpg ở acceptance-ef04f01.
+Ngân sách hiện còn 1/16 lượt mô hình; không đủ cho một ca web cần ba lượt,
+không đặt lại bộ đếm hoặc yêu cầu thêm khóa. Không gọi lặp để chọn kết quả đẹp.
+
 **ef04f01 qua CI:** lượt 37563231626 hoàn tất thành công, gồm PostgreSQL,
 backend, giao diện và ảnh chạy. Ảnh công khai đối chiếu theo đúng commit:
 `sha256:0f26be48e572d73e98a237ab5675952774bfe7f0abd309be1554f2d1d07a1f59`.
 Render nhận ảnh này trong đợt dep-db2r5dks728c73abmc6g lúc 02:47:18 UTC,
-đang khởi động tại thời điểm ghi nhận; chưa ghi Live hoặc nghiệp vụ đạt.
+Live lúc 02:49:04 UTC ngày 07/10. Ảnh bằng chứng:
+`design-work/qa/acceptance-ef04f01/render-live.jpg`. Chưa ghi nghiệp vụ đạt
+chỉ từ trạng thái triển khai hoặc kiểm tự động.
+
+**Kiểm báo cáo sau sửa trên ef04f01:** lượt
+`773e348f-8b36-4f7b-9dc4-eb1ff1303efb` hoàn tất 28,5 giây, web_research
+thành công, sáu nguồn. Đủ ba câu hỏi do mô hình tạo; tách ngày đăng/ngày sự
+kiện chưa xác minh, phạm vi tập đoàn/đơn vị Việt Nam và trạng thái chỉ đọc.
+Không đọc nguồn riêng hoặc ghi Google. Đóng riêng lỗi bỏ câu hỏi.
+Vẫn chêm tên lĩnh vực tiếng Anh trong giải thích; không ghi toàn bộ A hoặc
+company-06 đạt đầy đủ. Ngân sách từ 9/16 còn 6/16; không chạy lại Bosch.
+Ảnh: `design-work/qa/acceptance-ef04f01/bosch-web-trace.jpg`.
 
 **Sửa nguyên nhân bỏ câu hỏi trong báo cáo:** phép kiểm qua bộ điều phối thực
 tái hiện đầu ra chỉ bắt buộc answer/proposals, không bắt buộc câu hỏi làm rõ.
