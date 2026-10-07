@@ -10,7 +10,7 @@ import unicodedata
 from difflib import SequenceMatcher
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.services.document_creator import DocumentSpec
 from app.services.sheet_creator import (
@@ -134,6 +134,52 @@ class WireAnswer(BaseModel):
             answer=self.answer,
             proposals=proposals,
         )
+
+
+class ConsultationQuestions(BaseModel):
+    """Required model-authored questions, not invented customer facts."""
+
+    model_config = ConfigDict(extra="forbid")
+    clarification_questions: list[str] = Field(min_length=3, max_length=3)
+
+    @field_validator("clarification_questions")
+    @classmethod
+    def distinct_nonempty_questions(cls, values: list[str]) -> list[str]:
+        questions = [value.strip() for value in values]
+        if any(not question or len(question) > 1000 for question in questions):
+            raise ValueError("Câu hỏi làm rõ phải có nội dung và không quá 1000 ký tự.")
+        if len({question.casefold() for question in questions}) != 3:
+            raise ValueError("Ba câu hỏi làm rõ phải khác nhau.")
+        return questions
+
+
+def consultation_report_requested(request: str) -> bool:
+    return bool(re.search(
+        r"\b(?:báo cáo tư vấn|báo cáo chuẩn bị tư vấn|hồ sơ tư vấn|"
+        r"chuẩn bị hồ sơ[^.;\n]{0,80}(?:khách hàng|doanh nghiệp|công ty|tư vấn))\b",
+        request, re.I,
+    ))
+
+
+def consultation_provider_schema(base_schema: dict) -> dict:
+    schema = {**base_schema, "properties": {**base_schema["properties"]},
+              "required": [*base_schema["required"], "clarification_questions"]}
+    schema["properties"]["clarification_questions"] = {
+        "type": "array", "minItems": 3, "maxItems": 3,
+        "items": {"type": "string"},
+        "description": "Ba câu hỏi tiếng Việt cụ thể để xác nhận nhu cầu khách hàng.",
+    }
+    return schema
+
+
+def separate_consultation_questions(raw: str) -> tuple[str, list[str]]:
+    payload = json.loads(raw)
+    if not isinstance(payload, dict):
+        raise ValueError("Báo cáo tư vấn phải là đối tượng JSON.")
+    questions = ConsultationQuestions.model_validate({
+        "clarification_questions": payload.pop("clarification_questions", None),
+    }).clarification_questions
+    return json.dumps(payload, ensure_ascii=False), questions
 
 
 def _sheet_request_data_flags(request: str) -> tuple[bool, bool]:

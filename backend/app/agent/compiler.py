@@ -28,8 +28,11 @@ from app.agent.creation import (
     WireAnswer,
     blank_unsourced_sheet_requested,
     budget_tracker_template,
+    consultation_provider_schema,
+    consultation_report_requested,
     ground_unsourced_spreadsheet_preview,
     preserve_explicit_literals,
+    separate_consultation_questions,
 )
 from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
@@ -1255,6 +1258,9 @@ class CompilerOrchestrator:
             CalculatedWireAnswer.provider_schema() if source_calculation
             else WireAnswer.provider_schema()
         )
+        consultation_report = consultation_report_requested(user_message)
+        if consultation_report:
+            wire_schema = consultation_provider_schema(wire_schema)
         verified_calculations = inventory_facts(user_message)
         if verified_calculations:
             trace.append({"stage": "deterministic_analysis", "status": "success",
@@ -1304,6 +1310,17 @@ class CompilerOrchestrator:
         )
         if source_calculation:
             instruction += SOURCE_CALCULATION_INSTRUCTION
+        if consultation_report:
+            instruction += (
+                "\nBáo cáo tư vấn phải có clarification_questions: đúng ba câu hỏi khác nhau, "
+                "ngắn, cụ thể bằng tiếng Việt để xác nhận hiện trạng, nhu cầu và kết quả "
+                "mong muốn của khách hàng này. Không tự trả lời các câu hỏi đó. "
+                "Hệ thống hiển thị trường này riêng; không lặp lại trong answer. "
+                "Nếu yêu cầu giới hạn số từ, tổng answer và ba câu hỏi phải nằm trong giới hạn. "
+                "Diễn đạt giải thích hoàn toàn bằng tiếng Việt; giữ nguyên tên riêng, "
+                "tên tệp và mã nguồn, nhưng không chêm nhãn như headline, Mobility, "
+                "Industrial Technology hoặc Consumer Goods. Ngày tin phải ghi 'ngày đăng'."
+            )
         await asyncio.to_thread(
             self.quota.reserve, "flash",
             conservative_tokens(prompt + instruction + json.dumps(wire_schema), 8192),
@@ -1344,6 +1361,7 @@ class CompilerOrchestrator:
         answer = None
         proposals = []
         invalid_raw = ""
+        clarification_questions: list[str] = []
         async with asyncio.timeout(90):
             async for event in runner.run_async(
                 user_id=user.id,
@@ -1368,7 +1386,11 @@ class CompilerOrchestrator:
                     raw = "".join(p.text for p in parts if p.text and not p.thought)
                     if not raw:
                         raw = next((p.text for p in reversed(parts) if p.text), "")
+                    original_raw = raw
                     try:
+                        candidate_questions = []
+                        if consultation_report:
+                            raw, candidate_questions = separate_consultation_questions(raw)
                         wire = (
                             validate_calculation_payload(raw) if source_calculation
                             else WireAnswer.model_validate_json(raw)
@@ -1394,6 +1416,7 @@ class CompilerOrchestrator:
                             has_source_data=context_data is not None or bool(citations),
                         )
                         answer = compiled.answer
+                        clarification_questions = candidate_questions
                         proposals = [item.model_dump(mode="json") for item in compiled.proposals]
                     except (ValidationError, ValueError) as exc:
                         _logger.warning(
@@ -1403,7 +1426,7 @@ class CompilerOrchestrator:
                         # Keep the first malformed payload private and perform one bounded,
                         # schema-constrained repair. No side-effect tool is available in
                         # either pass, so a failed repair still remains fail-closed.
-                        invalid_raw = raw[:40000]
+                        invalid_raw = original_raw[:40000]
         if not answer and invalid_raw:
             await asyncio.to_thread(
                 self.quota.reserve,
@@ -1479,6 +1502,9 @@ class CompilerOrchestrator:
                         if not raw:
                             raw = next((p.text for p in reversed(parts) if p.text), "")
                         try:
+                            candidate_questions = []
+                            if consultation_report:
+                                raw, candidate_questions = separate_consultation_questions(raw)
                             wire = (
                                 validate_calculation_payload(raw) if source_calculation
                                 else WireAnswer.model_validate_json(raw)
@@ -1506,6 +1532,7 @@ class CompilerOrchestrator:
                                 has_source_data=context_data is not None or bool(citations),
                             )
                             answer = compiled.answer
+                            clarification_questions = candidate_questions
                             proposals = [
                                 item.model_dump(mode="json") for item in compiled.proposals
                             ]
@@ -1598,6 +1625,11 @@ class CompilerOrchestrator:
                     "affected_lines": affected_claims,
                 }
             )
+        if clarification_questions:
+            answer += "\n\n## Câu hỏi cần làm rõ\n\n" + "\n".join(
+                f"{index}. {question}"
+                for index, question in enumerate(clarification_questions, 1)
+            )
         answer = await enforce_presentation_contract(
             client=self.client,
             quota=self.quota,
@@ -1619,6 +1651,15 @@ class CompilerOrchestrator:
             answer = label_historical_sources(answer, citations)
         if gmail_scope_warning:
             answer = f"{answer.rstrip()}\n\n**Giới hạn nguồn:** {gmail_scope_warning}"
+        if clarification_questions and any(
+            question not in answer for question in clarification_questions
+        ):
+            # A bounded presentation rewrite must not remove required output.
+            # Do not append questions afterward and silently exceed a word limit.
+            raise ToolError(
+                "Báo cáo chưa giữ đủ câu hỏi làm rõ; chưa thực hiện thao tác ghi.",
+                code="incomplete_consultation_report",
+            )
         return AgentRunResult(
             answer=answer, plan=[], trace=trace, citations=citations, proposals=proposals
         )

@@ -2,6 +2,29 @@
 
 ## Đối soát mới nhất
 
+**Sửa nguyên nhân bỏ câu hỏi trong báo cáo:** phép kiểm qua bộ điều phối thực
+tái hiện đầu ra chỉ bắt buộc answer/proposals, không bắt buộc câu hỏi làm rõ.
+Một ca thất bại trước sửa. Bổ sung trường ba câu hỏi khác nhau, không rỗng,
+do mô hình tạo trong chính lượt tổng hợp; kiểm dữ liệu trước khi hiển thị,
+kiểm độ dài gồm cả câu hỏi và chặn nếu bước chỉnh cách trình bày làm mất
+câu hỏi. Không thêm câu hỏi sau kiểm độ dài, không chèn câu mẫu hoặc dữ kiện giả.
+Giữ lượt sửa cấu trúc có giới hạn đã có, không đọc lại nguồn hoặc ghi Google.
+Kiểm cả ca thiếu trường được sửa một lần và ca đúng chỉ dùng một lượt;
+203 phép kiểm điều phối/định tuyến/cuối khóa/cấu trúc tạo
+đạt; kiểm mã, diff và bí mật đạt (557 tệp). Chưa triển khai sửa này và chưa
+đóng A từ kiểm tự động. Nhắc diễn đạt bằng tiếng Việt trong lượt tổng hợp,
+không tuyên bố đã chứng minh mọi cách diễn đạt ngoài mô hình kiểm.
+
+**B — mở lại kết quả trên fea3e65:** màn hình Kết quả đã lưu mở đúng mục
+`5cbbce8b-70de-4fe6-8078-2ea3a474ce5d`, bản 2, đủ bốn câu hỏi và ngân sách
+chưa xác nhận; không gọi mô hình, không sửa bản. Chỉ chứng minh mở lại hiện
+tại, không coi là lần tạo/sửa/xuất mới. Ảnh:
+`design-work/qa/acceptance-fea3e65/stored-result-readback.jpg`.
+Tìm riêng QA-FINAL-8ad36c0 trên màn hình Bộ nhớ trả không có kết quả (gồm
+danh sách đang dùng và đã cất). Không xóa hoặc tạo lại dữ liệu. Ảnh:
+`design-work/qa/acceptance-fea3e65/deleted-memory-search.jpg`. Đây là đối soát
+trạng thái lưu hiện tại, không thay thế kiểm hỏi lại qua mô hình.
+
 **fea3e65 đã triển khai:** CI 37561245089 thành công; Render
 dep-db2qrvcs728c73aakps0 Live lúc 02:28:54 UTC ngày 07/10/2026, ảnh
 `sha256:1e4e73a294e45da394bbcf5f7ba9e908bdbe43d5c6c46e4a9dd93f7497fefa54`.
