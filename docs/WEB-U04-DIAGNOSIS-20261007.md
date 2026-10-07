@@ -83,3 +83,16 @@ object_storage=true; runtime bắt đầu 20:57:04.962576 giờ Việt Nam.
 Đã thực sự gọi render_get_deploy theo hướng dẫn render-monitor và đọc kết nối
 công khai. Không coi gemini_connectivity=not_probed là kết nối Gemini đã đạt.
 U04 sau sửa chưa có kết quả; cần một lượt qua tài khoản quản trị trong sản phẩm.
+
+## Kết quả sau sửa — U04 đạt
+
+Lượt aade876b-9698-4adb-8fbc-c6b3f143fa5a hoàn tất lúc
+2026-10-07T14:00:04.662107Z; câu trả lời 6cc4e938-ca29-4d98-8cd7-eb1f139e8e01
+nêu đúng hạn mức theo dự án, không theo khóa, có căn cứ ngắn và [S1].
+Nguồn 1 là đúng trang rate-limits được hỏi; văn bản lưu chứa quy định hỗ trợ.
+web_research và agent_task đều success, lần lượt 10465 và 14798 ms;
+không thao tác ghi hoặc công cụ đọc riêng. Tám nguồn được lưu nhưng câu trả lời
+chỉ dùng nguồn 1; không biến các tiêu đề tin thành căn cứ kết luận.
+Đã đối soát Supabase theo chủ sở hữu; không tuyên bố kiểm trực quan thanh bên.
+Đóng ca này, không kiểm lặp. Đây không phải điểm tổng hay xác nhận toàn bộ web,
+và chưa đóng tất cả hồ sơ doanh nghiệp/chuỗi nghiệp vụ trong A/B/E/F.

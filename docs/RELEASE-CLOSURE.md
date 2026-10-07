@@ -9,8 +9,11 @@ CI 37631186037 thành công; /api/health xác nhận máy chủ, cơ sở dữ l
 kho tệp. U04 trên 8c4de13 đã thất bại ở tổng hợp sau khi nguồn HTTP 200;
 được giữ trong prior_8c4de13_results, không mất dấu vết thất bại.
 Bản mới thay định dạng cấu trúc cũ bằng JSON Schema như phần trò chuyện;
-85 phép kiểm đạt, có kiểm SDK thật với kết nối giả lập. Chưa có câu trả lời
-U04 sau sửa; không cấp điểm E hoặc gộp main. Chỉ kiểm đúng ca này, không
+85 phép kiểm đạt, có kiểm SDK thật với kết nối giả lập. U04 sau sửa đã đạt:
+lượt aade876b-9698-4adb-8fbc-c6b3f143fa5a trả đúng theo dự án, không theo khóa;
+nguồn [S1] đúng trang chính thức và có dữ kiện hỗ trợ. Đã đối soát câu trả lời,
+nguồn lưu, dấu vết và nhật ký đúng yêu cầu. Đóng U04; không cấp điểm E hoặc
+gộp main từ một ca. Chuyển sang hồ sơ doanh nghiệp company-02; không
 chạy lại bộ nhớ hoặc đọc thêm dữ liệu riêng. Chi tiết tại WEB-U04-DIAGNOSIS-20261007.md.
 
 ### Biên nhận trước sửa định dạng

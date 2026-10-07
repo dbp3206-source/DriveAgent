@@ -48,9 +48,28 @@
       "runtime_started_at": "2026-10-07T20:57:04.962576+07:00",
       "scope": "Exact deployed image and public health, not authenticated Gemini connectivity or answer quality"
     },
-    "cases": {},
+    "cases": {
+      "U04": {
+        "status": "PASS",
+        "scope": "Locked rate-limit question and official-source grounding; not all web search or inference cases",
+        "request_id": "aade876b-9698-4adb-8fbc-c6b3f143fa5a",
+        "session_id": "95a218b8-be08-4ed0-9fab-75250bb243cd",
+        "assistant_message_id": "6cc4e938-ca29-4d98-8cd7-eb1f139e8e01",
+        "observed_at": "2026-10-07T14:00:04.662107Z",
+        "observed": "Answer states limits apply per project, not per API key, with a concise rationale and [S1]. Stored source 1 is the exact official rate-limits URL and contains the supporting statement. No unsupported number or quota balance claimed.",
+        "evidence_method": "Owner-scoped Supabase readback of full answer, stored source text, trace and exact-request audit; not sidebar visual verification",
+        "tool_status": "success",
+        "tools_in_stored_trace": ["web_research"],
+        "web_tool_latency_ms": 10465,
+        "agent_task_latency_ms": 14798,
+        "stored_source_count": 8,
+        "sources_used_in_answer": [1],
+        "proposal_count": 0,
+        "quality_score": null
+      }
+    },
     "unchanged_path_evidence": "Historical W02 and other non-web receipts remain tied to their original versions; no unnecessary new model calls.",
-    "unlisted_cases": "NOT VERIFIED on this release. U04 must be checked on the corrected JSON Schema wire dialect; no score inferred from CI."
+    "unlisted_cases": "NOT VERIFIED on this release. U04 is closed; do not repeat it. Company profiles and other locked missing cases remain, no total score inferred from one PASS."
   },
   "prior_8c4de13_results": {
     "release_commit": "8c4de13b3e5a4bce2c76a25b9c706abf98f2ebd7",

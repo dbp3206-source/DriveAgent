@@ -19,7 +19,10 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2.
   Máy chủ, cơ sở dữ liệu và kho tệp trả thành công; chưa suy ra kết nối
   Gemini của quản trị hoặc chất lượng câu trả lời từ kiểm công khai. Bước 1 đóng.
-  U04 trên bản này đang chờ thao tác người dùng; không chạy lại W02.
+  U04 trên bản này đã đạt: trả đúng hạn mức theo dự án, không theo khóa,
+  dẫn đúng trang chính thức với trích đoạn hỗ trợ. Lượt aade876b-9698-4adb-8fbc-c6b3f143fa5a,
+  web 10,465 giây, toàn tác vụ 14,798 giây; không nguồn riêng hoặc ghi dữ liệu.
+  Đóng ca U04, không chạy lại; tiếp tục company-02 còn thiếu, không chạy lại W02.
 - Biên nhận bản trước 8c4de13: bản sửa bước suy luận web đã lên
   staging; CI 37626892424 đã hoàn tất thành công, gồm PostgreSQL, máy chủ,
   giao diện, dựng/chạy ảnh và xuất PDF tiếng Việt. Ảnh theo commit được đọc
@@ -35,7 +38,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   Đã xác định lệch định dạng gửi cấu trúc: ràng buộc cấm trường thừa không
   thuộc định dạng cũ. Bản sửa dùng định dạng JSON Schema như phần trò chuyện,
   qua 85 phép kiểm gồm SDK thật với kết nối giả lập, đã Live trên 5267996;
-  chưa có câu trả lời thật sau sửa để chấm.
+  câu trả lời thật U04 sau sửa đã đạt. Không suy rộng thành mọi ca web đều đạt.
   Giữ mã lỗi an toàn để phân biệt nguyên nhân nếu còn lỗi. Tự tìm nguồn chính thức khi tìm kiếm
   hết hạn mức vẫn còn hạn chế. Hồ sơ doanh nghiệp chưa đủ kết quả đạt.
 - B: W02 đạt đủ chuỗi. Có biên nhận lịch sử cho tính toán, đổi đầu vào quy
