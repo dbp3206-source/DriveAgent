@@ -59,3 +59,18 @@ thử lại và không lộ nội dung riêng. Không phép nào gọi Gemini th
 Nguồn đối soát: biên nhận lưu trong Supabase, nhật ký ứng dụng Render đúng lượt,
 SDK Google cài trong backend/.venv. Thao tác đã thực hiện bằng Supabase và Render;
 không tuyên bố đã xem trực tiếp giao diện thanh bên.
+
+## Bản sửa sẵn sàng triển khai
+
+- Mã nguồn: 52679964193864136e8e2a7c77333fd1d146c0ea.
+- GitHub CI 37631186037 hoàn tất thành công, gồm postgres-state và verify.
+- GHCR HEAD của nhãn đúng mã nguồn trả HTTP 200; mã ảnh:
+  sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2.
+- Ảnh triển khai:
+  ghcr.io/dbp3206-source/veridra@sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2.
+- Chưa triển khai bản sửa lên Render; không coi ảnh đã xuất bản là dịch vụ đã đổi bản.
+- Công cụ điều khiển thanh bên khởi động thất bại: node_repl kernel exited unexpectedly;
+  windows sandbox failed: helper_unknown_error: setup refresh had errors.
+  Đã yêu cầu mở trang Settings bằng open_in_codex, kết quả queued, không coi là đã nhìn thấy trang.
+- Theo hướng dẫn render-docker, dùng mã ảnh bất biến; không kích hoạt triển khai lại ảnh cũ.
+  Cần người dùng đổi nguồn ảnh trong dịch vụ hiện có, không thêm dịch vụ hoặc đổi gói.
