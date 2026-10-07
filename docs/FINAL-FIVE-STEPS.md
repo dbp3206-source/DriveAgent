@@ -14,6 +14,11 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái lúc khóa
 
+- W02 trên bản đang chạy 42d7865 đã đạt đủ ba lượt theo đáp án đã khóa:
+  giữ An Bình, đổi ngày hẹn sang 14/10/2026, giữ 09:00 và ngân sách chưa rõ;
+  lượt hai 142 từ/bốn mục; lượt cuối ba câu hỏi; không đọc nguồn/ghi dữ liệu
+  hoặc khẳng định hiện trạng không có bằng chứng. Đóng ca này, không chạy
+  lại; các ca W02 cũ bên dưới chỉ giữ lịch sử. Toàn B/E/F chưa đóng.
 - Bản mới nhất đang chạy: 42d7865, CI 37590312321 thành công. Render
   dep-db2vpo67bikc73b6p4k0 live lúc 15:05:38 giờ Việt Nam ngày 07/10,
   đúng ảnh sha256:0a02c6a7dfe2c21570e9e3e06c389a329f5040e8c45f8fb30d9d886e24ac786d.

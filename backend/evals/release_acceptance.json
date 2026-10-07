@@ -57,7 +57,25 @@
       "observed": "Owner-scoped saved Mộc An test result remains revision 2 with four questions and unknown budget after deployment; no new creation, edit or export performed.",
       "evidence_method": "Read-only production database query; not authenticated API, UI or export verification"
     },
-    "cases": {},
+    "cases": {
+      "W02": {
+        "status": "PASS",
+        "scope": "Locked three-turn W02 oracle only; not all B workflows or all memory behavior",
+        "session_id": "057479cd-236c-44c4-849a-31c83216fd51",
+        "run_ids": ["9c7f2c7d-65fd-4e53-9399-77d4514e4b8c", "cc8d9ab8-e499-43fc-ace5-2e2c20c5c911", "27cc6e8e-6456-4ab2-a30b-637efb374fb0"],
+        "assistant_message_ids": ["b6e45f96-0bfd-483b-8d44-c65cc481f316", "c0ac117e-7dca-4698-980c-2170fe3d7e66", "9854445c-5abe-4fd0-a1b6-5da377f166e4"],
+        "observed_at_utc": ["2026-10-07T08:12:22.349278Z", "2026-10-07T08:12:39.92022Z", "2026-10-07T08:12:53.713252Z"],
+        "agent_task_latency_seconds": [15.920, 9.682, 6.680],
+        "whitespace_word_counts": [224, 142, 49],
+        "tools_in_stored_trace": [],
+        "proposal_counts": [0, 0, 0],
+        "citation_counts": [0, 0, 0],
+        "observed": "Three completed turns preserve An Bình and unknown budget, update only 12/10/2026 to 14/10/2026 and retain 09:00. Turn 2 preserves four headings and has 142 whitespace-separated words. Turn 3 provides exactly three clarification questions and correct meeting date/time instead of server clock. No asserted manual workflow or missing tools, no Vinamilk facts carried over; trace/audit contain no source reads or writes.",
+        "evidence_method": "Owner-scoped Supabase readback of full messages, citation/trace and exact-request audit; not sidebar visual verification",
+        "execution_context": "User ran in existing Vinamilk session, not a fresh conversation; no company/source contamination observed in this sequence",
+        "quality_score": null
+      }
+    },
     "unlisted_cases": "NOT VERIFIED on this release; historical results retained separately, no score inferred from CI or prior answer checks"
   },
   "prior_2f0183a_results": {

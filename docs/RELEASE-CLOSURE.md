@@ -2,6 +2,20 @@
 
 ## Đối soát mới nhất
 
+**W02 trên 42d7865 — đạt đủ chuỗi đã khóa:** đối soát ba câu người dùng đã
+chạy trong phiên 057479cd bằng Supabase chỉ đọc. Mã lượt:
+9c7f2c7d-65fd-4e53-9399-77d4514e4b8c,
+cc8d9ab8-e499-43fc-ace5-2e2c20c5c911,
+27cc6e8e-6456-4ab2-a30b-637efb374fb0. Kết quả cuối lúc 15:12:53 giờ Việt Nam
+ngày 07/10. Giữ An Bình, ngân sách chưa xác nhận và 09:00; đổi đúng ngày từ
+12/10 sang 14/10/2026, không trả giờ máy chủ. Lượt hai có bốn đề mục và 142
+từ tách theo khoảng trắng. Lượt cuối đủ ba câu hỏi. Không khẳng định xử lý
+thủ công/thiếu phân loại/thiếu công cụ; không lẫn dữ kiện Vinamilk dù dùng
+phiên cũ. Nhật ký ba tác vụ thành công, 15,920 / 9,682 / 6,680 giây; không có
+lượt đọc nguồn hoặc ghi, cả ba không có đề xuất và dẫn nguồn. Đóng riêng
+W02, không đồng nhất với hoàn tất toàn B hoặc chứng minh mọi loại bộ nhớ.
+Không chạy lại W02, không cấp điểm E từ một ca riêng.
+
 **42d7865 đã qua CI và chạy đúng trên Render:** CI `37590312321` completed /
 success cho đúng `42d78654a506c5b519fdce1750a28ae9083626ac`, gồm kiểm PostgreSQL,
 máy chủ, giao diện, đóng gói/chạy ứng dụng trong ảnh và xuất PDF tiếng Việt.
