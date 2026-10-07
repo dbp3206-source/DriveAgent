@@ -14,14 +14,16 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
-- Bản đang chạy vẫn là 42d7865. Bản sửa bước suy luận web 8c4de13 đã lên
+- Bản đang chạy là 8c4de13. Bản sửa bước suy luận web đã lên
   staging; CI 37626892424 đã hoàn tất thành công, gồm PostgreSQL, máy chủ,
   giao diện, dựng/chạy ảnh và xuất PDF tiếng Việt. Ảnh theo commit được đọc
   HEAD HTTP 200: sha256:aed79992105db137f087fab7b8287db2189f148b96e9436eb6de70693071600b.
-  Bước tự triển khai skipped. Chưa triển khai; bước 1 cần đóng bằng đúng ảnh mới.
+  Bước tự triển khai skipped; người dùng đã đổi nguồn ảnh. Render xác nhận
+  dep-db34erpsrm7s73e33krg Live lúc 20:23:34 giờ Việt Nam ngày 07/10;
+  kết nối công khai trả máy chủ, cơ sở dữ liệu và kho tệp thành công. Bước 1 đóng.
 - A: U01 trên 42d7865 chưa đạt vì không trả ngày hiện tại/khoảng sự kiện,
   chỉ có tám tiêu đề tin. Bản sửa mới thêm bước suy luận có trích đoạn và
-  căn cứ, nhưng chưa kiểm thật; tự tìm nguồn chính thức khi công cụ tìm kiếm
+  căn cứ và đã Live, nhưng chưa kiểm câu trả lời thật; tự tìm nguồn chính thức khi tìm kiếm
   hết hạn mức vẫn còn hạn chế. Hồ sơ doanh nghiệp chưa đủ kết quả đạt.
 - B: W02 đạt đủ chuỗi. Có biên nhận lịch sử cho tính toán, đổi đầu vào quy
   trình, nhớ/quên, lưu/xuất và bản tin; không chạy lại chỉ để tăng số mẫu.

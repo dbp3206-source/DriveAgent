@@ -36,6 +36,25 @@
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
   "current_results": {
+    "release_commit": "8c4de13b3e5a4bce2c76a25b9c706abf98f2ebd7",
+    "image_digest": "sha256:aed79992105db137f087fab7b8287db2189f148b96e9436eb6de70693071600b",
+    "observed_date": "2026-10-07",
+    "deployment": {
+      "ci_run_id": "37626892424",
+      "ci_status": "success",
+      "render_deploy_id": "dep-db34erpsrm7s73e33krg",
+      "render_status": "live",
+      "finished_at": "2026-10-07T13:23:34.965493Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"status": "ok", "database": true, "object_storage": true},
+      "runtime_started_at": "2026-10-07T20:23:32.705214+07:00",
+      "scope": "Exact image deployment and public health only; no answer quality inferred"
+    },
+    "cases": {},
+    "unchanged_path_evidence": "W02 PASS on 42d7865 remains historical evidence; this change is in web research, not the source-free conversation route. Do not rerun solely to create a new sample or label it a new run.",
+    "unlisted_cases": "NOT VERIFIED on this release; web synthesis requires a real affected-path check, no score inferred from CI"
+  },
+  "prior_42d7865_results": {
     "release_commit": "42d78654a506c5b519fdce1750a28ae9083626ac",
     "image_digest": "sha256:0a02c6a7dfe2c21570e9e3e06c389a329f5040e8c45f8fb30d9d886e24ac786d",
     "observed_date": "2026-10-07",
