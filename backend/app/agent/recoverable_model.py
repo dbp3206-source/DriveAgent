@@ -8,7 +8,7 @@ from typing import Any
 from google.adk.models import Gemini
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
-from google.genai import errors
+from google.genai import errors, types
 from pydantic import Field
 
 from app.core.config import APPROVED_GEMINI_MODELS
@@ -25,6 +25,8 @@ class RecoverableGemini(Gemini):
     circuit: Any = Field(default=None, exclude=True)
     reserve_primary: bool = Field(default=False, exclude=True)
     enable_fallback: bool = Field(default=True, exclude=True)
+    fallback_attempt_limit: int | None = Field(default=None, ge=1, exclude=True)
+    fallback_timeout_ms: int | None = Field(default=None, ge=10000, exclude=True)
     known_tool_names: set[str] = Field(default_factory=set, exclude=True)
 
     def _validate_tool_calls(self, response: LlmResponse, request: LlmRequest) -> None:
@@ -108,6 +110,8 @@ class RecoverableGemini(Gemini):
             for candidate in sorted(APPROVED_GEMINI_MODELS):
                 if candidate != self.model and candidate not in fallback_candidates:
                     fallback_candidates.append(candidate)
+            if self.fallback_attempt_limit is not None:
+                fallback_candidates = fallback_candidates[:self.fallback_attempt_limit]
 
             last_fallback_exc: Exception | None = None
             for idx, candidate_model in enumerate(fallback_candidates):
@@ -126,6 +130,17 @@ class RecoverableGemini(Gemini):
                 # resources, and replace only the model identifier.
                 request = llm_request.model_copy()
                 request.model = candidate_model
+                if self.fallback_timeout_ms is not None:
+                    request.config = (
+                        llm_request.config.model_copy()
+                        if llm_request.config is not None else types.GenerateContentConfig()
+                    )
+                    options = request.config.http_options
+                    request.config.http_options = (
+                        options.model_copy(update={"timeout": self.fallback_timeout_ms})
+                        if options is not None
+                        else types.HttpOptions(timeout=self.fallback_timeout_ms)
+                    )
                 fallback = Gemini(model=candidate_model, client=self.client)
                 try:
                     if self.circuit is not None:

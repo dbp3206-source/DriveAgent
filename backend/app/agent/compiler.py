@@ -1340,6 +1340,8 @@ class CompilerOrchestrator:
             quota=self.quota,
             circuit=self.circuit,
             enable_fallback=self.model_fallback_enabled,
+            fallback_attempt_limit=1 if consultation_report else None,
+            fallback_timeout_ms=10000 if consultation_report else None,
         )
         # Pydantic copies mutable inputs during construction. Rebind afterwards so
         # provider attempt records are visible to the compiler trace.
@@ -1352,7 +1354,8 @@ class CompilerOrchestrator:
             include_contents="none",
             generate_content_config=types.GenerateContentConfig(
                 temperature=0.2,
-                max_output_tokens=8192,
+                max_output_tokens=4096 if consultation_report else 8192,
+                http_options=types.HttpOptions(timeout=25000) if consultation_report else None,
                 # ADK output_schema targets the legacy responseSchema dialect.
                 # Pydantic extra='forbid' needs JSON Schema's additionalProperties.
                 response_mime_type="application/json",
@@ -1447,6 +1450,8 @@ class CompilerOrchestrator:
                 quota=self.quota,
                 circuit=self.circuit,
                 enable_fallback=self.model_fallback_enabled,
+                fallback_attempt_limit=1 if consultation_report else None,
+                fallback_timeout_ms=10000 if consultation_report else None,
             )
             repair_model.records = model_attempts
             repair_agent = LlmAgent(
@@ -1462,7 +1467,7 @@ class CompilerOrchestrator:
                 include_contents="none",
                 generate_content_config=types.GenerateContentConfig(
                     temperature=0,
-                    max_output_tokens=8192,
+                    max_output_tokens=4096 if consultation_report else 8192,
                     response_mime_type="application/json",
                     response_json_schema=wire_schema,
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(disable=True),

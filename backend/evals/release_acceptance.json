@@ -49,6 +49,20 @@
       "scope": "Exact deployed image and public health, not authenticated Gemini connectivity or answer quality"
     },
     "cases": {
+      "company-02": {
+        "status": "FAIL_PROVIDER_TIMEOUT",
+        "request_id": "18cadd6d-9392-4b93-9b74-afb1a7f91872",
+        "user_message_id": "0b6e8d05-5952-4dd2-badc-4e460867e898",
+        "session_id": "95a218b8-be08-4ed0-9fab-75250bb243cd",
+        "observed_date": "2026-10-07",
+        "provider_code": 504,
+        "agent_task_latency_ms": 65679,
+        "web_tool_latency_ms": 11654,
+        "observed": "Web source collection succeeded; report generation returned Gemini DEADLINE_EXCEEDED. Outer credential retry replayed the workflow near the 60-second cap, then timed out. No report to grade.",
+        "root_cause": "Report request deadline and multiple fallback attempts plus whole-workflow credential replay after sources completed.",
+        "quality_score": null,
+        "fix_status": "Local regression checks passed; not yet deployed or live-accepted"
+      },
       "U04": {
         "status": "PASS",
         "scope": "Locked rate-limit question and official-source grounding; not all web search or inference cases",

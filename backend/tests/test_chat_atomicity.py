@@ -301,6 +301,53 @@ async def test_provider_504_explains_timeout_without_claiming_quota_exhaustion(t
     await engine.dispose()
 
 
+@pytest.mark.parametrize("source_completed", [False, True])
+async def test_provider_replay_only_before_source_completion(tmp_path, source_completed):
+    engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'replay.db'}")
+    async with engine.begin() as connection:
+        await connection.run_sync(Base.metadata.create_all)
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    alternate = CapturingOrchestrator()
+    resolutions = []
+    async with factory() as db:
+        user = User(email="replay@example.com", display_name="Replay", role="editor")
+        db.add(user)
+        await db.commit()
+
+        class Provider:
+            async def run(self, **kwargs):
+                if source_completed:
+                    db.add(AuditEvent(
+                        request_id=kwargs["request_id"], user_id=user.id,
+                        tool_name="web_research", status="success",
+                    ))
+                    await db.commit()
+                raise ServerError(504, {"error": {"message": "deadline exceeded"}})
+
+        async def resolve(*args):
+            resolutions.append(True)
+            return alternate
+
+        request = SimpleNamespace(
+            state=SimpleNamespace(request_id="replay-request"),
+            app=SimpleNamespace(state=SimpleNamespace(
+                orchestrator=Provider(), resolve_user_alternate_orchestrator=resolve,
+            )),
+        )
+        if source_completed:
+            with pytest.raises(HTTPException) as caught:
+                await chat(ChatRequest(message="synthetic recovery"), request, user, db)
+            assert caught.value.status_code == 503
+            assert resolutions == [] and alternate.calls == []
+            audit = await db.scalar(select(AuditEvent).where(AuditEvent.tool_name == "agent_task"))
+            assert json.loads(audit.result_json)["provider_code"] == 504
+        else:
+            result = await chat(ChatRequest(message="synthetic recovery"), request, user, db)
+            assert result.answer == "Đã liệt kê."
+            assert resolutions == [True] and len(alternate.calls) == 1
+    await engine.dispose()
+
+
 async def test_provider_400_is_not_replayed_against_alternate_key(tmp_path):
     engine = create_async_engine(f"sqlite+aiosqlite:///{tmp_path / 'chat-provider-400.db'}")
     async with engine.begin() as connection:

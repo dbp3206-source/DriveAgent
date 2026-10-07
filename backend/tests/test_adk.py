@@ -211,6 +211,45 @@ async def test_fallback_does_not_deepcopy_tool_locks(monkeypatch):
     }
 
 
+@pytest.mark.parametrize("fallback_succeeds", [False, True])
+async def test_bounded_report_recovery_preserves_primary_config(monkeypatch, fallback_succeeds):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+    from google.genai.errors import ServerError
+
+    attempts = []
+
+    async def generate(self, request, stream=False):
+        attempts.append((self.model, request.config.http_options.timeout))
+        assert request.config.response_json_schema == {"type": "object"}
+        if self.model == "gemini-3.5-flash-lite" or not fallback_succeeds:
+            raise ServerError(504, {"error": {"message": "deadline exceeded"}})
+        yield LlmResponse(content=types.Content(parts=[types.Part(text="OK")]))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    request = LlmRequest(
+        model="gemini-3.5-flash-lite",
+        config=types.GenerateContentConfig(
+            http_options=types.HttpOptions(timeout=25000),
+            response_json_schema={"type": "object"},
+        ),
+    )
+    model = RecoverableGemini(
+        model="gemini-3.5-flash-lite", fallback_model="gemini-3.8-flash",
+        fallback_attempt_limit=1, fallback_timeout_ms=10000,
+    )
+    if fallback_succeeds:
+        replies = [reply async for reply in model.generate_content_async(request)]
+        assert replies[0].content.parts[0].text == "OK"
+    else:
+        with pytest.raises(ServerError) as caught:
+            _ = [reply async for reply in model.generate_content_async(request)]
+        assert caught.value.code == 504
+    assert attempts == [("gemini-3.5-flash-lite", 25000), ("gemini-3.8-flash", 10000)]
+    assert request.config.http_options.timeout == 25000
+
+
 async def test_recoverable_gemini_records_all_intermediate_fallback_failures(monkeypatch):
     from google.adk.models import Gemini
     from google.adk.models.llm_request import LlmRequest

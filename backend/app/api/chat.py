@@ -657,6 +657,23 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
                 # failures can benefit from credential failover.
                 if int(getattr(exc, "code", 0) or 0) not in {429, 500, 502, 503, 504}:
                     raise
+                # This boundary re-runs the entire workflow, not just generation.
+                # Once a source/tool completed, model-only recovery belongs inside
+                # the orchestrator; replaying here wastes quota and can duplicate work.
+                completed_tool = await db.scalar(
+                    select(AuditEvent.id).where(
+                        AuditEvent.user_id == user.id,
+                        AuditEvent.request_id == request.state.request_id,
+                        AuditEvent.tool_name != "agent_task",
+                        AuditEvent.status == AuditStatus.SUCCESS.value,
+                    ).limit(1)
+                )
+                if completed_tool is not None:
+                    logger.warning(
+                        "Stopped whole-workflow replay after completed tool; request_id=%s",
+                        request.state.request_id,
+                    )
+                    raise
                 alternate_resolver = getattr(
                     request.app.state, "resolve_user_alternate_orchestrator", None
                 )

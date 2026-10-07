@@ -96,3 +96,32 @@ chỉ dùng nguồn 1; không biến các tiêu đề tin thành căn cứ kết
 Đã đối soát Supabase theo chủ sở hữu; không tuyên bố kiểm trực quan thanh bên.
 Đóng ca này, không kiểm lặp. Đây không phải điểm tổng hay xác nhận toàn bộ web,
 và chưa đóng tất cả hồ sơ doanh nghiệp/chuỗi nghiệp vụ trong A/B/E/F.
+
+## Lỗi báo cáo doanh nghiệp sau đó — chưa đạt
+
+Lượt 18cadd6d-9392-4b93-9b74-afb1a7f91872 trên 5267996,
+đầu vào 0b6e8d05-5952-4dd2-badc-4e460867e898, thất bại sau 65679 ms.
+Đây là company-02 (Vinamilk), không thay đổi kết quả U04 đã đạt.
+Nguồn web đã đọc thành công trong 11654 ms; trang công ty trả HTTP 200.
+Nhật ký Render lúc 14:11:01 UTC ghi Gemini 504 DEADLINE_EXCEEDED ở bước
+lập báo cáo. Lúc 14:11:06 UTC lớp ngoài đổi khóa và chạy lại toàn quy trình;
+web bắt đầu lần thứ hai rồi bị giới hạn tổng 60 giây cắt. Không có báo cáo
+đạt để chấm; không kết luận hết hạn mức từ mã 504.
+
+Nguyên nhân trong ứng dụng: thời gian gọi báo cáo ngắn, nhiều lượt dự phòng
+cộng với việc chạy lại nguồn ở lớp đổi khóa, dù nguồn đã hoàn tất. Bản sửa
+dành 25 giây cho lần lập báo cáo chính, giới hạn một lần dự phòng 10 giây,
+giới hạn đầu ra 4096 đơn vị thay vì 8192 nhưng giữ đủ trường báo cáo.
+Lớp đổi khóa không chạy lại toàn quy trình sau công cụ thành công; phục hồi
+riêng bước tạo câu trả lời vẫn ở bên trong bộ điều phối. Giữ giới hạn tổng,
+ngân sách khóa, danh sách mô hình và các kiểm nguồn/trích dẫn như cũ.
+Không đảm bảo Google không bao giờ trả 504; phải kiểm một lượt thật sau
+triển khai trước khi đóng company-02. Chưa sửa điểm hoặc xác nhận A/E đạt.
+
+Kiểm mã sau sửa: 194 phép kiểm đạt trong 59,13 giây (test_adk.py,
+test_compiler.py, test_chat_atomicity.py); không gọi Google thật. Có kiểm
+giữ cấu hình lần chính, giới hạn lượt dự phòng, giữ cấu trúc nguồn, không
+đọc lại nguồn sau lỗi 504 và vẫn đổi khóa khi chưa có công cụ hoàn tất.
+Lần kiểm đầu có hai lỗi thiếu import trong phép kiểm mới (192 đạt, 2 lỗi);
+đã sửa import và chạy lại đủ cả ba tệp, không ghi lần lỗi là đạt.
+Ruff đạt. Đây là bằng chứng sửa mã, không thay bằng chứng câu trả lời thật.

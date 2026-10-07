@@ -14,6 +14,12 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Company-02 trên 5267996 chưa đạt: lượt
+  18cadd6d-9392-4b93-9b74-afb1a7f91872 bị hết thời gian khi lập báo cáo.
+  Nguồn web đã đọc xong; mã gốc là Gemini 504, rồi lớp đổi khóa chạy lại
+  toàn quy trình gần giới hạn 60 giây. Đang sửa thời gian và phạm vi phục hồi,
+  không kiểm lại U04 hoặc W02; chưa đóng A/E và chưa gộp main.
+
 - Bản đang chạy là 5267996. CI 37631186037 thành công; Render
   dep-db34ug59fdbs73a05nag Live lúc 20:57:07 giờ Việt Nam, ảnh
   sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2.

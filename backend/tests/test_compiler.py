@@ -63,6 +63,11 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
         schema = request.config.response_json_schema
         assert "clarification_questions" in schema["required"]
         generations.append(prompt)
+        if len(generations) == 1:
+            assert request.config.max_output_tokens == 4096
+            assert request.config.http_options.timeout == 25000
+            assert self.fallback_attempt_limit == 1
+            assert self.fallback_timeout_ms == 10000
         if missing_first and len(generations) == 1:
             yield LlmResponse(content=types.Content(role="model", parts=[types.Part(
                 text='{"answer":"Báo cáo chưa đủ câu hỏi [2]."}'
