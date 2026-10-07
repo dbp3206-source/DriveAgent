@@ -12,7 +12,23 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 | 4 — Đóng E | Đối soát kết quả 24 tác vụ đã khóa, P06 giữ hoãn; không chạy thêm mẫu ngoài bộ. Chỉ tính số đo từ bằng chứng thật, công bố mẫu số/ngoại lệ và kết quả chưa đạt. Chốt hướng dẫn và bài demo 10 phút bằng các kết quả này. | Đủ bằng chứng cho các tác vụ áp dụng; điểm theo ngưỡng đã khóa, không có điểm giả hoặc lỗi chức năng chính bị bỏ qua. Không dùng kết quả lịch sử khác bản như phép kiểm mới. |
 | 5 — Đóng F | Khi 1–4 đạt: gộp staging vào main, kiểm CI main, triển khai đúng ảnh; kiểm ngắn đăng nhập, nguồn, kết quả đã lưu và URL. Công bố bản/mã ảnh, báo cáo nghiệm thu, giới hạn và cách quay lui. | Main và Render cùng bản đã nghiệm thu; URL dùng được; bàn giao đủ. Dừng chỉnh sửa sau bước này. |
 
-## Trạng thái lúc khóa
+## Trạng thái hiện hành — 07/10/2026
+
+- Bản đang chạy vẫn là 42d7865. Bản sửa bước suy luận web 8c4de13 đã lên
+  staging; CI 37626892424 đang dựng ảnh sau khi kiểm PostgreSQL, máy chủ và
+  giao diện. Chưa triển khai; bước 1 cần đóng lại bằng đúng ảnh mới.
+- A: U01 trên 42d7865 chưa đạt vì không trả ngày hiện tại/khoảng sự kiện,
+  chỉ có tám tiêu đề tin. Bản sửa mới thêm bước suy luận có trích đoạn và
+  căn cứ, nhưng chưa kiểm thật; tự tìm nguồn chính thức khi công cụ tìm kiếm
+  hết hạn mức vẫn còn hạn chế. Hồ sơ doanh nghiệp chưa đủ kết quả đạt.
+- B: W02 đạt đủ chuỗi. Có biên nhận lịch sử cho tính toán, đổi đầu vào quy
+  trình, nhớ/quên, lưu/xuất và bản tin; không chạy lại chỉ để tăng số mẫu.
+  Những biên nhận đó vẫn ghi đúng bản/phạm vi, không giả làm kiểm trên 8c4de13.
+- E: thiếu kết quả hợp lệ cho toàn bộ tác vụ áp dụng trong bộ 24; P06 hoãn.
+  Chưa tính điểm tổng; không lấy số phép kiểm mã thay cho chất lượng nghiệp vụ.
+- F: main chưa gộp. Chỉ thực hiện sau khi các mục phía trên đạt.
+
+## Lịch sử các bản đã kiểm — không phải trạng thái hiện hành
 
 - W02 trên bản đang chạy 42d7865 đã đạt đủ ba lượt theo đáp án đã khóa:
   giữ An Bình, đổi ngày hẹn sang 14/10/2026, giữ 09:00 và ngân sách chưa rõ;
@@ -70,7 +86,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Phần còn lại, không mở rộng
 
-1. Đã đóng: ảnh 42d7865 đã qua kiểm và chạy đúng mã ảnh trên Render.
+1. Chờ ảnh 8c4de13 qua CI; triển khai đúng mã ảnh rồi kiểm phiên bản công khai.
 2. Đóng A bằng các ca còn thiếu trong bộ đã khóa; gộp kiểm web, nội dung và
    tiếng Việt. Không chạy lại ca đã đạt nếu mã sửa không ảnh hưởng.
 3. Đóng B bằng các đoạn quy trình còn thiếu; đối soát lại biên nhận lưu,
