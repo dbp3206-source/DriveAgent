@@ -2,6 +2,23 @@
 
 ## Đối soát mới nhất
 
+**Vinamilk trên 2f0183a — đóng lỗi gọi nhầm công cụ, chưa đạt toàn báo cáo:**
+Người dùng chạy một lượt trong phiên cũ, mã
+`97979210-6180-4a0b-b72a-ea59c423819f`, kết quả lưu lúc 14:45:47 giờ Việt Nam
+ngày 07/10. Đối soát câu trả lời, tám dẫn nguồn, dấu vết và nhật ký bằng
+Supabase chỉ đọc; không gọi thêm mô hình. Tác vụ hoàn tất 20,637 giây,
+web_research thành công 9,985 giây; chỉ một lần gọi mô hình, không có đề xuất
+ghi. Đọc được chữ trang Vinamilk và bảy tiêu đề. Câu trả lời ghi rõ chỉ đọc
+tiêu đề, chưa xác minh ngày sự kiện; không suy diễn thành ra mắt sản phẩm,
+không tự gán lịch/ngân sách và đủ ba câu hỏi. Đóng riêng lỗi định tuyến và
+kiểm giới hạn tiêu đề trong câu trả lời này; không mở vòng kiểm lại Vinamilk.
+Còn hạn chế chất lượng: số 1000 cửa hàng dẫn [1], nhưng chữ nguồn [1] đã lưu
+không có số này; chỉ có trong tiêu đề [4]. Danh sách tin còn chứa trang sản
+phẩm/tuyển dụng. Giữ PARTIAL, không cấp điểm E hoặc gộp main từ ca này.
+Nguyên nhân ở phạm vi bằng chứng: sửa trước bảo vệ dòng tiêu đề, chưa kiểm
+ánh xạ mọi nhận định trong phần quy mô tới đúng đoạn nguồn. Đây không phải
+lỗi kết nối web hay lý do chạy lại câu hỏi nhiều lần để chọn kết quả đẹp.
+
 **Ảnh gộp đã chạy đúng trên Render:** commit
 `2f0183a9e605da922065d55474d0549a6f4e23c4` có cả sửa ranh giới dữ kiện
 và nhận diện nguồn công khai. 252 phép kiểm liên quan đạt trong 49,42 giây;

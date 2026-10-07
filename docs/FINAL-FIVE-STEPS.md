@@ -21,6 +21,12 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   Bước 1 đóng trên bản mới; kết quả các bản dưới đây là lịch sử, không cấp
   điểm cho bản mới. Lượt tiếp theo chỉ kiểm Vinamilk một lần, không chạy lại
   toàn bộ để tăng số phép thử.
+- Đã chạy lượt Vinamilk trên 2f0183a: 97979210-6180-4a0b-b72a-ea59c423819f,
+  web thành công, tác vụ 20,637 giây, tám nguồn và một lần gọi mô hình.
+  Đóng lỗi gọi nhầm công cụ; không suy diễn tiêu đề thành ra mắt sản phẩm.
+  Giữ PARTIAL toàn báo cáo vì số 1000 cửa hàng dẫn nguồn [1] không có dữ kiện
+  đó trong chữ đã đọc (chỉ có tiêu đề [4]); danh sách còn trang sản phẩm.
+  Không chạy lặp lại Vinamilk; A và E chưa đóng từ một ca riêng này.
 - Bước 1: đã đẩy staging đến 35183a5, kiểm GitHub 37583117325 hoàn tất
   thành công ngày 07/10. Ảnh mới công khai đã đối chiếu theo đúng commit:
   sha256:4b0016d9dd4414f6490749e1126ca544a8141d901ae18913e8495b1d09a42c89.

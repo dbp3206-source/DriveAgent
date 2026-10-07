@@ -49,8 +49,29 @@
       "health": {"status": "ok", "database": true, "object_storage": true},
       "scope": "Deployment and public health only; no answer quality inferred"
     },
-    "cases": {},
-    "unlisted_cases": "NOT VERIFIED on this release; one Vinamilk check pending; no score inferred from historical or automated results"
+    "cases": {
+      "company-02": {
+        "status": "PARTIAL",
+        "application_routing": "PASS",
+        "headline_boundary": "PASS_FOR_OBSERVED_RESPONSE",
+        "claim_source_mapping": "FAIL_UNSUPPORTED_CITATION",
+        "session_id": "057479cd-236c-44c4-849a-31c83216fd51",
+        "run_ids": ["97979210-6180-4a0b-b72a-ea59c423819f"],
+        "assistant_message_ids": ["8a2ed3c5-67fa-4153-a32a-ae3c3823cd25"],
+        "observed_at_utc": "2026-10-07T07:45:47.897792Z",
+        "agent_task_latency_seconds": 20.637,
+        "web_tool_latency_seconds": 9.985,
+        "model_call_count": 1,
+        "citation_count": 8,
+        "tools_in_stored_trace": ["web_research"],
+        "proposal_count": 0,
+        "observed": "Website page text and seven headline-only sources retrieved. Response explicitly distinguishes publication dates from unverified event dates, makes no product-launch claim, preserves unknown meeting/budget and provides three clarification questions. However, the 1000-store claim cites [1], whose stored page text does not contain that claim; it is present only in headline [4]. Product and recruitment pages remain in the recent-news list. Full report quality is not certified.",
+        "evidence_method": "Owner-scoped Supabase readback of exact request, full assistant answer, stored citation snippets, trace and audit; no new model invocation or sidebar visual verification",
+        "execution_context": "User reran in existing session containing the earlier failed request, not a fresh conversation",
+        "quality_score": null
+      }
+    },
+    "unlisted_cases": "NOT VERIFIED on this release; no score inferred from historical or automated results"
   },
   "prior_35183a5_results": {
     "release_commit": "35183a5d611f5f4ba3957f9e25b2f57a00c38d32",
