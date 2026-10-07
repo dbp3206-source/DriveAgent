@@ -2,6 +2,19 @@
 
 ## Đối soát mới nhất
 
+5267996 đã Live đúng ảnh sửa định dạng tổng hợp web:
+dep-db34ug59fdbs73a05nag, kết thúc 2026-10-07T13:57:07.100928Z,
+ảnh 3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2.
+CI 37631186037 thành công; /api/health xác nhận máy chủ, cơ sở dữ liệu,
+kho tệp. U04 trên 8c4de13 đã thất bại ở tổng hợp sau khi nguồn HTTP 200;
+được giữ trong prior_8c4de13_results, không mất dấu vết thất bại.
+Bản mới thay định dạng cấu trúc cũ bằng JSON Schema như phần trò chuyện;
+85 phép kiểm đạt, có kiểm SDK thật với kết nối giả lập. Chưa có câu trả lời
+U04 sau sửa; không cấp điểm E hoặc gộp main. Chỉ kiểm đúng ca này, không
+chạy lại bộ nhớ hoặc đọc thêm dữ liệu riêng. Chi tiết tại WEB-U04-DIAGNOSIS-20261007.md.
+
+### Biên nhận trước sửa định dạng
+
 8c4de13 đã Live đúng ảnh suy luận web: Render dep-db34erpsrm7s73e33krg,
 kết thúc 2026-10-07T13:23:34.965493Z, ảnh aed79992105db137f087fab7b8287db2189f148b96e9436eb6de70693071600b.
 /api/health trả status=ok, database=true, object_storage=true; runtime bắt

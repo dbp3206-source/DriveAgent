@@ -14,7 +14,13 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
-- Bản đang chạy là 8c4de13. Bản sửa bước suy luận web đã lên
+- Bản đang chạy là 5267996. CI 37631186037 thành công; Render
+  dep-db34ug59fdbs73a05nag Live lúc 20:57:07 giờ Việt Nam, ảnh
+  sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2.
+  Máy chủ, cơ sở dữ liệu và kho tệp trả thành công; chưa suy ra kết nối
+  Gemini của quản trị hoặc chất lượng câu trả lời từ kiểm công khai. Bước 1 đóng.
+  U04 trên bản này đang chờ thao tác người dùng; không chạy lại W02.
+- Biên nhận bản trước 8c4de13: bản sửa bước suy luận web đã lên
   staging; CI 37626892424 đã hoàn tất thành công, gồm PostgreSQL, máy chủ,
   giao diện, dựng/chạy ảnh và xuất PDF tiếng Việt. Ảnh theo commit được đọc
   HEAD HTTP 200: sha256:aed79992105db137f087fab7b8287db2189f148b96e9436eb6de70693071600b.
@@ -28,7 +34,8 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   Mã lỗi gốc chưa được giữ lại, nên chưa kết luận nguyên nhân hoặc hết hạn mức.
   Đã xác định lệch định dạng gửi cấu trúc: ràng buộc cấm trường thừa không
   thuộc định dạng cũ. Bản sửa dùng định dạng JSON Schema như phần trò chuyện,
-  qua 85 phép kiểm gồm SDK thật với kết nối giả lập; chưa kiểm trên sản phẩm.
+  qua 85 phép kiểm gồm SDK thật với kết nối giả lập, đã Live trên 5267996;
+  chưa có câu trả lời thật sau sửa để chấm.
   Giữ mã lỗi an toàn để phân biệt nguyên nhân nếu còn lỗi. Tự tìm nguồn chính thức khi tìm kiếm
   hết hạn mức vẫn còn hạn chế. Hồ sơ doanh nghiệp chưa đủ kết quả đạt.
 - B: W02 đạt đủ chuỗi. Có biên nhận lịch sử cho tính toán, đổi đầu vào quy

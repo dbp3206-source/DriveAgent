@@ -36,6 +36,23 @@
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
   "current_results": {
+    "release_commit": "52679964193864136e8e2a7c77333fd1d146c0ea",
+    "image_digest": "sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2",
+    "observed_date": "2026-10-07",
+    "deployment": {
+      "ci_run_id": "37631186037", "ci_status": "success",
+      "render_deploy_id": "dep-db34ug59fdbs73a05nag", "render_status": "live",
+      "finished_at": "2026-10-07T13:57:07.100928Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"status": "ok", "database": true, "object_storage": true},
+      "runtime_started_at": "2026-10-07T20:57:04.962576+07:00",
+      "scope": "Exact deployed image and public health, not authenticated Gemini connectivity or answer quality"
+    },
+    "cases": {},
+    "unchanged_path_evidence": "Historical W02 and other non-web receipts remain tied to their original versions; no unnecessary new model calls.",
+    "unlisted_cases": "NOT VERIFIED on this release. U04 must be checked on the corrected JSON Schema wire dialect; no score inferred from CI."
+  },
+  "prior_8c4de13_results": {
     "release_commit": "8c4de13b3e5a4bce2c76a25b9c706abf98f2ebd7",
     "image_digest": "sha256:aed79992105db137f087fab7b8287db2189f148b96e9436eb6de70693071600b",
     "observed_date": "2026-10-07",

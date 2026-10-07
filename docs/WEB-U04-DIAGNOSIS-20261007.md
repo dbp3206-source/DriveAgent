@@ -74,3 +74,12 @@ không tuyên bố đã xem trực tiếp giao diện thanh bên.
   Đã yêu cầu mở trang Settings bằng open_in_codex, kết quả queued, không coi là đã nhìn thấy trang.
 - Theo hướng dẫn render-docker, dùng mã ảnh bất biến; không kích hoạt triển khai lại ảnh cũ.
   Cần người dùng đổi nguồn ảnh trong dịch vụ hiện có, không thêm dịch vụ hoặc đổi gói.
+
+## Xác nhận triển khai sau đó
+
+Render dep-db34ug59fdbs73a05nag đã Live đúng mã ảnh nêu trên lúc
+2026-10-07T13:57:07.100928Z. /api/health trả status=ok, database=true,
+object_storage=true; runtime bắt đầu 20:57:04.962576 giờ Việt Nam.
+Đã thực sự gọi render_get_deploy theo hướng dẫn render-monitor và đọc kết nối
+công khai. Không coi gemini_connectivity=not_probed là kết nối Gemini đã đạt.
+U04 sau sửa chưa có kết quả; cần một lượt qua tài khoản quản trị trong sản phẩm.
