@@ -227,9 +227,18 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
         r"\b(?:website|trang web)\s+chính thức\s*:?\s*(https://[^\s<>`\"']+)",
         text, re.I,
     )
+    if website is None:
+        # A public source can be requested beside simulated/private contact
+        # context without using the exact words "website chính thức". Keep
+        # the existing domain-only gather; never search the contact payload.
+        website = re.search(
+            r"\b(?:tìm(?: kiếm)?|đọc|tra cứu|kiểm tra)\s+nguồn\s+công khai"
+            r"(?:\s+thật)?\s+(?:từ|tại)\s*(https://[^\s<>`\"']+)",
+            text, re.I,
+        )
     web_forbidden = re.search(
         r"\b(?:không|đừng|chưa)\s+(?:(?:đọc|dùng|truy cập|tìm|tìm kiếm)\s+)?"
-        r"(?:web|internet|website|trang web)\b", text, re.I,
+        r"(?:web|internet|website|trang web|nguồn\s+công khai)\b", text, re.I,
     )
     if (website and not web_forbidden
             and re.search(

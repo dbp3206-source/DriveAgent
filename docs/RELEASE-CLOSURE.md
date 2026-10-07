@@ -2,6 +2,19 @@
 
 ## Đối soát mới nhất
 
+**Vinamilk trên 35183a5 — lỗi định tuyến đã xác định:** lượt
+`c848fa59-415c-4f0e-97b1-1f805b20b71c` thất bại lần xử lý đầu, không có
+câu trả lời. Supabase audit ghi ToolScopeError / unavailable_tool:
+web_research bị gọi trong nhóm chỉ có calculate/local_source_read/local_source_search.
+Điều khiển đầu vào đều auto. Nhật ký Render xác nhận cùng mã yêu cầu.
+Nguyên nhân: nhu cầu có bối cảnh giả lập/tài liệu nên không thuộc bộ tìm tin
+thuần công khai; đường đọc website doanh nghiệp chỉ nhận cụm “website/trang web
+chính thức”, bỏ sót “tìm nguồn công khai thật từ URL”. Đã tái hiện ba biến thể
+đều thất bại bằng kiểm mã trước sửa, không gọi Gemini. Mở rộng nhận diện rõ
+nguồn công khai được chọn, dùng lại luồng thu thập theo tên miền và tổng hợp;
+không gửi bối cảnh thư vào tìm web, không bỏ kiểm quyền. Giữ ca thật FAIL đến
+khi kiểm bản sửa trên cloud; không coi lỗi này là hết hạn mức hay website chết.
+
 **Sửa giới hạn suy diễn sau W02 — chưa chứng nhận câu trả lời thật:** dấu vết
 ba lượt xác nhận đúng dữ kiện/ngày giờ, không gọi nguồn ngoài. Lượt đầu tự thêm
 hiện trạng thiếu phân loại/công cụ; lượt hai giữ suy diễn đó trong khi chỉ đổi

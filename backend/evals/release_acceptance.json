@@ -50,6 +50,20 @@
       "scope": "Deployment and public health only; no answer quality inferred"
     },
     "cases": {
+      "company-02": {
+        "status": "FAIL_APPLICATION_ROUTING",
+        "session_id": "057479cd-236c-44c4-849a-31c83216fd51",
+        "run_ids": ["c848fa59-415c-4f0e-97b1-1f805b20b71c"],
+        "observed_at_utc": "2026-10-07T07:22:08.538665Z",
+        "attempts": 1,
+        "error_type": "ToolScopeError",
+        "error_code": "unavailable_tool",
+        "blocked_tool": "web_research",
+        "offered_tools": ["calculate", "local_source_read", "local_source_search"],
+        "observed": "No assistant response or successful web read. Automatic controls; selected public-source wording was not recognized as a company website gather, so a specialist without web_research attempted that tool and was blocked. Not evidence of website failure or exhausted provider quota.",
+        "evidence_method": "Exact-request owner-scoped Supabase message/task/audit readback and Render request log",
+        "quality_score": null
+      },
       "W02": {
         "status": "PARTIAL",
         "memory_sequence": "PASS",

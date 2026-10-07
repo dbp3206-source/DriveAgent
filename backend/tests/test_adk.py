@@ -93,6 +93,36 @@ def test_every_specialist_inherits_customer_fact_provenance_policy():
         )
 
 
+@pytest.mark.parametrize('public_selection', [
+    'Tìm nguồn công khai thật từ https://www.vinamilk.com.vn và tin liên quan.',
+    'Đọc nguồn công khai từ https://www.samsung.com/vn để kiểm thông tin công ty.',
+    'Tra cứu nguồn công khai tại https://solutions.viettel.vn/vi cho báo cáo tư vấn.',
+])
+def test_simulated_contact_with_selected_public_source_routes_to_web(public_selection):
+    question = (
+        'Dữ liệu thư giả lập: khách hàng muốn ứng dụng AI trong quản lý tài liệu. '
+        'Chuẩn bị báo cáo tư vấn công ty. ' + public_selection
+        + ' Không đọc Gmail, Drive, lịch hoặc bộ nhớ; không ghi dữ liệu.'
+    )
+    controls = ChatControls().enforce_explicit_source_exclusions(question)
+    route = controls.filter_excluded_route(route_request(question))
+    assert route.required_sources == ('web',)
+    assert [source.tool for source in route.sources] == ['web_research']
+    assert 'khách hàng' not in route.sources[0].arguments['question']
+    assert AdkOrchestrator._should_use_compiler(controls, route, question)
+
+
+@pytest.mark.parametrize('selection', [
+    'Không đọc nguồn công khai từ https://example.org.',
+    'Đừng tìm nguồn công khai thật từ https://example.org.',
+    'Đọc nguồn công khai từ https://docs.google.com/document/d/private.',
+])
+def test_public_source_wording_cannot_bypass_prohibition_or_private_google(selection):
+    question = 'Chuẩn bị báo cáo tư vấn công ty từ dữ liệu giả lập. ' + selection
+    route = route_request(question)
+    assert not any(source.tool == 'web_research' for source in route.sources)
+
+
 @pytest.mark.parametrize('fallback', [False, True])
 async def test_invented_tool_is_blocked_before_adk_dispatch(monkeypatch, fallback):
     from google.adk.models import Gemini
