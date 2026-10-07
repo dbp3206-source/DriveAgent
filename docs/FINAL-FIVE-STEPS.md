@@ -14,8 +14,11 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái lúc khóa
 
-- Bước 1 đang chạy CI 37559845504; 99 phép kiểm liên quan đã đạt local.
-- Bước 2 còn ca đọc website bị bỏ sót trên a75b722; đã tái hiện và sửa trong 9169e79, chưa kiểm URL sau sửa.
+- Bước 1 đạt: CI 37559845504 thành công; 9169e79 chạy đúng ảnh trên Render,
+  đợt dep-db2qikss728c73a9i3m0 Live lúc 02:09:00 UTC ngày 07/10.
+- Bước 2: lỗi bỏ sót đọc website đã hết trên URL thật. Ca Bosch 28,4 giây,
+  có công cụ web thành công và dẫn nguồn; vẫn chưa đạt toàn bộ báo cáo vì
+  không tách rõ ngày đăng/ngày sự kiện và thiếu trạng thái duyệt rõ ràng.
 - Bước 3 có bằng chứng hẹn giờ và kết quả lưu/xuất; chưa đủ đối soát toàn chuỗi cùng bản.
 - Bước 4 chưa đủ bộ kết quả/điểm hợp lệ. Không công bố điểm tổng hiện tại.
 - Bước 5 chưa gộp main; phải chờ các bước trên.

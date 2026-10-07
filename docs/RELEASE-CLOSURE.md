@@ -2,6 +2,20 @@
 
 ## Đối soát mới nhất
 
+**9169e79 đã triển khai và kiểm URL thật:** CI 37559845504 thành công.
+Render dep-db2qikss728c73a9i3m0 Live lúc 02:09:00 UTC ngày 07/10, ảnh
+`sha256:e5af206ec2fdc2ecb41d9de2866c986128bf8c54d38d3b337209e2dd1bad3af2`.
+Kiểm nguyên yêu cầu Bosch trước sửa, không đổi đầu vào để dễ đạt. Lượt
+`a48bf09c-3662-4e81-8cec-53c91d539681` hoàn tất 28,4 giây; dấu vết có
+`web_research` thành công và sáu nguồn hiển thị. Đã hết lỗi trả từ bộ nhớ
+thay vì đọc website. Câu trả lời tách quy mô toàn cầu khỏi Việt Nam, không
+tự gán lịch/ngân sách. Tuy nhiên ngày tin không phân biệt rõ ngày đăng với
+ngày sự kiện, và thiếu trạng thái duyệt rõ ràng: chưa đóng company-06/A.
+Giao diện ngân sách còn 12/16, không đồng nhất một câu hỏi với một lượt
+dịch vụ. Không gọi thêm mô hình, Gmail hoặc thao tác ghi Google trong đợt này.
+Ảnh bằng chứng riêng ở `design-work/qa/acceptance-9169e79/`; không có khóa
+hoặc thư thật. Danh sách kết thúc cố định: [năm bước](FINAL-FIVE-STEPS.md).
+
 **Đối soát ngày 07/10:** Vault của dự án đang chạy đã có mục bí mật hẹn giờ;
 chỉ kiểm trạng thái tồn tại, không đọc giá trị. Bản a75b722 đã qua CI
 37558493700 và triển khai thành công trong đợt dep-db2qaqe7bikc73ajmn3g,
