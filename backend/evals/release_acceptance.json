@@ -48,9 +48,26 @@
       "runtime_started_at": "2026-10-07T21:39:10.80559+07:00",
       "scope": "Exact image deployment and public health; not authenticated answer quality"
     },
-    "cases": {},
+    "cases": {
+      "company-02": {
+        "status": "FAIL_PROVIDER_UNAVAILABLE",
+        "request_id": "3766fd3e-7397-495d-9bd2-b2878de90083",
+        "user_message_id": "150a2cdf-0a2a-40ad-9540-23799da61196",
+        "session_id": "b7710ea1-ae94-47e2-9b38-c6c5ed81665a",
+        "observed_at": "2026-10-07T14:44:27.68098Z",
+        "agent_task_latency_ms": 49381,
+        "web_tool_latency_ms": 15456,
+        "primary_provider_code": 504,
+        "fallback_provider_code": 503,
+        "observed": "Source read succeeded once. Primary Gemini reached its deadline; fallback returned high demand / UNAVAILABLE. Whole-workflow replay was blocked as intended. No answer to grade.",
+        "recovery_replay_guard": "PASS_ON_LIVE_FAILURE",
+        "answer_quality": "NOT VERIFIED",
+        "quality_score": null,
+        "next_action": "Do not repeat immediately or infer quota exhaustion; keep company report pending, continue remaining existing workflow evidence."
+      }
+    },
     "unchanged_path_evidence": "U04 and non-company historical receipts retain their original release and scope; do not repeat just to create samples.",
-    "unlisted_cases": "Company-02 recovery requires one live check on this release. No aggregate quality score inferred from CI or deployment."
+    "unlisted_cases": "Company-02 live check failed at the provider, although the replay guard worked. No aggregate quality score inferred from CI or deployment."
   },
   "prior_5267996_results": {
     "release_commit": "52679964193864136e8e2a7c77333fd1d146c0ea",

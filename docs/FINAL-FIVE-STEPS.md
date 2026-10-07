@@ -14,6 +14,19 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Lượt company-02 trên 1baf5e6 đã chạy: nguồn web đọc thành công
+  một lần; Gemini chính trả 504, dự phòng báo quá tải 503. Toàn lượt
+  49,381 giây, không chạy lại web. Biên nhận
+  3766fd3e-7397-495d-9bd2-b2878de90083. Cơ chế phục hồi đã kiểm đúng,
+  nhưng chưa có báo cáo để chấm; giữ A/E chưa đạt, không kiểm lặp ngay.
+- Đối soát B không gọi mô hình: W04 lịch sử vẫn có đủ ba câu trả lời
+  đúng 30 triệu/25%, sửa thành 24 triệu/20%, giữ 120/144 và hai câu.
+  W03 có câu trả lời tìm không thấy ghi chú đã xóa; kiểm dữ liệu hiện tại
+  không còn QA-FINAL-8ad36c0. Kết quả Mộc An vẫn phiên bản 2,
+  không lưu trữ, bốn câu hỏi và ngân sách chưa xác nhận. Đây không phải
+  chạy lại chuỗi hoặc xuất tệp mới trên 1baf5e6. Nhãn bảy vai trò ready
+  trong dấu vết không chứng minh cả bảy vai trò đã thực hiện công việc.
+
 - Bản sửa phục hồi báo cáo 1baf5e6 đã Live đúng ảnh f406f454...:
   Render dep-db35i9vlk1mc739gm7tg kết thúc 14:39:13.703355 UTC.
   CI 37637232987 thành công; kết nối công khai xác nhận máy chủ,
@@ -29,7 +42,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   toàn quy trình gần giới hạn 60 giây. Đang sửa thời gian và phạm vi phục hồi,
   không kiểm lại U04 hoặc W02; chưa đóng A/E và chưa gộp main.
 
-- Bản đang chạy là 5267996. CI 37631186037 thành công; Render
+- Biên nhận lịch sử 5267996. CI 37631186037 thành công; Render
   dep-db34ug59fdbs73a05nag Live lúc 20:57:07 giờ Việt Nam, ảnh
   sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2.
   Máy chủ, cơ sở dữ liệu và kho tệp trả thành công; chưa suy ra kết nối

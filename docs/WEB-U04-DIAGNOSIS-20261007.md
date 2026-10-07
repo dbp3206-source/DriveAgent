@@ -148,3 +148,19 @@ Thao tác getTab trong thanh bên thất bại: trusted Node process exited
 unexpectedly; kernel reset, rerun your request. Không gửi được câu hỏi,
 không tuyên bố kiểm trực quan hoặc tự chạy lượt nghiệp vụ mới.
 Company-02 còn chờ đúng một lượt trong phiên đăng nhập của người dùng.
+
+## Kết quả lượt thật trên 1baf5e6 — chưa đạt báo cáo
+
+Lượt 3766fd3e-7397-495d-9bd2-b2878de90083, phiên
+b7710ea1-ae94-47e2-9b38-c6c5ed81665a, đầu vào
+150a2cdf-0a2a-40ad-9540-23799da61196, đã thất bại sau 49381 ms.
+Web thành công đúng một lần trong 15456 ms. Nhật ký Render cùng lượt:
+mô hình chính bắt đầu 14:44:52.554 UTC, trả 504 DEADLINE_EXCEEDED;
+mô hình dự phòng bắt đầu 14:45:15.581 UTC, trả 503 UNAVAILABLE với
+thông báo đang quá tải. Lúc 14:45:18.067 UTC cơ chế mới chặn chạy lại
+toàn quy trình sau công cụ hoàn tất. Không có lần đọc web thứ hai.
+Đối soát audit lưu lỗi ServerError/provider_code=503, không phải
+TimeoutError do giới hạn tổng. Đóng kiểm cơ chế chống chạy lại nguồn;
+không đóng chất lượng báo cáo, không coi đây là bằng chứng hết hạn mức.
+Không sửa mã suy đoán hay yêu cầu lặp ngay lượt Vinamilk; chuyển sang
+phần B/E dùng bằng chứng đã có, giữ A chưa đạt và main chưa gộp.
