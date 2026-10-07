@@ -27,7 +27,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.agent.evidence import bound_web_numeric_claims
 from app.agent.freshness import server_time_context
 from app.auth.permissions import WEB_RESEARCH
-from app.services.inference_gateway import create_inference_client
+from app.services.inference_gateway import create_inference_client, provider_error_class
 from app.services.quota import conservative_tokens
 from app.services.relational_quota import quota_guard
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
@@ -407,10 +407,22 @@ async def _reason_over_sources(
             ),
         )
     except Exception as exc:
+        # Persist only bounded codes, never the provider body, prompt or credential.
+        # The old generic wrapper discarded the cause needed for live diagnosis.
+        status = getattr(exc, "code", None)
+        if type(status) is int and status in {400, 401, 403, 404, 408, 429, 500, 502, 503, 504}:
+            diagnostic = f"http_{status}"
+        elif isinstance(exc, (ValueError, TypeError)):
+            diagnostic = "client_configuration"
+        elif isinstance(exc, ToolError) and exc.code in {"provider_circuit_open", "quota_exceeded"}:
+            diagnostic = exc.code
+        else:
+            diagnostic = provider_error_class(exc)[0]
         raise ToolError(
-            "Không thể tổng hợp source bundle đã thu thập.",
-            code="source_bundle_summary_failed",
-            retryable=True,
+            "Chưa tạo được câu trả lời từ các nguồn đã đọc. "
+            "Yêu cầu được giữ lại để kiểm tra, không tự suy đoán kết quả.",
+            code=f"source_bundle_summary_{diagnostic}",
+            retryable=provider_error_class(exc)[2],
         ) from exc
     finally:
         await client.aio.aclose()

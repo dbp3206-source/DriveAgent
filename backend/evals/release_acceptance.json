@@ -50,7 +50,18 @@
       "runtime_started_at": "2026-10-07T20:23:32.705214+07:00",
       "scope": "Exact image deployment and public health only; no answer quality inferred"
     },
-    "cases": {},
+    "cases": {
+      "U04": {
+        "status": "FAIL",
+        "request_id": "feeee879-1b26-4fad-a296-51fd1f48fdea",
+        "session_id": "d307eadc-1c2a-464f-8056-a0ac2808541b",
+        "observed_at": "2026-10-07T13:28:45Z",
+        "error_code": "source_bundle_summary_failed",
+        "evidence": "Official rate-limits page HTTP 200; synthesis failed, no answer to grade. Active credential circuit records provider, not quota, at 13:28:43.406412Z.",
+        "root_cause": "Not established: generic wrapper discarded underlying status. Offline actual SDK serialization succeeds; no claim that this proves server acceptance.",
+        "score": null
+      }
+    },
     "unchanged_path_evidence": "W02 PASS on 42d7865 remains historical evidence; this change is in web research, not the source-free conversation route. Do not rerun solely to create a new sample or label it a new run.",
     "unlisted_cases": "NOT VERIFIED on this release; web synthesis requires a real affected-path check, no score inferred from CI"
   },

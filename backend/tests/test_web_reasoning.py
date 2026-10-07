@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from app.core.config import Settings
+from app.tools.contracts import ToolError
 from app.tools.web_research import (
     PublicAnswer,
     PublicConclusion,
@@ -27,6 +28,30 @@ def test_inference_is_explained_and_bound_to_its_actual_premise():
         basis="Ngày kiểm tra 07/10/2026 đã sau ngày kết thúc 04/10/2026.")])
     text = _render_public_answer(answer, [source])
     assert "Kết luận từ nguồn:" in text and "Căn cứ:" in text and "[S1]" in text
+
+
+@pytest.mark.parametrize("status,retryable", [(400, False), (404, False), (429, True), (503, True)])
+async def test_synthesis_preserves_bounded_failure_code_without_private_body(
+    monkeypatch, status, retryable,
+):
+    class ProviderFailure(Exception):
+        code = status
+
+    failure = ProviderFailure("private source and secret must not reach diagnostics")
+    client = SimpleNamespace(aio=SimpleNamespace(models=SimpleNamespace(
+        generate_content=AsyncMock(side_effect=failure)), aclose=AsyncMock()), close=Mock())
+    monkeypatch.setattr("app.tools.web_research.create_inference_client", lambda **_: client)
+    monkeypatch.setattr("app.tools.web_research.quota_guard",
+                        lambda *_, **__: SimpleNamespace(reserve=Mock()))
+    with pytest.raises(ToolError) as caught:
+        await _reason_over_sources(WebResearchInput(question="Hỏi từ nguồn công khai"),
+            SimpleNamespace(settings=Settings(_env_file=None, gemini_api_key="fake-qa-key")),
+            [], [])
+    assert caught.value.code == f"source_bundle_summary_http_{status}"
+    assert caught.value.retryable is retryable
+    assert "private" not in str(caught.value) and "secret" not in str(caught.value)
+    client.aio.aclose.assert_awaited_once()
+    client.close.assert_called_once()
 
 
 @pytest.mark.parametrize("kind,quote,source_id", [

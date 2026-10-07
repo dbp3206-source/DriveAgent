@@ -23,7 +23,10 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   kết nối công khai trả máy chủ, cơ sở dữ liệu và kho tệp thành công. Bước 1 đóng.
 - A: U01 trên 42d7865 chưa đạt vì không trả ngày hiện tại/khoảng sự kiện,
   chỉ có tám tiêu đề tin. Bản sửa mới thêm bước suy luận có trích đoạn và
-  căn cứ và đã Live, nhưng chưa kiểm câu trả lời thật; tự tìm nguồn chính thức khi tìm kiếm
+  căn cứ và đã Live. U04 vừa chạy chưa đạt: trang chính thức HTTP 200 nhưng
+  bước tổng hợp lỗi source_bundle_summary_failed; chưa có câu trả lời để chấm.
+  Mã lỗi gốc chưa được giữ lại, nên chưa kết luận nguyên nhân hoặc hết hạn mức.
+  Đã chuẩn bị chẩn đoán mã lỗi an toàn, chưa tuyên bố sửa xong. Tự tìm nguồn chính thức khi tìm kiếm
   hết hạn mức vẫn còn hạn chế. Hồ sơ doanh nghiệp chưa đủ kết quả đạt.
 - B: W02 đạt đủ chuỗi. Có biên nhận lịch sử cho tính toán, đổi đầu vào quy
   trình, nhớ/quên, lưu/xuất và bản tin; không chạy lại chỉ để tăng số mẫu.
