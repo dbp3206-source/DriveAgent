@@ -2,16 +2,20 @@
 
 ## Đối soát mới nhất
 
-**Ảnh gộp sẵn sàng triển khai — cloud chưa đổi:** commit
+**Ảnh gộp đã chạy đúng trên Render:** commit
 `2f0183a9e605da922065d55474d0549a6f4e23c4` có cả sửa ranh giới dữ kiện
 và nhận diện nguồn công khai. 252 phép kiểm liên quan đạt trong 49,42 giây;
 kiểm mã đạt. CI `37587663500` hoàn tất success, gồm PostgreSQL, backend,
 giao diện, đóng gói ảnh và xuất PDF tiếng Việt. Mã ảnh đọc trực tiếp từ GHCR
 theo thẻ commit, HTTP 200:
 `ghcr.io/dbp3206-source/veridra@sha256:d33051adc30ea6ff64b766958ef50943f7b52d020bdafe0dc2b7ec45c68dd953`.
-Bước triển khai Render skipped; cần đổi nguồn ảnh trong Settings.
-Không đổi current_results hoặc ghi lỗi Vinamilk đã hết trên cloud trước khi
-triển khai và đối soát thật. Không triển khai ảnh trung gian 0ae3dcb.
+Bước tự triển khai Render skipped; người dùng đã đổi nguồn ảnh trong Settings.
+Render xác nhận dep-db2vdb0m7kps73cfms9g live lúc 07:39:01.145447 UTC
+ngày 07/10, đúng mã ảnh trên. /api/health trả status=ok, database=true và
+object_storage=true; khởi động lúc 14:38:58.782588 giờ Việt Nam.
+Đã đổi current_results sang bản này, giữ nguyên kết quả 35183a5 ở lịch sử.
+Đóng bước triển khai; chưa coi lỗi Vinamilk đã hết trước phép kiểm thật.
+Không triển khai ảnh trung gian 0ae3dcb.
 
 **Vinamilk trên 35183a5 — lỗi định tuyến đã xác định:** lượt
 `c848fa59-415c-4f0e-97b1-1f805b20b71c` thất bại lần xử lý đầu, không có
@@ -34,8 +38,8 @@ không chứng minh nguyên nhân và câu trả lời trợ lý không phải n
 Bổ sung hai ranh giới này trong SYSTEM_PROMPT dùng chung cho các tuyến điều phối,
 không thay đáp án hoặc lọc từ riêng An Bình. 65 phép kiểm ADK/LangGraph đạt;
 kiểm mã và diff đạt. Phép kiểm mới chỉ chứng minh mọi vai trò nhận quy tắc,
-không chứng minh mô hình luôn tuân thủ. Bản cloud vẫn là 35183a5; chưa triển khai
-sửa này hoặc đổi W02 thành đạt toàn bộ.
+không chứng minh mô hình luôn tuân thủ. Sửa này đã có trong bản cloud 2f0183a;
+chưa kiểm lại chất lượng W02 và không đổi kết quả cũ thành đạt toàn bộ.
 
 **W02 trên 35183a5 — đã đối soát ba lượt người dùng chạy:** đọc riêng phiên
 `d3bbbdd9-98b5-4dc2-a7ff-d588711c540b` qua Supabase, không chạy lại mô hình.

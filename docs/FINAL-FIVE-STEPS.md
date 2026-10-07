@@ -14,6 +14,13 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái lúc khóa
 
+- Cập nhật bản đang chạy: 2f0183a có cả hai sửa chung, CI 37587663500 đạt.
+  Render dep-db2vdb0m7kps73cfms9g live lúc 07:39:01.145447 UTC ngày 07/10,
+  mã ảnh sha256:d33051adc30ea6ff64b766958ef50943f7b52d020bdafe0dc2b7ec45c68dd953.
+  Kiểm công khai trả status=ok, database=true, object_storage=true.
+  Bước 1 đóng trên bản mới; kết quả các bản dưới đây là lịch sử, không cấp
+  điểm cho bản mới. Lượt tiếp theo chỉ kiểm Vinamilk một lần, không chạy lại
+  toàn bộ để tăng số phép thử.
 - Bước 1: đã đẩy staging đến 35183a5, kiểm GitHub 37583117325 hoàn tất
   thành công ngày 07/10. Ảnh mới công khai đã đối chiếu theo đúng commit:
   sha256:4b0016d9dd4414f6490749e1126ca544a8141d901ae18913e8495b1d09a42c89.
@@ -47,7 +54,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Phần còn lại, không mở rộng
 
-1. Đã đóng: ảnh 35183a5 đã qua kiểm và chạy đúng mã ảnh trên Render.
+1. Đã đóng: ảnh 2f0183a đã qua kiểm và chạy đúng mã ảnh trên Render.
 2. Đóng A bằng các ca còn thiếu trong bộ đã khóa; gộp kiểm web, nội dung và
    tiếng Việt. Không chạy lại ca đã đạt nếu mã sửa không ảnh hưởng.
 3. Đóng B bằng các đoạn quy trình còn thiếu; đối soát lại biên nhận lưu,
