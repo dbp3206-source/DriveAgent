@@ -2,6 +2,12 @@
 
 ## Đối soát mới nhất
 
+**ef04f01 qua CI:** lượt 37563231626 hoàn tất thành công, gồm PostgreSQL,
+backend, giao diện và ảnh chạy. Ảnh công khai đối chiếu theo đúng commit:
+`sha256:0f26be48e572d73e98a237ab5675952774bfe7f0abd309be1554f2d1d07a1f59`.
+Render nhận ảnh này trong đợt dep-db2r5dks728c73abmc6g lúc 02:47:18 UTC,
+đang khởi động tại thời điểm ghi nhận; chưa ghi Live hoặc nghiệp vụ đạt.
+
 **Sửa nguyên nhân bỏ câu hỏi trong báo cáo:** phép kiểm qua bộ điều phối thực
 tái hiện đầu ra chỉ bắt buộc answer/proposals, không bắt buộc câu hỏi làm rõ.
 Một ca thất bại trước sửa. Bổ sung trường ba câu hỏi khác nhau, không rỗng,
@@ -11,7 +17,7 @@ câu hỏi. Không thêm câu hỏi sau kiểm độ dài, không chèn câu m�
 Giữ lượt sửa cấu trúc có giới hạn đã có, không đọc lại nguồn hoặc ghi Google.
 Kiểm cả ca thiếu trường được sửa một lần và ca đúng chỉ dùng một lượt;
 203 phép kiểm điều phối/định tuyến/cuối khóa/cấu trúc tạo
-đạt; kiểm mã, diff và bí mật đạt (557 tệp). Chưa triển khai sửa này và chưa
+đạt; kiểm mã, diff và bí mật đạt (557 tệp). Đang triển khai ef04f01, chưa
 đóng A từ kiểm tự động. Nhắc diễn đạt bằng tiếng Việt trong lượt tổng hợp,
 không tuyên bố đã chứng minh mọi cách diễn đạt ngoài mô hình kiểm.
 
