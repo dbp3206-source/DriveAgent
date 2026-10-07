@@ -2,6 +2,21 @@
 
 ## Đối soát mới nhất
 
+**fea3e65 đã triển khai:** CI 37561245089 thành công; Render
+dep-db2qrvcs728c73aakps0 Live lúc 02:28:54 UTC ngày 07/10/2026, ảnh
+`sha256:1e4e73a294e45da394bbcf5f7ba9e908bdbe43d5c6c46e4a9dd93f7497fefa54`.
+Giữ đúng năm bước trong FINAL-FIVE-STEPS.md, không thêm phạm vi nghiệm thu.
+
+**Kiểm gộp Bosch trên fea3e65:** lượt `8c2b8502-c89b-4a75-836b-b662fa116651`
+hoàn tất 27,3 giây; web_research thành công, sáu dẫn nguồn. Câu trả lời giữ
+phạm vi quy mô toàn cầu, ghi chưa xác minh đơn vị Việt Nam, giới hạn chỉ đọc
+tiêu đề tin/chưa xác minh ngày sự kiện; trạng thái chỉ đọc, chưa gửi thư,
+tạo tài liệu hoặc đặt lịch. Tuy nhiên thiếu ba câu hỏi làm rõ đã khóa;
+còn dùng thuật ngữ tiếng Anh trong giải thích. Chưa đóng company-06/A.
+Ngân sách giao diện từ 12/16 còn 9/16, không đặt lại bộ đếm. Không gọi
+nguồn riêng hoặc thao tác ghi Google trong phép kiểm này. Bằng chứng:
+`design-work/qa/acceptance-fea3e65/bosch-web-trace.jpg`.
+
 **Nguyên nhân và sửa gộp bằng chứng web sau 9169e79:** bộ tạo dẫn chứng gán
 cùng 500 ký tự đầu của tóm tắt cho mọi URL và bỏ các trường ngày nguồn.
 Kiểm xác định với hai nguồn khác nhau thất bại đúng ở đoạn trích trùng nhau.
@@ -13,8 +28,8 @@ không dùng tóm tắt chung làm bằng chứng cho mọi liên kết. Bổ su
 hợp phân biệt các ngày, phạm vi tập đoàn/đơn vị, câu hỏi cần làm rõ và trạng thái
 hành động chỉ đọc/chưa thực thi. Không tự thêm biên nhận duyệt hoặc thao tác ghi.
 172 phép kiểm định tuyến/web/dẫn chứng/tổng hợp đạt, gồm một ca qua bộ điều phối
-thực với ranh giới mô hình thay thế; kiểm mã và bí mật đạt. Chưa kiểm live bản
-sửa này, không ghi company-06 hoặc điểm nghiệp vụ đạt từ kết quả tự động.
+thực với ranh giới mô hình thay thế; kiểm mã và bí mật đạt. Kết quả live
+ghi ở trên; không ghi company-06 hoặc điểm nghiệp vụ đạt từ kiểm tự động.
 
 **9169e79 đã triển khai và kiểm URL thật:** CI 37559845504 thành công.
 Render dep-db2qikss728c73a9i3m0 Live lúc 02:09:00 UTC ngày 07/10, ảnh
