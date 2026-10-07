@@ -232,7 +232,10 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
         r"(?:web|internet|website|trang web)\b", text, re.I,
     )
     if (website and not web_forbidden
-            and re.search(r"\b(?:hồ sơ|doanh nghiệp|công ty)\b", text, re.I)):
+            and re.search(
+                r"\b(?:hồ sơ|doanh nghiệp|công ty|khách hàng|báo cáo tư vấn)\b",
+                text, re.I,
+            )):
         selected_url = website[1].rstrip(".,;:!?)]}")
         parsed = urlsplit(selected_url)
         if parsed.hostname and not parsed.username and parsed.hostname not in {

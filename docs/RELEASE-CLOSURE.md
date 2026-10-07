@@ -2,7 +2,26 @@
 
 ## Đối soát mới nhất
 
-**Sửa chung bộ nhận bằng chứng web, chưa triển khai:** nhánh trả lời công ty
+**Đối soát ngày 07/10:** Vault của dự án đang chạy đã có mục bí mật hẹn giờ;
+chỉ kiểm trạng thái tồn tại, không đọc giá trị. Bản a75b722 đã qua CI
+37558493700 và triển khai thành công trong đợt dep-db2qaqe7bikc73ajmn3g,
+Live lúc 01:52:17 UTC. Ảnh triển khai:
+`sha256:adf2c4bc26232b46792756c162295dcf8571515f1f3a54b729c1c5e6efe3e3be`.
+
+Một lần kiểm thật hồ sơ Bosch trên bản này chưa đạt: câu trả lời không có
+lần đọc web trong dấu vết, dù đầu vào yêu cầu dùng website chính thức.
+Nguyên nhân đã tái hiện bằng kiểm thử không gọi mô hình với khách hàng khác:
+đầu vào giả lập không đi qua tuyến thông tin mới; tuyến website riêng chỉ
+nhận “hồ sơ/doanh nghiệp/công ty”, bỏ sót “khách hàng/báo cáo tư vấn”.
+Bổ sung hai cách diễn đạt nghiệp vụ vào tuyến website được chọn, giữ nguyên
+việc không gửi tên liên hệ/đầu vào riêng vào truy vấn và chặn khi cấm web.
+Trước sửa: một ca thất bại, một ca cấm web đạt. Sau sửa: 99 phép kiểm định
+tuyến, giới hạn nguồn và yêu cầu cuối khóa đạt. Thay đổi định tuyến chưa
+triển khai và chưa được kiểm lại trên URL thật; không ghi ca Bosch đạt.
+Ngân sách ngày mới được ứng dụng cập nhật tự nhiên, không đặt lại bộ đếm;
+sau lần kiểm này giao diện báo còn 15/16 lượt ở khóa dự phòng đang dùng.
+
+**Sửa chung bộ nhận bằng chứng web, đã triển khai trong a75b722:** nhánh trả lời công ty
 trước đây cho phép dùng nguyên văn mô hình nếu có liên kết nhưng không có
 đoạn nhận định được nhà cung cấp đối chiếu. Câu hỏi thời sự đã chặn trường
 hợp này, còn công ty bị ngoại lệ `company_name`. Bỏ ngoại lệ và chỉ chuyển
@@ -12,8 +31,7 @@ các đoạn có đối chiếu nguồn sang bước tổng hợp. Kiểm cả �
 “đạt” cũ chỉ có liên kết nên bị chặn đúng; bổ sung dữ liệu hỗ trợ nguồn cho
 ca dương và kiểm câu ngoài bằng chứng không lọt qua. Không gọi Gemini thật.
 Không coi thay đổi này đã chứng minh sáu báo cáo doanh nghiệp đạt, hoặc
-đã khắc phục đầy đủ phạm vi Việt Nam và ngày sự kiện. Bản cloud vẫn fc4733d
-cho tới khi xác nhận triển khai một ảnh mới.
+đã khắc phục đầy đủ phạm vi Việt Nam và ngày sự kiện.
 
 **Hẹn giờ sáng thực tế đã đạt trên bản fc4733d.** CI 37489514010 thành công;
 Render dep-db2hgg7lot8c73f7miig Live lúc 15:50:13 UTC với ảnh
@@ -33,7 +51,7 @@ Chỉ đóng mục hẹn giờ sáng; A/B/E/F toàn nhóm chưa đủ điều ki
 |---|---|
 | A | Hồ sơ chưa đủ đối soát nguồn/tin hiện tại; chuỗi xem trước → duyệt → đọc lại chưa đóng toàn bộ. P06 đã hoãn, không kiểm lại. |
 | B | Hẹn giờ sáng đã đạt; lịch hiện trống nên chưa chứng minh chuẩn bị cuộc hẹn có dữ liệu thật; chưa đủ dấu vết toàn bộ bảy vai trò trong chuỗi nghiệp vụ. |
-| E | Chưa đủ kết quả đạt của 24 tác vụ; không có điểm tổng hợp hợp lệ. Ngân sách mô hình hiện đã hết; không đặt lại bộ đếm hoặc yêu cầu thêm khóa. |
+| E | Chưa đủ kết quả đạt của 24 tác vụ; không có điểm tổng hợp hợp lệ. Ngân sách ngày mới còn 15/16 lượt sau một lần kiểm; không đặt lại bộ đếm hoặc yêu cầu thêm khóa. |
 | F | Đã kiểm tải mới, cài đặt và dựng giao diện của fc4733d; có kịch bản 10 phút và bộ mẫu/đáp án. Đăng nhập Google và khóa riêng trên bản tải sạch chưa kiểm đủ. Chưa gộp main khi A/B/E còn thiếu. |
 
 ### Bằng chứng bàn giao từ bản tải sạch

@@ -75,6 +75,33 @@ def test_private_google_document_is_not_a_company_website_source():
     assert not any(source.tool == "web_research" for source in route.sources)
 
 
+def test_simulated_customer_consultation_reads_only_selected_public_website():
+    route = route_request(
+        'Dữ liệu giả lập: khách hàng An Bình, người liên hệ Emily Wong, '
+        'yêu cầu "Trao đổi giải pháp tự động hóa". '
+        'Website chính thức https://example.org/company/. '
+        'Chỉ dùng thông tin công khai để chuẩn bị báo cáo tư vấn: tổng quan, '
+        'ngành, sản phẩm, quy mô, tin gần đây và nguồn. '
+        'Không đọc tài liệu riêng, Gmail, Drive, lịch hoặc bộ nhớ; không ghi dữ liệu.'
+    )
+    assert route.required_sources == ("web",)
+    assert len(route.sources) == 1
+    source = route.sources[0]
+    assert source.tool == "web_research"
+    assert source.arguments["domain"] == "https://example.org/company/"
+    assert "Emily" not in source.arguments["question"]
+    assert "An Bình" not in source.arguments["question"]
+
+
+def test_customer_consultation_still_respects_web_prohibition():
+    route = route_request(
+        'Dữ liệu giả lập: khách hàng An Bình. Báo cáo tư vấn chỉ dùng đầu vào. '
+        'Website chính thức https://example.org. Không đọc web.'
+    )
+    assert route.tool != "web_research"
+    assert not any(source.tool == "web_research" for source in route.sources)
+
+
 def test_explicit_web_prohibition_blocks_company_website_gather():
     route = route_request(
         "Hồ sơ doanh nghiệp có website chính thức https://example.org. "
