@@ -2,6 +2,23 @@
 
 ## Đối soát mới nhất
 
+**Sửa chung kiểm số liệu web — local đạt, chưa triển khai:** sau khi đối soát
+ca Vinamilk, thêm kiểm ranh giới số liệu ở cả ba tuyến tổng hợp, sau lần viết
+lại cuối. Nếu số trong dòng khẳng định không có trong chính đoạn trang web
+được dẫn, dòng đó trở thành thông báo chưa đủ bằng chứng; không mượn số từ
+tiêu đề khác, không tự đổi sang một dẫn nguồn có cùng số. Không gọi thêm mô
+hình. Bản sửa không kiểm mọi ý nghĩa, đơn vị, đối tượng hoặc thời kỳ; một số
+có mặt trong đoạn nguồn chưa đủ chứng minh nhận định đúng. Không áp dụng
+kiểm literal này cho phép tính tài liệu local hay tên nguồn ở thư mục nguồn.
+212 phép kiểm evidence/ADK/compiler/cuối khóa đạt trong 49,20 giây; 106 phép
+kiểm evidence/ADK/LangGraph, gồm lần viết lại sai số, đạt trong 9,27 giây.
+Các bộ có phần giao nhau, không cộng thành số ca nghiệp vụ khác nhau.
+Kiểm mã và diff đạt. Lệnh kiểm đầu gọi nhầm tên test_langgraph_agent.py nên
+không có test chạy; đã chọn đúng test_orchestrator.py, không ghi lần đầu là đạt.
+Giữ current_results trên 2f0183a và PARTIAL của Vinamilk tới bằng chứng bản mới.
+Chưa sửa lọc trang sản phẩm bằng từ khóa: RSS chỉ chứng minh tiêu đề/ngày
+đăng, không đủ để phân loại mọi trang là tin tức. Hạn chế này vẫn còn mở.
+
 **Vinamilk trên 2f0183a — đóng lỗi gọi nhầm công cụ, chưa đạt toàn báo cáo:**
 Người dùng chạy một lượt trong phiên cũ, mã
 `97979210-6180-4a0b-b72a-ea59c423819f`, kết quả lưu lúc 14:45:47 giờ Việt Nam

@@ -944,13 +944,15 @@ async def test_adk_open_ended_run_records_session_handoff_usage_and_final_answer
     assert runner_models[0].quota is orchestrator.compiler.quota
 
 
-@pytest.mark.parametrize("repair_mode", ["unchanged", "collapsed", "headline"])
+@pytest.mark.parametrize("repair_mode", ["unchanged", "collapsed", "headline", "web_number"])
 async def test_adk_presentation_repair_receives_collected_tool_evidence_and_references(repair_mode):
     citation = {"file_id": "local:sample", "file_name": "sample.md", "chunk_index": 0,
                 "snippet": "Nhóm khảo sát có 42 người.", "score": 1.0}
     if repair_mode == "headline":
         citation.update(file_name="Sản phẩm mẫu", evidence_kind="headline",
                         published_at="2026-10-02T07:00:00Z")
+    if repair_mode == "web_number":
+        citation.update(file_id="https://example.org", evidence_kind="page_text")
     tool_content = json.dumps({"data": {"citations": [citation]}}, ensure_ascii=False)
 
     class FakeSessions:
@@ -983,6 +985,8 @@ async def test_adk_presentation_repair_receives_collected_tool_evidence_and_refe
             return "## Hiện trạng\nNhóm có 42 người [1]. ## Việc tiếp theo\nHỏi ngân sách."
         if repair_mode == "headline":
             return "Đã ra mắt sản phẩm mới ngày 02/10 [1]."
+        if repair_mode == "web_number":
+            return "Nhóm có 900 người [1]."
         return kwargs["answer"]
 
     repair = AsyncMock(side_effect=revised_answer)
@@ -1006,6 +1010,10 @@ async def test_adk_presentation_repair_receives_collected_tool_evidence_and_refe
         assert "ngày đăng: 2026-10-02 [1]" in result.answer
         assert "ngày sự kiện và nội dung chi tiết chưa xác minh" in result.answer
         assert any(item.get("rule") == "headline_evidence_boundary" for item in result.trace)
+    if repair_mode == "web_number":
+        assert "900 người" not in result.answer
+        assert "Chưa đủ bằng chứng" in result.answer
+        assert any(item.get("rule") == "web_numeric_evidence_boundary" for item in result.trace)
     repair.assert_awaited_once()
     assert repair.await_args.kwargs["source_evidence_untrusted"] == [
         {"tool": "local_source_read", "result_untrusted": tool_content},

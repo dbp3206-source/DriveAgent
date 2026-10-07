@@ -37,6 +37,7 @@ from app.agent.creation import (
 from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
     bound_headline_claims,
+    bound_web_numeric_claims,
     label_historical_sources,
     prior_turn_sources,
     retain_referenced_citations,
@@ -1647,6 +1648,12 @@ class CompilerOrchestrator:
         # The bounded model rewrite can restore inline headings/steps or TeX
         # that were already cleaned in the first pass. Apply only content-neutral
         # boundary normalization; do not synthesize new answer sections here.
+        answer, numeric_lines = bound_web_numeric_claims(answer, citations)
+        if numeric_lines:
+            trace.append({
+                "stage": "output_guard", "status": "corrected",
+                "rule": "web_numeric_evidence_boundary", "affected_lines": numeric_lines,
+            })
         answer, headline_lines = bound_headline_claims(answer, citations)
         if headline_lines:
             answer, citations = retain_referenced_citations(answer, citations)

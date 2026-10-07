@@ -298,6 +298,48 @@ def test_headline_boundary_does_not_turn_product_titles_into_launches():
     assert result.count("ngày sự kiện và nội dung chi tiết chưa xác minh") == 2
 
 
+def test_web_numeric_claim_requires_numbers_in_the_cited_page_not_other_sources():
+    from app.agent.evidence import bound_web_numeric_claims
+
+    sources = [
+        {"evidence_kind": "page_text", "snippet": "14 trang trại và 14 nhà máy."},
+        {"evidence_kind": "headline", "snippet": "Đạt 1000 cửa hàng."},
+    ]
+    result, count = bound_web_numeric_claims(
+        "Có 14 nhà máy [1].\nCó 1000 cửa hàng [1].", sources,
+    )
+    assert count == 1
+    assert "Có 14 nhà máy [1]." in result
+    assert "Có 1000 cửa hàng" not in result
+    assert "Chưa đủ bằng chứng" in result
+
+
+def test_web_numeric_boundary_preserves_local_calculations_and_missing_metadata():
+    from app.agent.evidence import bound_web_numeric_claims
+
+    for source in [{"snippet": "120 và 150"},
+                   {"evidence_kind": "local", "snippet": "120 và 150"},
+                   {"evidence_kind": "page_text"}]:
+        answer = "Chênh lệch 30, tăng 25% [1]."
+        assert bound_web_numeric_claims(answer, [source]) == (answer, 0)
+
+
+def test_web_numeric_boundary_does_not_invent_support_for_calculated_values():
+    from app.agent.evidence import bound_web_numeric_claims
+
+    sources = [{"evidence_kind": "page_text", "snippet": "Năm 2026: 120; 150."}]
+    result, count = bound_web_numeric_claims("Tăng 25% theo trang web [1].", sources)
+    assert count == 1 and "Tăng 25% theo trang web" not in result
+
+
+def test_web_numeric_boundary_supports_grouped_numbers_and_keeps_source_titles():
+    from app.agent.evidence import bound_web_numeric_claims
+
+    source = {"evidence_kind": "page_text", "snippet": "Có 1.000 người, tăng 2,5%."}
+    answer = "Có 1000 người, tăng 2,5% [S1].\n## Nguồn\n- Báo cáo 2030 [1]."
+    assert bound_web_numeric_claims(answer, [source]) == (answer, 0)
+
+
 def test_headline_boundary_cannot_be_bypassed_with_mixed_source_or_markdown():
     from app.agent.evidence import bound_headline_claims
 

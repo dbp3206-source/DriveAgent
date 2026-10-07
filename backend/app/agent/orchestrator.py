@@ -17,7 +17,11 @@ from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, System
 from pydantic import BaseModel, Field
 
 from app.agent.controls import ChatControls
-from app.agent.evidence import bound_headline_claims, retain_referenced_citations
+from app.agent.evidence import (
+    bound_headline_claims,
+    bound_web_numeric_claims,
+    retain_referenced_citations,
+)
 from app.agent.presentation import PRESENTATION_POLICY, normalize_math_notation
 from app.agent.quantitative import inventory_facts
 from app.agent.routing import Route, route_request
@@ -442,6 +446,12 @@ class AgentOrchestrator:
         answer = normalize_math_notation(answer)
         answer, citations = retain_referenced_citations(answer, citations, auto_reference=True)
         trace = list(final_state.get("trace", [])) + execution_records
+        answer, numeric_lines = bound_web_numeric_claims(answer, citations)
+        if numeric_lines:
+            trace.append({
+                "stage": "output_guard", "status": "corrected",
+                "rule": "web_numeric_evidence_boundary", "affected_lines": numeric_lines,
+            })
         answer, headline_lines = bound_headline_claims(answer, citations)
         if headline_lines:
             answer, citations = retain_referenced_citations(answer, citations)

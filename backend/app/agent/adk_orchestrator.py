@@ -34,6 +34,7 @@ from app.agent.controls import ChatControls
 from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
     bound_headline_claims,
+    bound_web_numeric_claims,
     context_only_followup,
     label_historical_sources,
     prior_turn_sources,
@@ -614,6 +615,12 @@ class AdkOrchestrator:
             # Apply content-neutral boundary repair after the last model call.
             answer = normalize_math_notation(answer)
             answer, _ = normalize_markdown_boundaries(answer)
+            answer, numeric_lines = bound_web_numeric_claims(answer, citations)
+            if numeric_lines:
+                records.append({
+                    "stage": "output_guard", "status": "corrected",
+                    "rule": "web_numeric_evidence_boundary", "affected_lines": numeric_lines,
+                })
             answer, headline_lines = bound_headline_claims(answer, citations)
             if headline_lines:
                 answer, citations = retain_referenced_citations(answer, citations)

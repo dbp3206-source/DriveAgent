@@ -78,6 +78,58 @@ def source_references(citations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{"reference": index, **citation} for index, citation in enumerate(citations, start=1)]
 
 
+def bound_web_numeric_claims(answer: str, citations: list[dict[str, Any]]) -> tuple[str, int]:
+    """Reject missing literal numbers in cited web-page claims, without a model call.
+
+    This is a necessary evidence check, not semantic validation of units, entities
+    or dates. It never borrows a number from an uncited source or a headline.
+    Local-source calculations and bibliography titles are outside this boundary.
+    """
+    marker = re.compile(r"\[(\s*S?\d+(?:\s*[,;]\s*S?\d+)*\s*)\]", re.I)
+
+    def numbers(text: str) -> set[str]:
+        text = re.sub(r"https?://\S+", "", text)
+        values = set()
+        for value in re.findall(r"(?<!\w)\d+(?:[.,]\d+)*(?!\w)", text):
+            if re.fullmatch(r"\d{1,3}(?:[.,]\d{3})+", value):
+                value = re.sub(r"[.,]", "", value)
+            else:
+                value = value.replace(",", ".")
+            values.add(value)
+        return values
+
+    result: list[str] = []
+    affected = 0
+    bibliography = False
+    for line in answer.splitlines():
+        if line.lstrip().startswith("#"):
+            bibliography = bool(re.match(r"^#+\s*(?:nguồn|tài liệu tham khảo)\s*$", line, re.I))
+            result.append(line)
+            continue
+        indices = list(dict.fromkeys(
+            int(number) for match in marker.finditer(line)
+            for number in re.findall(r"\d+", match[1])
+        ))
+        selected = [citations[index - 1] for index in indices if 1 <= index <= len(citations)]
+        if (bibliography or not selected or len(selected) != len(indices)
+                or any(source.get("evidence_kind") != "page_text"
+                       or not source.get("snippet") for source in selected)):
+            result.append(line)
+            continue
+        claims = numbers(marker.sub("", line))
+        supported = set().union(*(numbers(str(source["snippet"])) for source in selected))
+        if claims <= supported:
+            result.append(line)
+            continue
+        affected += 1
+        refs = ", ".join(str(index) for index in indices)
+        result.append(
+            "Chưa đủ bằng chứng trong nguồn đã dẫn để xác nhận số liệu "
+            f"của nhận định này [{refs}]."
+        )
+    return "\n".join(result), affected
+
+
 def bound_headline_claims(answer: str, citations: list[dict[str, Any]]) -> tuple[str, int]:
     """Render headline evidence as metadata, never inferred events or page facts.
 
