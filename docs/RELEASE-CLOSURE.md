@@ -2,6 +2,19 @@
 
 ## Đối soát mới nhất
 
+**35183a5 đã lên GitHub và qua toàn bộ kiểm:** lúc 13:43 ngày 07/10 đã
+đẩy staging từ 2418357 đến 35183a5d611f5f4ba3957f9e25b2f57a00c38d32.
+Lượt 37583117325 hoàn tất thành công, gồm PostgreSQL, backend, giao diện,
+dựng ảnh, kiểm đóng gói và xuất PDF tiếng Việt. Mã ảnh công khai đọc theo
+đúng thẻ commit:
+sha256:4b0016d9dd4414f6490749e1126ca544a8141d901ae18913e8495b1d09a42c89.
+Bước tự triển khai Render có kết luận skipped. Kết nối Render đọc được
+dịch vụ đang ghim ảnh ef04f01; chưa ghi bản mới đã chạy. Công cụ điều khiển
+trình duyệt thanh bên không được cung cấp trong phiên hiện tại; đã mở
+Settings và hướng dẫn người dùng đổi đúng nguồn ảnh, không đổi secrets.
+Đây là bước triển khai trong năm bước đã khóa, không thêm hạng mục hoặc
+dùng bộ kiểm mã để cấp điểm chất lượng. Mục tiêu vẫn chưa hoàn tất.
+
 **Chuẩn bị E, không tiêu lượt mô hình:** trên ef04f01 đã mở lại kết quả
 Mộc An 5cbbce8b-70de-4fe6-8078-2ea3a474ce5d, bản 2, ngân sách chưa xác nhận
 và đúng bốn câu hỏi; không sửa/lưu mới/xuất mới. Ảnh

@@ -14,10 +14,12 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái lúc khóa
 
-- Bước 1: bản đang chạy đã đạt kiểm triển khai; bản sửa bằng chứng web mới
-  vẫn ở local, chưa đẩy và chưa triển khai. Không dùng bằng chứng của bản đang
-  chạy để chứng nhận bản sửa. Lệnh đẩy trước bị bộ duyệt chặn vì hạn mức;
-  không đi đường khác để vượt chặn. Kiểm local: 179 phép kiểm đạt trong
+- Bước 1: đã đẩy staging đến 35183a5, kiểm GitHub 37583117325 hoàn tất
+  thành công ngày 07/10. Ảnh mới công khai đã đối chiếu theo đúng commit:
+  sha256:4b0016d9dd4414f6490749e1126ca544a8141d901ae18913e8495b1d09a42c89.
+  Bước tự triển khai Render bị bỏ qua; đang chờ đổi nguồn ảnh trong Settings.
+  Chưa chứng nhận bản mới chạy trên cloud. Lệnh đẩy không còn bị chặn.
+  Kiểm local: 179 phép kiểm đạt trong
   67,90 giây, gồm nguồn, điều phối, tìm web và yêu cầu cuối khóa; kiểm mã đạt.
   CI 37563231626 thành công; ef04f01 chạy đúng ảnh trên Render,
   đợt dep-db2r5dks728c73abmc6g Live lúc 02:49:04 UTC ngày 07/10.
@@ -40,7 +42,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Phần còn lại, không mở rộng
 
-1. Đưa đợt sửa đang có lên bản nghiệm thu sau khi lệnh đẩy được phép chạy.
+1. Triển khai ảnh 35183a5 đã qua kiểm lên Render, đối chiếu đúng bản chạy.
 2. Đóng A bằng các ca còn thiếu trong bộ đã khóa; gộp kiểm web, nội dung và
    tiếng Việt. Không chạy lại ca đã đạt nếu mã sửa không ảnh hưởng.
 3. Đóng B bằng các đoạn quy trình còn thiếu; đối soát lại biên nhận lưu,
