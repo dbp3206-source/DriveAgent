@@ -12,8 +12,13 @@ Ba lượt đều dùng calculate; không đọc nguồn riêng hoặc ghi Googl
 efa16082-c7f4-42a8-9470-933921b50afe (21,9 giây).
 Ghi kết quả thật vào manifest đã khóa, không thêm ca; không đóng toàn B/E
 từ một chuỗi. Ảnh w04-turn1/2/3.jpg ở acceptance-ef04f01.
-Ngân sách hiện còn 1/16 lượt mô hình; không đủ cho một ca web cần ba lượt,
-không đặt lại bộ đếm hoặc yêu cầu thêm khóa. Không gọi lặp để chọn kết quả đẹp.
+Khóa đang dùng sau chuỗi còn 1/16 lượt mô hình; không đủ cho một ca web
+cần ba lượt. Kiểm trang Cài đặt thấy khóa Veridra2 đã lưu, đang bật dự phòng,
+chưa dùng ngân sách hôm nay. Chọn chính khóa có sẵn này; màn hình xác nhận
+Veridra2 đang dùng, còn 16/16. Không thêm khóa, tăng giới hạn hoặc đặt lại
+bộ đếm. Số này không phải hạn mức Google đã xác minh. Ảnh:
+`design-work/qa/acceptance-ef04f01/existing-key-selected.jpg`.
+Không gọi lặp để chọn kết quả đẹp.
 
 **ef04f01 qua CI:** lượt 37563231626 hoàn tất thành công, gồm PostgreSQL,
 backend, giao diện và ảnh chạy. Ảnh công khai đối chiếu theo đúng commit:
