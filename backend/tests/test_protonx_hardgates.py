@@ -275,7 +275,11 @@ async def test_web_research_accepts_grounded_provider_response(tmp_path):
     )
     fake_client = SimpleNamespace(
         aio=SimpleNamespace(
-            models=SimpleNamespace(generate_content=AsyncMock(return_value=grounded)),
+            models=SimpleNamespace(generate_content=AsyncMock(side_effect=[grounded,
+                SimpleNamespace(text='{"conclusions":[{"kind":"fact",'
+                    '"text":"Acme là doanh nghiệp phần mềm.",'
+                    '"supports":[{"source_id":1,"quote":"Acme là doanh nghiệp phần mềm."}],'
+                    '"basis":"Nguồn mô tả lĩnh vực của Acme."}]}')])),
             aclose=AsyncMock(),
         ),
         close=lambda: None,
@@ -299,9 +303,24 @@ async def test_web_research_accepts_grounded_provider_response(tmp_path):
             WebResearchInput(company_name="Acme", domain="https://example.com"), context
         )
     assert result.sources[0].url == "https://example.com/about"
-    assert result.summary == "Acme là doanh nghiệp phần mềm. [1]"
-    assert result.model == settings.gemini_web_research_model
-    assert fake_client.aio.models.generate_content.call_args.kwargs["model"] == "gemini-2.5-flash"
+    assert result.summary == (
+        "Acme là doanh nghiệp phần mềm. [S1]\nCăn cứ: Nguồn mô tả lĩnh vực của Acme."
+    )
+    assert result.model == settings.gemini_chat_model + "+evidence-reasoning"
+    assert fake_client.aio.models.generate_content.await_count == 2
+    search_config = fake_client.aio.models.generate_content.call_args_list[0].kwargs["config"]
+    reasoning_config = fake_client.aio.models.generate_content.call_args_list[1].kwargs["config"]
+    assert search_config.tools
+    assert reasoning_config.response_mime_type == "application/json"
+    assert not reasoning_config.tools
+    assert (
+        fake_client.aio.models.generate_content.call_args_list[0].kwargs["model"]
+        == settings.gemini_web_research_model
+    )
+    assert (
+        fake_client.aio.models.generate_content.call_args_list[1].kwargs["model"]
+        == settings.gemini_chat_model
+    )
 
 
 def test_report_exports_are_openable_and_preserve_vietnamese():

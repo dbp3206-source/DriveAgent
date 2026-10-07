@@ -58,6 +58,20 @@
       "evidence_method": "Read-only production database query; not authenticated API, UI or export verification"
     },
     "cases": {
+      "U01": {
+        "status": "FAIL",
+        "run_ids": ["8a81c237-3147-47dd-98f2-270d2b41b7b8"],
+        "session_id": "5f5e93e5-3ad6-41b1-b167-4f6a8e2ecc55",
+        "assistant_message_ids": ["b382392c-92d8-4ba7-bce0-d26c99d7cb9e"],
+        "observed_at_utc": "2026-10-07T08:35:03.111689Z",
+        "agent_task_latency_seconds": 8.830,
+        "web_tool_latency_seconds": 6.577,
+        "citation_count": 8,
+        "proposal_count": 0,
+        "observed": "Completed response contains only a generic unverified notice and eight RSS headlines. It does not answer today's Vietnam date or verify the event period from an official source. No official page in stored citations. A cautious refusal is not a retrieval or answer-quality PASS.",
+        "evidence_method": "Previously read owner-scoped full message, stored citations, trace and exact-request audit; not sidebar visual verification",
+        "quality_score": null
+      },
       "W02": {
         "status": "PASS",
         "scope": "Locked three-turn W02 oracle only; not all B workflows or all memory behavior",

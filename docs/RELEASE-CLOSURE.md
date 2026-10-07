@@ -2,6 +2,37 @@
 
 ## Đối soát mới nhất
 
+U01 trên 42d7865 chưa đạt: lượt 8a81c237-3147-47dd-98f2-270d2b41b7b8
+không trả ngày hiện tại hoặc khoảng ngày ASIAD, chỉ liệt kê tám tiêu đề RSS.
+Nhánh tìm kiếm trả trực tiếp đoạn được đối chiếu; nhánh dự phòng có tổng
+hợp nhưng không có bước suy luận chung với kiểm ràng buộc từng kết luận.
+Khi tổng hợp không đạt kiểm nguồn, câu hỏi bị thay bằng thông báo chưa
+xác minh chung. Không cấp điểm hoặc gộp main từ kết quả này.
+
+Sửa bước suy luận web theo yêu cầu 07/10: cả nhánh tìm kiếm được đối chiếu
+và nhánh thu thập trang dự phòng đi qua một bước tổng hợp có cấu trúc.
+Kết luận phân biệt dữ kiện, kết luận suy ra và phần chưa xác minh. Trích
+đoạn phải có thật trong chính nguồn được dẫn; tiêu đề RSS không được làm
+căn cứ cho dữ kiện hoặc suy luận. Số liệu khẳng định trực tiếp phải có trong
+nguồn đã dẫn. Có căn cứ ngắn gọn bằng tiếng Việt, không xuất chuỗi suy nghĩ
+nội bộ. Ngày hôm nay được trả riêng từ đồng hồ khi câu hỏi yêu cầu rõ, không
+thay ngày cuộc hẹn hoặc sự kiện. Bản sửa chưa triển khai hoặc nghiệm thu thật.
+Kiểm trích đoạn không tự chứng minh suy luận đúng về nghĩa hay thẩm quyền
+của nguồn. Tự tìm nguồn chính thức khi không có địa chỉ và công cụ tìm kiếm
+hết hạn mức vẫn còn hạn chế; không ghi U01 đạt bằng bản sửa tổng hợp.
+Mỗi lần tìm kiếm có kết quả đối chiếu dùng thêm một lượt tổng hợp; nhánh
+dự phòng giữ một lượt tổng hợp như trước. Không tăng giới hạn bảo vệ.
+
+Kiểm gộp cuối: 222 phép kiểm suy luận web, thời gian, lỗi nguồn, yêu cầu
+cuối khóa, bằng chứng và bộ điều phối đạt trong 81,61 giây; kiểm mã và diff
+đạt. Không gọi Gemini thật hoặc mạng trong bộ kiểm. Lần đầu 62 đạt, 16 lỗi
+quyền thư mục tạm Windows; chuyển sang thư mục tạm mới riêng trong kho mã.
+Lần kế 220 đạt, một kiểm còn so model của lần gọi cuối với model tìm kiếm
+cũ; đã sửa để kiểm riêng model tìm kiếm và model tổng hợp, rồi chạy lại cả
+bộ đạt như trên. Đây là kiểm hợp đồng mã, không phải điểm nghiệm thu E.
+Trong phiên này, apply_patch của ứng dụng lỗi đường dẫn; đã dùng chính
+apply_patch qua bộ máy Codex trực tiếp, không sửa tệp bằng lệnh ghi khác.
+
 **W02 trên 42d7865 — đạt đủ chuỗi đã khóa:** đối soát ba câu người dùng đã
 chạy trong phiên 057479cd bằng Supabase chỉ đọc. Mã lượt:
 9c7f2c7d-65fd-4e53-9399-77d4514e4b8c,
