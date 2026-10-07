@@ -14,6 +14,15 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Bản sửa phục hồi báo cáo 1baf5e6 đã Live đúng ảnh f406f454...:
+  Render dep-db35i9vlk1mc739gm7tg kết thúc 14:39:13.703355 UTC.
+  CI 37637232987 thành công; kết nối công khai xác nhận máy chủ,
+  cơ sở dữ liệu và kho tệp. Bước triển khai đóng; còn đúng một lượt
+  company-02 để kiểm đường lập báo cáo bị ảnh hưởng. Chưa đóng A/E/F.
+  Kết quả 5267996 giữ trong prior_5267996_results, không biến thành
+  kết quả mới. Công cụ thao tác thanh bên khởi động lỗi nên chưa tự
+  gửi được câu hỏi; không bỏ qua đăng nhập hay ghi Chat trực tiếp qua SQL.
+
 - Company-02 trên 5267996 chưa đạt: lượt
   18cadd6d-9392-4b93-9b74-afb1a7f91872 bị hết thời gian khi lập báo cáo.
   Nguồn web đã đọc xong; mã gốc là Gemini 504, rồi lớp đổi khóa chạy lại

@@ -36,6 +36,23 @@
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
   "current_results": {
+    "release_commit": "1baf5e6be152958189b74d3afa8c042b81e3293a",
+    "image_digest": "sha256:f406f454137b66958baa8bdea33fe7806845c0fbdb6112ddf7071a1e07675d0a",
+    "observed_date": "2026-10-07",
+    "deployment": {
+      "ci_run_id": "37637232987", "ci_status": "success",
+      "render_deploy_id": "dep-db35i9vlk1mc739gm7tg", "render_status": "live",
+      "finished_at": "2026-10-07T14:39:13.703355Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"status": "ok", "database": true, "object_storage": true},
+      "runtime_started_at": "2026-10-07T21:39:10.80559+07:00",
+      "scope": "Exact image deployment and public health; not authenticated answer quality"
+    },
+    "cases": {},
+    "unchanged_path_evidence": "U04 and non-company historical receipts retain their original release and scope; do not repeat just to create samples.",
+    "unlisted_cases": "Company-02 recovery requires one live check on this release. No aggregate quality score inferred from CI or deployment."
+  },
+  "prior_5267996_results": {
     "release_commit": "52679964193864136e8e2a7c77333fd1d146c0ea",
     "image_digest": "sha256:3abd78d3a46b407337c8c3c0741ae91b15fd34ab03c06c8a92ccaed8fcfb12f2",
     "observed_date": "2026-10-07",

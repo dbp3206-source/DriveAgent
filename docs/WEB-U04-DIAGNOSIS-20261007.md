@@ -136,3 +136,15 @@ ghcr.io/dbp3206-source/veridra@sha256:f406f454137b66958baa8bdea33fe7806845c0fbdb
 dịch vụ vẫn là ảnh 3abd78d3... của 5267996. Không kích hoạt lại ảnh cũ;
 cần đổi nguồn ảnh trong dịch vụ hiện có. Chưa xác nhận triển khai hoặc
 company-02 đạt sau sửa; main chưa gộp.
+
+## Bản phục hồi báo cáo đã triển khai
+
+render_get_deploy xác nhận dep-db35i9vlk1mc739gm7tg Live đúng f406f454...
+lúc 2026-10-07T14:39:13.703355Z. /api/health trả status=ok, database=true,
+object_storage=true; runtime_started_at=2026-10-07T21:39:10.80559+07:00.
+Đã thực hiện đối soát theo render-monitor, không coi trạng thái
+gemini_connectivity=not_probed là kết nối khóa quản trị đã được kiểm.
+Thao tác getTab trong thanh bên thất bại: trusted Node process exited
+unexpectedly; kernel reset, rerun your request. Không gửi được câu hỏi,
+không tuyên bố kiểm trực quan hoặc tự chạy lượt nghiệp vụ mới.
+Company-02 còn chờ đúng một lượt trong phiên đăng nhập của người dùng.
