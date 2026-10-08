@@ -1653,6 +1653,7 @@ class CompilerOrchestrator:
             verified_calculations=verified_calculations,
             source_evidence_untrusted=context_data,
             source_references_untrusted=source_references(citations),
+            required_questions=clarification_questions,
         )
         # The bounded model rewrite can restore inline headings/steps or TeX
         # that were already cleaned in the first pass. Apply only content-neutral

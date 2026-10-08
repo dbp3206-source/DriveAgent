@@ -12,6 +12,80 @@ from app.agent.presentation import (
 from app.agent.source_calculations import SOURCE_NUMERIC_FIDELITY_INSTRUCTION
 
 
+@pytest.mark.parametrize("changed", ["omit", "paraphrase"])
+async def test_rewrite_cannot_drop_or_paraphrase_required_consultation_questions(changed):
+    questions = ["Nguồn nào cần tìm?", "Khó khăn nào cần giải quyết?", "Kết quả mong muốn là gì?"]
+    question_block = "## Câu hỏi cần làm rõ\n" + "\n".join(
+        f"{index}. {question}" for index, question in enumerate(questions, 1))
+    original = "Dữ kiện đã đọc [1].\n\n" + question_block
+    candidate_block = (question_block.replace(questions[0], "Tài liệu cần tìm ở đâu?")
+                       if changed == "paraphrase" else question_block.replace(questions[0], ""))
+    candidate = " ".join(["phân tích"] * 100) + " [1].\n\n" + candidate_block
+
+    class Models:
+        async def generate_content(self, **_kwargs):
+            return SimpleNamespace(text=candidate)
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Báo cáo tư vấn 200–240 từ.", answer=original,
+        model_name="gemini-3.5-flash-lite", fallback_model="gemini-3.8-flash", records=records,
+        required_questions=questions,
+    )
+    assert result.startswith(original)
+    assert all(question in result for question in questions)
+    assert "required_questions_changed" in records[-1]["violations"]
+
+
+async def test_rewrite_preserves_required_questions_inside_word_budget():
+    questions = ["Nguồn nào cần tìm?", "Khó khăn nào cần giải quyết?", "Kết quả mong muốn là gì?"]
+    block = "## Câu hỏi cần làm rõ\n" + "\n".join(
+        f"{index}. {question}" for index, question in enumerate(questions, 1))
+    original = "Dữ kiện đã đọc [1].\n\n" + block
+    candidate = " ".join(["phân tích"] * 100) + " [1].\n\n" + block
+
+    class Models:
+        async def generate_content(self, **kwargs):
+            payload = json.loads(kwargs["contents"])
+            assert payload["required_questions_verbatim"] == questions
+            assert "total word budget" in payload["question_preservation"]
+            return SimpleNamespace(text=candidate)
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=Models())),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Báo cáo tư vấn 200–240 từ.", answer=original,
+        model_name="gemini-3.5-flash-lite", fallback_model="gemini-3.8-flash", records=records,
+        required_questions=questions,
+    )
+    assert result == candidate
+    assert records[-1]["status"] == "corrected"
+    assert not presentation_contract_violations(
+        result, explicit_presentation_contract("Báo cáo tư vấn 200–240 từ."))
+
+
+async def test_quota_fallback_cannot_truncate_required_question():
+    question = "Kết quả mong muốn là gì?"
+    original = " ".join(["Nội dung."] * 40) + "\n\n" + question
+
+    def no_budget(*_args):
+        raise RuntimeError("offline exhausted")
+
+    records = []
+    result = await enforce_presentation_contract(
+        client=None, quota=SimpleNamespace(reserve=no_budget),
+        user_message="Tối đa 30 từ.", answer=original,
+        model_name="gemini-3.5-flash-lite", fallback_model="gemini-3.8-flash", records=records,
+        required_questions=[question],
+    )
+    assert result.startswith(original)
+    assert question in result
+    assert records[-1]["status"] == "degraded"
+
+
 @pytest.mark.parametrize("markers", ["[1, 2]", "[1;2]", "[1,2]", "[ 1 ][ 2 ]"])
 async def test_format_repair_accepts_equivalent_grouped_citations(markers):
     original = "Nội dung nguồn [1][2]."

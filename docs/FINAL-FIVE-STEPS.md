@@ -14,6 +14,21 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 08/10 sau 14:29 UTC: đã dùng đúng ba lượt dự phòng được cho
+  phép rồi dừng. Vinamilk đọc web thật, có quy mô 14 trang trại/14 nhà
+  máy và số liệu 2024 đúng nguồn, nhưng mục thiếu tin mới vẫn quá chung.
+  W01 đọc đủ hai tệp, tính đúng; lượt sửa trình bày làm câu hỏi bắt buộc
+  không còn khớp nên báo lỗi. Đã tái hiện lỗi giữ câu hỏi bằng kiểm giả
+  lập và sửa ở bộ kiểm trình bày chung, không nới điều kiện đầu ra hoặc
+  thêm lượt mô hình. 313 phép kiểm trong máy đạt; chưa kiểm lại đầu ra
+  Gemini sau sửa. Ngân sách tại máy 19/20 tổng, không dùng lượt còn lại.
+  Người dùng xác nhận đã lưu Tavily trong Render. URL /api/health trả
+  status=ok, database=true, object_storage=true; phép đọc này không xác
+  minh khóa Tavily, quyền riêng hoặc phiên Chat. A/B chưa đóng toàn bộ;
+  E chưa đủ bằng chứng tính điểm; F chưa gộp main hoặc triển khai bản sửa.
+  Giữ nguyên năm bước, C/D loại khỏi đợt và P06 hoãn. Chi tiết mới nhất
+  tại INTERNAL-ANSWER-REVIEW-20261008.md; các mục dưới đây là lịch sử.
+
 - Cập nhật 08/10 sau 13:55 UTC: mô hình đã trả lời lại, không còn căn cứ
   gọi lỗi 503 trước đó là tình trạng hiện hành. U01 nội bộ trả đúng ngày máy
   chủ, khoảng 19/9–4/10/2026 và kết luận sự kiện đã kết thúc, trong 3,691

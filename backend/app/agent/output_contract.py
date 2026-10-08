@@ -34,6 +34,7 @@ _VIOLATION_LABELS = {
     "citation_markers_changed": "bản sửa có thể làm thay đổi trích dẫn",
     "numeric_claims_added": "bản sửa đã thêm số liệu không có trong bản gốc",
     "source_sections_dropped": "bản sửa bỏ mất phần chính của bản gốc",
+    "required_questions_changed": "bản sửa bỏ hoặc đổi câu hỏi bắt buộc",
     "rewrite_truncated": "bản sửa bị cắt trước khi hoàn thành",
     "missing_action_section": "chưa có phần hành động và ngưỡng kích hoạt đã yêu cầu",
     "numeric_comparison_inconsistent": "có phép so sánh số học không nhất quán",
@@ -382,8 +383,16 @@ async def enforce_presentation_contract(
     verified_calculations: dict[str, Any] | None = None,
     source_evidence_untrusted: Any = None,
     source_references_untrusted: list[dict[str, Any]] | None = None,
+    required_questions: list[str] | None = None,
 ) -> str:
     """Return a validated rewrite, or a clearly labelled best-effort draft."""
+
+    # App-owned deliverables are immutable through formatting repair. Checking
+    # headings alone cannot detect a missing or paraphrased question underneath.
+    questions = tuple(required_questions or ())
+
+    def keeps_required_questions(value: str) -> bool:
+        return all(question in value for question in questions)
 
     numeric_violations = _explicit_numeric_comparison_violations(answer)
     if numeric_violations:
@@ -438,7 +447,8 @@ async def enforce_presentation_contract(
     ):
         compacted = _compact_markdown_sections(answer, contract.max_words)
         if (not presentation_contract_violations(compacted, contract)
-                and _numeric_literals(compacted) == _numeric_literals(answer)):
+                and _numeric_literals(compacted) == _numeric_literals(answer)
+                and keeps_required_questions(compacted)):
             records.append(
                 {
                     "stage": "output_contract",
@@ -493,6 +503,13 @@ async def enforce_presentation_contract(
             "depth_requirements": list(contract.depth_guidance),
             "length_control": target_length,
             "required_citation_sequence": [f"[{marker}]" for marker in original_markers],
+            "required_questions_verbatim": list(questions),
+            "question_preservation": (
+                "Keep every required_questions_verbatim item exactly as supplied in the "
+                "visible answer. Include these questions in the total word budget; shorten "
+                "other prose, not the questions. Never paraphrase, omit or answer them."
+                if questions else ""
+            ),
             "word_count_method": (
                 "Máy chủ đếm từng tiếng hoặc số tách biệt, không đếm từ ghép tiếng Việt "
                 "như một từ. Ví dụ: 'thời gian tổng hợp' được tính là 4 từ. "
@@ -541,7 +558,8 @@ async def enforce_presentation_contract(
             and not re.findall(r"\[(\d+)\]", answer)
         ):
             shortened = _truncate_at_sentence_boundary(answer, contract.max_words)
-            if not presentation_contract_violations(shortened, contract):
+            if (not presentation_contract_violations(shortened, contract)
+                    and keeps_required_questions(shortened)):
                 records.append(
                     {
                         "stage": "output_contract",
@@ -660,6 +678,8 @@ async def enforce_presentation_contract(
         remaining.append("numeric_claims_added")
     if _major_headings(answer) >= 2 and _major_headings(candidate) < _major_headings(answer):
         remaining.append("source_sections_dropped")
+    if not keeps_required_questions(candidate):
+        remaining.append("required_questions_changed")
     candidates = getattr(response, "candidates", None) or []
     if (
         candidates
@@ -673,7 +693,7 @@ async def enforce_presentation_contract(
     ):
         shortened = _truncate_at_sentence_boundary(candidate, contract.max_words)
         shortened_violations = presentation_contract_violations(shortened, contract)
-        if not shortened_violations:
+        if not shortened_violations and keeps_required_questions(shortened):
             records.append(
                 {
                     "stage": "output_contract",
@@ -703,6 +723,7 @@ async def enforce_presentation_contract(
             "citation_markers_changed",
             "numeric_claims_added",
             "source_sections_dropped",
+            "required_questions_changed",
             "rewrite_truncated",
             "numeric_comparison_inconsistent",
             "missing_action_section",

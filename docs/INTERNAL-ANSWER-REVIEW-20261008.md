@@ -8,6 +8,67 @@ Không mở rộng danh sách nghiệm thu; giữ nguyên phạm vi A/B/E/F, ho�
 
 ## Đối soát mới nhất — 08/10/2026, sau 09:34 UTC
 
+### Cập nhật sau 14:29 UTC — hết ba lượt kiểm gộp được cho phép
+
+Người dùng xác nhận đã lưu Tavily trên Render; không đọc giá trị khóa.
+Đã dùng đúng ba lượt dự phòng, sổ bảo vệ tại máy tăng từ 16 lên 19/20.
+Không dùng lượt thứ tư, không đặt lại bộ đếm, thêm khóa hoặc đổi gói.
+
+Biên nhận thật: `acceptance-20261008/tavily-pipeline-hia8z1q_/result.json`.
+Chạy công cụ và bộ điều phối sản phẩm trong phiên SQLite riêng; công cụ
+đọc dữ liệu riêng Google hoặc ghi ngoài máy không được đăng ký. Không
+coi đây là lần nghiệm thu Chat cloud.
+
+- **A — Vinamilk:** 10,092 giây, đọc web công khai thật, một lượt Gemini.
+  Có tổng quan/sản phẩm, quy mô 14 trang trại/14 nhà máy và số liệu 2024
+  từ nguồn đã đọc; nhu cầu giả lập tách riêng, không tự đặt lịch. Mục tin
+  mới bị bộ kiểm số thay một dòng thành lời thiếu bằng chứng quá chung.
+  Đã làm rõ chỉ dẫn: khoảng tìm tin trong yêu cầu là điều kiện tìm kiếm;
+  thông báo chưa xác minh là giới hạn của lần tìm, không phải dữ kiện
+  website để gắn trích dẫn. Không nới bộ kiểm số; không suy từ chưa tìm
+  được thành không có sự kiện. Chưa có lượt mô hình kiểm chỉ dẫn mới,
+  không cấp đạt cả sáu doanh nghiệp hoặc toàn A.
+- **B — W01:** 5,443 giây, đủ hai tệp giả lập và phép tính
+  `24×12×20=5760`, `5760×0,2=1152` đúng; dùng hai lượt mô hình gồm sửa
+  trình bày, lỗi `incomplete_consultation_report`. Biên nhận không lưu
+  bản trả lời thô của hai lượt nên không kết luận câu nào cụ thể bị đổi.
+  Mã báo lỗi chứng minh câu hỏi bắt buộc không còn khớp ở đầu ra cuối,
+  không phải lỗi kết nối Gemini trong ca này.
+
+**Nguyên nhân chung và sửa:** bộ sửa trình bày kiểm độ dài, số liệu,
+trích dẫn và số đề mục, nhưng không kiểm nội dung ba câu hỏi được bộ
+điều phối tách riêng. Vì vậy bản sửa có thể giữ đề mục nhưng bỏ/diễn đạt
+lại câu hỏi; bước kiểm cuối từ chối toàn bộ báo cáo. Hai kiểm tái hiện
+bỏ câu và đổi câu đều thất bại trước sửa. Nay truyền danh sách câu hỏi
+bắt buộc vào bộ sửa; yêu cầu giữ nguyên trong tổng độ dài, kiểm cả bản
+sửa và các nhánh rút gọn tại máy. Nếu bản sửa mất câu hỏi, giữ bản gốc
+cùng thông báo phần chưa đạt thay vì trả lỗi trống. Không thêm câu hỏi
+sau sửa rồi âm thầm vượt giới hạn; giữ bước kiểm cuối và không cấp đạt
+độ dài khi bản gốc còn thiếu.
+
+Đợt gộp sau sửa: **313 kiểm đạt trong 79,44 giây**, gồm bộ điều phối,
+trình bày, nguồn web, bằng chứng, phép tính liên quan và hạn mức. Một
+cảnh báo quyền ghi bộ nhớ đệm pytest, không có phép kiểm thất bại.
+Kiểm quy tắc mã và quét **566 tệp Git thấy được** đạt; không gọi Gemini.
+Biên nhận kiểm máy: `acceptance-20261008/question-preservation-regression.xml`.
+Không cộng đợt 204 kiểm trước đó vào mẫu số; hai đợt có phần giao nhau.
+Đánh giá ngoại tuyến cùng bản đạt 12/12, 12/12, 16/16 và 160/160;
+không có lượt mô hình hoặc ghi cloud. Đây là kiểm không giảm chất lượng
+mã, không phải điểm nghiệp vụ E.
+
+CI bản cha `6ebefae` / `37788669203` completed/success nhưng bước công
+bố ảnh và triển khai bỏ qua theo điều kiện nhánh xem xét. Đây không phải
+CI của sửa giữ câu hỏi mới. `/api/health` hiện trả `ok`, DB và kho tệp
+đều true; không kiểm Gemini, Google Workspace hoặc nội dung Chat từ phép
+đọc này. Công cụ điều khiển thanh bên lỗi khởi tạo sandbox; kết nối Render
+không được cài trong phiên kiểm hiện tại. Không tuyên bố đã triển khai.
+
+**Điểm dừng:** không gọi thêm mô hình trong lượt này. Giữ các chuỗi B
+đã đạt, không chạy lại. A còn đầu ra hồ sơ/tin cập nhật của bộ đã khóa;
+B còn xác minh W01 sau sửa; E chưa cấp điểm; F chưa gộp main và chưa có
+ảnh bản sửa đang chạy. Không nhận sẵn sàng vận hành từ kiểm mã. Các mục
+bên dưới là lịch sử, không phải số lượt hay kết quả mới nhất.
+
 ### Cập nhật sau 13:55 UTC — kiểm gộp, dừng gọi thêm mô hình
 
 Gemini đã trả lời lại; lỗi 503 ở lượt cũ không chứng minh dịch vụ vẫn quá

@@ -70,6 +70,8 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
         assert "không thay quy mô bằng xếp hạng thương hiệu" in instruction
         assert "không thay thế tin mới" in instruction
         assert "chưa có ngày giờ" in instruction
+        assert "không gắn trích dẫn web cho lời báo thiếu đó" in instruction
+        assert "Không tìm thấy không có nghĩa" in instruction
         schema = request.config.response_json_schema
         assert "clarification_questions" in schema["required"]
         generations.append(prompt)
@@ -98,6 +100,11 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
     monkeypatch.setattr(Gemini, "generate_content_async", generate)
     async def presentation(**kwargs):
         assert "3. Kết quả mong muốn được đánh giá bằng cách nào?" in kwargs["answer"]
+        assert kwargs["required_questions"] == [
+            "Công việc nào hiện mất nhiều thời gian?",
+            "Nguồn tài liệu nào cần tìm?",
+            "Kết quả mong muốn được đánh giá bằng cách nào?",
+        ]
         return kwargs["answer"].split("## Câu hỏi cần làm rõ")[0] if drop_questions else kwargs[
             "answer"
         ]
