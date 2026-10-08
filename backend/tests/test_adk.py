@@ -664,6 +664,8 @@ def test_named_files_with_drive_excluded_use_bounded_local_compiler(names):
     "Chỉ đọc a.md và b.md trên Drive.",
     "Chỉ đọc a.md; không đọc tài liệu local hoặc Drive.",
     "Không đọc a.md; không đọc Drive.",
+    "Chỉ dùng RAG cho a.md; không đọc Drive.",
+    "Đừng chỉ đọc a.md; không đọc Drive.",
 ])
 def test_local_source_inference_does_not_override_other_source_contracts(message):
     assert ChatControls().enforce_explicit_message_source(message).source != "local"

@@ -32,5 +32,11 @@ bằng công cụ → kiểm kết quả trước khi công bố. Không tăng h
 
 ## Trạng thái nghiệm thu
 
+Kiểm tự động cục bộ: 266 phép kiểm đạt trong 42,95 giây (ADK, điều khiển
+nguồn, luồng tổng hợp, định tuyến và ngân sách ở hai kho lưu). Ruff và
+`git diff --check` đạt. Không gọi Gemini thật trong đợt kiểm này. Kiểm
+bao gồm giữ lựa chọn nguồn đã lập chỉ mục và không coi câu cấm đọc là
+yêu cầu chuyển sang nguồn trên máy.
+
 Chưa có câu trả lời hoàn chỉnh của W01 để chấm; không đóng B/E hoặc main.
 Bản sửa cần qua kiểm tự động và triển khai trước một phép kiểm gộp thật.

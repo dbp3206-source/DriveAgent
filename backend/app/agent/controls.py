@@ -228,12 +228,18 @@ class ChatControls(BaseModel):
         if self.source != "auto":
             return self
         normalized = message.casefold()
+        if "rag_search" in normalized or "chỉ dùng rag" in normalized or (
+            "lập chỉ mục" in normalized and "chỉ" in normalized
+        ):
+            return self.model_copy(update={"source": "rag"})
         # Named files alone can live in Drive. Infer local only when the user
         # explicitly restricts reading to named files and excludes Drive.
         exclusions = self.enforce_explicit_source_exclusions(message).excluded_sources
         if (
             "drive" in exclusions and "local" not in exclusions
-            and re.search(r"\bchỉ\s+(?:đọc|dùng|sử\s+dụng)\b", normalized)
+            and re.search(
+                r"(?<!không )(?<!đừng )\bchỉ\s+(?:đọc|dùng|sử\s+dụng)\b", normalized
+            )
             and re.search(r"[\w.-]+\.(?:md|txt|csv|ipynb|pdf|docx|xlsx)\b", normalized)
         ):
             return self.model_copy(update={"source": "local"})
@@ -243,10 +249,6 @@ class ChatControls(BaseModel):
             normalized,
         ):
             return self.model_copy(update={"source": "local"})
-        if "rag_search" in normalized or "chỉ dùng rag" in normalized or (
-            "lập chỉ mục" in normalized and "chỉ" in normalized
-        ):
-            return self.model_copy(update={"source": "rag"})
         return self
 
     def enforce_explicit_source_exclusions(self, message: str) -> "ChatControls":
