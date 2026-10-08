@@ -14,6 +14,35 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật mới nhất 08/10: đã đọc hai câu trả lời Vinamilk và ASIAD trên 81665f7.
+  Không còn lỗi kết nối ở hai tác vụ, nhưng Vinamilk thiếu phần giới thiệu hữu ích,
+  lặp tiêu đề; ASIAD chưa đọc được khoảng ngày từ nguồn chính thức. Giữ hai ca
+  một phần, không cấp đạt. Đã sửa chung ranh giới câu có nguồn, tránh lặp nguồn
+  tiêu đề, hướng tổng hợp báo cáo và truy vấn tìm tin; kiểm trong máy, chưa triển
+  khai. Biên nhận và giới hạn trong INTERNAL-ANSWER-REVIEW-20261008.md. Không
+  tiếp tục yêu cầu người dùng chạy lặp bản cũ; A/E/F chưa đóng, B giữ phạm vi
+  bằng chứng đã có, không chạy lại các đoạn không bị sửa.
+
+- Cập nhật tiếp 08/10: W01 hỏi tiếp 82bea3d1-e3e7-43a8-b45b-d0185bab8758
+  completed, giữ đúng ngữ cảnh 24 người/12 phút, ba câu hỏi, ngân sách chưa
+  xác nhận và mức giảm 20% chỉ giả định; không đọc thêm nguồn. Bản lưu
+  a8e73a8e-a363-4f4c-91fc-1af7b847c051 revision 1 giữ nội dung và hai liên
+  kết nguồn; người dùng xác nhận mở lại. Đóng riêng đoạn hỏi tiếp/lưu, không
+  cấp đạt toàn W01 vì lượt đầu thiếu độ dài. Công cụ thanh bên lỗi khởi tạo
+  sandbox cả trước và sau reset, Chrome DevTools chỉ có about:blank; không
+  tự chạy được ca web tiếp theo. Không yêu cầu nhập tay hoặc bỏ qua đăng
+  nhập; A/E/F chưa đóng, không gộp main khi còn bằng chứng bắt buộc thiếu.
+
+- Cập nhật 08/10, bản 81665f7 đã Live đúng ảnh b80b2bd6... trên Render
+  dep-db3kafaj9qps7380tps0, CI 37742152484 thành công. W01 thật
+  766df02c-e80b-4a34-8436-9af39ab3205a trả lời sau khoảng 16.46 giây,
+  nhật ký tác vụ 14.328 giây, một lần gọi mô hình. Hai nguồn và phép tính
+  đúng (24 người, 5760 phút/tháng, 1152 phút tiết kiệm giả định). Đóng riêng
+  lỗi vòng gọi gây hết thời gian; không đóng toàn W01 vì câu trả lời dưới
+  200 từ và bộ kiểm sửa định dạng phát hiện thay đổi dấu trích dẫn. Không
+  chạy lại lượt đầu để tăng số mẫu. Còn hỏi tiếp và lưu/mở lại; A/E/F chưa
+  đóng. Chi tiết trong LOCAL-SOURCE-TIMEOUT-20261008.md.
+
 - Cập nhật 08/10: ngân sách tự đặt lại đúng 14:00 giờ Việt Nam. W01
   d3b1a9af-52b0-4172-9b2c-c51e2871eb8a đọc cả hai nguồn và tính thành công,
   nhưng vòng điều phối chạm 5 lượt/phút, chờ lượt rồi bị giới hạn tổng

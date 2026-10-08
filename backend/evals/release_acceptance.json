@@ -36,6 +36,68 @@
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
   "current_results": {
+    "release_commit": "81665f7f941c53b77b12daba388ff17c46f5e9f4",
+    "image_digest": "sha256:b80b2bd6fe8e1c7acf0943cf3f2e7bd1e8f0b9ad412cf5e75a8ae86b12bd9575",
+    "observed_date": "2026-10-08",
+    "deployment": {
+      "ci_run_id": "37742152484", "ci_status": "success",
+      "render_deploy_id": "dep-db3kafaj9qps7380tps0", "render_status": "live",
+      "finished_at": "2026-10-08T07:26:49.670105Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"status": "ok", "database": true, "object_storage": true},
+      "runtime_started_at": "2026-10-08T14:26:38.880904+07:00",
+      "scope": "Exact image, public health and the owner-scoped W01 receipts below; no whole-release quality inferred"
+    },
+    "cases": {
+      "company-02": {
+        "status": "PARTIAL_ANSWER_QUALITY",
+        "request_id": "ac98c7f3-85d6-4cf1-8b96-930091719a3b",
+        "assistant_message_id": "c9267ee0-727b-4a45-a941-d61187695319",
+        "session_id": "eb5eaf81-edd9-48f1-88fe-f2f6598d8077",
+        "completed_at": "2026-10-08T07:38:46.832091Z",
+        "observed": "Official page read succeeded; three clarification questions present. Final text mostly repeats headline metadata, lacks a usable company overview and does not clearly separate simulated inbound need from public evidence.",
+        "quality_score": null,
+        "next_action": "Batch synthesis and evidence-boundary fixes internally before another deployment. Do not equate completed task with accepted answer."
+      },
+      "U01": {
+        "status": "PARTIAL_SOURCE_DISCOVERY",
+        "request_id": "e2d5c830-4ea4-41d3-9802-7e284a3d2482",
+        "assistant_message_id": "d39504aa-d558-44c9-92b4-8950d07a5dec",
+        "session_id": "6bf32df8-9454-4e4d-9aa0-a3f18a9e575a",
+        "completed_at": "2026-10-08T07:39:20.371501Z",
+        "observed": "Server date correct and unknown explicitly stated. Eight RSS headline sources, including irrelevant topics; no official event interval fetched. Render logs confirm full user question used as RSS search query. No provider failure code in the inspected logs, so the fallback's upstream trigger is unconfirmed.",
+        "quality_score": null,
+        "next_action": "Do not score safe unknown as successful official-source discovery. Resolve retrieval limitation before calling the next image ready for final acceptance."
+      },
+      "W01": {
+        "status": "PARTIAL",
+        "session_id": "eb5eaf81-edd9-48f1-88fe-f2f6598d8077",
+        "run_ids": ["766df02c-e80b-4a34-8436-9af39ab3205a", "82bea3d1-e3e7-43a8-b45b-d0185bab8758"],
+        "assistant_message_ids": ["58b7afc2-8d99-43b2-9ed4-b486e1986ab6", "9ad00d63-debd-4a41-b3d0-dc9bf2d93256"],
+        "first_task_latency_ms": 14328,
+        "first_model_call_count": 1,
+        "first_turn_status": "incomplete",
+        "first_turn_violations": ["below_explicit_word_minimum", "citation_markers_changed"],
+        "source_and_calculation": "PASS_FOR_OBSERVED_RESPONSE",
+        "followup_status": "completed",
+        "followup_model_latency_ms": 3468,
+        "followup_context": "PASS_FOR_OBSERVED_RESPONSE",
+        "observed": "Read only both named local documents; used revised 24 people, 5760 minutes/month and hypothetical 1152 minutes at 20%. Two sources and three clarification questions. Initial answer was below the requested minimum; rejected presentation repair changed citation markers, so the original remained incomplete. Follow-up preserved 24 people/12 minutes and unknown budget, with exactly three questions and no new source tool calls.",
+        "artifact": {
+          "id": "a8e73a8e-a363-4f4c-91fc-1af7b847c051",
+          "revision": 1, "is_archived": false,
+          "status": "PASS_DATABASE_READBACK_AND_USER_REPORTED_REOPEN",
+          "observed": "Saved follow-up text and both source links match the reply. User reported reopening; no autonomous browser screenshot available."
+        },
+        "evidence_method": "Owner-scoped Supabase readback of messages, trace, audit and saved artifact; no additional model invocation",
+        "quality_score": null,
+        "next_action": "Do not rerun the passing follow-up/save steps. Keep the initial length limitation visible; do not close the entire workflow or aggregate score from this partial receipt."
+      }
+    },
+    "unchanged_path_evidence": "Historical U04, W02, W03, W04, W05, W06, scheduler and approved Google Doc receipts retain their original release and exact scope; not new runs on this image.",
+    "unlisted_cases": "Missing or historical only. A/E/F remain unaccepted; no score inferred from CI or a partial W01."
+  },
+  "prior_1baf5e6_results": {
     "release_commit": "1baf5e6be152958189b74d3afa8c042b81e3293a",
     "image_digest": "sha256:f406f454137b66958baa8bdea33fe7806845c0fbdb6112ddf7071a1e07675d0a",
     "observed_date": "2026-10-07",

@@ -33,10 +33,10 @@ async def main() -> None:
         db=SimpleNamespace(),
         settings=settings,
     )
-    results = []
-    for case in cases:
+
+    async def probe(case):
         try:
-            sources, blocks = await collect_public_source_bundle(
+            sources, _blocks = await collect_public_source_bundle(
                 WebResearchInput(
                     company_name=case["company"],
                     domain=case["official_domain"],
@@ -45,23 +45,31 @@ async def main() -> None:
                 ),
                 context,
             )
-            results.append(
-                {
-                    "case_id": case["id"],
-                    "status": "pass",
-                    "sources": len(sources),
-                    "official_characters": len(blocks[0]),
-                }
-            )
+            official = [
+                source for source in sources if source.evidence_kind == "page_text"
+            ]
+            return {
+                "case_id": case["id"],
+                "status": "pass" if official else "partial",
+                "sources": len(sources),
+                "official_characters": sum(
+                    len(source.evidence_excerpt or "") for source in official
+                ),
+                "official_urls": [source.url for source in official],
+                "headline_sources": sum(
+                    source.evidence_kind == "headline" for source in sources
+                ),
+                "scope": "source_transport_only_not_answer_quality",
+            }
         except ToolError as exc:
-            results.append(
-                {
-                    "case_id": case["id"],
-                    "status": "fail",
-                    "error_type": type(exc).__name__,
-                    "error_code": getattr(exc, "code", None),
-                }
-            )
+            return {
+                "case_id": case["id"],
+                "status": "fail",
+                "error_type": type(exc).__name__,
+                "error_code": getattr(exc, "code", None),
+            }
+
+    results = await asyncio.gather(*(probe(case) for case in cases))
     print(json.dumps(results, ensure_ascii=False))
     if any(result["status"] != "pass" for result in results):
         raise SystemExit(1)

@@ -349,3 +349,31 @@ def test_headline_boundary_cannot_be_bypassed_with_mixed_source_or_markdown():
     assert count == 1 and "Đã bổ nhiệm" not in result
     assert r"\[Gửi thư\]" in result
     assert "[2]" in result and "ngày đăng: chưa xác minh" in result
+
+
+def test_headline_boundary_preserves_separately_cited_page_sentence():
+    from app.agent.evidence import bound_headline_claims
+
+    sources = [
+        {"file_name": "Doanh nghiệp", "evidence_kind": "page_text"},
+        {"file_name": "Sản phẩm", "evidence_kind": "headline"},
+    ]
+    result, count = bound_headline_claims(
+        "Doanh nghiệp sản xuất sữa [1]. Đã ra mắt sản phẩm hôm nay [2].", sources,
+    )
+    assert count == 1
+    assert "Doanh nghiệp sản xuất sữa [1]." in result
+    assert "Đã ra mắt" not in result
+    assert "ngày sự kiện và nội dung chi tiết chưa xác minh" in result
+
+
+def test_headline_boundary_does_not_repeat_same_metadata_in_bibliography():
+    from app.agent.evidence import bound_headline_claims
+
+    sources = [{"file_name": "Tin doanh nghiệp", "evidence_kind": "headline"}]
+    result, count = bound_headline_claims(
+        "Có sự kiện mới [1].\n\n## Nguồn tham khảo\n- Tin doanh nghiệp [1].", sources,
+    )
+    assert count == 2
+    assert result.count("Tiêu đề nguồn:") == 1
+    assert "Có sự kiện mới" not in result

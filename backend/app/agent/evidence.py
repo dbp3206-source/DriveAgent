@@ -135,13 +135,27 @@ def bound_headline_claims(answer: str, citations: list[dict[str, Any]]) -> tuple
 
     A title alone cannot establish a launch, price change, appointment or event
     date. Apply after synthesis/rewrites so prose cannot upgrade evidence type.
-    Mixed-source lines are conservatively replaced too: a page citation beside
-    a headline is not proof that the page supports the inferred news claim.
+    Shared-citation claims are conservatively replaced too: a page citation
+    beside a headline is not proof that the page supports the news claim.
+    Separately cited sentences keep their own evidence boundary.
     """
     marker = re.compile(r"\[(\s*S?\d+(?:\s*[,;]\s*S?\d+)*\s*)\]", re.I)
     corrected = []
     affected = 0
-    for line in answer.splitlines():
+    emitted_headlines: set[int] = set()
+    segments: list[str] = []
+    for original_line in answer.splitlines():
+        line_indices = [int(number) for match in marker.finditer(original_line)
+                        for number in re.findall(r"\d+", match[1])]
+        if any(1 <= index <= len(citations)
+               and citations[index - 1].get("evidence_kind") == "headline"
+               for index in line_indices):
+            # Split only at an explicit citation followed by sentence punctuation.
+            # Never split decimals, URLs, uncited clauses or a shared [1, 2] claim.
+            segments.extend(re.split(r"(?<=\][.!?])\s+(?=[^\W\d_])", original_line))
+        else:
+            segments.append(original_line)
+    for line in segments:
         indices = list(dict.fromkeys(
             int(number) for match in marker.finditer(line)
             for number in re.findall(r"\d+", match[1])
@@ -153,6 +167,9 @@ def bound_headline_claims(answer: str, citations: list[dict[str, Any]]) -> tuple
             continue
         affected += 1
         for index in headlines:
+            if index in emitted_headlines:
+                continue
+            emitted_headlines.add(index)
             source = citations[index - 1]
             title = re.sub(r"[\r\n]+", " ", str(source.get("file_name") or "Chưa có tiêu đề"))
             # Neutralize Markdown metacharacters; title remains quoted source data.

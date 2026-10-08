@@ -60,6 +60,9 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
         assert "Chỉ tiêu đề tin." in prompt
         assert "không khẳng định ngày sự kiện" in instruction
         assert "chưa gửi thư/tạo tài liệu/đặt lịch" in instruction
+        assert "không thay bằng danh sách tin" in instruction
+        assert "không cần website xác nhận" in instruction
+        assert "không ghép nguồn chỉ có tiêu đề vào cùng câu" in instruction
         schema = request.config.response_json_schema
         assert "clarification_questions" in schema["required"]
         generations.append(prompt)

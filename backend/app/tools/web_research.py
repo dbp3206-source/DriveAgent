@@ -210,6 +210,31 @@ def _html_text(payload: bytes, maximum: int = 12_000) -> str:
     return re.sub(r"\s+", " ", " ".join(parser.parts)).strip()[:maximum]
 
 
+def _public_query_topic(question: str) -> tuple[str, list[str]]:
+    """Remove answer/source controls; retain the requested public subject.
+
+    This is query normalization, not entity discovery or proof of authority.
+    Capitalized acronyms provide a conservative relevance boundary for RSS.
+    No invented hostname, event date, translated entity or extra model call.
+    """
+    segments = re.split(r"[?!;\n]+|(?<!\d)\.(?!\d)", question)
+    controls = re.compile(
+        r"^(?:không|đừng|chưa|nếu|chỉ\s+(?:kết luận|trả lời|dẫn|nêu|giải thích))\b",
+        re.I,
+    )
+    clock_question = re.compile(
+        r"^(?:hôm nay|ngày hiện tại|today)\b.*(?:ngày nào|ngày bao nhiêu|date)", re.I
+    )
+    topics = [segment.strip() for segment in segments
+              if segment.strip() and not controls.search(segment.strip())
+              and not clock_question.search(segment.strip())]
+    topic = topics[0] if topics else question.strip()[:240]
+    anchors = list(dict.fromkeys(re.findall(r"\b[A-Z][A-Z0-9-]{1,19}\b", topic)))[:4]
+    # Do not reduce "Google API pricing" to "API": that loses the actual
+    # subject. Anchors filter results, but the query retains the full topic.
+    return topic[:240], anchors
+
+
 def _news_items(payload: bytes, maximum: int) -> list[tuple[WebSource, str]]:
     try:
         root = ElementTree.fromstring(payload)
@@ -476,7 +501,11 @@ async def collect_public_source_bundle(
         if payload.company_name:
             news_query = f"{payload.company_name} {news_query}"
     else:
-        news_query = payload.company_name or payload.question
+        news_query = payload.company_name or _public_query_topic(payload.question)[0]
+    relevance_anchors = (
+        _public_query_topic(payload.question)[1]
+        if not payload.domain and not payload.company_name and not payload.news_query else []
+    )
     encoded_query = quote_plus(f"{news_query} when:30d")
     news_urls = [
         f"https://news.google.com/rss/search?q={encoded_query}&hl=vi&gl=VN&ceid=VN:vi",
@@ -515,7 +544,14 @@ async def collect_public_source_bundle(
     news: list[tuple[WebSource, str]] = []
     seen_news: set[str] = set()
     for news_raw in news_payloads:
-        for source, snippet in _news_items(news_raw, max(1, maximum - official_available)):
+        # Filter before the source budget: unrelated first results must not hide
+        # later relevant ones. Feed bytes and inspected candidates stay bounded.
+        for source, snippet in _news_items(news_raw, maximum * 4):
+            if relevance_anchors and not all(
+                re.search(r"(?<!\w)" + re.escape(anchor) + r"(?!\w)", source.title, re.I)
+                for anchor in relevance_anchors
+            ):
+                continue
             key = re.sub(r"\s+", " ", source.title).strip().casefold()
             if key in seen_news:
                 continue
