@@ -40,6 +40,15 @@ phạm vi A/B/E/F, không bật trả phí hoặc nới hạn mức Gemini.
 
 ## Bằng chứng hiện có và bước còn lại
 
+Cập nhật sau 13:55 UTC ngày 08/10: U01 đã trả lời nội bộ đúng khoảng ngày
+và kết luận, trích đoạn được kiểm trên đúng nguồn trả về. Company-02 trả
+báo cáo sau một lượt mô hình, nhưng còn thiếu quy mô và giới hạn tin mới;
+đã làm rõ hướng dẫn báo cáo, chưa kiểm thật sau sửa. Ngân sách bảo vệ tại
+máy đã 16/16, không gọi thêm hoặc đặt lại. Không phải lỗi 503 đang tiếp
+diễn. Chưa triển khai Tavily lên Render hoặc cấp đạt A/E/F; xem trạng thái
+hiện hành ở đầu INTERNAL-ANSWER-REVIEW-20261008.md. Các số đo dưới đây là
+lịch sử theo đợt, không mô tả ngân sách còn lại hiện tại.
+
 Kiểm trong máy: 119 phép kiểm cấu hình, nguồn, suy luận, bảo mật và định
 tuyến đạt trong 5,77 giây. Bao gồm khóa được che, không đi theo yêu cầu đọc
 trang, URL/chuyển hướng nội bộ, dữ liệu quá lớn, lỗi mạng và các mã lỗi

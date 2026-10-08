@@ -8,6 +8,65 @@ Không mở rộng danh sách nghiệm thu; giữ nguyên phạm vi A/B/E/F, ho�
 
 ## Đối soát mới nhất — 08/10/2026, sau 09:34 UTC
 
+### Cập nhật sau 13:55 UTC — kiểm gộp, dừng gọi thêm mô hình
+
+Gemini đã trả lời lại; lỗi 503 ở lượt cũ không chứng minh dịch vụ vẫn quá
+tải. Không đổi mô hình trả phí, khóa hoặc bộ đếm. Khóa tại máy đã dùng
+16/16 lượt bảo vệ, tự đặt lại lúc 14:00 giờ Việt Nam ngày 09/10. Hạn mức
+này của Veridra, không phải hạn mức còn lại Google xác nhận.
+
+| Phần cố định | Kết quả và việc còn lại |
+| --- | --- |
+| A | U01 nội bộ trả đúng ngày máy chủ 08/10, khoảng sự kiện 19/9–4/10/2026 và kết luận đã kết thúc. Company-02 có báo cáo nhưng bỏ quy mô và không nói rõ chưa xác minh tin trong 30 ngày. Chưa đóng sáu doanh nghiệp và các ca cập nhật còn thiếu; không dùng một câu đúng để cấp đạt cả A. |
+| B | Giữ các chuỗi hỏi tiếp, nhớ/quên, đổi đầu vào, lưu/mở lại và tài liệu đã duyệt có bằng chứng hợp lệ. W01 lượt đầu còn dưới 200 từ; đã đọc lại dữ liệu thật, không có lỗi ký tự xuống dòng như nghi ngờ. Lịch trống và kiểm hiển thị DOCX còn giới hạn; không chạy lại phần đã đạt. |
+| E | Bộ vẫn 24 tác vụ, 23 áp dụng khi hoãn P06; chưa đủ kết quả đạt để chấm điểm. Không dùng kiểm mã làm điểm 8,7/9 hoặc xác nhận bảy vai trò đều đã thực hiện. |
+| F | Bản sửa chỉ ở nhánh xem xét; Render vẫn 81665f7, main chưa gộp. Chỉ bàn giao bản đã kiểm và ghi đúng giới hạn, không công bố sẵn sàng vận hành từ CI. |
+
+Nguyên nhân và sửa chung, không gắn cứng đáp án ASIAD hoặc Vinamilk:
+
+1. Câu trích ghép các ô bảng không xuất hiện liên tục trong nguồn; mô hình
+   coi nguồn thứ cấp là chính thức. Ưu tiên trang cơ quan khi người dùng
+   yêu cầu chính thức, ràng buộc trích nguyên văn và gắn lại số nguồn cùng
+   nội dung. Đây là ưu tiên nguồn, không phải chứng nhận mọi trang đúng.
+2. Bộ kiểm số chưa nhận ra ngày tiếng Anh và ngày tiếng Việt tương đương.
+   Chuẩn hóa ngày đầy đủ hợp lệ và số thứ tự, vẫn chặn ngày sai/thiếu năm,
+   số không có trong đúng nguồn và nguồn chỉ có tiêu đề.
+3. Mô hình thêm ngày đồng hồ vào một dữ kiện web không có trích dẫn; một
+   kết luận sai định dạng khiến cả câu bị từ chối. Tách câu hỏi ngày máy
+   chủ khỏi câu hỏi gửi tổng hợp; vẫn dùng đồng hồ để đối chiếu sự kiện,
+   trả ngày bằng ứng dụng. Không bỏ bộ kiểm trích đoạn để lấy câu trả lời.
+4. Báo cáo có ba câu hỏi bắt buộc nhưng các mục nội dung chỉ là chỉ dẫn
+   chung. Kết quả company-02 bỏ quy mô dù nguồn có 14 trang trại/14 nhà
+   máy; tin 2024 không được trình bày rõ là bối cảnh cũ. Đã yêu cầu các mục
+   tổng quan, quy mô, tin mới, nhu cầu và cuộc hẹn; nếu thiếu bằng chứng
+   phải ghi thiếu ở đúng mục, không thay quy mô bằng xếp hạng. Sửa hướng
+   dẫn này chưa có lượt mô hình sau sửa, không cấp đạt từ kiểm giả lập.
+
+Biên nhận giữ tại máy, không đăng khóa hoặc dữ liệu phiên:
+
+- U01: `acceptance-20261008/tavily-pipeline-5j4ldw8k/result.json`, 3,691 giây,
+  đúng một lượt tổng hợp trên sáu trang công khai đã thu thật trước đó,
+  không tìm lại nguồn. Câu trả lời dùng trang Chính phủ Nhật Bản và OCA.
+  Khoảng ngày được chứng minh trực tiếp bởi trang Chính phủ; phần kết luận
+  kết thúc đối chiếu đồng hồ và nguồn bế mạc. Không coi đoạn trích ngắn ở
+  OCA tự chứng minh riêng ngày bế mạc. Bộ chẩn đoán thử ban đầu dùng thứ tự
+  nguồn trước sắp xếp nên báo sai lỗi; đối soát lại chính câu trả lời với
+  nguồn trả về đã qua kiểm, không gọi thêm mô hình hoặc đổi kết quả gốc.
+- Company-02: `acceptance-20261008/tavily-pipeline-dca2egbz/result.json`,
+  27,303 giây, công cụ và bộ điều phối thật trong phiên SQLite riêng, sáu
+  nguồn, một lượt Gemini. Không đọc nguồn riêng hoặc ghi Google/cloud.
+  Tổng quan, sản phẩm, nhu cầu giả lập và ba câu hỏi có; thiếu các phần
+  trên nên không cấp đạt nghiệp vụ.
+- W01: `acceptance-20261008/w01-readback-20261008.md`, đọc Supabase có điều
+  kiện đúng quản trị/phiên/lượt; không ghi hoặc gọi Gemini. Kết quả vẫn có
+  hai nguồn, 24 người, 5760 phút và 1152 phút theo giả thuyết, thiếu độ dài.
+
+Đợt gộp cuối gồm cả sửa hướng dẫn báo cáo: 363 phép kiểm đạt trong 86,81
+giây; không gọi mô hình hoặc mạng. Bốn nhóm ngoại tuyến
+12/12, 12/12, 16/16, 160/160 đạt; quét 566 tệp Git thấy được không phát
+hiện bí mật. Các nhóm có phần giao nhau, không cộng thành điểm nghiệp vụ.
+Những mục bên dưới là lịch sử theo bản, không phải tình trạng hiện hành.
+
 ### Cập nhật 13:02 UTC — nguồn đã đọc, mô hình quá tải
 
 Khóa tìm kiếm đã cấu hình tại máy, không đọc/công bố giá trị. Tìm nguồn U01

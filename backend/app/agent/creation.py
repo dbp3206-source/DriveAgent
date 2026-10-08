@@ -24,6 +24,17 @@ from app.tools.documents import DocumentEditIntent
 
 WEB_CONSULTATION_INSTRUCTION = (
     "\nBáo cáo từ website phải trả lời nhu cầu tư vấn, không thay bằng danh sách tin. "
+    "Nếu người dùng không quy định bố cục khác, chia answer thành các mục ngắn: "
+    "Tổng quan và sản phẩm; Quy mô có căn cứ; Tin mới đã xác minh; Nhu cầu tư vấn; "
+    "Cuộc hẹn và bước tiếp theo. Không bỏ mục đã được hỏi chỉ vì chưa có dữ liệu: "
+    "nêu cụ thể điều chưa xác minh thay cho một nhận định chung. "
+    "Ở mục quy mô, dùng số liệu hiện có trong đúng nguồn và đúng phạm vi doanh nghiệp, "
+    "kèm thời kỳ hoặc giới hạn thời điểm; không thay quy mô bằng xếp hạng thương hiệu. "
+    "Khi được hỏi tin trong một khoảng thời gian, đối chiếu ngày đăng với đồng hồ; "
+    "nếu không có tin đủ căn cứ trong khoảng đó, nói rõ chưa xác minh được tin trong "
+    "khoảng đã yêu cầu. Tin cũ chỉ được nêu là bối cảnh lịch sử, có năm/ngày nguồn, "
+    "không thay thế tin mới. Không có lịch hẹn trong đầu vào thì ghi chưa có ngày giờ "
+    "được xác nhận, không tự đặt lịch. "
     "Tách riêng: doanh nghiệp làm gì từ chữ trang đã đọc; nhu cầu người dùng đã cung cấp; "
     "phần chưa rõ; đề xuất bước trao đổi tiếp. Nhu cầu trong đầu vào giả lập là dữ kiện "
     "của đầu vào, không cần website xác nhận và không gắn nguồn web cho nhu cầu đó. "

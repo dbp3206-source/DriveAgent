@@ -14,6 +14,18 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 08/10 sau 13:55 UTC: mô hình đã trả lời lại, không còn căn cứ
+  gọi lỗi 503 trước đó là tình trạng hiện hành. U01 nội bộ trả đúng ngày máy
+  chủ, khoảng 19/9–4/10/2026 và kết luận sự kiện đã kết thúc, trong 3,691
+  giây; trích đoạn và số liệu qua kiểm với đúng thứ tự nguồn trả về. Chưa
+  phải nghiệm thu Chat cloud. Company-02 đọc web và tổng hợp đúng một lượt,
+  27,303 giây, nhưng bỏ quy mô và chưa nói rõ thiếu tin trong 30 ngày nên
+  giữ một phần. Đã làm rõ các mục bắt buộc trong hướng dẫn báo cáo, chưa
+  kiểm lại bằng mô hình. Ngân sách tại máy 16/16; không gọi thêm, không đặt
+  lại bộ đếm. B giữ bằng chứng cũ; W01 còn độ dài. E chưa cấp điểm; F chưa
+  gộp main hoặc đổi Render. Không mở rộng năm bước; chi tiết mới nhất ở đầu
+  INTERNAL-ANSWER-REVIEW-20261008.md. Các cập nhật dưới đây là lịch sử.
+
 - Cập nhật 08/10 lúc 13:02 UTC: khóa Tavily ở máy đã cấu hình, nguồn thật
   đọc được. U01 thu được trang của Hội đồng Olympic châu Á và Chính phủ
   Nhật Bản, có khoảng ngày; chưa chấm câu trả lời. company-02 chạy công cụ

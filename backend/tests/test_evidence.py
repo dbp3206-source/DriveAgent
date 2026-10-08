@@ -340,6 +340,33 @@ def test_web_numeric_boundary_supports_grouped_numbers_and_keeps_source_titles()
     assert bound_web_numeric_claims(answer, [source]) == (answer, 0)
 
 
+@pytest.mark.parametrize("source_text,answer", [
+    ("The 20th event runs September 19 to October 4 2026 (16 days).",
+     "Sự kiện thứ 20 diễn ra từ 19 tháng 9 đến 4 tháng 10 năm 2026 [1]."),
+    ("Closing: 4 October 2026.", "Kết thúc ngày 04/10/2026 [1]."),
+    ("Opening: September 19, 2026.", "Mở ngày 19/09/2026 [1]."),
+])
+def test_numeric_guard_accepts_equivalent_translated_dated_spans(source_text, answer):
+    from app.agent.evidence import bound_web_numeric_claims
+
+    source = {"evidence_kind": "page_text", "snippet": source_text}
+    assert bound_web_numeric_claims(answer, [source]) == (answer, 0)
+
+
+@pytest.mark.parametrize("source_text,answer", [
+    ("September update 2026", "Có 9 cơ sở [1]."),
+    ("February 30, 2026", "Có 2 cơ sở [1]."),
+    ("September 19 to October 4 2026", "Kết thúc ngày 05/10/2026 [1]."),
+    ("The 20th event runs September 19 to October 4 2026.", "Có 1000 người [1]."),
+])
+def test_date_translation_never_grants_missing_dates_or_unrelated_values(source_text, answer):
+    from app.agent.evidence import bound_web_numeric_claims
+
+    source = {"evidence_kind": "page_text", "snippet": source_text}
+    _, affected = bound_web_numeric_claims(answer, [source])
+    assert affected == 1
+
+
 def test_headline_boundary_cannot_be_bypassed_with_mixed_source_or_markdown():
     from app.agent.evidence import bound_headline_claims
 

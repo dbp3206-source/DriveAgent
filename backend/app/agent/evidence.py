@@ -2,6 +2,7 @@
 
 import json
 import re
+from datetime import date
 from typing import Any
 
 HISTORICAL_SOURCE_INSTRUCTION = (
@@ -89,6 +90,44 @@ def bound_web_numeric_claims(answer: str, citations: list[dict[str, Any]]) -> tu
 
     def numbers(text: str) -> set[str]:
         text = re.sub(r"https?://\S+", "", text)
+        # A translated date or English ordinal is the same evidenced value,
+        # not a new numerical fact. Expand only complete, valid dated spans;
+        # a bare month name must not grant an arbitrary numeric claim.
+        months = {name.casefold(): index for index, name in enumerate((
+            "January", "February", "March", "April", "May", "June", "July",
+            "August", "September", "October", "November", "December",
+        ), 1)}
+        month_pattern = "(?:" + "|".join(months) + ")"
+        dates = []
+        patterns = (
+            rf"\b(?P<m>{month_pattern})\s+(?P<d>\d{{1,2}})\s*,?\s+(?P<y>\d{{4}})\b",
+            rf"\b(?P<d>\d{{1,2}})\s+(?P<m>{month_pattern})\s+(?P<y>\d{{4}})\b",
+            rf"\b(?P<m>{month_pattern})\s+(?P<d>\d{{1,2}})\s+(?:to|through|until)\s+"
+            rf"(?P<end_m>{month_pattern})\s+(?P<end_d>\d{{1,2}})\s*,?\s+(?P<y>\d{{4}})\b",
+        )
+        for pattern in patterns:
+            for match in re.finditer(pattern, text, re.I):
+                try:
+                    value = date(int(match['y']), months[match['m'].casefold()], int(match['d']))
+                    dated_span = [f"{value.day}/{value.month}/{value.year}"]
+                    if match.groupdict().get('end_m'):
+                        value = date(int(match['y']), months[match['end_m'].casefold()],
+                                     int(match['end_d']))
+                        dated_span.append(f"{value.day}/{value.month}/{value.year}")
+                    dates.extend(dated_span)
+                except ValueError:
+                    continue
+
+        def numeric_date(match: re.Match) -> str:
+            try:
+                value = date(int(match[3]), int(match[2]), int(match[1]))
+                return f"{value.day}/{value.month}/{value.year}"
+            except ValueError:
+                return match.group()
+
+        text = re.sub(r"(?<!\w)(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})(?!\w)", numeric_date, text)
+        text = re.sub(r"(?<!\w)(\d+)(?:st|nd|rd|th)(?!\w)", r"\1", text, flags=re.I)
+        text += " " + " ".join(dates)
         values = set()
         for value in re.findall(r"(?<!\w)\d+(?:[.,]\d+)*(?!\w)", text):
             if re.fullmatch(r"\d{1,3}(?:[.,]\d{3})+", value):
