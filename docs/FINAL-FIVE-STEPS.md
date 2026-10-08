@@ -170,15 +170,22 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Phần còn lại, không mở rộng
 
-1. Chờ ảnh 8c4de13 qua CI; triển khai đúng mã ảnh rồi kiểm phiên bản công khai.
-2. Đóng A bằng các ca còn thiếu trong bộ đã khóa; gộp kiểm web, nội dung và
-   tiếng Việt. Không chạy lại ca đã đạt nếu mã sửa không ảnh hưởng.
-3. Đóng B bằng các đoạn quy trình còn thiếu; đối soát lại biên nhận lưu,
-   xuất và hẹn giờ, chỉ chạy đoạn chưa có bằng chứng phù hợp.
-4. Chốt E: tính đúng kết quả bộ 24 tác vụ theo ngưỡng đã khóa, công bố mục
-   hoãn/không áp dụng; hoàn tất hướng dẫn và bài demo 10 phút.
-5. Chốt F: chỉ khi 1–4 đạt mới gộp main, kiểm tự động và triển khai đúng bản;
-   kiểm ngắn URL rồi bàn giao. Không sửa tiếp ngoài lỗi chặn các bước này.
+1. Bản sửa 1047eb2 đã qua CI 37748916764 trên nhánh review, chưa triển khai.
+   Các sửa nội bộ tiếp theo chưa thuộc kết quả CI đó. Chỉ gửi một bản triển
+   khai gộp sau khi đánh giá báo cáo nội bộ; đang chờ xác nhận một lượt Gemini.
+2. A: đối chiếu từng nhận định của báo cáo với phần chữ nguồn thực đã đọc,
+   phân biệt nhu cầu giả lập, dữ kiện công khai và điều chưa rõ. Phép kiểm gộp
+   nội bộ không thay sáu tác vụ Chat trong bộ đã khóa. Tự tìm nguồn chính thức
+   của U01 vẫn thiếu bằng chứng; không chốt từ câu trả lời "chưa xác minh".
+3. B: giữ các biên nhận hỏi tiếp, nhớ/quên, lưu/xuất, hẹn giờ và tài liệu đã
+   có đúng phạm vi. Chỉ xử lý lượt đầu W01 chưa đủ độ dài và những đoạn còn
+   thiếu bằng chứng; không chạy lại các thao tác đã đạt hoặc ghi Google thêm.
+4. E: chỉ tính điểm từ kết quả hợp lệ của bộ đã khóa, không từ số phép kiểm
+   mã hoặc đủ đề mục. P06 giữ hoãn. Hướng dẫn và bài demo đã có nhưng chỉ
+   thay biên nhận sau nghiệm thu, không trình bày bản xem lại như lần chạy mới.
+5. F: chỉ sau khi các điều kiện trên đạt mới gộp main, chạy CI main và triển
+   khai đúng mã ảnh. Main vẫn chưa gộp; URL hiện chạy 81665f7, không phải
+   1047eb2. Kiểm ngắn bản cuối và bàn giao rồi dừng chỉnh sửa.
 
 Danh sách này không bảo đảm sẽ đạt ngưỡng khi chưa đo. Nếu hạn mức không
 đủ, phải ghi chưa kiểm, không thay bằng điểm giả. Nghiệm thu giới hạn cho

@@ -56,3 +56,22 @@ async def test_unrelated_headlines_do_not_consume_relevant_source_budget(monkeyp
     # Relevance is not authority or full-text evidence.
     assert sources[0].evidence_kind == "headline"
     assert sources[0].event_date is None
+
+
+async def test_synthesis_and_saved_source_use_identical_bounded_text(monkeypatch):
+    async def fetch(_client, url, _maximum):
+        if "news.google.com" in url:
+            return b"<rss><channel/></rss>"
+        return ("<html><body>" + "Verified source text. " * 700 + "</body></html>").encode()
+
+    monkeypatch.setattr("app.tools.web_research._fetch_with_retry", fetch)
+    context = ToolContext(request_id="same-source", user=SimpleNamespace(id="qa"),
+                          db=SimpleNamespace(), settings=Settings(_env_file=None))
+    sources, blocks = await collect_public_source_bundle(
+        WebResearchInput(domain="example.com", question="Company overview", max_sources=2),
+        context,
+    )
+    assert len(sources) == len(blocks) == 1
+    assert sources[0].evidence_kind == "page_text"
+    assert len(sources[0].evidence_excerpt) <= 9000
+    assert blocks[0].split("\n", 1)[1] == sources[0].evidence_excerpt

@@ -94,6 +94,27 @@ chính thức khi dịch vụ tìm kiếm không cung cấp kết quả vẫn ch
 
 ## Điều kiện dừng sửa phần này
 
+### Kiểm nội bộ trước lượt triển khai tiếp
+
+- Đồng bộ phần chữ trang được đưa vào tổng hợp với phần chữ được lưu để đối
+  chiếu: cùng giới hạn 9.000 ký tự. Trước đây phần tổng hợp có thể nhận thêm
+  3.000 ký tự không còn trong bản nguồn lưu; đây là sai lệch hợp đồng nguồn,
+  chưa có bằng chứng nó gây ra riêng câu Vinamilk đã ghi nhận.
+- Bộ kiểm sáu doanh nghiệp dùng đúng một yêu cầu có cấu trúc, tối đa 60 giây,
+  một lần thử, không tìm kiếm phụ hoặc đổi mô hình. Dùng bộ đếm bảo vệ đang
+  cấu hình thay vì bộ đếm riêng hoặc lượt dự phòng; hết hạn mức thì dừng trước
+  khi tạo kết nối. Báo cáo yêu cầu đúng sáu trường hợp, mỗi trường hợp có ba
+  câu hỏi làm rõ, không ép nguồn tiêu đề thành nội dung trang chính thức.
+- Các nhóm kiểm web, dẫn chứng và cấu trúc đạt 91 phép kiểm trong 6,41 giây.
+  Bộ kiểm ranh giới một lượt sau bổ sung đạt 5 phép kiểm trong 2,02 giây,
+  có phần trùng với đợt trước nên không cộng số mẫu. Có dùng thư viện Google
+  thật với đường truyền giả lập để xác nhận cấu trúc yêu cầu; không gọi Gemini
+  thật. Đã kiểm lỗi 429/503, kết quả thiếu cấu trúc và chặn trước khi gọi khi
+  hết hạn mức. Kiểm quy tắc mã đạt ở các tệp thay đổi trước bước bổ sung cuối.
+- Chưa dùng lượt mô hình đang xin xác nhận, chưa triển khai, chưa nhập vào
+  main. Những phép kiểm này không phải điểm chất lượng câu trả lời hoặc bằng
+  chứng nghiệm thu A/E/F. Không bảo đảm kết quả thực trước khi đọc được báo cáo.
+
 Chỉ đưa một bản triển khai gộp sau khi đường thu thập và tổng hợp đủ bằng chứng
 cho các câu bắt buộc. Lượt xác nhận thật cuối chỉ chạy các đường bị sửa; không
 lặp lại bộ nhớ, lưu kết quả hoặc phép tính đã đạt mà không bị tác động.

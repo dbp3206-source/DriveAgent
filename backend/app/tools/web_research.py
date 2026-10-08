@@ -530,7 +530,9 @@ async def collect_public_source_bundle(
     official_raw = official_result if isinstance(official_result, bytes) else b""
     news_results = results[1:] if official_url else results
     news_payloads = [result for result in news_results if isinstance(result, bytes)]
-    official_text = _html_text(official_raw)
+    # Synthesis and the persisted source snapshot must see identical text.
+    # A longer prompt-only tail cannot be quoted against the bounded receipt.
+    official_text = _html_text(official_raw, maximum=9_000)
     official_available = bool(official_url and len(official_text) >= 80)
     if not news_payloads and not official_available:
         if isinstance(official_result, ToolError):
@@ -567,7 +569,7 @@ async def collect_public_source_bundle(
         raise ToolError("Không có nguồn tin tức để đối chiếu.", code="news_sources_empty")
     sources = ([WebSource(title=f"Website chính thức — {payload.company_name or 'nguồn cung cấp'}",
                          url=official_url, evidence_kind="page_text",
-                         evidence_excerpt=official_text[:9000])] if official_available else [])
+                         evidence_excerpt=official_text)] if official_available else [])
     blocks = [f"[S1] WEBSITE CHÍNH THỨC\n{official_text}"] if official_available else []
     if official_url and not official_available:
         blocks.append(
