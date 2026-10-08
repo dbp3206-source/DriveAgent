@@ -70,6 +70,16 @@ Chúng là bằng chứng nội bộ giữ tại máy, không đăng dữ liệu
 
 ### Phần chưa thể đóng
 
+Kiểm khả năng miễn phí thay thế lúc 09:49 UTC: đúng một yêu cầu tìm kiếm
+với `gemini-2.5-flash-lite`, không thử lại hoặc đổi sang mô hình trả phí.
+Google trả 404; thông báo chứa “no longer available” và “new users”. Chỉ
+lưu các cờ chẩn đoán có/không, không lưu toàn thân lỗi hay khóa. Đây là bằng
+chứng hạn chế truy cập của phương án thay thế, không phải điểm U01. Đã dừng
+gọi lại; tăng bộ đếm Veridra hoặc đợi đặt lại hạn mức không sửa quyền truy cập.
+Biên nhận: `design-work/qa/acceptance-20261008/free_search_capability_probe.json`.
+Để đóng tìm kiếm tự do cần một nguồn tìm kiếm còn hoạt động; không coi chỉ
+đọc địa chỉ do người dùng cung cấp là hoàn tất khả năng tự tìm nguồn.
+
 A còn khả năng tự tìm/đọc nguồn chính thức và chất lượng hồ sơ chưa đều;
 B dùng lại các chuỗi hợp lệ nhưng chưa đủ chứng minh toàn bộ ba quy trình;
 E chưa đủ các tác vụ áp dụng để tính điểm; F chưa nhập main hoặc triển khai
