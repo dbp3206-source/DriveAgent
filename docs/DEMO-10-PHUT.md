@@ -45,26 +45,29 @@ Không dùng câu trả lời của mô hình làm đáp án thay cho hai tệp 
 
 Trong cùng cuộc trò chuyện:
 
-> Đổi giả thuyết giảm thời gian thành 25%; các dữ kiện khác giữ nguyên.
-> Tính lại bằng công cụ, nêu đúng phần thay đổi. Không đọc thêm nguồn.
+> Giữ dữ kiện đã đọc, trình bày lại thành ba câu hỏi cần làm rõ; phân biệt
+> dữ kiện, giả thuyết và điều chưa biết. Không đọc thêm nguồn.
 
-Đối chiếu **24 giờ có thể tiết kiệm**, còn **72 giờ**. Nhắc lại rằng đây là
-giả thuyết, không phải số liệu thực nghiệm. Nếu có dữ kiện khác bị đổi hoặc
-nguồn không được đọc, nêu rõ chưa đạt; không thử lặp để chọn câu trả lời đẹp.
+Đây là đúng lượt hỏi tiếp W01 trong bộ đã khóa, không thêm phép kiểm mới.
+Đối chiếu vẫn **24 người**, **96 giờ/tháng**, mức giảm **20% là giả thuyết**
+và ngân sách chưa xác nhận; có đúng ba câu hỏi. Mở lại kết quả hỏi tiếp đã
+lưu nếu không còn lượt gọi. Nếu dữ kiện bị đổi, nêu rõ chưa đạt; không thử
+lặp để chọn câu trả lời đẹp hoặc dùng việc xem lại như một lần chạy mới.
 
 ## 4:30–6:00 — Kiểm chứng thông tin doanh nghiệp
 
-Mở hồ sơ Bosch đã kiểm, mở liên kết website và các tin được dẫn. Chỉ ra:
+Mở hồ sơ doanh nghiệp có biên nhận đã đạt trên bản nghiệm thu, mở liên kết
+website và các tin được dẫn. Chỉ ra:
 
 - Số liệu tập đoàn toàn cầu không tự trở thành số liệu của đơn vị Việt Nam.
 - Ngày đăng tin không phải ngày sự kiện; nguồn tin tóm lược chưa phải toàn văn.
 - Thông tin chưa có phải ghi chưa xác nhận, không tự gán ngân sách/chức danh.
 
-Chọn đúng hội thoại Bosch của lần kiểm 07/10/2026 trên ef04f01, mã lượt
-`773e348f-8b36-4f7b-9dc4-eb1ff1303efb`. Nói rõ đây là xem lại, không phải
-tin vừa được tìm lại. Ca này đọc web thật và đủ ba câu hỏi, nhưng còn thuật
-ngữ tiếng Anh; chưa được chứng nhận đạt toàn bộ báo cáo. Sau nghiệm thu
-bản cuối, thay bằng đúng biên nhận đã đạt của bản đó, không dùng ngày mặc định.
+Chỉ chọn hội thoại theo mã lượt và bản đã ghi trong báo cáo nghiệm thu;
+nếu là xem lại, nói rõ không phải tin vừa tìm. Hiện chưa có hồ sơ trên bản
+cuối được xác nhận đạt toàn bộ: không dùng kết quả Bosch cũ hoặc kết quả
+Vinamilk nội bộ còn một phần để tuyên bố mục này đã nghiệm thu. Sau khi
+đóng A, điền đúng biên nhận đã đạt; không dùng ngày mặc định hoặc điểm giả.
 Nếu đủ ngân sách và muốn tìm mới, chỉ dùng câu hỏi đã chuẩn bị; không đưa nội
 dung thư riêng vào truy vấn công khai. Mở Nhật ký để đối chiếu lần dùng công cụ
 thật; có công cụ chạy thành công chưa chứng minh mọi kết luận đều đúng.
@@ -114,7 +117,7 @@ nhập lại; Google/Gemini có hạn mức và phụ thuộc dịch vụ bên n
 
 1. Không đổi khóa nhiều lần, tăng bộ đếm bảo vệ hoặc chuyển sang trả phí.
 2. Giữ câu hỏi và mã yêu cầu; nói rõ phần vừa chạy chưa hoàn tất.
-3. Mở nguồn giả lập cùng đáp án, hồ sơ Bosch đã lưu trong hội thoại và kết quả
+3. Mở nguồn giả lập cùng đáp án, hồ sơ đã lưu có biên nhận và kết quả
    Mộc An bản 2. Giới thiệu đây là **xem lại kết quả**, không phải chạy trực tiếp.
 4. Nếu mất mạng, dùng tài liệu nguồn và biên bản đã tải sẵn; không giả giao diện
    đang kết nối hoặc tuyên bố có hành động vừa được thực hiện.
