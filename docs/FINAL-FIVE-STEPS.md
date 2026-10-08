@@ -14,6 +14,15 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Đối soát mới nhất 08/10 sau 09:34 UTC: bản xem xét 8296376 đã qua CI,
+  nhưng chưa triển khai và còn sửa chọn nguồn/tiết kiệm lượt đang kiểm trong
+  máy. Bộ sáu báo cáo gộp không dùng làm nghiệm thu vì lẫn dữ kiện giữa ca;
+  năm ca kiểm riêng không lẫn nguồn khác nhưng chất lượng chưa đều. U01
+  công cụ thật chỉ có tiêu đề, chưa đủ nguồn chính thức. A/E/F chưa đóng;
+  B giữ các biên nhận đã đạt, không chạy lại phần không bị sửa. Không nới
+  hạn mức hoặc chuyển tìm kiếm trả phí. Chi tiết mới nhất nằm ở đầu báo cáo
+  INTERNAL-ANSWER-REVIEW-20261008.md; các mục bên dưới là lịch sử.
+
 - Đã chạy đúng một lượt nội bộ được cho phép ngày 08/10: sáu báo cáo nhận
   đủ nguồn và trả lời, không lỗi kết nối. Chưa nghiệm thu: các lĩnh vực thiếu
   dẫn nguồn, quy mô Vinamilk bị bỏ sót, bối cảnh Bosch và ngôn ngữ chưa đủ

@@ -232,7 +232,7 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
         # context without using the exact words "website chính thức". Keep
         # the existing domain-only gather; never search the contact payload.
         website = re.search(
-            r"\b(?:tìm(?: kiếm)?|đọc|tra cứu|kiểm tra)\s+nguồn\s+công khai"
+            r"\b(?:tìm(?: kiếm)?|đọc|tra cứu|kiểm tra|dùng|sử dụng)\s+nguồn\s+công khai"
             r"(?:\s+thật)?\s+(?:từ|tại)\s*(https://[^\s<>`\"']+)",
             text, re.I,
         )

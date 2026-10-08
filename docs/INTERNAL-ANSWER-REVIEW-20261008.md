@@ -2,8 +2,79 @@
 
 ## Quyết định
 
-Chưa yêu cầu triển khai. Không dùng thêm lượt Gemini trong đợt kiểm nội bộ này.
+Chưa yêu cầu triển khai. Sau khi người dùng cho phép kiểm tiếp, đã thực hiện
+các phép kiểm nội bộ dưới đây; không yêu cầu người dùng chạy lại bản cũ.
 Không mở rộng danh sách nghiệm thu; giữ nguyên phạm vi A/B/E/F, hoãn PDF đã thống nhất.
+
+## Đối soát mới nhất — 08/10/2026, sau 09:34 UTC
+
+### Kết quả thực, không thay bằng điểm kiểm mã
+
+- CI của bản xem xét 8296376 đạt: 1379 phép kiểm máy chủ, 13 bỏ qua,
+  mức phủ 87,46%; 187 phép kiểm giao diện và 12 phép kiểm PostgreSQL đạt.
+  Đường công bố ảnh và triển khai bỏ qua theo điều kiện nhánh. Bản này chưa
+  lên Render; dịch vụ vẫn ở 81665f7. CI này không bao gồm sửa tiếp bên dưới.
+- Lượt gộp sáu doanh nghiệp lúc 09:12 UTC dùng một lần gọi Gemini, mất
+  45,673 giây; 5/6 báo cáo đủ cấu trúc, nhưng KHÔNG phải 5/6 nghiệp vụ đạt.
+  FPT lẫn tên sản phẩm của Viettel trong cùng đầu vào gộp; Samsung thiếu
+  chữ trang. Bộ kiểm gộp không chứng minh sáu phiên trò chuyện độc lập.
+  Không dùng nó để kết luận sản phẩm đã lẫn dữ liệu người dùng hoặc để cấp đạt.
+- Đã kiểm lại bằng bộ điều phối thật, mỗi doanh nghiệp một phiên dữ liệu riêng,
+  chỉ cấp bộ nguồn công khai đã lưu; không có quyền đọc dữ liệu riêng hoặc ghi
+  Google. Đây là nguồn cấp sẵn trong máy, KHÔNG phải Chat đăng nhập trên cloud.
+  FPT, Vinamilk, Samsung, Shopee và Viettel trả lời, mỗi ca một lần gọi chính.
+  Bosch bị giới hạn lượt trong phút chặn trước gọi, không phải lỗi Gemini.
+  FPT không còn lẫn tên sản phẩm Viettel; Vinamilk nêu đúng 14 trang trại và
+  14 nhà máy. Samsung và Viettel còn thiếu tổng quan hữu ích; bộ giới hạn
+  nguồn vẫn có thể thay đoạn thiếu căn cứ bằng nhiều tiêu đề. Chưa cấp đạt
+  toàn bộ báo cáo hoặc chấm điểm E.
+- U01 gọi công cụ web thật lúc 09:34 UTC: hai lượt mô hình, chỉ thu tám
+  tiêu đề tin, không có chữ trang hoặc khoảng ngày từ nguồn chính thức.
+  Ngày máy chủ đúng; câu trả lời chưa đạt. Nhật ký bộ ngắt lỗi của khả năng
+  tìm kiếm ghi loại `provider`, không phải `quota`; kết hợp nhánh dự phòng
+  chỉ nhận 404/429 thì phù hợp với lỗi 404. Mã/thân lỗi gốc không được biên
+  nhận lưu, nên không khẳng định chính xác lý do từ chối hay lỗi hết hạn mức.
+- Kiểm thông tin mô hình bằng API chỉ đọc nhận `models/gemini-2.5-flash`
+  tồn tại. Điều này KHÔNG chứng minh dự án có quyền gọi tìm kiếm; cũng không
+  thể kết luận mô hình đã bị ngừng hoàn toàn. Google hiện công bố giới hạn
+  quyền truy cập dòng 2.5 với dự án mới; tìm kiếm của dòng 3.x không có trong
+  gói miễn phí. Không tự chuyển sang dịch vụ trả phí.
+  Nguồn: https://ai.google.dev/gemini-api/docs/deprecations/ và
+  https://ai.google.dev/gemini-api/docs/pricing, đọc ngày 08/10/2026.
+
+### Sửa chung sau khi tái hiện, chưa triển khai
+
+1. Chọn nguồn: câu “chỉ dùng/sử dụng nguồn công khai” không khớp nhánh đọc
+   website; từ khóa trong câu phủ định về tài liệu trên máy kéo sang nguồn
+   riêng. Đã tái hiện thất bại trước sửa; nhận thêm hai động từ cùng nhóm.
+   Kiểm cả năm cách nói và bảo đảm không đưa dữ liệu riêng vào truy vấn.
+2. Tiết kiệm lượt: đường dự phòng gọi tổng hợp dù chỉ có tiêu đề, trong khi
+   hợp đồng cấm dùng tiêu đề làm căn cứ kết luận. Đã tái hiện rồi bỏ lượt
+   tổng hợp trong trường hợp không có đoạn nguồn. Giữ nguồn, ngày máy chủ
+   và lời giải thích thiếu căn cứ; không nhận đã giải quyết tìm nguồn.
+3. Chẩn đoán: lưu vào nhật ký đúng mã 404/429 khi chuyển dự phòng, không
+   ghi thân lỗi, câu hỏi hoặc khóa. Không nới hạn mức, không tự đổi mô hình.
+
+Kiểm sau sửa: năm nhóm định tuyến, nguồn web, suy luận và thông tin cập nhật
+đạt 123 phép kiểm trong 9,22 giây; kiểm quy tắc mã và khoảng trắng đạt.
+Đợt gộp trước đó 245 đạt/1 thất bại do nguồn giả lập của phép kiểm URL không
+có đoạn chữ, nên nay được dừng trước gọi đúng như ràng buộc mới. Đã bổ sung
+đoạn chữ vào riêng phép kiểm URL để tiếp tục kiểm chặn URL bịa; không nới
+bộ chặn trong sản phẩm hoặc đổi kết quả thật thành đạt. 123 kiểm có phần
+trùng với đợt gộp, không cộng chúng để tính điểm chất lượng.
+
+Biên nhận riêng: `design-work/qa/acceptance-20261008/isolated-jj4v_qwx/result.json`,
+`isolated-tfwrvyc5/result.json`, `actual-web-093455.json` và
+`design-work/qa/protonx-live-benchmark-20261008T091237720714Z.json`.
+Chúng là bằng chứng nội bộ giữ tại máy, không đăng dữ liệu phiên hoặc khóa.
+
+### Phần chưa thể đóng
+
+A còn khả năng tự tìm/đọc nguồn chính thức và chất lượng hồ sơ chưa đều;
+B dùng lại các chuỗi hợp lệ nhưng chưa đủ chứng minh toàn bộ ba quy trình;
+E chưa đủ các tác vụ áp dụng để tính điểm; F chưa nhập main hoặc triển khai
+bản xem xét. Công cụ thanh bên vẫn lỗi khởi tạo; không vượt đăng nhập qua
+cookie hoặc SQL. Không tuyên bố sẵn sàng vận hành từ kết quả kiểm mã.
 
 ## Hai câu trả lời thật đã kiểm
 

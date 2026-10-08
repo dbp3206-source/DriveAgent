@@ -102,6 +102,19 @@ def test_customer_consultation_still_respects_web_prohibition():
     assert not any(source.tool == "web_research" for source in route.sources)
 
 
+def test_company_public_source_selection_accepts_use_verbs_without_private_search():
+    for verb in ("Chỉ dùng", "Sử dụng", "Đọc", "Tìm", "Tra cứu"):
+        route = route_request(
+            f"Đầu vào giả lập: khách hàng có ngân sách riêng 12345. {verb} nguồn công khai "
+            "từ https://example.org/company để lập báo cáo chuẩn bị tư vấn ngắn. "
+            "Không đọc Gmail, Drive, lịch, tài liệu trên máy hoặc bộ nhớ; không ghi dữ liệu."
+        )
+        assert route.required_sources == ("web",), verb
+        assert [source.tool for source in route.sources] == ["web_research"]
+        assert route.sources[0].arguments["domain"] == "https://example.org/company"
+        assert "12345" not in route.sources[0].arguments["question"]
+
+
 def test_explicit_web_prohibition_blocks_company_website_gather():
     route = route_request(
         "Hồ sơ doanh nghiệp có website chính thức https://example.org. "

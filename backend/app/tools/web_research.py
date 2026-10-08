@@ -8,6 +8,7 @@ as citations, and uses a normal Gemini call only to summarize the bounded bundle
 
 import asyncio
 import ipaddress
+import logging
 import re
 import socket
 from datetime import UTC, datetime, timedelta
@@ -31,6 +32,8 @@ from app.services.inference_gateway import create_inference_client, provider_err
 from app.services.quota import conservative_tokens
 from app.services.relational_quota import quota_guard
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
+
+logger = logging.getLogger(__name__)
 
 
 class WebResearchInput(BaseModel):
@@ -323,7 +326,7 @@ def _safe_unverified_bundle_summary(
         rows.append(f"- {source.title} — {published} [S{index}]")
     return (
         "Chưa có đủ bằng chứng để trả lời phần thông tin web trong câu hỏi. "
-        "Bản tổng hợp chưa đạt kiểm tra dẫn nguồn, nên chưa thể đưa ra kết luận. "
+        "Chưa đọc được hoặc xác nhận đủ nội dung nguồn để đưa ra kết luận. "
         "Veridra không khẳng định lịch, giá, chức vụ hoặc sự kiện từ trí nhớ "
         "hay từ việc không thấy kết quả.\n\n"
         "Nguồn thu thập được (không thay cho kết luận đã xác minh):\n" + "\n".join(rows)
@@ -335,7 +338,31 @@ async def _source_bundle_fallback(
     context: ToolContext,
 ) -> WebResearchOutput:
     sources, blocks = await collect_public_source_bundle(payload, context)
+    if not any(source.evidence_kind != "headline" and source.evidence_excerpt
+               for source in sources):
+        # No model can recover missing page evidence from headline-only input.
+        # Preserve the limitation and clock without consuming a synthesis call.
+        return WebResearchOutput(
+            summary=_with_requested_clock(
+                _safe_unverified_bundle_summary(payload, sources), payload),
+            sources=sources,
+            observed_at=datetime.now(UTC),
+            model="public-source-bundle",
+        )
     return await _reason_over_sources(payload, context, sources, blocks)
+
+
+def _with_requested_clock(text: str, payload: WebResearchInput) -> str:
+    # The server clock answers a date question, never an event or meeting date.
+    if re.search(r"\bhôm nay\b[^?!.\n]{0,90}\b(?:ngày nào|ngày mấy)\b",
+                 payload.question, re.I):
+        current = datetime.fromisoformat(server_time_context(payload.timezone)["now"])
+        zone_label = (
+            "giờ Việt Nam" if payload.timezone in {"Asia/Bangkok", "Asia/Ho_Chi_Minh"}
+            else f"múi giờ {payload.timezone}"
+        )
+        return f"Hôm nay theo {zone_label} là {current:%d/%m/%Y} (đồng hồ máy chủ).\n\n" + text
+    return text
 
 
 def _render_public_answer(answer: PublicAnswer, sources: list[WebSource]) -> str:
@@ -462,18 +489,8 @@ async def _reason_over_sources(
         text = _render_public_answer(answer, sources)
     except ValueError:
         text = _safe_unverified_bundle_summary(payload, sources)
-    # Answer an explicit request for today's date independently of web evidence.
-    # Never replace a meeting date or an event date with the server clock.
-    if re.search(r"\bhôm nay\b[^?!.\n]{0,90}\b(?:ngày nào|ngày mấy)\b",
-                 payload.question, re.I):
-        current = datetime.fromisoformat(server_time_context(payload.timezone)["now"])
-        zone_label = (
-            "giờ Việt Nam" if payload.timezone in {"Asia/Bangkok", "Asia/Ho_Chi_Minh"}
-            else f"múi giờ {payload.timezone}"
-        )
-        text = f"Hôm nay theo {zone_label} là {current:%d/%m/%Y} (đồng hồ máy chủ).\n\n" + text
     return WebResearchOutput(
-        summary=text,
+        summary=_with_requested_clock(text, payload),
         sources=sources,
         observed_at=datetime.now(UTC),
         model=f"{context.settings.gemini_chat_model}+evidence-reasoning",
@@ -684,9 +701,9 @@ async def web_research(payload: WebResearchInput, context: ToolContext) -> WebRe
             ),
         )
     except genai_errors.ClientError as exc:
-        if exc.code == 404:
-            return await _source_bundle_fallback(payload, context)
-        if exc.code == 429:
+        if exc.code in {404, 429}:
+            # Bounded diagnostics only: never log the provider body or key.
+            logger.warning("Public web search fallback: provider_http_%d", exc.code)
             return await _source_bundle_fallback(payload, context)
         raise ToolError(
             "Gemini từ chối web research; không có kết quả web nào được dùng.",

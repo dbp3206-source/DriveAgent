@@ -212,13 +212,14 @@ async def test_bundle_replaces_model_answer_with_invented_url(monkeypatch):
 
     from app.tools.web_research import _source_bundle_fallback
 
-    sources = [WebSource(title="Nguồn thật", url="https://example.com/actual")]
+    sources = [WebSource(title="Nguồn thật", url="https://example.com/actual",
+                         evidence_kind="page_text", evidence_excerpt="Lịch sự kiện đã công bố.")]
     client = SimpleNamespace(
         aio=SimpleNamespace(models=SimpleNamespace(generate_content=AsyncMock(
             return_value=SimpleNamespace(text="Đang diễn ra [S1] https://fake.example/news"))),
             aclose=AsyncMock()), close=Mock())
     monkeypatch.setattr("app.tools.web_research.collect_public_source_bundle",
-                        AsyncMock(return_value=(sources, ["[S1] Chỉ có tiêu đề"])))
+                        AsyncMock(return_value=(sources, ["[S1] Lịch sự kiện đã công bố."])))
     monkeypatch.setattr("app.tools.web_research.create_inference_client", lambda **_: client)
     reserve = Mock()
     monkeypatch.setattr("app.tools.web_research.quota_guard",
@@ -313,7 +314,7 @@ async def test_public_fetch_rejects_credentials_and_nonstandard_ports(url):
 
 @pytest.mark.parametrize("status", [404, 429])
 async def test_unavailable_grounding_uses_readonly_bundle_not_paid_search(monkeypatch, tmp_path,
-                                                                       status):
+                                                                       caplog, status):
     from unittest.mock import AsyncMock, Mock
 
     from google.genai.errors import ClientError
@@ -325,7 +326,8 @@ async def test_unavailable_grounding_uses_readonly_bundle_not_paid_search(monkey
                                sources=[WebSource(title="News", url="https://news.google.com/a")],
                                observed_at=WebSource(title="x", url="https://example.com").accessed_at,
                                model="normal-chat+source-bundle")
-    generate = AsyncMock(side_effect=ClientError(status, {"error": {"message": "unavailable"}}))
+    generate = AsyncMock(side_effect=ClientError(status, {"error": {
+        "message": "private prompt and secret must not enter diagnostics"}}))
     client = SimpleNamespace(aio=SimpleNamespace(models=SimpleNamespace(generate_content=generate),
                                                 aclose=AsyncMock()), close=Mock())
     fallback = AsyncMock(return_value=result)
@@ -338,5 +340,7 @@ async def test_unavailable_grounding_uses_readonly_bundle_not_paid_search(monkey
     assert await web_research(WebResearchInput(question="Schedule today"), context) is result
     assert generate.await_count == 1 and fallback.await_count == 1
     assert generate.call_args.kwargs["model"] == "gemini-2.5-flash"
+    assert f"provider_http_{status}" in caplog.text
+    assert "private prompt" not in caplog.text and "secret" not in caplog.text
     client.aio.aclose.assert_awaited_once()
     client.close.assert_called_once()

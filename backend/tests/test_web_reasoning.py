@@ -19,7 +19,28 @@ from app.tools.web_research import (
     WebSource,
     _reason_over_sources,
     _render_public_answer,
+    _source_bundle_fallback,
 )
+
+
+async def test_headline_only_fallback_does_not_spend_another_model_call(monkeypatch):
+    source = WebSource(title="Lịch sự kiện", url="https://news.google.com/articles/test",
+                       evidence_kind="headline", evidence_excerpt="Chỉ đọc tiêu đề.")
+    collect = AsyncMock(return_value=([source], ["[S1] Chỉ đọc tiêu đề."]))
+    synthesize = AsyncMock()
+    monkeypatch.setattr("app.tools.web_research.collect_public_source_bundle", collect)
+    monkeypatch.setattr("app.tools.web_research._reason_over_sources", synthesize)
+    monkeypatch.setattr("app.tools.web_research.server_time_context",
+                        lambda _: {"now": "2026-10-08T15:00:00+07:00"})
+    output = await _source_bundle_fallback(WebResearchInput(
+        question="Hôm nay theo giờ Việt Nam là ngày nào? Sự kiện còn diễn ra không?"),
+        SimpleNamespace(settings=Settings(_env_file=None)))
+    synthesize.assert_not_awaited()
+    assert output.model == "public-source-bundle"
+    assert "08/10/2026 (đồng hồ máy chủ)" in output.summary
+    assert "Chưa có đủ bằng chứng" in output.summary
+    assert "chưa đạt kiểm tra dẫn nguồn" not in output.summary
+    assert output.sources == [source]
 
 
 def test_inference_is_explained_and_bound_to_its_actual_premise():
