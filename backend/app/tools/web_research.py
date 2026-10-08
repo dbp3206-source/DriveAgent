@@ -384,6 +384,19 @@ async def _collect_tavily_source_bundle(
              if payload.company_name else
              f"site:{urlsplit(official).hostname} giới thiệu sản phẩm dịch vụ tin mới"
              if official else _public_query_topic(payload.question)[0])
+    if not payload.company_name and not official:
+        query = re.sub(
+            r"\b(?:còn\s+)?(?:đang\s+)?diễn\s+ra\s+(?:không|khi\s+nào|lúc\s+nào)\b",
+            "", query, flags=re.I,
+        ).strip()
+        # Response controls stay out of discovery, but evidence requirements
+        # must survive normalization. Otherwise Vietnamese current-event
+        # questions find only local press rather than the event organizer.
+        if re.search(r"nguồn\s+chính\s+thức|website\s+chính\s+thức|official",
+                     payload.question, re.I):
+            query += " official website"
+        if re.search(r"lịch|khoảng\s+ngày|ngày\s+sự\s+kiện|diễn\s+ra", payload.question, re.I):
+            query += " schedule dates"
     if SECRET_TEXT.search(query):
         raise ToolError("Câu tìm kiếm chứa thông tin bí mật; hãy bỏ khóa hoặc mật khẩu.",
                         code="private_search_query")
@@ -454,7 +467,8 @@ async def _collect_tavily_source_bundle(
         # official. Missing raw text may be read directly, with one bounded GET.
         if official:
             host = urlsplit(official).hostname
-            candidates.sort(key=lambda item: urlsplit(item[0]).hostname != host)
+            candidates.sort(key=lambda item: (item[0] != official,
+                                               urlsplit(item[0]).hostname != host))
 
         async def read(candidate: tuple[str, str, str]) -> WebSource | None:
             url, title, text = candidate
@@ -798,6 +812,17 @@ async def web_research(payload: WebResearchInput, context: ToolContext) -> WebRe
     if (context.settings.tavily_api_key is not None
             and context.settings.tavily_api_key.get_secret_value().strip()):
         sources, blocks = await collect_tavily_source_bundle(payload, context)
+        if (context.source == "compiler_gather"
+                and context.metadata.get("defer_web_synthesis") is True):
+            # The compiler will reason over these same original page excerpts
+            # with the user's consultation context. Do not summarize twice or
+            # turn an intermediary summary into a substitute for source text.
+            return WebResearchOutput(
+                summary=("Đã thu nội dung nguồn công khai để lập báo cáo. "
+                         "Đây chưa phải câu trả lời hoặc kết luận. Đối chiếu từng "
+                         "nhận định với đoạn nguồn gốc và phạm vi, ngày của nguồn."),
+                sources=sources, observed_at=datetime.now(UTC), model="tavily-basic-page-bundle",
+            )
         return await _reason_over_sources(payload, context, sources, blocks)
     prompt = (
         (

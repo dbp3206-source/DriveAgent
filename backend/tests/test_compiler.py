@@ -42,6 +42,8 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
 
     async def execute(name, arguments, context):
         calls.append(name)
+        assert context.source == "compiler_gather"
+        assert context.metadata == {"defer_web_synthesis": True}
         return WebResearchOutput(
             summary="Dữ kiện doanh nghiệp [S1]. Tiêu đề tin [S2].",
             sources=[

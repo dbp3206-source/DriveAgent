@@ -8,6 +8,44 @@ Không mở rộng danh sách nghiệm thu; giữ nguyên phạm vi A/B/E/F, ho�
 
 ## Đối soát mới nhất — 08/10/2026, sau 09:34 UTC
 
+### Cập nhật 13:02 UTC — nguồn đã đọc, mô hình quá tải
+
+Khóa tìm kiếm đã cấu hình tại máy, không đọc/công bố giá trị. Tìm nguồn U01
+theo nguyên câu hỏi đã khóa trả sáu trang trong 4,051 giây; có trang Hội đồng
+Olympic châu Á và Chính phủ Nhật Bản. Trang Chính phủ có khoảng 19/9–4/10/2026,
+tách riêng kỳ thể thao người khuyết tật. Không gắn cứng đáp án, URL hoặc ngày
+vào mã. Biên nhận: validation/public-source-probe-20261008T124958073597Z.json.
+Đây là thu nguồn thật, chưa chứng minh câu trả lời cuối đúng hoặc nghiệm thu cloud.
+
+Hai nguyên nhân được sửa chung: truy vấn bỏ mất yêu cầu nguồn chính thức và
+khoảng ngày; đường báo cáo tổng hợp nguồn hai lần. Nay truy vấn giữ yêu cầu
+bằng chứng, ưu tiên đúng trang được chỉ định. Báo cáo dùng văn bản gốc trong
+một lượt tổng hợp cuối; câu hỏi web độc lập vẫn có lượt suy luận và kiểm nguồn.
+Cờ hoãn tổng hợp trung gian chỉ do bộ điều phối đặt. 139 phép kiểm đạt trong
+11,19 giây trước bổ sung kiểm bảo vệ cờ và bộ điều phối; không gọi dịch vụ thật.
+
+Đợt gộp sau cùng đạt 359 phép kiểm trong 134,81 giây: nguồn, suy luận,
+định tuyến, bộ điều phối thật với biên mô hình giả lập, định dạng, bộ nhớ,
+điều kiện phát hành và quét bí mật. Bốn nhóm đánh giá ngoại tuyến đạt
+(12/12 định tuyến, 12/12 bộ đánh giá, 16/16 hợp đồng trả lời, 160/160
+kiểm biến đổi); không gọi mô hình hoặc ghi cloud. Quy tắc mã máy chủ/script
+và khoảng trắng đạt; quét 566 tệp Git thấy được không phát hiện bí mật.
+Các bộ có phần trùng nhau, không cộng thành điểm chất lượng nghiệp vụ.
+Biên nhận ngoại tuyến: validation/release-evaluation-tavily-final.json.
+
+company-02 dùng công cụ, bộ điều phối và phiên thử tách biệt thật: sáu nguồn,
+đúng một lượt Gemini, tổng 10,656 giây; không đọc nguồn riêng hoặc ghi Google.
+Google trả HTTP 503 UNAVAILABLE, thông báo mô hình đang quá tải. Lỗi quan sát
+trong đầu ra thực thi; biên nhận vẫn giữ trạng thái chưa nghiệm thu, không có
+báo cáo để chấm: acceptance-20261008/tavily-pipeline-cuxr0fl_/result.json.
+Ngân sách tại máy tăng 10 → 11/16, còn năm lượt; đây không phải hết ngân sách.
+Không gọi lại hoặc tăng giới hạn. Các câu tiếp theo trong đợt gộp không chạy.
+
+A chưa đóng chất lượng cuối; B giữ kết quả hợp lệ cũ, W01 vẫn thiếu độ dài;
+E chưa có đủ kết quả áp dụng để cấp điểm; F chưa gộp main. Chưa yêu cầu triển
+khai bản chưa có đầu ra đạt. Tài liệu phía dưới là lịch sử, không phải trạng thái
+khóa hiện hành. Không biến lỗi dịch vụ ngoài thành đạt hoặc sửa quanh một mẫu.
+
 ### Bổ sung sau chấp thuận nguồn tìm kiếm miễn phí
 
 Người dùng đã đồng ý Tavily miễn phí. Đã triển khai trong máy đường tìm

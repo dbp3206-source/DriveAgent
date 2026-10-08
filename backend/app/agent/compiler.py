@@ -719,6 +719,7 @@ class CompilerOrchestrator:
                             db=db,
                             settings=self.settings,
                             source="compiler_gather",
+                            metadata={"defer_web_synthesis": True},
                         ),
                     )
                     source_data = source_result.model_dump(mode="json")

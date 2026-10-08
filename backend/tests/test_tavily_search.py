@@ -26,7 +26,7 @@ PAGE = "Event dates are 19 September 2026 through 4 October 2026. " * 3
 
 @pytest.fixture
 def context():
-    return SimpleNamespace(settings=Settings(
+    return SimpleNamespace(source="api", metadata={}, settings=Settings(
         _env_file=None, gemini_api_key="test-model-key", tavily_api_key=KEY))
 
 
@@ -62,7 +62,7 @@ async def test_basic_search_page_text_and_bounded_public_query(monkeypatch, cont
         question="ASIAD 2026 diễn ra lúc nào? Không dùng Gmail. Hôm nay là ngày nào?"), context)
     assert len(requests) == 1
     body = json.loads(requests[0].content)
-    assert body["query"] == "ASIAD 2026 diễn ra lúc nào"
+    assert body["query"] == "ASIAD 2026 schedule dates"
     assert body["search_depth"] == "basic" and body["auto_parameters"] is False
     assert body["include_answer"] is False and body["include_raw_content"] == "text"
     assert body["max_results"] <= 6 and "include_domains" not in body
@@ -178,10 +178,47 @@ async def test_tavily_path_skips_native_google_and_synthesizes_once(monkeypatch,
     monkeypatch.setattr("app.tools.web_research.collect_tavily_source_bundle", collect)
     monkeypatch.setattr("app.tools.web_research._reason_over_sources", reason)
     monkeypatch.setattr("app.tools.web_research.create_inference_client", native_client)
+    context.source = "compiler_gather"
+    context.metadata = {}
     assert await web_research(WebResearchInput(question="Event dates"), context) == output
     collect.assert_awaited_once()
     reason.assert_awaited_once()
     native_client.assert_not_called()
+
+
+async def test_server_selected_gather_defers_only_the_intermediate_synthesis(monkeypatch, context):
+    from app.tools.web_research import WebSource
+
+    source = WebSource(title="Public page", url="https://example.com",
+                       evidence_kind="page_text", evidence_excerpt=PAGE)
+    collect = AsyncMock(return_value=([source], [PAGE]))
+    reason = AsyncMock(side_effect=AssertionError("Compiler will synthesize the final report"))
+    monkeypatch.setattr("app.tools.web_research.collect_tavily_source_bundle", collect)
+    monkeypatch.setattr("app.tools.web_research._reason_over_sources", reason)
+    context.source = "compiler_gather"
+    context.metadata = {"defer_web_synthesis": True}
+    result = await web_research(WebResearchInput(company_name="Example"), context)
+    assert result.sources == [source]
+    assert result.model == "tavily-basic-page-bundle"
+    assert "chưa phải câu trả lời" in result.summary
+    reason.assert_not_awaited()
+
+
+@pytest.mark.parametrize("source, flag", [("api", True), ("compiler_gather", "true"),
+                                         ("compiler_gather", False)])
+async def test_deferral_requires_both_server_source_and_exact_boolean(
+    monkeypatch, context, source, flag,
+):
+    output = WebResearchOutput(summary="Reasoned answer", sources=[],
+                               observed_at="2026-10-08T00:00:00Z", model="test")
+    monkeypatch.setattr("app.tools.web_research.collect_tavily_source_bundle",
+                        AsyncMock(return_value=([], [])))
+    reason = AsyncMock(return_value=output)
+    monkeypatch.setattr("app.tools.web_research._reason_over_sources", reason)
+    context.source = source
+    context.metadata = {"defer_web_synthesis": flag}
+    assert await web_research(WebResearchInput(question="Public question"), context) == output
+    reason.assert_awaited_once()
 
 
 async def test_private_redirect_is_blocked_and_partial_good_sources_survive(monkeypatch, context):
@@ -255,3 +292,24 @@ async def test_long_raw_content_and_duplicate_urls_are_bounded(monkeypatch, cont
         WebResearchInput(question="Dates"), context)
     assert len(sources) == 1 and len(sources[0].evidence_excerpt) == 9000
     assert sources[0].evidence_excerpt in blocks[0]
+
+
+@pytest.mark.parametrize("topic, auxiliary", [("ASIAD 2026", "còn đang diễn ra không"),
+                                             ("Lễ hội hoa Nhật Bản", "diễn ra khi nào")])
+async def test_official_source_and_date_requirements_survive_query_normalization(
+    monkeypatch, context, topic, auxiliary,
+):
+    queries = []
+
+    def handler(request):
+        queries.append(json.loads(request.content)["query"])
+        return httpx.Response(200, json={"results": [
+            {"url": "https://example.com/event", "raw_content": PAGE}]})
+
+    mock_http(monkeypatch, handler)
+    await collect_tavily_source_bundle(WebResearchInput(
+        question=f"Hôm nay theo giờ Việt Nam là ngày nào? {topic} {auxiliary}? "
+        "Chỉ kết luận từ nguồn chính thức và nêu khoảng ngày sự kiện; "
+        "không đọc Gmail hoặc dữ liệu riêng."), context)
+    assert queries == [f"{topic} official website schedule dates"]
+    assert "Gmail" not in queries[0] and "dữ liệu riêng" not in queries[0]

@@ -14,6 +14,20 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 08/10 lúc 13:02 UTC: khóa Tavily ở máy đã cấu hình, nguồn thật
+  đọc được. U01 thu được trang của Hội đồng Olympic châu Á và Chính phủ
+  Nhật Bản, có khoảng ngày; chưa chấm câu trả lời. company-02 chạy công cụ
+  và bộ điều phối thật, sáu nguồn, bỏ tổng hợp trung gian: đúng một lượt
+  Gemini. Google trả 503 vì mô hình quá tải sau toàn lượt 10,656 giây;
+  không gọi lại, không đặt lại ngân sách (11/16, còn năm lượt tại máy).
+  Đây không phải nghiệm thu cloud. A còn chất lượng đầu ra; B giữ biên
+  nhận hợp lệ, W01 còn giới hạn độ dài; E chưa đủ kết quả để tính điểm;
+  F chưa gộp main hoặc triển khai. Chi tiết và nguồn gốc biên nhận tại
+  TAVILY-FREE-SETUP.md. Không thêm công việc ngoài năm bước đã khóa.
+  Các mục dưới đây là lịch sử, không phải trạng thái cấu hình khóa hiện tại.
+  Đợt kiểm gộp cuối 359 đạt/134,81 giây; bốn nhóm ngoại tuyến, kiểm quy tắc
+  mã và quét 566 tệp đạt. Đây là kiểm mã, không phải điểm nghiệp vụ E.
+
 - Cập nhật 08/10 sau khi người dùng đồng ý Tavily miễn phí: đã bổ sung
   cấu hình khóa chỉ ở máy chủ và đường tìm nguồn có văn bản trang, bỏ lần
   tìm kiếm Gemini bị từ chối khi có Tavily. Đợt gộp cuối đạt 186 phép kiểm trong máy;

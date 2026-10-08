@@ -22,9 +22,11 @@ phạm vi A/B/E/F, không bật trả phí hoặc nới hạn mức Gemini.
   Tối đa sáu kết quả. Dùng văn bản trang do Tavily trích xuất; nếu thiếu,
   thử đọc trang trực tiếp một lần. Không dùng đoạn giới thiệu tìm kiếm làm
   bằng chứng đã đọc trang. Nội dung lưu và nội dung dùng suy luận giống nhau.
-- Sau đó tổng hợp một lần bằng Gemini hiện có, kiểm trích đoạn và nguồn.
-  Bỏ lần gọi Gemini Search vốn đang bị từ chối. Bộ điều phối vẫn có thể cần
-  một lượt riêng để ghép báo cáo tư vấn; không tuyên bố toàn Chat chỉ một lượt.
+- Câu hỏi web độc lập: tổng hợp một lần bằng Gemini hiện có, kiểm trích
+  đoạn và nguồn. Báo cáo tư vấn: công cụ chỉ thu văn bản gốc, bộ điều phối
+  tổng hợp báo cáo cuối; bỏ lượt tổng hợp trung gian. Cờ chọn đường này do
+  máy chủ đặt, không phải tham số người dùng. Lượt sửa cấu trúc nếu thật sự
+  cần vẫn có giới hạn; không tuyên bố mọi câu hỏi luôn chỉ một lượt.
 - Tìm kiếm/đọc nguồn có giới hạn tổng 25 giây. Nội dung trả tối đa 2 MB;
   mỗi đoạn trang tối đa 9.000 ký tự. Chặn URL nội bộ và đường chuyển hướng
   nội bộ. Khóa chỉ gửi tới API Tavily, không chuyển tới các website nguồn.
@@ -61,9 +63,25 @@ khóa, dùng đúng một lần `scripts/qa_protonx_source_probe.py company-02 U
 Biên nhận văn bản nguồn và thời gian nằm riêng trong thư mục QA bị Git bỏ
 qua. Nhãn `collected` chỉ nghĩa đã thu dữ liệu, không nghĩa nghiệm thu đạt.
 
-Chưa có khóa Tavily để kiểm nguồn thật; chưa đóng A/E/F hoặc chấm điểm.
-Tiếp theo chỉ kiểm nguồn/câu trả lời của các ca còn thiếu trong bộ đã khóa,
-ưu tiên company-02 và U01; không chạy lại phần bộ nhớ đã có biên nhận hợp lệ.
+Đã nhận cấu hình khóa tại máy và kiểm nguồn thật ngày 08/10, không đọc hoặc
+công bố khóa. U01 tìm được văn bản từ Hội đồng Olympic châu Á và Chính phủ
+Nhật Bản chứa khoảng ngày sự kiện. Đây là thu nguồn, chưa phải nghiệm thu
+câu trả lời. Chọn trang chính thức người dùng đã đưa trước tài liệu phụ;
+truy vấn giữ yêu cầu nguồn chính thức/khoảng ngày, bỏ cụm hỏi đóng không
+cần cho tìm kiếm. Không gắn cứng tên sự kiện, ngày hoặc URL vào sản phẩm.
+
+Báo cáo company-02 chạy bộ điều phối và công cụ thật trong phiên thử riêng:
+đọc sáu nguồn, đúng một lượt Gemini, không đọc dữ liệu riêng hoặc ghi Google.
+Google trả 503 UNAVAILABLE, thông báo mô hình đang quá tải; toàn lượt 10,656
+giây, chưa có báo cáo để chấm. Không chạy lại, không đặt lại hạn mức. Bộ đếm
+tại máy tăng đúng 10 → 11/16; còn năm lượt, không phải hết ngân sách.
+Biên nhận tại design-work/qa/acceptance-20261008/tavily-pipeline-cuxr0fl_/result.json;
+mã 503 được quan sát trực tiếp trong đầu ra thực thi, không suy từ biên nhận
+chỉ ghi chưa nghiệm thu. Đường web đã thu nguồn, nhưng chất lượng cuối cần
+kiểm khi mô hình hoạt động trở lại. A/E/F vẫn chưa đóng.
+
+Tiếp theo chỉ kiểm câu trả lời của các ca còn thiếu trong bộ đã khóa;
+không chạy lại phần bộ nhớ đã có biên nhận hợp lệ.
 Nếu nội dung thật không đạt thì giữ trạng thái chưa đạt, không coi CI hoặc
 kiểm giả lập là nghiệm thu nghiệp vụ.
 
