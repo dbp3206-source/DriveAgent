@@ -48,6 +48,19 @@ trang, URL/chuyển hướng nội bộ, dữ liệu quá lớn, lỗi mạng v�
 quét 565 tệp Git thấy được không phát hiện bí mật. Các bộ có phần trùng nhau,
 không cộng số lượng và không dùng chúng làm điểm chất lượng câu trả lời.
 
+Bản mã ứng dụng `53c96eeada85e322ed45055030dc60db0d294f9f` đã qua kiểm
+tự động GitHub `37762947341`; hai công việc PostgreSQL và verify đều hoàn
+tất thành công. Chưa triển khai bản này hoặc cấp đạt nghiệp vụ từ CI.
+
+Đã đồng bộ bộ kiểm nguồn `qa_protonx_source_probe.py` với nhà cung cấp đang
+cấu hình. Tên ca sai bị chặn trước gửi yêu cầu; trang của bên thứ ba không
+được gán là website chính thức. Ca U01 lấy nguyên câu hỏi trong bộ đã khóa.
+Ba phép kiểm của bộ đo đạt trong 2,49 giây, không gọi mạng/mô hình. Khi có
+khóa, dùng đúng một lần `scripts/qa_protonx_source_probe.py company-02 U01`
+để thu nguồn công khai trước khi dành lượt Gemini cho chất lượng câu trả lời.
+Biên nhận văn bản nguồn và thời gian nằm riêng trong thư mục QA bị Git bỏ
+qua. Nhãn `collected` chỉ nghĩa đã thu dữ liệu, không nghĩa nghiệm thu đạt.
+
 Chưa có khóa Tavily để kiểm nguồn thật; chưa đóng A/E/F hoặc chấm điểm.
 Tiếp theo chỉ kiểm nguồn/câu trả lời của các ca còn thiếu trong bộ đã khóa,
 ưu tiên company-02 và U01; không chạy lại phần bộ nhớ đã có biên nhận hợp lệ.
