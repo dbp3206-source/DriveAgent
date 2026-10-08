@@ -176,6 +176,31 @@ async def test_real_calculator_replaces_results_and_records_tool():
     assert result.proposals == []
 
 
+async def test_calculator_evidence_survives_for_presentation_without_trace_content():
+    class Registry:
+        async def execute(self, name, arguments, context):
+            return calculate(CalculateInput.model_validate(arguments))
+
+    wire = validate_calculation_payload(json.dumps({
+        "answer": "Nền {{calc:0}}, giảm giả định {{calc:1}}, còn {{calc:2}} phút.",
+        "expressions": ["17*9*22", "17*9*22*20/100", "17*9*22*(1-20/100)"],
+    }))
+    evidence = {"existing": "kept"}
+    trace = []
+    result = await resolve_calculations(
+        wire, Registry(), None, trace, verified_calculations=evidence,
+    )
+    assert evidence == {
+        "existing": "kept", "source_calculations": [
+            {"expression": "17*9*22", "result": "3366"},
+            {"expression": "17*9*22*20/100", "result": "673.2"},
+            {"expression": "17*9*22*(1-20/100)", "result": "2692.8"},
+        ],
+    }
+    assert result.answer == "Nền 3366, giảm giả định 673.2, còn 2692.8 phút."
+    assert trace == [{"stage": "tool", "tool": "calculate", "status": "success"}]
+
+
 def test_provider_contract_is_shallow_and_requires_expressions():
     schema = CalculatedWireAnswer.provider_schema()
     assert "expressions" in schema["required"]

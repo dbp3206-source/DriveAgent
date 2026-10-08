@@ -1,6 +1,7 @@
 """Bounded arithmetic for source-backed synthesis; no extra model loop or writes."""
 
 import re
+from typing import Any
 
 from pydantic import Field
 
@@ -36,6 +37,10 @@ SOURCE_CALCULATION_INSTRUCTION = (
     "Phân biệt % với điểm phần trăm; kết quả giữ trạng thái dự báo/kế hoạch/ước tính "
     "của đầu vào và nêu ngày nguồn nếu có. Công cụ chỉ kiểm tra số học, "
     "không xác minh đơn vị hay ý nghĩa dữ liệu. "
+    "Khi tính tác động của mức giảm/tăng, phân biệt giá trị ban đầu, phần thay đổi "
+    "và giá trị sau thay đổi; nếu cần các đại lượng này để trả lời thì đưa mỗi "
+    "đại lượng vào expressions và gọi rõ tên trong answer. Không gọi giá trị còn "
+    "lại là phần tiết kiệm hoặc gọi dự tính là hiệu quả đã đo. "
     + SOURCE_NUMERIC_FIDELITY_INSTRUCTION
     + " "
     "Trong answer thay mọi kết quả tính bằng {{calc:0}}, {{calc:1}}, ... "
@@ -137,12 +142,24 @@ def validate_calculation_payload(raw: str) -> CalculatedWireAnswer:
     return wire
 
 
-async def resolve_calculations(wire, registry, context: ToolContext, trace: list) -> WireAnswer:
+async def resolve_calculations(
+    wire, registry, context: ToolContext, trace: list, *,
+    verified_calculations: dict[str, Any] | None = None,
+) -> WireAnswer:
     result = await registry.execute(
         "calculate", {"operation": "expressions", "values": wire.expressions}, context
     )
     if len(result.results) != len(wire.expressions):
         raise ValueError("calculation_result_count_mismatch")
+    if verified_calculations is not None:
+        # Retain only arithmetic actually executed for this request. The next
+        # presentation pass must not reconstruct results or lose their formula.
+        # Units, source scope and semantic labels are NOT verified by a calculator.
+        # Keep this evidence in request memory, never in the public run trace.
+        verified_calculations["source_calculations"] = [
+            {"expression": expression, "result": value}
+            for expression, value in zip(wire.expressions, result.results, strict=True)
+        ]
     answer = wire.answer
     for index, value in enumerate(result.results):
         answer = answer.replace("{{calc:" + str(index) + "}}", value)

@@ -14,6 +14,23 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 08/10 sau 15:06 UTC: người dùng đã chạy W01 trên cloud.
+  Tác vụ c6c9f064-2380-4222-99f3-a3b0419c40eb hoàn tất, nhưng câu trả lời
+  incomplete: 164 tiếng/số, dưới yêu cầu 200–240. Đọc đủ hai tệp, dùng
+  24 người đã sửa, giữ ba câu hỏi. 4608 phút là thời gian còn lại đúng
+  theo giả thuyết, nhưng chưa gọi rõ đại lượng và thiếu nền 5760/phần
+  giảm 1152 theo đáp án đã khóa. Đây không phải lỗi không phản hồi.
+  Đã tái hiện khoảng hở truyền kết quả công cụ sang lượt sửa và sửa
+  chung; 267 kiểm trong máy đạt, không gọi Gemini hoặc ghi cloud.
+  Không coi sửa này đã chứng minh độ dài/chất lượng thực tế đạt.
+  Sổ cloud 16/16; sổ máy 19/20, ba lượt dự phòng đã dùng. Không gọi thêm.
+  Chấm theo đúng tác vụ và nguồn, không so với câu trả lời của trợ lý
+  đánh giá hoặc đòi hỏi suy luận cao cấp; giữ các yêu cầu bắt buộc đã khóa.
+  Render Live do người dùng báo, chưa xác minh độc lập mã ảnh. A/B còn
+  thiếu bằng chứng đạt; E chưa tính điểm; F chưa gộp main. Không phát
+  sinh ca ngoài bộ, không chạy lại các phần B đã đạt. Chi tiết ở mục
+  mới nhất INTERNAL-ANSWER-REVIEW-20261008.md; cập nhật dưới là lịch sử.
+
 - Cập nhật 08/10 sau 14:29 UTC: đã dùng đúng ba lượt dự phòng được cho
   phép rồi dừng. Vinamilk đọc web thật, có quy mô 14 trang trại/14 nhà
   máy và số liệu 2024 đúng nguồn, nhưng mục thiếu tin mới vẫn quá chung.

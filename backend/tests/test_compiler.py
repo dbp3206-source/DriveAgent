@@ -317,6 +317,72 @@ async def test_multi_local_retrieval_collects_pages_from_each_file(runtime, monk
     ]
 
 
+@pytest.mark.parametrize("invalid_first", [False, True])
+async def test_source_arithmetic_reaches_presentation_in_both_compiler_paths(
+    runtime, monkeypatch, invalid_first,
+):
+    from app.tools.calculator import CalculateInput, calculate
+
+    runner, user, session_id = runtime
+    calls = []
+    model_calls = []
+    questions = ["Thời gian được đo thế nào?", "Chất lượng hiện tại ra sao?",
+                 "Đã cho phép xử lý nguồn chưa?"]
+
+    async def execute(name, arguments, context):
+        calls.append(name)
+        if name == "calculate":
+            return calculate(CalculateInput.model_validate(arguments))
+        if name == "local_source_search":
+            filename = arguments["query"]
+            return SimpleNamespace(model_dump=lambda **_: {"data": {"sources": [
+                {"id": filename, "name": filename},
+            ]}})
+        assert name == "local_source_read"
+        return SimpleNamespace(model_dump=lambda **_: {"data": {"citations": [{
+            "file_id": "local:" + arguments["source_id"], "file_name": arguments["source_id"],
+            "chunk_index": 0, "page_number": None,
+            "snippet": "Nhóm có 17 người, 9 phút/ngày, 22 ngày/tháng; giảm 20% là giả thuyết.",
+            "score": 1.0,
+        }]}})
+
+    async def generate(self, request, stream=False):
+        model_calls.append(request)
+        if invalid_first and len(model_calls) == 1:
+            raw = '{"answer":"Thiếu câu hỏi và biểu thức."}'
+        else:
+            raw = json.dumps({
+                "answer": "Nền {{calc:0}}, giảm giả định {{calc:1}}, còn {{calc:2}} phút [1].",
+                "expressions": ["17*9*22", "17*9*22*20/100", "17*9*22*(1-20/100)"],
+                "clarification_questions": questions,
+            })
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=raw)]))
+
+    async def presentation(**kwargs):
+        assert kwargs["verified_calculations"]["source_calculations"] == [
+            {"expression": "17*9*22", "result": "3366"},
+            {"expression": "17*9*22*20/100", "result": "673.2"},
+            {"expression": "17*9*22*(1-20/100)", "result": "2692.8"},
+        ]
+        assert kwargs["required_questions"] == questions
+        return kwargs["answer"]
+
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(compiler, "enforce_presentation_contract", presentation)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="arithmetic-evidence-transfer",
+        user_message="Đọc tài liệu local alpha.md và beta.md; lập báo cáo chuẩn bị tư vấn "
+                     "200–240 từ, tính thời gian theo giả thuyết bằng công cụ. Không ghi dữ liệu.",
+        controls=ChatControls(source="local"),
+    )
+    assert calls.count("calculate") == 1
+    assert len(model_calls) == (2 if invalid_first else 1)
+    assert "3366" in result.answer and "673.2" in result.answer
+    assert all(question in result.answer for question in questions)
+    assert result.proposals == []
+
+
 @pytest.mark.parametrize("multiple_sources", [False, True])
 async def test_explicit_pdf_page_reads_requested_page_not_relevance_preview(
     runtime, monkeypatch, multiple_sources,

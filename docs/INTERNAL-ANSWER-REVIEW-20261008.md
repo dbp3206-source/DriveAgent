@@ -8,6 +8,47 @@ Không mở rộng danh sách nghiệm thu; giữ nguyên phạm vi A/B/E/F, ho�
 
 ## Đối soát mới nhất — 08/10/2026, sau 09:34 UTC
 
+### Cập nhật sau 15:06 UTC — W01 cloud và sửa truyền bằng chứng
+
+Tin 7b202feb-9871-47d0-98dc-4675485f5516, tác vụ
+c6c9f064-2380-4222-99f3-a3b0419c40eb được đọc lại đúng chủ sở hữu.
+Tác vụ completed, không có lỗi; tin incomplete. Hai tệp đọc thành công,
+24 người thay 30, giảm 20% chỉ giả thuyết, ba câu hỏi đủ. Phần báo cáo
+và câu hỏi có 164 tiếng/số theo cách đếm máy chủ, không tính lời cảnh báo.
+4608 phút đúng cho thời gian còn lại, không phải số tiết kiệm; cách gọi
+chưa rõ, thiếu nền 5760 và phần giảm 1152. Không gọi đây là lỗi số học
+hoặc lỗi máy chủ, không tự kết luận chất lượng toàn B đã đạt.
+
+Người dùng yêu cầu chấm phù hợp mô hình đang dùng: chấp nhận câu đơn
+giản, trực tiếp nếu đúng, đủ ý chính và có nguồn. Không lấy câu trả lời
+của trợ lý đánh giá làm đáp án mẫu hoặc đòi hỏi suy luận phức tạp. Không
+nới độ chính xác, nghĩa của số liệu, yêu cầu nguồn/bộ nhớ/thao tác hoặc
+đổi điểm của kết quả cũ. Độ dài là tuân thủ yêu cầu, không đo trí thông
+minh; chưa có dữ liệu chứng minh khả năng tối đa của mô hình.
+
+Khoảng hở chung được tái hiện bằng hai kiểm dùng bộ điều phối ADK thật,
+chỉ thay ranh giới mô hình bằng dữ liệu giả lập: cả nhánh trả JSON hợp
+lệ ngay và nhánh sửa cấu trúc đều không truyền kết quả calculate sang
+verified_calculations của lượt hoàn thiện. Biến này trước chỉ lấy từ
+inventory_facts. resolve_calculations nay giữ cặp biểu thức/kết quả thực
+đã chạy trong bộ nhớ của chính yêu cầu; không đưa nội dung vào nhật ký,
+không tự tính thêm đại lượng, không thêm lần gọi mô hình. Làm rõ chỉ dẫn
+phân biệt nền/phần thay đổi/giá trị sau thay đổi, không gắn cứng tên hay
+con số của W01. Công cụ chỉ xác minh số học, không chứng minh đơn vị,
+phạm vi hay nhãn nghiệp vụ. Đây là sửa khoảng hở có bằng chứng, không
+khẳng định là nguyên nhân duy nhất của độ dài hoặc thiếu ý trong tin.
+
+Ba kiểm tái hiện thất bại trước sửa; sau sửa bộ liên quan đạt 267 kiểm
+trong 79,42 giây. Kiểm quy tắc mã và diff đạt. Không gọi Gemini, không
+ghi Google/Supabase, không thử lại các phần đã đạt. Biên nhận ở
+design-work/qa/acceptance-20261008/calculator-evidence-transfer.xml;
+đối soát cloud ở cloud-w01-20261008-1506.md trong cùng thư mục.
+Chưa triển khai sửa mới, chưa kiểm đầu ra thật sau sửa. Render Live do
+người dùng báo; chưa có xác nhận mã ảnh. Sổ cloud đã dùng 16/16, máy
+19/20 với ba lượt dự phòng đã dùng; không đặt lại hoặc dùng lượt thứ tư.
+Giữ A/B một phần, E/F chưa đóng. Không triển khai vòng nhỏ lẻ hoặc cấp
+nhãn sẵn sàng vận hành từ kiểm mã. Các mục dưới đây là lịch sử.
+
 ### Cập nhật sau 14:29 UTC — hết ba lượt kiểm gộp được cho phép
 
 Người dùng xác nhận đã lưu Tavily trên Render; không đọc giá trị khóa.

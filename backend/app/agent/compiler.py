@@ -1270,6 +1270,8 @@ class CompilerOrchestrator:
         if verified_calculations:
             trace.append({"stage": "deterministic_analysis", "status": "success",
                           "kind": "inventory_balance", "method": "Decimal"})
+        if source_calculation and verified_calculations is None:
+            verified_calculations = {}
         prompt = json.dumps(
             {
                 "current_user_request": user_message,
@@ -1411,6 +1413,7 @@ class CompilerOrchestrator:
                                 ToolContext(request_id=request_id, user=user, db=db,
                                             settings=self.settings, source="compiler_calculation"),
                                 trace,
+                                verified_calculations=verified_calculations,
                             )
                         compiled = ground_unsourced_spreadsheet_preview(
                             user_message,
@@ -1527,6 +1530,7 @@ class CompilerOrchestrator:
                                     ToolContext(request_id=request_id, user=user, db=db,
                                                 settings=self.settings,
                                                 source="compiler_calculation"), trace,
+                                    verified_calculations=verified_calculations,
                                 )
                             compiled = ground_unsourced_spreadsheet_preview(
                                 user_message,
