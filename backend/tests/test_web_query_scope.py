@@ -11,6 +11,7 @@ from app.core.config import Settings
 from app.tools.contracts import ToolContext
 from app.tools.web_research import (
     WebResearchInput,
+    _news_items,
     _public_query_topic,
     collect_public_source_bundle,
 )
@@ -75,3 +76,34 @@ async def test_synthesis_and_saved_source_use_identical_bounded_text(monkeypatch
     assert sources[0].evidence_kind == "page_text"
     assert len(sources[0].evidence_excerpt) <= 9000
     assert blocks[0].split("\n", 1)[1] == sources[0].evidence_excerpt
+
+
+async def test_explicit_company_query_rejects_unrelated_feed_entries(monkeypatch):
+    date = format_datetime(datetime.now(UTC))
+    titles = ["Football result - Publisher", "Acmeology announcement - Publisher",
+              "Acme research update - Publisher"]
+    rss = ("<rss><channel>" + "".join(
+        f"<item><title>{title}</title><link>https://news.google.com/articles/{index}</link>"
+        f"<pubDate>{date}</pubDate></item>" for index, title in enumerate(titles)
+    ) + "</channel></rss>").encode()
+
+    async def fetch(_client, url, _maximum):
+        return rss if "news.google.com" in url else b"<html>Official company text. </html>" * 8
+
+    monkeypatch.setattr("app.tools.web_research._fetch_with_retry", fetch)
+    context = ToolContext(request_id="company-scope", user=SimpleNamespace(id="qa"),
+                          db=SimpleNamespace(), settings=Settings(_env_file=None))
+    sources, _blocks = await collect_public_source_bundle(
+        WebResearchInput(company_name="Acme Global", domain="example.com",
+                         news_query="Acme Vietnam", max_sources=2), context,
+    )
+    assert [source.title for source in sources if source.evidence_kind == "headline"] == [
+        "Acme research update - Publisher"]
+
+
+def test_empty_news_title_with_publisher_is_not_a_news_item():
+    date = format_datetime(datetime.now(UTC))
+    rss = (f"<rss><channel><item><title>- Publisher</title>"
+           f"<link>https://news.google.com/articles/empty</link><pubDate>{date}</pubDate>"
+           "</item></channel></rss>").encode()
+    assert _news_items(rss, 2) == []

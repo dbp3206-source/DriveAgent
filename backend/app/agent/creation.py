@@ -22,6 +22,23 @@ from app.services.sheet_creator import (
 )
 from app.tools.documents import DocumentEditIntent
 
+WEB_CONSULTATION_INSTRUCTION = (
+    "\nBáo cáo từ website phải trả lời nhu cầu tư vấn, không thay bằng danh sách tin. "
+    "Tách riêng: doanh nghiệp làm gì từ chữ trang đã đọc; nhu cầu người dùng đã cung cấp; "
+    "phần chưa rõ; đề xuất bước trao đổi tiếp. Nhu cầu trong đầu vào giả lập là dữ kiện "
+    "của đầu vào, không cần website xác nhận và không gắn nguồn web cho nhu cầu đó. "
+    "Mỗi câu mô tả doanh nghiệp dẫn riêng nguồn toàn văn hỗ trợ; không ghép nguồn chỉ "
+    "có tiêu đề vào cùng câu. Tin chỉ có tiêu đề thì nêu ngắn giới hạn, không dùng để "
+    "mô tả doanh nghiệp hay suy ra sự kiện. Không lặp danh mục nguồn trong answer; "
+    "thẻ nguồn đã có trên giao diện. Không tự thêm hiện trạng, quy mô, ngân sách hoặc lịch hẹn. "
+    "Không bỏ dữ kiện rõ đã đọc rồi ghi chưa xác minh; khi số liệu thiếu thời điểm hoặc "
+    "phạm vi, giải thích ngắn giới hạn đó. Nguồn về tập đoàn chỉ là bối cảnh của tập đoàn, "
+    "không chứng minh hoạt động hay quy mô của chi nhánh được hỏi. Không lấy danh sách "
+    "đối tác hoặc số nhận giải thưởng làm danh sách sản phẩm hoặc số nhân viên. "
+    "Mô tả và nhận xét bằng tiếng Việt dễ hiểu; dịch thuật ngữ và nội dung tiêu đề tin, "
+    "giữ nguyên tên riêng và tên sản phẩm. Không chép câu hướng dẫn làm nội dung báo cáo."
+)
+
 
 class DocumentProposal(BaseModel):
     model_config = ConfigDict(extra="forbid")

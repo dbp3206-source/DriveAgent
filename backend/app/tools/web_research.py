@@ -249,9 +249,9 @@ def _news_items(payload: bytes, maximum: int) -> list[tuple[WebSource, str]]:
             continue
         # Search indexes can publish placeholder product pages as "news".
         # Ignore missing-title sentinels, including a date and publisher suffix.
-        title_core = re.sub(r"\s+-\s+[^\n]+$", "", title)
+        title_core = re.sub(r"(?:^|\s+)-\s+[^\n]+$", "", title)
         title_core = re.sub(r"\s*\([^)]*\)\s*$", "", title_core).strip().casefold()
-        if title_core in {"undefined", "null", "none", "untitled", "n/a", "không có tiêu đề"}:
+        if title_core in {"", "undefined", "null", "none", "untitled", "n/a", "không có tiêu đề"}:
             continue
         date_label = published
         published_at: datetime | None = None
@@ -506,6 +506,15 @@ async def collect_public_source_bundle(
         _public_query_topic(payload.question)[1]
         if not payload.domain and not payload.company_name and not payload.news_query else []
     )
+    if payload.company_name and payload.news_query:
+        # An explicit query can return broad, unrelated feed results even with
+        # the company named. Require its identifying word before spending the
+        # source budget. This establishes relevance, not source authority.
+        legal_prefixes = {"công", "ty", "cổ", "phần", "tập", "đoàn", "tnhh",
+                          "the", "company", "corporation"}
+        identifiers = [word for word in re.findall(r"[^\W_]+", payload.company_name)
+                       if word.casefold() not in legal_prefixes]
+        relevance_anchors = identifiers[:1]
     encoded_query = quote_plus(f"{news_query} when:30d")
     news_urls = [
         f"https://news.google.com/rss/search?q={encoded_query}&hl=vi&gl=VN&ceid=VN:vi",

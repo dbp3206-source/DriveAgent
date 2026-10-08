@@ -24,6 +24,7 @@ from sqlalchemy import select
 from app.agent.controls import ChatControls
 from app.agent.creation import (
     CREATION_INSTRUCTION,
+    WEB_CONSULTATION_INSTRUCTION,
     CreationAnswer,
     WireAnswer,
     blank_unsourced_sheet_requested,
@@ -1325,18 +1326,7 @@ class CompilerOrchestrator:
                 "Industrial Technology hoặc Consumer Goods. Ngày tin phải ghi 'ngày đăng'."
             )
             if any(item.name == "web_research" for item in evidence):
-                instruction += (
-                    "\nBáo cáo từ website phải trả lời nhu cầu tư vấn, "
-                    "không thay bằng danh sách tin. "
-                    "Tách riêng: doanh nghiệp làm gì từ chữ trang đã đọc; nhu cầu người dùng "
-                    "đã cung cấp; phần chưa rõ; đề xuất bước trao đổi tiếp. Nhu cầu trong đầu "
-                    "vào giả lập là dữ kiện của đầu vào, không cần website xác nhận và không "
-                    "gắn nguồn web cho nhu cầu đó. Mỗi câu mô tả doanh nghiệp dẫn riêng nguồn "
-                    "toàn văn hỗ trợ; không ghép nguồn chỉ có tiêu đề vào cùng câu. Tin chỉ "
-                    "có tiêu đề thì nêu ngắn giới hạn, không dùng để mô tả doanh nghiệp hay "
-                    "suy ra sự kiện. Không lặp danh mục nguồn trong answer; thẻ nguồn đã có "
-                    "trên giao diện. Không tự thêm hiện trạng, quy mô, ngân sách hoặc lịch hẹn."
-                )
+                instruction += WEB_CONSULTATION_INSTRUCTION
         await asyncio.to_thread(
             self.quota.reserve, "flash",
             conservative_tokens(prompt + instruction + json.dumps(wire_schema), 8192),

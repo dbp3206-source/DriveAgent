@@ -12,6 +12,7 @@ import pytest
 from google import genai
 from google.genai import errors, types
 
+from app.agent.creation import WEB_CONSULTATION_INSTRUCTION
 from app.tools.contracts import ToolError
 
 SCRIPTS = Path(__file__).resolve().parents[2] / "scripts"
@@ -25,6 +26,10 @@ spec = importlib.util.spec_from_file_location(
 probe = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = probe
 spec.loader.exec_module(probe)
+
+
+def test_internal_probe_uses_product_consultation_guidance():
+    assert probe.WEB_CONSULTATION_INSTRUCTION == WEB_CONSULTATION_INSTRUCTION
 
 
 def install(monkeypatch, *, response=None, failure=None):

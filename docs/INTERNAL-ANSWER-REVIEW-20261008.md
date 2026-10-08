@@ -94,6 +94,46 @@ chính thức khi dịch vụ tìm kiếm không cung cấp kết quả vẫn ch
 
 ## Điều kiện dừng sửa phần này
 
+### Kết quả một lượt đã được người dùng cho phép
+
+Biên nhận: `design-work/qa/protonx-live-benchmark-20261008T084436927452Z.json`,
+08:44:36 UTC ngày 08/10, Gemini 3.5 Flash-Lite, đúng một yêu cầu mô hình.
+Toàn đợt 8,557 giây, sáu trang chính thức đều có chữ đọc được lần này.
+Không có lỗi kết nối, không tự thử lại. Đây là phép kiểm nội bộ, không phải
+sáu chuỗi Chat cloud hoặc nghiệm thu bản đang chạy.
+
+- Sáu báo cáo có tổng quan, nhu cầu đầu vào và đúng ba câu hỏi; không bịa
+  lịch, ngân sách hoặc hành động đã thực hiện. Phần giới thiệu không còn bị
+  thay toàn bộ bằng danh sách tin như biên nhận cloud Vinamilk trước đó.
+- Cả sáu thiếu nhãn nguồn ở trường lĩnh vực, nên bộ kiểm cấu trúc ghi 0/6.
+  Đây không phải điểm chất lượng bằng 0, cũng không được sửa đáp án để cấp đạt.
+- Vinamilk ghi quy mô chưa xác minh dù chữ nguồn có 14 trang trại và 14 nhà
+  máy. FPT không nêu số nhân viên khi chữ trang chỉ có bộ đếm chưa chạy và
+  số lần nhận ghi nhận; sự thận trọng này đúng, không ép lấp số còn thiếu.
+- Bosch dùng bối cảnh tập đoàn toàn cầu cho trường hợp đơn vị Việt Nam,
+  chưa tách đủ rõ phần chưa xác minh của đơn vị. Phần quy mô giữ chữ tiếng
+  Anh; các mô tả sản phẩm, tiêu đề và nhãn đầu vào ở nhiều báo cáo cũng còn
+  tiếng Anh. Viettel có tên sản phẩm nằm dưới danh sách đối tác trên trang;
+  không đủ để khẳng định chúng là sản phẩm của đơn vị chỉ từ vị trí này.
+- Tin Bosch chứa bóng đá, điện thoại và hoa hậu không liên quan; FPT nhận
+  cả mục chỉ có dấu gạch nối và tên nơi đăng. Hai nguyên nhân ở bộ đọc tin
+  đã tái hiện bằng phép kiểm thất bại trước sửa. Sửa lọc tên nhận diện khi
+  có truy vấn doanh nghiệp rõ và bỏ tiêu đề rỗng trước khi tính số nguồn.
+  Không dùng bộ lọc này để chứng nhận thẩm quyền hoặc ý nghĩa của tin.
+- Hướng dẫn nội bộ trước đó khác hướng dẫn tổng hợp trong sản phẩm. Đã dùng
+  chung hướng dẫn báo cáo web, thêm ranh giới tập đoàn/chi nhánh, danh sách
+  đối tác/sản phẩm và quy mô có căn cứ. Đây là sửa hợp đồng tổng hợp, chưa
+  chứng minh câu trả lời thật mới đã đạt; không chạy thêm lượt Gemini.
+- Sau sửa đọc tin, các nhóm web/dẫn chứng đạt 94 phép kiểm trong 7,63 giây.
+  Đợt web, điều phối và bản xem trước đạt 224 phép kiểm trong 45,95 giây
+  trước khi bổ sung hai xác nhận dùng chung hướng dẫn; không cộng số mẫu.
+  CI 118d816 đạt 1376 phép kiểm máy chủ, 13 bỏ qua và mức phủ 87,45%; nó
+  chưa bao gồm sửa mới sau khi đọc báo cáo này. Không gắn kết quả CI cũ cho mã mới.
+
+Kết luận: có bằng chứng chất lượng cơ bản cải thiện, nhưng còn thiếu bằng
+chứng nghiệm thu A/E/F, đặc biệt tự tìm nguồn chính thức cho U01. Chưa có
+lý do để yêu cầu người dùng triển khai hoặc tuyên bố đã sẵn sàng phát hành.
+
 ### Kiểm nội bộ trước lượt triển khai tiếp
 
 - Đồng bộ phần chữ trang được đưa vào tổng hợp với phần chữ được lưu để đối
