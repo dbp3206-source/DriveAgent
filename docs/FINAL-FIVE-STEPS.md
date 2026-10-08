@@ -14,6 +14,13 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 08/10: ngân sách tự đặt lại đúng 14:00 giờ Việt Nam. W01
+  d3b1a9af-52b0-4172-9b2c-c51e2871eb8a đọc cả hai nguồn và tính thành công,
+  nhưng vòng điều phối chạm 5 lượt/phút, chờ lượt rồi bị giới hạn tổng
+  60 giây cắt ngang. Không kết luận Gemini quá tải từ lượt này. Sửa chọn
+  tuyến nguồn để tái sử dụng luồng đọc có sẵn; chưa triển khai hoặc chấm
+  câu trả lời. Xem LOCAL-SOURCE-TIMEOUT-20261008.md. Không chạy lặp bản cũ.
+
 - Lượt company-02 trên 1baf5e6 đã chạy: nguồn web đọc thành công
   một lần; Gemini chính trả 504, dự phòng báo quá tải 503. Toàn lượt
   49,381 giây, không chạy lại web. Biên nhận

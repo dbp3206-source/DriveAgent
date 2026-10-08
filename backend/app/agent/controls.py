@@ -228,6 +228,15 @@ class ChatControls(BaseModel):
         if self.source != "auto":
             return self
         normalized = message.casefold()
+        # Named files alone can live in Drive. Infer local only when the user
+        # explicitly restricts reading to named files and excludes Drive.
+        exclusions = self.enforce_explicit_source_exclusions(message).excluded_sources
+        if (
+            "drive" in exclusions and "local" not in exclusions
+            and re.search(r"\bchỉ\s+(?:đọc|dùng|sử\s+dụng)\b", normalized)
+            and re.search(r"[\w.-]+\.(?:md|txt|csv|ipynb|pdf|docx|xlsx)\b", normalized)
+        ):
+            return self.model_copy(update={"source": "local"})
         if re.search(
             r"(?<!không )(?<!đừng )\bchỉ\s+(?:dùng|sử\s+dụng)\b"
             r"[^.!?\n]{0,120}\b(?:tài\s+liệu|tệp)\s+local\b",

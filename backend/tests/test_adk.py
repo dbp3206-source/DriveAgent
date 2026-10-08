@@ -14,7 +14,7 @@ from app.agent.adk_orchestrator import (
     RecoverableGemini,
     scoped_execution_session,
 )
-from app.agent.compiler import deterministic_static_answer
+from app.agent.compiler import CompilerOrchestrator, deterministic_static_answer
 from app.agent.controls import ChatControls
 from app.agent.orchestrator import AgentNotConfiguredError
 from app.agent.routing import route_request
@@ -635,6 +635,38 @@ def test_saved_skill_stays_in_adk_even_when_its_message_matches_direct_gmail_rou
         route,
         "Tổng hợp email Bản chi tiết hôm nay",
     )
+
+
+@pytest.mark.parametrize("names", [
+    "01-yeu-cau-khach-hang.md và 02-dieu-chinh-pham-vi.md",
+    "a.txt và b.csv",
+])
+def test_named_files_with_drive_excluded_use_bounded_local_compiler(names):
+    message = (
+        f"Chỉ đọc hai tài liệu giả lập {names}. Lập báo cáo, tính bằng công cụ. "
+        "Không đọc Gmail, Drive, lịch, web hoặc bộ nhớ; không ghi Google."
+    )
+    controls = (ChatControls().enforce_explicit_message_source(message)
+                .enforce_explicit_source_exclusions(message))
+    assert controls.source == "local"
+    route = controls.filter_excluded_route(route_request(message))
+    assert AdkOrchestrator._should_use_compiler(controls, route, message)
+    effective = CompilerOrchestrator._apply_controls(route, message, controls)
+    assert effective.required_sources == ("local",)
+    assert len(effective.sources) == 2
+    assert all(source.tool == "local_source_search" for source in effective.sources)
+    assert not AdkOrchestrator._should_use_compiler(
+        controls.model_copy(update={"skill_name": "saved-flow"}), route, message
+    )
+
+
+@pytest.mark.parametrize("message", [
+    "Chỉ đọc a.md và b.md trên Drive.",
+    "Chỉ đọc a.md; không đọc tài liệu local hoặc Drive.",
+    "Không đọc a.md; không đọc Drive.",
+])
+def test_local_source_inference_does_not_override_other_source_contracts(message):
+    assert ChatControls().enforce_explicit_message_source(message).source != "local"
 
 
 def test_saved_skill_selects_dedicated_gmail_capability_agent():

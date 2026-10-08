@@ -642,6 +642,10 @@ class AdkOrchestrator:
         """Keep saved skills in the governed ADK execution path, including source reads."""
         if controls.skill_name:
             return False
+        # Select the same effective source route that the compiler will use.
+        # An excluded Drive heuristic must not force named local reads into
+        # the multi-call ADK loop and exhaust its per-minute budget.
+        route = CompilerOrchestrator._apply_controls(route, user_message, controls)
         return bool(
             route.direct
             or inventory_facts(user_message) is not None
