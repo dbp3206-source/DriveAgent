@@ -235,6 +235,8 @@ class Settings(BaseSettings):
         return value
 
     gemini_api_key: str = ""
+    # Optional server-only public search credential. Never exposed to the UI.
+    tavily_api_key: SecretStr | None = None
     gemini_chat_model: str = "gemini-3.5-flash-lite"
     # Independent from Chat; no silent paid Search grounding fallback.
     gemini_web_research_model: Literal["gemini-2.5-flash"] = "gemini-2.5-flash"

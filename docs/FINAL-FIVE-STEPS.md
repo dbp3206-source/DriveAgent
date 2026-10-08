@@ -14,6 +14,13 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 08/10 sau khi người dùng đồng ý Tavily miễn phí: đã bổ sung
+  cấu hình khóa chỉ ở máy chủ và đường tìm nguồn có văn bản trang, bỏ lần
+  tìm kiếm Gemini bị từ chối khi có Tavily. Đợt gộp cuối đạt 186 phép kiểm trong máy;
+  chưa có khóa để kiểm thật, chưa triển khai hoặc đóng A/E/F. Không thêm
+  tiêu chí, không chạy lại phần B đã đạt. Hướng dẫn nhập khóa và giới hạn
+  nằm tại TAVILY-FREE-SETUP.md. Các kết quả bên dưới là lịch sử theo bản.
+
 - Đối soát mới nhất 08/10 sau 09:34 UTC: bản xem xét 8296376 đã qua CI,
   nhưng chưa triển khai và còn sửa chọn nguồn/tiết kiệm lượt đang kiểm trong
   máy. Bộ sáu báo cáo gộp không dùng làm nghiệm thu vì lẫn dữ kiện giữa ca;

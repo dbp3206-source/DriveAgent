@@ -34,6 +34,7 @@ SECRET_TEXT = re.compile(
     \s*(?:is\b|là\b|[:=])\s*\S+)
     |(?:\bBearer\s+[A-Za-z0-9._~+/=-]+)
     |(?:\bAIza[A-Za-z0-9_-]{30,})
+    |(?:\btvly-[A-Za-z0-9_-]{20,})
     |(?:-----BEGIN\s+(?:RSA\s+|EC\s+|OPENSSH\s+)?PRIVATE\ KEY-----)
     """
 )

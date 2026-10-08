@@ -25,6 +25,7 @@ FORBIDDEN_NAMES = (
 )
 SECRET_PATTERNS = {
     "Google API key": re.compile(rb"AIza[0-9A-Za-z_-]{30,}"),
+    "Tavily API key": re.compile(rb"tvly-[0-9A-Za-z_-]{20,}"),
     "private key": re.compile(rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----"),
     "GitHub token": re.compile(rb"gh[pousr]_[0-9A-Za-z]{30,}"),
     "Supabase service JWT": re.compile(rb"eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}"),

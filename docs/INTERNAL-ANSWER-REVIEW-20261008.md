@@ -8,6 +8,18 @@ Không mở rộng danh sách nghiệm thu; giữ nguyên phạm vi A/B/E/F, ho�
 
 ## Đối soát mới nhất — 08/10/2026, sau 09:34 UTC
 
+### Bổ sung sau chấp thuận nguồn tìm kiếm miễn phí
+
+Người dùng đã đồng ý Tavily miễn phí. Đã triển khai trong máy đường tìm
+nguồn `basic` → văn bản trang → tổng hợp có căn cứ; không dùng câu trả lời
+tự sinh của Tavily, không gọi tìm kiếm Gemini trước khi dùng Tavily. Không
+đưa ngữ cảnh tư vấn riêng vào truy vấn doanh nghiệp. Đạt 119 phép kiểm trong
+máy; đợt gộp cuối 186 đạt trong 14,87 giây, không gọi dịch vụ thật. Chưa có
+khóa Tavily để kiểm nguồn và chất lượng
+thật; chưa nghiệm thu A/E/F hoặc cập nhật điểm. Chi tiết và thao tác an toàn
+tại TAVILY-FREE-SETUP.md. Những số đo ở dưới giữ nguyên nguồn gốc lịch sử,
+không được dùng làm số đo của đường tìm kiếm mới.
+
 ### Kết quả thực, không thay bằng điểm kiểm mã
 
 - CI của bản xem xét 8296376 đạt: 1379 phép kiểm máy chủ, 13 bỏ qua,

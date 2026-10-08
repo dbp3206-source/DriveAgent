@@ -1,13 +1,13 @@
-"""Grounded web research with a quota-resilient source-bundle fallback.
+"""Read public evidence, then synthesize source-bound conclusions.
 
-Only provider-returned grounding URLs become citations. Web text is untrusted data;
-it never becomes an instruction. When Gemini Search grounding has no project quota,
-the fallback reads a public official page plus Google News RSS, preserves those URLs
-as citations, and uses a normal Gemini call only to summarize the bounded bundle.
+Configured Tavily uses one basic search and one Gemini synthesis, bypassing
+unavailable Gemini Search. Page text remains untrusted data, never instructions.
+Without Tavily, retain the existing grounded-search and bounded RSS fallback.
 """
 
 import asyncio
 import ipaddress
+import json
 import logging
 import re
 import socket
@@ -28,6 +28,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 from app.agent.evidence import bound_web_numeric_claims
 from app.agent.freshness import server_time_context
 from app.auth.permissions import WEB_RESEARCH
+from app.core.security import SECRET_TEXT
 from app.services.inference_gateway import create_inference_client, provider_error_class
 from app.services.quota import conservative_tokens
 from app.services.relational_quota import quota_guard
@@ -352,6 +353,136 @@ async def _source_bundle_fallback(
     return await _reason_over_sources(payload, context, sources, blocks)
 
 
+async def collect_tavily_source_bundle(
+    payload: WebResearchInput, context: ToolContext,
+) -> tuple[list[WebSource], list[str]]:
+    try:
+        async with asyncio.timeout(25):
+            return await _collect_tavily_source_bundle(payload, context)
+    except TimeoutError:
+        raise ToolError("Tìm kiếm web vượt thời gian chờ. Không tự chạy lại.",
+                        code="web_search_transport_error", retryable=True) from None
+
+
+async def _collect_tavily_source_bundle(
+    payload: WebResearchInput, context: ToolContext,
+) -> tuple[list[WebSource], list[str]]:
+    """One basic search; use page content, never the generated answer/snippets.
+
+    Raw content is the provider's extracted page text, not independently fetched
+    proof. URL checks, bounded text and synthesis quote checks still apply. No
+    Extract/Crawl API, automatic advanced search, retry or paid fallback.
+    """
+    secret = context.settings.tavily_api_key
+    if secret is None or not secret.get_secret_value().strip():
+        raise ToolError("Chưa cấu hình khóa tìm kiếm web.", code="search_not_configured")
+    official = _normalized_public_url(payload.domain) if payload.domain else None
+    if official:
+        await _assert_public_https(official)
+    # Company research must not export the user's private consultation context.
+    query = (f"{payload.company_name} giới thiệu sản phẩm dịch vụ tin mới"
+             if payload.company_name else
+             f"site:{urlsplit(official).hostname} giới thiệu sản phẩm dịch vụ tin mới"
+             if official else _public_query_topic(payload.question)[0])
+    if SECRET_TEXT.search(query):
+        raise ToolError("Câu tìm kiếm chứa thông tin bí mật; hãy bỏ khóa hoặc mật khẩu.",
+                        code="private_search_query")
+    maximum = min(payload.max_sources, context.settings.web_research_max_sources, 6)
+    body: dict[str, object] = {
+        "query": query, "search_depth": "basic", "auto_parameters": False,
+        "topic": "general", "max_results": maximum,
+        "include_answer": False, "include_raw_content": "text",
+        "include_images": False, "include_published_date": True,
+    }
+    if official:
+        body.update(include_domains=[urlsplit(official).hostname], include_domains_mode="prefer")
+    # Request-local Authorization must never be inherited by page GETs.
+    async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as http:
+        try:
+            async with http.stream(
+                "POST", "https://api.tavily.com/search", json=body,
+                headers={"Authorization": f"Bearer {secret.get_secret_value()}"},
+            ) as response:
+                if response.status_code != 200:
+                    status = response.status_code
+                    message = (
+                        "Tìm kiếm web đã hết hạn mức. Không chuyển sang dịch vụ trả phí."
+                        if status in {429, 432, 433} else
+                        "Dịch vụ tìm kiếm từ chối yêu cầu. Kiểm tra khóa trên máy chủ."
+                        if status == 401 else "Dịch vụ tìm kiếm chưa phản hồi thành công."
+                    )
+                    raise ToolError(message, code=f"web_search_http_{status}",
+                                    retryable=status >= 500)
+                chunks: list[bytes] = []
+                size = 0
+                async for chunk in response.aiter_bytes():
+                    size += len(chunk)
+                    if size > 2_000_000:
+                        raise ToolError("Nội dung tìm kiếm quá lớn.", code="web_search_too_large")
+                    chunks.append(chunk)
+                data = json.loads(b"".join(chunks))
+        except (httpx.HTTPError, TimeoutError):
+            raise ToolError("Dịch vụ tìm kiếm tạm thời không kết nối được.",
+                            code="web_search_transport_error", retryable=True) from None
+        except (ValueError, UnicodeError):
+            raise ToolError("Dịch vụ tìm kiếm trả dữ liệu không hợp lệ.",
+                            code="web_search_invalid_response") from None
+        if not isinstance(data, dict) or not isinstance(data.get("results"), list):
+            raise ToolError("Dịch vụ tìm kiếm trả dữ liệu không hợp lệ.",
+                            code="web_search_invalid_response")
+        candidates: list[tuple[str, str, str]] = []
+        seen: set[str] = set()
+        for item in data["results"][:maximum]:
+            if not isinstance(item, dict) or not isinstance(item.get("url"), str):
+                continue
+            url = item["url"]
+            if url in seen:
+                continue
+            seen.add(url)
+            try:
+                async with asyncio.timeout(2):
+                    await _assert_public_https(url)
+            except (ToolError, ValueError, TimeoutError):
+                continue
+            raw = item.get("raw_content")
+            text = re.sub(r"\s+", " ", raw).strip()[:9000] if isinstance(raw, str) else ""
+            title = item.get("title")
+            candidates.append((url, title[:240] if isinstance(title, str) else "Nguồn web", text))
+        if official and official not in seen:
+            candidates.insert(0, (official, "Website do người dùng chọn", ""))
+        # Prefer the selected host without mislabelling third-party results as
+        # official. Missing raw text may be read directly, with one bounded GET.
+        if official:
+            host = urlsplit(official).hostname
+            candidates.sort(key=lambda item: urlsplit(item[0]).hostname != host)
+
+        async def read(candidate: tuple[str, str, str]) -> WebSource | None:
+            url, title, text = candidate
+            if len(text) < 80:
+                try:
+                    async with asyncio.timeout(5):
+                        text = _html_text(await _fetch_bounded(http, url, 600_000), maximum=9000)
+                except (ToolError, httpx.HTTPError, TimeoutError, ValueError):
+                    return None
+            if len(text) < 80:
+                return None
+            return WebSource(title=title, url=url, evidence_kind="page_text", evidence_excerpt=text)
+
+        results = await asyncio.gather(*(read(item) for item in candidates[:maximum]))
+    sources = [source for source in results if source is not None]
+    if not sources:
+        raise ToolError("Chưa đọc được nội dung nguồn để trả lời có căn cứ.",
+                        code="web_sources_empty")
+    blocks = [
+        f"[S{index}] NỘI DUNG TRANG (Tavily trích xuất hoặc đọc trực tiếp)\n"
+        f"Địa chỉ: {source.url}\n{source.evidence_excerpt}\n"
+        "Ngày đăng và ngày sự kiện chỉ được kết luận nếu nội dung trang nêu rõ; "
+        "ngày tìm kiếm và ước tính ngày cập nhật không chứng minh ngày sự kiện."
+        for index, source in enumerate(sources, 1)
+    ]
+    return sources, blocks
+
+
 def _with_requested_clock(text: str, payload: WebResearchInput) -> str:
     # The server clock answers a date question, never an event or meeting date.
     if re.search(r"\bhôm nay\b[^?!.\n]{0,90}\b(?:ngày nào|ngày mấy)\b",
@@ -664,6 +795,10 @@ def _supported_claims(response: object, sources: list[WebSource]) -> str:
 async def web_research(payload: WebResearchInput, context: ToolContext) -> WebResearchOutput:
     if not context.settings.gemini_is_configured:
         raise ToolError("Chưa cấu hình Gemini API cho web research.", code="model_not_configured")
+    if (context.settings.tavily_api_key is not None
+            and context.settings.tavily_api_key.get_secret_value().strip()):
+        sources, blocks = await collect_tavily_source_bundle(payload, context)
+        return await _reason_over_sources(payload, context, sources, blocks)
     prompt = (
         (
             f"Nghiên cứu công ty {payload.company_name}. "
@@ -748,8 +883,8 @@ def web_research_tool_definitions() -> list[ToolDefinition]:
             name="web_research",
             description=(
                 "Nghiên cứu câu hỏi công khai, thông tin cập nhật hoặc công ty "
-                "qua Google Search grounding; không tìm kiếm dữ liệu riêng tư. Khi quota Search "
-                "không có, dùng website chính thức + Google News RSS có citation."
+                "từ các nguồn web có nội dung và trích dẫn; không tìm kiếm dữ liệu riêng tư. "
+                "Phân biệt dữ kiện, kết luận dựa trên nguồn và điều chưa xác minh."
             ),
             input_model=WebResearchInput,
             output_model=WebResearchOutput,
