@@ -14,6 +14,20 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 09/10 lúc 02:43 UTC: đã xác nhận qua Render lần triển khai
+  dep-db456kbtqb8s73e48gn0 Live đúng ảnh b57abd1696b3... của ffbac81,
+  hoàn tất lúc 02:38:58 UTC. CI xuất bản 37874873548 đạt. URL health
+  trả ok, database=true, object_storage=true; truy vấn nhật ký mức lỗi
+  từ 02:37 đến 02:43 UTC không có kết quả. Đây là kiểm triển khai,
+  không chứng nhận chất lượng Chat. Chuyển current_results sang ffbac81,
+  giữ a834ce4/W01 một phần trong lịch sử. Bộ đếm khóa đang dùng vẫn
+  16/16, ngày bảo vệ 08/10 theo giờ Los Angeles; lượt thông thường mở
+  lại lúc 14:00 giờ Việt Nam ngày 09/10. Không gọi Gemini, không đặt lại
+  bộ đếm hoặc dùng dự phòng. Không chạy lại các phần B đã đạt. Khi có
+  lượt, chỉ kiểm phần câu trả lời còn thiếu trong bộ đã khóa; A/B chưa
+  đóng toàn bộ, E chưa tính điểm và F chưa gộp main. Không cần triển
+  khai thêm lúc này. Các cập nhật dưới đây giữ nguyên làm lịch sử.
+
 - Cập nhật 09/10 lúc 02:25 UTC: kết nối Render đã đọc được trong
   My Workspace do người dùng xác nhận. Đã đối chiếu độc lập lần triển
   khai dep-db3qsk3tqb8s73f2jb40 Live đúng ảnh 42498cbc... của a834ce4,

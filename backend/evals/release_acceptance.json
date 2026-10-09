@@ -36,6 +36,34 @@
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
   "current_results": {
+    "release_commit": "ffbac816fabfdd160a22b9678865bf0581669006",
+    "image_digest": "sha256:b57abd1696b3ff5d940278ade743a0e2321b620a2055e5e73504ddebf8e3e1ed",
+    "observed_date": "2026-10-09",
+    "deployment": {
+      "ci_run_id": "37874873548", "ci_status": "success",
+      "render_deploy_id": "dep-db456kbtqb8s73e48gn0", "render_status": "live",
+      "finished_at": "2026-10-09T02:38:58.950021Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"status": "ok", "database": true, "object_storage": true},
+      "runtime_started_at": "2026-10-09T09:38:54.168777+07:00",
+      "error_log_window": {"start": "2026-10-09T02:37:00Z", "end": "2026-10-09T02:43:16.259096795Z", "matching_error_logs": 0},
+      "evidence_method": "Render MCP get_deploy, scoped error log query and public health read; exact image confirmed independently",
+      "scope": "Deployment and connections only; no new model answer or whole-release quality inferred"
+    },
+    "cases": {},
+    "pending_cases": {
+      "W01": {"status": "NOT VERIFIED AFTER FIX", "next_action": "One locked first-turn check after regular quota naturally renews. Do not repeat accepted follow-up/save steps; retain historical partial response."}
+    },
+    "quota_observation": {
+      "observed_at": "2026-10-09T02:43Z", "protection_day": "2026-10-08",
+      "calls_today": 16, "regular_calls_remaining": 0,
+      "next_regular_day_at": "2026-10-09T14:00:00+07:00",
+      "scope": "Owner-scoped active credential metadata only; not a measurement of Google's project quota. No model call, counter reset or reserve use."
+    },
+    "unchanged_path_evidence": "Historical passing workflow receipts retain original release and scope; not new runs on this image.",
+    "unlisted_cases": "Not verified on this release. No aggregate score or A/B/E/F acceptance inferred from CI."
+  },
+  "prior_a834ce4_results": {
     "release_commit": "a834ce4741d9a4dc41766695a0bb338375e003df",
     "image_digest": "sha256:42498cbc049b1b648a9823e5539399fc9e59fdcdd70ef445c8ee96007201810e",
     "observed_date": "2026-10-09",
@@ -61,7 +89,7 @@
         "calculation": "4608 minutes is the correct remaining time under the hypothesis, but its meaning is not explicit; required baseline 5760 and hypothesized savings 1152 are missing. Stored tool trace confirms execution but does not expose expressions/results.",
         "evidence_method": "Exact owner-scoped persisted message/task/audit readback on 2026-10-08; exact deployment subsequently verified through Render MCP",
         "quality_score": null,
-        "next_action": "Keep partial; do not infer quality from CI or repeat the previously accepted follow-up/save steps. Candidate ffbac81 fixes arithmetic evidence transfer but is not deployed or live-answer accepted."
+        "next_action": "Historical partial receipt retained. ffbac81 is now independently verified live but has no post-fix W01 answer receipt. Do not repeat the previously accepted follow-up/save steps or infer answer quality from deployment."
       }
     },
     "unchanged_path_evidence": "Historical passing workflow receipts retain original release and scope; not new runs on this image.",
