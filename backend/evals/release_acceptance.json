@@ -82,6 +82,30 @@
     "execution_blocker": "Sidebar getState failed after runtime reset: windows sandbox failed: helper_unknown_error: setup refresh had errors, kernel_pid=2624 exited code=1. No authenticated alternate browser or bypass used. Three manual Chat receipts now exist; deploying the new image still requires the normal Render dashboard because the deploy hook is skipped and available Render tools cannot change imagePath."
   },
   "current_results": {
+    "release_commit": "e1de733d453b8fa5c5badb9d5e2b482bf8134591",
+    "image_digest": "sha256:f43a6614f5728a611e5a68538212046acdd817cf622ff64f8ddf258906820f7f",
+    "observed_date": "2026-10-09",
+    "deployment": {
+      "ci_run_id": "37881913880", "ci_status": "success",
+      "render_deploy_id": "dep-db46o4cs728c739ovno0", "render_status": "live",
+      "finished_at": "2026-10-09T04:24:25.984089Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"http_status": 200, "status": "ok", "database": true, "object_storage": true, "gemini_connectivity": "not_probed", "google_workspace_connectivity": "not_probed"},
+      "runtime_started_at": "2026-10-09T04:24:24.749117+00:00",
+      "error_log_window": {"start": "2026-10-09T04:22:41Z", "end": "2026-10-09T04:25:04.283319718Z", "matching_error_logs": 0, "has_more": false},
+      "evidence_method": "Render MCP get_deploy/get_service confirms the exact immutable image after user Update Source; public health read and scoped error log query. Health does not probe the user-specific Gemini key or Google Workspace connectivity.",
+      "scope": "Deployment and DB/object-storage connections only. No current-image model response, full A/B/E/F acceptance or aggregate score inferred."
+    },
+    "cases": {},
+    "pending_cases": {
+      "company-03": {"status": "ONE_AFFECTED_ROUTE_CHAT_CHECK_PENDING", "next_action": "Run the existing Samsung case once in a new Chat on this image, source Auto. Do not repeat the whole three-case batch before checking this result. Current sidebar getTab fails kernel_pid 9544 with helper_unknown_error: setup refresh had errors; one manual submission is required."},
+      "remaining_locked_cases": "Company and freshness gaps retain their actual historical findings. No unrelated model calls or PDF retries. Assess the first affected-route result before requesting the remaining locked cases."
+    },
+    "unchanged_path_evidence": "Historical workflow, memory, scheduler and approved Google Doc receipts retain original release and functional scope, including W01/W05 reassessment above. Do not rerun unaffected steps just to relabel them as new.",
+    "quality_score": null,
+    "unlisted_cases": "NOT VERIFIED on this image. Main not merged; whole-product readiness unproven."
+  },
+  "prior_ffbac81_results": {
     "release_commit": "ffbac816fabfdd160a22b9678865bf0581669006",
     "image_digest": "sha256:b57abd1696b3ff5d940278ade743a0e2321b620a2055e5e73504ddebf8e3e1ed",
     "observed_date": "2026-10-09",

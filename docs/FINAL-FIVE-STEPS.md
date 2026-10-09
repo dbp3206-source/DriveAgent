@@ -14,6 +14,21 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Render dep-db46o4cs728c739ovno0 đã Live đúng e1de733/ảnh f43a6614f572
+  lúc 11:24:25 giờ Việt Nam ngày 09/10. HTTP health 200, status ok,
+  database/object_storage true; không có nhật ký mức lỗi từ 11:22:41 đến
+  11:25:04 trong phạm vi đọc. Đây là kiểm triển khai, không phải xác nhận
+  khóa Gemini của quản trị, kết nối Google hoặc chất lượng Chat. Đóng
+  bước triển khai ứng viên; main và điểm E chưa chốt.
+- Công cụ thanh bên vẫn không khởi tạo được (kernel 9544, setup refresh
+  had errors). Lượt tiếp chỉ gửi một câu Samsung đã khóa trên ảnh mới,
+  phiên Chat mới và nguồn Tự động. Đọc kết quả trước khi yêu cầu thêm
+  các ca còn thiếu; không gửi cả lô ba câu, không kiểm lại phần B đã đạt
+  hoặc PDF đã tạm gác. Biên nhận bản ffbac81 được giữ riêng, không đổi
+  thành kết quả của e1de733.
+
+### Lịch sử chuẩn bị trước khi bản mới Live
+
 - Bản gộp e1de733 đã qua toàn bộ CI 37881913880 và đã xuất ảnh bất biến:
   `ghcr.io/dbp3206-source/veridra@sha256:f43a6614f5728a611e5a68538212046acdd817cf622ff64f8ddf258906820f7f`.
   Chứa cả sửa nhận Dùng + URL và lọc đúng website; không triển khai ảnh
@@ -386,13 +401,13 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
    mã hoặc đủ đề mục. P06 giữ hoãn. Hướng dẫn và bài demo đã có nhưng chỉ
    thay biên nhận sau nghiệm thu, không trình bày bản xem lại như lần chạy mới.
 5. F: chỉ sau khi các điều kiện trên đạt mới gộp main, chạy CI main và triển
-   khai đúng mã ảnh. Main vẫn chưa gộp; URL hiện chạy ffbac81, chưa phải
+   khai đúng mã ảnh. Main vẫn chưa gộp; URL hiện chạy e1de733, chưa phải
    bản đã đóng A/B/E. Kiểm ngắn bản cuối và bàn giao rồi dừng chỉnh sửa.
 
 ### Đối soát E đã chuẩn bị — không gọi mô hình, không cấp điểm
 
 Bộ khóa có 24 tác vụ; P06 hoãn nên 23 tác vụ áp dụng. Không tăng mẫu.
-Biên nhận lịch sử không được đổi nhãn thành lần chạy mới trên ffbac81.
+Biên nhận lịch sử không được đổi nhãn thành lần chạy mới trên e1de733.
 
 | Phần trong bộ đã khóa | Bằng chứng đang có | Việc còn lại đúng phạm vi |
 |---|---|---|
@@ -428,7 +443,8 @@ Thiếu hạn mức/quyền/dữ liệu không phải lý do bịa kết quả. 
 
 Ba ca dưới đã có biên nhận ngày 09/10 nhưng chưa đạt bằng chứng web.
 Không coi đây là yêu cầu gửi lại ngay; trước tiên phải cập nhật ảnh
-f43a6614f572 và xác nhận Live đúng nguồn. Sau đó chỉ kiểm tuyến bị sửa,
+f43a6614f572 và xác nhận Live đúng nguồn (đã xác nhận 09/10 lúc 11:24).
+Hiện chỉ gửi Samsung trước, chưa gửi Shopee/Viettel. Chỉ kiểm tuyến bị sửa,
 không lặp các quy trình đã đạt hoặc gọi lại vì độ dài.
 
 Tạo ba cuộc trò chuyện mới, chọn nguồn **Tự động**, gửi mỗi câu đúng một lần.

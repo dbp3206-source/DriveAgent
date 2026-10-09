@@ -5,7 +5,9 @@
 Trạng thái triển khai và việc còn lại được cập nhật tại
 [FINAL-FIVE-STEPS.md](FINAL-FIVE-STEPS.md); biên nhận theo bản nằm trong
 `backend/evals/release_acceptance.json`. Ngày 09/10, URL đã chạy đúng
-ffbac81. Các đoạn dưới là lịch sử theo thời điểm ghi, không phải yêu cầu
+e1de733/ảnh f43a6614f572, Render dep-db46o4cs728c739ovno0 Live lúc
+11:24 ngày 09/10, kết nối DB/kho tệp tốt. Chưa chốt chất lượng Chat,
+điểm E hoặc main. Các đoạn dưới là lịch sử theo thời điểm ghi, không phải yêu cầu
 triển khai lại những bản cũ hoặc chứng nhận chất lượng của bản hiện tại.
 Phạm vi A/B/E/F, C/D loại khỏi đợt và P06 hoãn vẫn giữ nguyên.
 
