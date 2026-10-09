@@ -14,6 +14,15 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Đối soát phần nhớ/quên và bản lưu/xuất trong B mà không gọi mô hình:
+  ghi chú thử sau xóa vẫn không còn; câu trả lời đã lưu sau xóa báo đúng
+  không tìm thấy. Các biên nhận trước đó chứng minh sửa và nhớ bốn mục
+  ở phiên mới, rồi không dùng mục đã cất. Bản Mộc An đúng phiên bản 2 còn
+  hoạt động; ảnh PDF xuất có đủ bốn câu hỏi, tiếng Việt và ngân sách chưa
+  xác nhận, không cắt chữ. Mã API/dịch vụ bộ nhớ, bản lưu, xuất và mô hình
+  dữ liệu không đổi từ 1d84b13 đến 6b83775. Giữ các bước chức năng này,
+  không tạo lại ghi chú hoặc xuất lặp. Chưa chứng nhận hình thức Word,
+  chuỗi mới trên cùng ảnh, quy trình trước hẹn có lịch thật hoặc bảy vai trò.
 - Bản tách ngày 6b83775 đã qua toàn bộ CI 37958115551: cơ sở dữ liệu,
   máy chủ, giao diện, kiểm ngoại tuyến, ảnh chạy và xuất PDF tiếng Việt.
   Ảnh đã xuất và đối chiếu mã cố định bằng HTTP 200:
@@ -472,7 +481,7 @@ Biên nhận lịch sử không được đổi nhãn thành lần chạy mới 
 | W01 | Lượt đầu ffbac81 đúng nguồn và các đại lượng. Cùng chuỗi lịch sử 81665f7 đọc/tính → hỏi tiếp → lưu đã được đối soát và chấp nhận theo độ dài áng chừng. | Giữ đúng bản/phạm vi biên nhận. Không lặp đọc, hỏi tiếp hoặc lưu vì số từ; không gọi các bước khác bản là chuỗi mới. |
 | W02/W04 | Có đủ chuỗi ba lượt đạt đúng đáp án trên bản đã ghi. | Giữ nguyên biên nhận và phiên bản; không chạy lại chỉ để tạo mẫu mới. |
 | W05 | Đã đối soát quy trình lưu bản 2 và hai lần chạy thành công cùng phiên: Minh Phát đúng nguồn/tính; An Bình 8 người không lẫn dữ kiện cũ. Hai lần đổi lỗi trước đó vẫn được ghi. | Giữ bằng chứng lịch sử, chưa xác minh lại mã triển khai từng lượt; không gọi đây là chuỗi mới cùng ảnh, không chạy lại phần không bị ảnh hưởng. |
-| W03/W06 | Có bằng chứng quên; bản kết quả v2 và ba tệp xuất. Một số bằng chứng là từng bước, chưa chứng nhận cả chuỗi cùng bản. | Ghép biên nhận đúng mã/phạm vi; không tạo lại ghi chú đã xóa, xuất lặp hoặc ghi Google thêm. Nếu chuỗi thiếu bằng chứng thì giữ chưa đóng. |
+| W03/W06 | Đã đối soát các bước sửa/nhớ ở phiên mới, cất, xóa và báo không tìm thấy; bản v2 còn đúng và có ba tệp xuất lịch sử. PDF đã xem rõ bốn câu hỏi. | Giữ bằng chứng chức năng theo bản cũ và mã không đổi; không lặp các bước này. Hình thức Word và chuỗi mới cùng ảnh chưa được chứng nhận; không suy thành điểm E hoặc toàn B đạt. |
 
 Hẹn giờ có một bản tin thật; lịch trống và nhãn bảy vai trò sẵn sàng
 không chứng minh cuộc hẹn có dữ liệu hoặc cả bảy vai trò đã làm việc.

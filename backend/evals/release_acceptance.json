@@ -47,6 +47,17 @@
       "verified": "Original delivered first answer reads both fixtures, uses 24 people, 12 minutes/day, 20 days/month, 5760 baseline minutes and 1152 hypothetical savings. Follow-up keeps 24/12 and 20% hypothesis, asks budget rather than asserting one, has three questions and no new source tool calls. Saved active revision 1 matches follow-up text plus both source links; prior user-confirmed reopening retained. All these belong to the same observed historical session, not a composite of the new first turn and old follow-up.",
       "limitations": "The server stored the first turn as incomplete for short length and a rejected repair's changed citations. The original answer, not the rejected candidate, is reassessed under the user's 09/10 approximate-length instruction. No new visual reopening evidence or aggregate E score claimed."
     },
+    "W03_component_readback": {
+      "status": "HISTORICAL_MEMORY_LIFECYCLE_COMPONENTS_VERIFIED",
+      "evidence": "Existing live QA records show saving the same test label, editing three to four sections, recalling the edited value in a fresh chat and no active recall after archive. The persisted completed reply after deletion explicitly reports the label absent. Current owner-scoped SELECT returns zero matching memory rows.",
+      "compatibility": "git diff 1d84b13..6b83775 is empty for memory API/service, artifact API/service, export service and DB models. This supports retaining the functional receipts; it does not prove all chat orchestration unchanged.",
+      "limits": "Steps span historical deployments. No new same-image full-chain run, reconstructed deleted memory, aggregate score or separate proof of recall before the first edit. No repeat requested for the demonstrated edit/archive/delete operations."
+    },
+    "W06_component_readback": {
+      "status": "HISTORICAL_SAVED_REVISION_AND_EXPORT_CONTENT_VERIFIED",
+      "evidence": "Existing live QA records show the same fake customer result at revision 2 after editing to four questions and real Markdown, DOCX and PDF exports. Current owner-scoped SELECT finds the expected active revision. The preserved PDF render was inspected again: four questions, unknown budget and Vietnamese text are legible without clipping.",
+      "limits": "Not newly created, edited or exported on the candidate. DOCX content/package was checked in the historical record; its rendered appearance remains unverified because LibreOffice was unavailable. No extra export or Google write needed for this readback."
+    },
     "U05": {
       "status": "ACCEPTED_HISTORICAL_CONTENT",
       "request_id": "cd9d0cbd-2131-4e2c-96f8-7564e614d506",
