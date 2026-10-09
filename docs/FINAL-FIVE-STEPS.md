@@ -12,7 +12,7 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 | 4 — Đóng E | Đối soát kết quả 24 tác vụ đã khóa, P06 giữ hoãn; không chạy thêm mẫu ngoài bộ. Chỉ tính số đo từ bằng chứng thật, công bố mẫu số/ngoại lệ và kết quả chưa đạt. Chốt hướng dẫn và bài demo 10 phút bằng các kết quả này. | Đủ bằng chứng cho các tác vụ áp dụng; điểm theo ngưỡng đã khóa, không có điểm giả hoặc lỗi chức năng chính bị bỏ qua. Không dùng kết quả lịch sử khác bản như phép kiểm mới. |
 | 5 — Đóng F | Khi 1–4 đạt: gộp staging vào main, kiểm CI main, triển khai đúng ảnh; kiểm ngắn đăng nhập, nguồn, kết quả đã lưu và URL. Công bố bản/mã ảnh, báo cáo nghiệm thu, giới hạn và cách quay lui. | Main và Render cùng bản đã nghiệm thu; URL dùng được; bàn giao đủ. Dừng chỉnh sửa sau bước này. |
 
-## Trạng thái hiện hành — 07/10/2026
+## Trạng thái hiện hành — 09/10/2026
 
 - Cập nhật 09/10 lúc 02:43 UTC: đã xác nhận qua Render lần triển khai
   dep-db456kbtqb8s73e48gn0 Live đúng ảnh b57abd1696b3... của ffbac81,
@@ -278,9 +278,9 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Phần còn lại, không mở rộng
 
-1. Bản sửa 1047eb2 đã qua CI 37748916764 trên nhánh review, chưa triển khai.
-   Các sửa nội bộ tiếp theo chưa thuộc kết quả CI đó. Chỉ gửi một bản triển
-   khai gộp sau khi đánh giá báo cáo nội bộ; đang chờ xác nhận một lượt Gemini.
+1. Đã đóng xác nhận triển khai: ffbac81, CI 37874873548 đạt và Render
+   dep-db456kbtqb8s73e48gn0 Live đúng ảnh b57abd1696b3. Không triển khai
+   thêm hoặc chạy lại bộ kiểm mã khi chưa có thay đổi cần thiết.
 2. A: đối chiếu từng nhận định của báo cáo với phần chữ nguồn thực đã đọc,
    phân biệt nhu cầu giả lập, dữ kiện công khai và điều chưa rõ. Phép kiểm gộp
    nội bộ không thay sáu tác vụ Chat trong bộ đã khóa. Tự tìm nguồn chính thức
@@ -292,8 +292,29 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
    mã hoặc đủ đề mục. P06 giữ hoãn. Hướng dẫn và bài demo đã có nhưng chỉ
    thay biên nhận sau nghiệm thu, không trình bày bản xem lại như lần chạy mới.
 5. F: chỉ sau khi các điều kiện trên đạt mới gộp main, chạy CI main và triển
-   khai đúng mã ảnh. Main vẫn chưa gộp; URL hiện chạy 81665f7, không phải
-   1047eb2. Kiểm ngắn bản cuối và bàn giao rồi dừng chỉnh sửa.
+   khai đúng mã ảnh. Main vẫn chưa gộp; URL hiện chạy ffbac81, chưa phải
+   bản đã đóng A/B/E. Kiểm ngắn bản cuối và bàn giao rồi dừng chỉnh sửa.
+
+### Đối soát E đã chuẩn bị — không gọi mô hình, không cấp điểm
+
+Bộ khóa có 24 tác vụ; P06 hoãn nên 23 tác vụ áp dụng. Không tăng mẫu.
+Biên nhận lịch sử không được đổi nhãn thành lần chạy mới trên ffbac81.
+
+| Phần trong bộ đã khóa | Bằng chứng đang có | Việc còn lại đúng phạm vi |
+|---|---|---|
+| company-01–06 | FPT từng lỗi nguồn; Vinamilk và Bosch còn một phần. Chưa có bộ sáu báo cáo đạt đầy đủ sau sửa. | Đối soát báo cáo và nguồn thật từng công ty; không dùng kiểm cấu trúc hoặc báo cáo nội bộ thay tác vụ Chat. |
+| U01–06 | U04 có biên nhận đạt; xử lý nguồn không truy cập được có biên nhận a0916d11. U01 còn thiếu nghiệm thu nguồn chính thức; chưa đủ biên nhận U02/U03/U05. | Giữ U04 đã đóng. Chỉ xét các câu còn thiếu trong bộ; biên nhận nguồn lỗi chỉ chứng minh trả đúng giới hạn, không phải tìm được lịch. |
+| P01–05 | P02/P03 có kết quả lịch sử đã đối soát; P01 còn cách diễn đạt, P04 thiếu ngày/trạng thái dự báo, P05 thiếu đối soát đơn vị riêng. | Giữ đúng hạn chế, không gọi lại PDF hoặc sửa thêm theo quyết định tạm gác. Không biến các mục này thành đạt hoặc đưa chúng vào điểm hợp lệ. |
+| W01 | Hỏi tiếp/lưu có biên nhận; lượt đầu a834ce4 còn ngắn và nghĩa phép tính chưa rõ. | Một lượt đầu theo câu đã khóa sau khi có ngân sách; không lặp hỏi tiếp/lưu đã đạt. |
+| W02/W04 | Có đủ chuỗi ba lượt đạt đúng đáp án trên bản đã ghi. | Giữ nguyên biên nhận và phiên bản; không chạy lại chỉ để tạo mẫu mới. |
+| W03/W05/W06 | Có bằng chứng quên; đổi đầu vào An Bình; bản kết quả v2 và ba tệp xuất. Một số bằng chứng là từng bước, chưa chứng nhận cả chuỗi cùng bản. | Ghép biên nhận đúng mã/phạm vi; không tạo lại ghi chú đã xóa, xuất lặp hoặc ghi Google thêm. Nếu chuỗi thiếu bằng chứng thì giữ chưa đóng. |
+
+Hẹn giờ có một bản tin thật; lịch trống và nhãn bảy vai trò sẵn sàng
+không chứng minh cuộc hẹn có dữ liệu hoặc cả bảy vai trò đã làm việc.
+Giữ các giới hạn này trong B và bài demo, không mở thêm ca giả để lấp mẫu.
+Điểm E chưa thể tính hợp lệ; công cụ chấm cấu trúc báo cáo cũ không phải
+bộ chấm chất lượng nghiệp vụ. Phần PDF tạm gác vẫn là giới hạn nghiệm thu,
+không tự xóa khỏi mẫu số hoặc nới ngưỡng để cấp nhãn sẵn sàng phát hành.
 
 Danh sách này không bảo đảm sẽ đạt ngưỡng khi chưa đo. Nếu hạn mức không
 đủ, phải ghi chưa kiểm, không thay bằng điểm giả. Nghiệm thu giới hạn cho

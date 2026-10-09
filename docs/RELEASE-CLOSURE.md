@@ -1,6 +1,15 @@
 # Đợt nghiệm thu cuối — chốt phạm vi 06/10/2026
 
-## Đối soát mới nhất
+## Nơi đọc trạng thái hiện hành
+
+Trạng thái triển khai và việc còn lại được cập nhật tại
+[FINAL-FIVE-STEPS.md](FINAL-FIVE-STEPS.md); biên nhận theo bản nằm trong
+`backend/evals/release_acceptance.json`. Ngày 09/10, URL đã chạy đúng
+ffbac81. Các đoạn dưới là lịch sử theo thời điểm ghi, không phải yêu cầu
+triển khai lại những bản cũ hoặc chứng nhận chất lượng của bản hiện tại.
+Phạm vi A/B/E/F, C/D loại khỏi đợt và P06 hoãn vẫn giữ nguyên.
+
+## Lịch sử đối soát — 07/10/2026
 
 5267996 đã Live đúng ảnh sửa định dạng tổng hợp web:
 dep-db34ug59fdbs73a05nag, kết thúc 2026-10-07T13:57:07.100928Z,
