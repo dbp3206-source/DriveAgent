@@ -75,7 +75,9 @@ async def test_basic_search_page_text_and_bounded_public_query(monkeypatch, cont
     assert "Tavily" in blocks[0]
 
 
-async def test_company_query_omits_private_context_and_prefers_selected_host(monkeypatch, context):
+async def test_company_query_omits_private_context_and_restricts_selected_host(
+    monkeypatch, context,
+):
     requests = []
 
     def handler(request):
@@ -93,9 +95,35 @@ async def test_company_query_omits_private_context_and_prefers_selected_host(mon
     assert "Private" not in body["query"] and "0901234567" not in body["query"]
     assert "99" not in body["query"] and "Example" in body["query"]
     assert body["include_domains"] == ["example.com"]
-    assert body["include_domains_mode"] == "prefer"
+    assert body["include_domains_mode"] == "restrict"
     assert sources[0].url == "https://example.com"
-    assert sources[1].title == "News"  # Third-party is not relabelled official.
+    assert len(sources) == 1  # Unrequested third-party text cannot become official evidence.
+
+
+async def test_selected_host_filters_unrelated_and_lookalike_provider_results(monkeypatch, context):
+    mock_http(monkeypatch, lambda _: httpx.Response(200, json={"results": [
+        {"url": "https://example.com.evil.invalid/page", "raw_content": "Unrelated " * 20},
+        {"url": "https://notexample.com/page", "raw_content": "Unrelated " * 20},
+        {"url": "https://other.invalid/example.com", "raw_content": "Unrelated " * 20},
+        {"url": "https://news.example.com/page", "raw_content": PAGE},
+        {"url": "https://example.com", "raw_content": PAGE},
+    ]}))
+    sources, blocks = await collect_tavily_source_bundle(
+        WebResearchInput(domain="example.com", question="Company overview"), context)
+    assert [source.url for source in sources] == [
+        "https://example.com", "https://news.example.com/page"
+    ]
+    assert "Unrelated" not in "".join(blocks)
+
+
+async def test_foreign_results_cannot_replace_unreadable_selected_website(monkeypatch, context):
+    mock_http(monkeypatch, lambda request: httpx.Response(200, json={"results": [
+        {"url": "https://other.invalid/advertisement", "raw_content": PAGE}
+    ]}) if request.method == "POST" else httpx.Response(403))
+    with pytest.raises(ToolError) as error:
+        await collect_tavily_source_bundle(
+            WebResearchInput(domain="example.com", question="Company overview"), context)
+    assert error.value.code == "web_sources_empty"
 
 
 async def test_missing_raw_content_reads_page_without_sending_key(monkeypatch, context):

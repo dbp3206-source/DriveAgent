@@ -142,6 +142,16 @@
     "pending_cases": {
       "W01": {"status": "FIRST TURN ACCEPTED; WHOLE-CHAIN RECEIPTS REMAIN RELEASE-SCOPED", "next_action": "Do not rerun the now-accepted first turn for length. Retain historical follow-up/save receipts without relabelling them as current runs; remaining A/B/E closure must state its actual evidence scope."}
     },
+    "company_corrective_work_20261009": {
+      "status": "CODE_VERIFIED_LOCALLY_AWAITING_NEW_IMAGE",
+      "routing_fix_commit": "3cd8643720468cf126e3635f51f6c06be09e0e29",
+      "review_ci": {"run_id": "37880671347", "conclusion": "success"},
+      "routing_publication_ci": {"run_id": "37881169319", "conclusion": "success"},
+      "additional_root_cause": "A real public-only source probe read 6 Samsung, 6 Shopee and 4 Viettel pages but mixed unrelated advertising into the evidence bundle. Tavily prefer mode and missing application-side selected-host validation caused source pollution. No Gemini was called; these are retrieval diagnostics, not accepted company reports.",
+      "source_authority_fix": "For an explicitly selected domain, use restrict mode and enforce exact host or child-host matching. Foreign/lookalike results cannot replace an unreadable selected website. General searches without a selected domain are unchanged. No extra synthesis or paid fallback added.",
+      "local_checks": {"routing_controls_compiler_adk_passed": 287, "web_and_tavily_passed": 112, "ruff": "passed", "diff_check": "passed"},
+      "limits": "The 112-test web set repeats the previous 80 web checks; do not add overlapping counts as unique tests. Host filtering is not in 3cd8643 and requires the next image. No current cloud acceptance or aggregate E score inferred from these checks."
+    },
     "invalid_acceptance_attempts": [
       {
         "case_id": "W01", "status": "WRONG_SOURCE_RESPONSE_INPUT_NOT_BOUND",

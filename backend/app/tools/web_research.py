@@ -377,6 +377,7 @@ async def _collect_tavily_source_bundle(
     if secret is None or not secret.get_secret_value().strip():
         raise ToolError("Chưa cấu hình khóa tìm kiếm web.", code="search_not_configured")
     official = _normalized_public_url(payload.domain) if payload.domain else None
+    official_host = urlsplit(official).hostname if official else None
     if official:
         await _assert_public_https(official)
     # Company research must not export the user's private consultation context.
@@ -408,7 +409,7 @@ async def _collect_tavily_source_bundle(
         "include_images": False, "include_published_date": True,
     }
     if official:
-        body.update(include_domains=[urlsplit(official).hostname], include_domains_mode="prefer")
+        body.update(include_domains=[official_host], include_domains_mode="restrict")
     # Request-local Authorization must never be inherited by page GETs.
     async with httpx.AsyncClient(timeout=15.0, follow_redirects=False) as http:
         try:
@@ -449,6 +450,16 @@ async def _collect_tavily_source_bundle(
             if not isinstance(item, dict) or not isinstance(item.get("url"), str):
                 continue
             url = item["url"]
+            if official_host:
+                # Provider ranking is not an authority boundary. A selected
+                # website must not gain unrelated advertising or lookalike
+                # domains merely because the search returned readable text.
+                try:
+                    host = urlsplit(url).hostname or ""
+                except ValueError:
+                    continue
+                if host != official_host and not host.endswith("." + official_host):
+                    continue
             if url in seen:
                 continue
             seen.add(url)
@@ -463,8 +474,8 @@ async def _collect_tavily_source_bundle(
             candidates.append((url, title[:240] if isinstance(title, str) else "Nguồn web", text))
         if official and official not in seen:
             candidates.insert(0, (official, "Website do người dùng chọn", ""))
-        # Prefer the selected host without mislabelling third-party results as
-        # official. Missing raw text may be read directly, with one bounded GET.
+        # Read the selected page first; remaining candidates have already been
+        # restricted to its host. Missing raw text gets one bounded public GET.
         if official:
             host = urlsplit(official).hostname
             candidates.sort(key=lambda item: (item[0] != official,

@@ -30,6 +30,15 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   đạt; 80 phép kiểm tìm web, suy luận, nguồn lỗi và thông tin cập nhật đạt.
   Kiểm mã và cấu trúc tệp biên nhận đạt. Đây là kiểm trong máy với kết nối
   giả, không phải 367 câu trả lời Gemini thật. Chưa triển khai bản sửa.
+  GitHub 37880671347 và bước xuất ảnh 37881169319 đã đạt đúng 3cd8643.
+  Khi thu nguồn thật trước khi gọi lại Gemini, phát hiện thêm nguồn quảng
+  cáo lọt vào do chế độ chỉ ưu tiên tên miền. Đã sửa khóa đúng tên miền
+  được chọn và tên miền con, loại nguồn ngoài/giả giống tên miền; tìm
+  web chung vẫn giữ nguyên. 112 phép kiểm web/Tavily đạt, bao gồm 80
+  phép web đã nêu, không cộng trùng. Cả ba website có nội dung đọc được;
+  chưa phải ba báo cáo thật đạt. Không triển khai hoặc thử lại 3cd8643
+  để nghiệm thu vì ảnh đó chưa chứa sửa lọc nguồn. Gộp hai nhóm sửa
+  vào ảnh tiếp theo, không thêm tính năng hoặc dùng thêm lượt Gemini.
 
 - Đối soát biên nhận, không gọi lại mô hình: tìm được U05
   cd9d0cbd-2131-4e2c-96f8-7564e614d506 đạt phân biệt giá cũ/giá hiện tại.
