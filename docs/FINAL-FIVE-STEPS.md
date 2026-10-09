@@ -14,6 +14,19 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 07/10/2026
 
+- Cập nhật 09/10 lúc 02:25 UTC: kết nối Render đã đọc được trong
+  My Workspace do người dùng xác nhận. Đã đối chiếu độc lập lần triển
+  khai dep-db3qsk3tqb8s73f2jb40 Live đúng ảnh 42498cbc... của a834ce4,
+  hoàn tất lúc 14:55 UTC ngày 08/10. Không cần ảnh chụp nguồn triển khai
+  từ người dùng nữa. Chuyển current_results sang đúng bản đã xác minh,
+  giữ kết quả 81665f7 trong lịch sử. W01 trên a834ce4 vẫn một phần;
+  không dùng xác nhận đúng ảnh để cấp đạt câu trả lời hoặc điểm E.
+  Bản sửa ffbac81 đã qua CI 37800842191 ở nhánh xem xét, chưa xuất bản
+  ảnh hoặc triển khai. Lệnh đẩy staging bị xét duyệt chặn vì có thể tự
+  đổi Render trước khi đóng nghiệm thu; không thử đường vòng. Đang chờ
+  người dùng xác nhận riêng bước này. Main chưa gộp. Không gọi thêm
+  mô hình hoặc thay hạn mức; các cập nhật dưới đây giữ làm lịch sử.
+
 - Cập nhật 08/10 sau 15:06 UTC: người dùng đã chạy W01 trên cloud.
   Tác vụ c6c9f064-2380-4222-99f3-a3b0419c40eb hoàn tất, nhưng câu trả lời
   incomplete: 164 tiếng/số, dưới yêu cầu 200–240. Đọc đủ hai tệp, dùng

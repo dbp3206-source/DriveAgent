@@ -36,6 +36,38 @@
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
   "current_results": {
+    "release_commit": "a834ce4741d9a4dc41766695a0bb338375e003df",
+    "image_digest": "sha256:42498cbc049b1b648a9823e5539399fc9e59fdcdd70ef445c8ee96007201810e",
+    "observed_date": "2026-10-09",
+    "deployment": {
+      "ci_run_id": "37794511427", "ci_status": "success",
+      "render_deploy_id": "dep-db3qsk3tqb8s73f2jb40", "render_status": "live",
+      "finished_at": "2026-10-08T14:55:00.079239Z",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "evidence_method": "Render MCP list_services, get_deploy and list_deploys in the user-confirmed My Workspace; exact live image verified 2026-10-09T02:25Z",
+      "scope": "Exact live image and the observed W01 response; no whole-release quality inferred"
+    },
+    "cases": {
+      "W01": {
+        "status": "PARTIAL",
+        "request_id": "c6c9f064-2380-4222-99f3-a3b0419c40eb",
+        "session_id": "a794f519-2fd3-4a07-89c3-964681e7f09f",
+        "assistant_message_id": "7b202feb-9871-47d0-98dc-4675485f5516",
+        "completed_at": "2026-10-08T15:06:24.612406Z",
+        "task_status": "completed", "answer_status": "incomplete",
+        "body_word_count": 164, "required_word_range": [200, 240],
+        "violations": ["below_explicit_word_minimum"],
+        "source_reads": "Both named local files read; revised 24 people used, both sources cited, three clarification questions retained",
+        "calculation": "4608 minutes is the correct remaining time under the hypothesis, but its meaning is not explicit; required baseline 5760 and hypothesized savings 1152 are missing. Stored tool trace confirms execution but does not expose expressions/results.",
+        "evidence_method": "Exact owner-scoped persisted message/task/audit readback on 2026-10-08; exact deployment subsequently verified through Render MCP",
+        "quality_score": null,
+        "next_action": "Keep partial; do not infer quality from CI or repeat the previously accepted follow-up/save steps. Candidate ffbac81 fixes arithmetic evidence transfer but is not deployed or live-answer accepted."
+      }
+    },
+    "unchanged_path_evidence": "Historical passing workflow receipts retain original release and scope; not new runs on this image.",
+    "unlisted_cases": "Not verified on this release. No aggregate score or A/B/E/F acceptance inferred from CI."
+  },
+  "prior_81665f7_results": {
     "release_commit": "81665f7f941c53b77b12daba388ff17c46f5e9f4",
     "image_digest": "sha256:b80b2bd6fe8e1c7acf0943cf3f2e7bd1e8f0b9ad412cf5e75a8ae86b12bd9575",
     "observed_date": "2026-10-08",
