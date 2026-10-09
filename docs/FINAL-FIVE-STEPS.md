@@ -14,6 +14,21 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Hai lượt Shopee/Viettel đã được đối soát, không yêu cầu gửi lại cả lô.
+  Shopee đọc quy chế chính thức, một lượt Gemini, toàn tác vụ 17,445 giây;
+  tổng quan bị bộ kiểm số thay thành câu chung và chưa giải thích nhận chữ
+  từ ảnh như yêu cầu. Viettel đọc web thành công nhưng bị giới hạn xử lý
+  trong phút chặn trước tổng hợp; không phải bằng chứng Gemini lỗi. Biên
+  nhận được giữ, không gọi thất bại này là đạt.
+- Đã sửa gộp trong máy: giữ lời báo thiếu tin đúng khoảng người dùng yêu
+  cầu, không gắn lời báo đó cho website; giữ chặn số nghiệp vụ thiếu căn
+  cứ. Hướng dẫn tách khách hàng khỏi đơn vị vận hành website. Bỏ đoạn
+  nguồn web lặp trong yêu cầu tổng hợp, giữ đầy đủ chữ gốc ở danh mục
+  nguồn và không đổi giới hạn an toàn. Lượt kiểm cuối: 289 phép kiểm gộp
+  đạt trong 60,61 giây, gồm dữ liệu web lồng trong công cụ và đánh lại số
+  nguồn; kiểm mã đạt. Chưa triển khai hoặc khẳng định đầu ra thật đã đạt.
+  Không cộng với các lượt 283/288 trước đó. Chỉ chuẩn bị một
+  ứng viên chung, chờ CI; không gửi lại Samsung/Shopee/Viettel ngay.
 - Render dep-db46o4cs728c739ovno0 đã Live đúng e1de733/ảnh f43a6614f572
   lúc 11:24:25 giờ Việt Nam ngày 09/10. HTTP health 200, status ok,
   database/object_storage true; không có nhật ký mức lỗi từ 11:22:41 đến
@@ -31,10 +46,9 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   chứng minh một dòng bị thay, nhưng không lưu dòng trước khi thay nên
   không khẳng định nguyên văn ban đầu. Hướng dẫn hiện tại cũng chưa tách
   rõ đơn vị vận hành website với khách hàng/người liên hệ được hỏi.
-- Giữ Samsung, không gửi lại hoặc triển khai riêng một ví dụ. Chỉ gửi
-  hai câu Shopee/Viettel đã khóa, mỗi câu một lần ở phiên mới trên cùng
-  ảnh, nguồn Tự động; đọc chung rồi quyết định sửa tối thiểu. Thanh bên
-  bị chặn khởi tạo nên hai lượt nhập này cần người dùng thực hiện.
+- Giữ Samsung, không gửi lại hoặc triển khai riêng một ví dụ. Hai câu
+  Shopee/Viettel đã gửi và đối soát ở cập nhật trên; không gửi lại ngay.
+  Thanh bên bị chặn khởi tạo nên chưa có bằng chứng tự thao tác giao diện.
   Không kiểm lại B đã đạt hoặc PDF đã tạm gác; không thêm ca/khóa/ghi
   Google. Biên nhận ffbac81 giữ riêng, không đổi thành kết quả e1de733.
 
@@ -455,12 +469,12 @@ Thiếu hạn mức/quyền/dữ liệu không phải lý do bịa kết quả. 
 Ba ca dưới đã có biên nhận ngày 09/10 nhưng chưa đạt bằng chứng web.
 Không coi đây là yêu cầu gửi lại ngay; trước tiên phải cập nhật ảnh
 f43a6614f572 và xác nhận Live đúng nguồn (đã xác nhận 09/10 lúc 11:24).
-Samsung đã gửi và đối soát; không gửi lại. Tiếp tục riêng Shopee/Viettel
-để gom kết quả của tuyến bị sửa, không lặp quy trình đã đạt hoặc gọi lại
-vì độ dài. Câu Samsung dưới đây chỉ lưu làm nguồn đầu vào của biên nhận.
+Samsung/Shopee/Viettel đều đã gửi và đối soát; không gửi lại ngay.
+Các câu dưới chỉ lưu làm nguồn đầu vào của biên nhận và lần kiểm bị ảnh
+hưởng sau triển khai được xác nhận, không phải yêu cầu chạy cả lô.
 
-Tạo hai cuộc trò chuyện mới cho Shopee/Viettel, chọn nguồn **Tự động**,
-gửi mỗi câu đúng một lần.
+Khi có hướng dẫn kiểm đúng bản mới, tạo phiên mới, nguồn **Tự động**,
+chỉ gửi đúng ca còn cần xác minh một lần.
 Đợi một câu hoàn tất rồi mới gửi câu kế tiếp; không gửi lại khi đang chạy.
 Không đổi khóa, mô hình, hạn mức hoặc triển khai trong lô này. Độ dài không phải
 điều kiện chặn; ưu tiên thông tin đúng, rõ nguồn và những điều chưa biết.

@@ -112,16 +112,52 @@
         "root_cause_scope": "Trace proves one delivered line was replaced by the numeric guard; the pre-guard line is not persisted. Offline reproduction proves that a cited, negated 30-day search limitation is treated as an unsupported business number. This is a reproducible mechanism, not proof of the exact original Samsung sentence. Entity mapping is an observed answer defect; the current instruction distinguishes global/group scope but not website operator versus requested customer/contact.",
         "next_action": "Keep this receipt; do not rerun Samsung or deploy a one-example patch. Read the two remaining affected-route locked cases once on this same image before deciding the smallest shared fix. No new cases, PDF retries, private reads or aggregate score.",
         "quality_score": null
+      },
+      "company-04": {
+        "status": "PARTIAL_REAL_WEB_READ_OVERVIEW_AND_REQUIRED_EXPLANATION_NOT_ACCEPTED",
+        "receipt_reference": "Local-only QA: design-work/qa/acceptance-20261008/company-batch-readback-20261009.md. No new request/session/user identifiers published.",
+        "model": "gemini-3.5-flash-lite", "provider_status": "success",
+        "model_call_count": 1, "task_status": "completed", "task_attempts": 1,
+        "source_tools": ["web_research"], "citation_count": 1,
+        "source_urls": ["https://help.shopee.vn/portal/4/article/77245"],
+        "source_evidence_kind": "page_text", "source_excerpt_lengths": [9000],
+        "agent_task_latency_ms": 17445, "web_research_latency_ms": 6441,
+        "output_guard": {"rule": "web_numeric_evidence_boundary", "affected_lines": 1},
+        "verified": "Actual official operation-rules page retrieved. Report truthfully states no verified 30-day news and no confirmed meeting, has three questions and no writes. Text contains real newlines, not literal backslash-n. No word-count penalty.",
+        "findings": "Overview is replaced by the generic numeric guard message; pre-guard sentence is not persisted, so the original unsupported number is unknown. Website/app delivery channels are described as scale rather than measured scale, though staffing/finance are correctly unknown. OCR is not explained as requested and questions retain unexplained technical terms. These are answer-quality limits, not proof of provider outage.",
+        "quality_score": null
+      },
+      "company-05": {
+        "status": "BLOCKED_BEFORE_SYNTHESIS_BY_APPLICATION_MINUTE_LIMIT",
+        "receipt_reference": "Local-only QA: design-work/qa/acceptance-20261008/company-batch-readback-20261009.md. No new request/session/user identifiers published.",
+        "task_status": "failed", "task_attempts": 1,
+        "error_code": "quota_minute_exhausted", "failure_category": "application_guard",
+        "source_tools": ["web_research"], "web_research_status": "success",
+        "agent_task_latency_ms": 6659, "web_research_latency_ms": 4109,
+        "verified": "Web collection succeeded; application quota reservation failed before synthesis. No completed answer or successful model event. Not a confirmed Gemini provider error and not accepted as a business-task success.",
+        "quota_evidence": "One flash reservation of 191578 conservative tokens exists within the observed minute window, for the preceding Shopee run; default TPM limit is 250000. No counter, quota profile or paid setting changed. Exact attempted Viettel reservation was not persisted, so waiting one minute alone is not claimed to guarantee success.",
+        "quality_score": null
       }
     },
     "pending_cases": {
-      "company-04": {"status": "AFFECTED_ROUTE_CHECK_PENDING", "next_action": "Run the existing Shopee prompt once in a fresh Chat, source Auto, on the unchanged e1de733 image. No private sources or writes."},
-      "company-05": {"status": "AFFECTED_ROUTE_CHECK_PENDING", "next_action": "Run the existing Viettel prompt once in a fresh Chat, source Auto, on the unchanged e1de733 image. No private sources or writes."},
-      "remaining_locked_cases": "Samsung route check is complete but report quality is partial. Retain existing company/freshness and historical B limits. Read Shopee/Viettel before a shared fix; do not add cases or repeat passed/PDF workflows. No aggregate score."
+      "company-05": {"status": "WAITING_FOR_GROUPED_FIX_AND_BOUNDED_RECHECK", "next_action": "Keep the failed receipt. Do not request an immediate repeated batch, add keys, reset quota or claim Gemini outage. Group the reproduced numeric-limit fix, customer-scope instruction and duplicate-evidence removal; verify CI before deployment. A later single Viettel check must retain the original prompt and scope."},
+      "remaining_locked_cases": "Samsung and Shopee route checks now have real web evidence but report quality remains partial. Viettel is application-limit blocked before synthesis. Retain existing company/freshness and historical B limits; no new cases or PDF/passed-workflow retries. No aggregate score."
     },
     "unchanged_path_evidence": "Historical workflow, memory, scheduler and approved Google Doc receipts retain original release and functional scope, including W01/W05 reassessment above. Do not rerun unaffected steps just to relabel them as new.",
     "quality_score": null,
     "unlisted_cases": "NOT VERIFIED on this image. Main not merged; whole-product readiness unproven."
+  },
+  "candidate_fix_20261009": {
+    "status": "LOCAL_VERIFIED_NOT_DEPLOYED",
+    "changes": [
+      "Retain a whole-sentence unverified-news search limitation only when its day window was explicitly requested; remove false source attribution. Mixed business claims, unsupported numbers and unrequested windows remain blocked. Shared by compiler, ADK and legacy answer paths.",
+      "Clarify website operator versus requested customer/contact, avoid treating registration/address as scale and use a neutral recent-news heading. Prompt-policy correction is not proof of model compliance.",
+      "Avoid sending an identical web excerpt twice in compiler input, including explicit web_research/data wrappers: original text remains in canonical source_references, source metadata points to that reference. Recompute against the current mapping after citation renumbering. Unmatched excerpts and non-web portions of mixed-source data stay intact. No source truncation or quota-limit changes."
+    ],
+    "verification": "Before behavior fix, 6 regression cases fail and 7 negative controls pass. The final grouped run passes 289 tests in 60.61 seconds across evidence, compiler, ADK, legacy orchestration and creation schema, including actual nested web payload and post-retention reference remapping. Ruff and diff checks pass. Tests use fake provider boundaries, not Gemini answer-quality evidence. Earlier 283/288-test runs and a failed 12-case mapping check overlap this final run; do not add the counts or treat the intermediate run as final.",
+    "live_quality_verified": false,
+    "ci_verified": false,
+    "deployment_verified": false
   },
   "prior_ffbac81_results": {
     "release_commit": "ffbac816fabfdd160a22b9678865bf0581669006",

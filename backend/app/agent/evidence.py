@@ -79,14 +79,58 @@ def source_references(citations: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [{"reference": index, **citation} for index, citation in enumerate(citations, start=1)]
 
 
-def bound_web_numeric_claims(answer: str, citations: list[dict[str, Any]]) -> tuple[str, int]:
+def compact_web_evidence(payload: Any, citations: list[dict[str, Any]]) -> Any:
+    """Avoid repeating an identical web excerpt beside its canonical reference.
+
+    Keep every source, date and nonidentical excerpt; no retrieval or source
+    boundary changes. Non-web portions of mixed-tool payloads stay untouched.
+    """
+    if not isinstance(payload, dict) or not isinstance(payload.get("sources"), list):
+        return payload
+    refs = {item.get("file_id"): (index, item.get("snippet"))
+            for index, item in enumerate(citations, 1) if item.get("evidence_kind")}
+    sources = []
+    for source in payload["sources"]:
+        if isinstance(source, dict) and source.get("tool") == "web_research":
+            sources.append({
+                **source, "data": compact_web_evidence(source.get("data"), citations),
+            })
+            continue
+        ref = refs.get(source.get("url")) if isinstance(source, dict) else None
+        if ref and ref[1] and source.get("evidence_excerpt") == ref[1]:
+            sources.append({
+                **{key: value for key, value in source.items() if key != "evidence_excerpt"},
+                "evidence_reference": ref[0],
+            })
+        else:
+            sources.append(source)
+    return {**payload, "sources": sources}
+
+
+def bound_web_numeric_claims(
+    answer: str, citations: list[dict[str, Any]], *, request: str = "",
+) -> tuple[str, int]:
     """Reject missing literal numbers in cited web-page claims, without a model call.
 
     This is a necessary evidence check, not semantic validation of units, entities
     or dates. It never borrows a number from an uncited source or a headline.
     Local-source calculations and bibliography titles are outside this boundary.
+    A whole-sentence search limitation may retain only a period explicitly asked
+    for by the user; remove its false web attribution instead. Never exempt a
+    paragraph merely because it contains a negation or a requested number.
     """
     marker = re.compile(r"\[(\s*S?\d+(?:\s*[,;]\s*S?\d+)*\s*)\]", re.I)
+    window = r"(?P<days>\d{1,3})\s+ngày\s+(?:gần\s+đây|vừa\s+qua|qua)"
+    requested_days = {match["days"] for match in re.finditer(
+        rf"(?<!\w){window}\b", request, re.I,
+    )}
+    news_limit = re.compile(
+        r"\s*(?:[-*]\s+)?Chưa\s+xác\s+minh\s+được\s+"
+        r"(?:tin(?:\s+(?:mới|tức))?|thông\s+tin\s+cập\s+nhật)\s+trong\s+"
+        + window
+        + r"(?:\s+(?:từ|trong)\s+(?:các\s+)?nguồn\s+đã\s+(?:đọc|dẫn))?\s*[.!]?\s*",
+        re.I,
+    )
 
     def numbers(text: str) -> set[str]:
         text = re.sub(r"https?://\S+", "", text)
@@ -155,7 +199,13 @@ def bound_web_numeric_claims(answer: str, citations: list[dict[str, Any]]) -> tu
                        or not source.get("snippet") for source in selected)):
             result.append(line)
             continue
-        claims = numbers(marker.sub("", line))
+        plain = marker.sub("", line)
+        limitation = news_limit.fullmatch(plain)
+        if limitation and limitation["days"] in requested_days:
+            result.append(re.sub(r"\s+([.!])", r"\1", plain).rstrip())
+            affected += 1
+            continue
+        claims = numbers(plain)
         supported = set().union(*(numbers(str(source["snippet"])) for source in selected))
         if claims <= supported:
             result.append(line)

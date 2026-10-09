@@ -314,6 +314,63 @@ def test_web_numeric_claim_requires_numbers_in_the_cited_page_not_other_sources(
     assert "Chưa đủ bằng chứng" in result
 
 
+def test_web_prompt_keeps_each_original_excerpt_once_with_unchanged_reference_metadata():
+    from copy import deepcopy
+
+    from app.agent.evidence import compact_web_evidence
+
+    excerpt = "Dữ kiện gốc không được cắt bỏ; có 120 nhân viên."
+    payload = {"summary": "Đã thu nguồn, chưa kết luận.", "sources": [
+        {"url": "https://example.org", "title": "Công ty", "evidence_excerpt": excerpt,
+         "evidence_kind": "page_text", "published_at": None, "event_date": None},
+        {"url": "https://example.org/other", "evidence_excerpt": "Chưa có trong trích dẫn."},
+    ]}
+    before = deepcopy(payload)
+    citations = [{"file_id": "https://example.org", "snippet": excerpt,
+                  "evidence_kind": "page_text"}]
+    packed = compact_web_evidence(payload, citations)
+    assert payload == before
+    assert packed["summary"] == payload["summary"]
+    assert packed["sources"][0] == {
+        **{key: value for key, value in payload["sources"][0].items()
+           if key != "evidence_excerpt"}, "evidence_reference": 1,
+    }
+    assert packed["sources"][1] == payload["sources"][1]
+    prompt = json.dumps({"evidence_untrusted": packed,
+                         "source_references": source_references(citations)}, ensure_ascii=False)
+    assert prompt.count(excerpt) == 1
+    assert len(prompt) < len(json.dumps({"evidence_untrusted": payload,
+        "source_references": source_references(citations)}, ensure_ascii=False))
+
+
+@pytest.mark.parametrize("payload", [None, {"text": "Tài liệu local"},
+    {"sources": [{"tool": "local_source_read", "data": {"text": "Giữ đầy đủ"}}]},
+    {"sources": [{"url": "https://example.org", "evidence_excerpt": "Bản dài hơn."}]},
+])
+def test_web_prompt_compaction_never_drops_unmatched_or_private_evidence(payload):
+    from app.agent.evidence import compact_web_evidence
+
+    citations = [{"file_id": "https://example.org", "snippet": "Bản ngắn.",
+                  "evidence_kind": "page_text"}]
+    assert compact_web_evidence(payload, citations) == payload
+
+
+def test_web_prompt_compacts_explicit_web_tool_wrapper_without_touching_other_tools():
+    from app.agent.evidence import compact_web_evidence
+
+    web = {"sources": [{"url": "https://example.org", "evidence_excerpt": "Nguồn gốc."}]}
+    local = {"tool": "local_source_read", "data": {"text": "Giữ nguyên tài liệu local."}}
+    payload = {"sources": [{"tool": "web_research", "data": web}, local]}
+    citations = [{"file_id": "https://example.org", "snippet": "Nguồn gốc.",
+                  "evidence_kind": "page_text"}]
+    compact = compact_web_evidence(payload, citations)
+    assert compact["sources"][0]["data"]["sources"] == [
+        {"url": "https://example.org", "evidence_reference": 1},
+    ]
+    assert compact["sources"][1] == local
+    assert payload["sources"][0]["data"] == web
+
+
 def test_web_numeric_boundary_preserves_local_calculations_and_missing_metadata():
     from app.agent.evidence import bound_web_numeric_claims
 
@@ -330,6 +387,46 @@ def test_web_numeric_boundary_does_not_invent_support_for_calculated_values():
     sources = [{"evidence_kind": "page_text", "snippet": "Năm 2026: 120; 150."}]
     result, count = bound_web_numeric_claims("Tăng 25% theo trang web [1].", sources)
     assert count == 1 and "Tăng 25% theo trang web" not in result
+
+
+@pytest.mark.parametrize("days", [7, 30, 45])
+@pytest.mark.parametrize("period", ["gần đây", "vừa qua"])
+def test_numeric_guard_keeps_requested_news_search_limit_without_web_attribution(days, period):
+    from app.agent.evidence import bound_web_numeric_claims
+
+    source = {"evidence_kind": "page_text", "snippet": "Danh mục sản phẩm doanh nghiệp."}
+    statement = f"Chưa xác minh được tin trong {days} ngày {period} từ các nguồn đã đọc."
+    answer = statement[:-1] + " [1]."
+    result, affected = bound_web_numeric_claims(
+        answer, [source], request=f"Chuẩn bị báo cáo và tin {days} ngày gần đây.",
+    )
+    assert result == statement
+    assert affected == 1  # Remove the false attribution, not the search limitation.
+
+
+@pytest.mark.parametrize("user_request,answer", [
+    ("Tin 7 ngày gần đây.", "Chưa xác minh được tin trong 30 ngày gần đây [1]."),
+    ("", "Chưa xác minh được tin trong 30 ngày gần đây [1]."),
+    ("Tin 30 ngày gần đây.", "Không có tin trong 30 ngày gần đây [1]."),
+    ("Tin 30 ngày gần đây.", "Có 30 nhà máy và 1000 nhân viên [1]."),
+    ("Tin 30 ngày gần đây.",
+     "Chưa xác minh được tin trong 30 ngày gần đây, nhưng có 1000 nhân viên [1]."),
+    ("Tin 30 ngày gần đây.",
+     "Chưa xác minh được tin trong 30 ngày gần đây [1]. Có 1000 nhân viên [1]."),
+    ("Tin 30 ngày gần đây.",
+     "Chưa xác minh được tin trong 30 ngày gần đây về doanh thu tăng 25% [1]."),
+])
+def test_news_limit_exception_never_grants_business_numbers_or_unrequested_period(
+    user_request, answer,
+):
+    from app.agent.evidence import bound_web_numeric_claims
+
+    source = {"evidence_kind": "page_text", "snippet": "Danh mục sản phẩm doanh nghiệp."}
+    result, affected = bound_web_numeric_claims(answer, [source], request=user_request)
+    assert affected == 1
+    assert "Chưa đủ bằng chứng" in result
+    assert "1000 nhân viên" not in result
+    assert "25%" not in result
 
 
 def test_web_numeric_boundary_supports_grouped_numbers_and_keeps_source_titles():

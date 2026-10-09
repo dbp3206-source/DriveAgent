@@ -39,6 +39,7 @@ from app.agent.evidence import (
     HISTORICAL_SOURCE_INSTRUCTION,
     bound_headline_claims,
     bound_web_numeric_claims,
+    compact_web_evidence,
     label_historical_sources,
     prior_turn_sources,
     retain_referenced_citations,
@@ -1277,12 +1278,13 @@ class CompilerOrchestrator:
                           "kind": "inventory_balance", "method": "Decimal"})
         if source_calculation and verified_calculations is None:
             verified_calculations = {}
+        model_context_data = compact_web_evidence(context_data, citations)
         prompt = json.dumps(
             {
                 "current_user_request": user_message,
                 "server_time": server_time_context(self.settings.local_timezone),
                 "history_untrusted": history_data,
-                "evidence_untrusted": context_data,
+                "evidence_untrusted": model_context_data,
                 "source_references": source_references(citations),
                 "artifact_contract": CreationAnswer.model_json_schema(),
                 "chat_controls": controls.model_dump(mode="json"),
@@ -1495,7 +1497,7 @@ class CompilerOrchestrator:
                     "current_user_request": user_message,
                     "invalid_payload_to_repair": invalid_raw,
                     "artifact_contract": CreationAnswer.model_json_schema(),
-                    "evidence_untrusted": context_data,
+                    "evidence_untrusted": model_context_data,
                     "source_references": source_references(citations),
                 },
                 ensure_ascii=False,
@@ -1660,14 +1662,14 @@ class CompilerOrchestrator:
             fallback_model=self.settings.gemini_fallback_model,
             records=trace,
             verified_calculations=verified_calculations,
-            source_evidence_untrusted=context_data,
+            source_evidence_untrusted=compact_web_evidence(context_data, citations),
             source_references_untrusted=source_references(citations),
             required_questions=clarification_questions,
         )
         # The bounded model rewrite can restore inline headings/steps or TeX
         # that were already cleaned in the first pass. Apply only content-neutral
         # boundary normalization; do not synthesize new answer sections here.
-        answer, numeric_lines = bound_web_numeric_claims(answer, citations)
+        answer, numeric_lines = bound_web_numeric_claims(answer, citations, request=user_message)
         if numeric_lines:
             trace.append({
                 "stage": "output_guard", "status": "corrected",

@@ -615,7 +615,9 @@ class AdkOrchestrator:
             # Apply content-neutral boundary repair after the last model call.
             answer = normalize_math_notation(answer)
             answer, _ = normalize_markdown_boundaries(answer)
-            answer, numeric_lines = bound_web_numeric_claims(answer, citations)
+            answer, numeric_lines = bound_web_numeric_claims(
+                answer, citations, request=user_message,
+            )
             if numeric_lines:
                 records.append({
                     "stage": "output_guard", "status": "corrected",

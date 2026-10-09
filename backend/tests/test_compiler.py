@@ -74,7 +74,10 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
         assert "không cần website xác nhận" in instruction
         assert "không ghép nguồn chỉ có tiêu đề vào cùng câu" in instruction
         assert compiler.WEB_CONSULTATION_INSTRUCTION in instruction
-        assert "Quy mô có căn cứ; Tin mới đã xác minh" in instruction
+        assert "Quy mô có căn cứ; Tin gần đây" in instruction
+        assert "đơn vị vận hành website, không tự" in instruction
+        assert "giữ nguyên tên khách hàng và người liên hệ" in instruction
+        assert "Địa chỉ, mã đăng ký và người đại diện không phải số đo quy mô" in instruction
         assert "không thay quy mô bằng xếp hạng thương hiệu" in instruction
         assert "không thay thế tin mới" in instruction
         assert "chưa có ngày giờ" in instruction
@@ -109,6 +112,12 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
     monkeypatch.setattr(Gemini, "generate_content_async", generate)
     async def presentation(**kwargs):
         assert "3. Kết quả mong muốn được đánh giá bằng cách nào?" in kwargs["answer"]
+        # Citation retention has removed the first source and renumbered the
+        # headline from 2 to 1. Compaction must use this current mapping.
+        web_sources = kwargs["source_evidence_untrusted"]["sources"][0]["data"]["sources"]
+        assert web_sources[1]["evidence_reference"] == 1
+        assert "evidence_excerpt" not in web_sources[1]
+        assert web_sources[0]["evidence_excerpt"] == "Dữ kiện doanh nghiệp."
         assert kwargs["required_questions"] == [
             "Công việc nào hiện mất nhiều thời gian?",
             "Nguồn tài liệu nào cần tìm?",
@@ -119,6 +128,13 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
         ]
 
     monkeypatch.setattr(compiler, "enforce_presentation_contract", presentation)
+    numeric_guard = compiler.bound_web_numeric_claims
+
+    def check_numeric_guard(answer, citations, *, request):
+        assert source_selection in request
+        return numeric_guard(answer, citations, request=request)
+
+    monkeypatch.setattr(compiler, "bound_web_numeric_claims", check_numeric_guard)
     if drop_questions:
         with pytest.raises(ToolError) as caught:
             await runner.run(
