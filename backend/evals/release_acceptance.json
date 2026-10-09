@@ -96,10 +96,28 @@
       "evidence_method": "Render MCP get_deploy/get_service confirms the exact immutable image after user Update Source; public health read and scoped error log query. Health does not probe the user-specific Gemini key or Google Workspace connectivity.",
       "scope": "Deployment and DB/object-storage connections only. No current-image model response, full A/B/E/F acceptance or aggregate score inferred."
     },
-    "cases": {},
+    "cases": {
+      "company-03": {
+        "status": "PARTIAL_WEB_ROUTE_VERIFIED_ENTITY_AND_NEWS_CLARITY_NOT_ACCEPTED",
+        "receipt_reference": "Local-only QA: design-work/qa/acceptance-20261008/samsung-e1de733-readback-20261009.md. Request/session/message identifiers and exact event timestamps are not added to the public repository by this receipt.",
+        "model": "gemini-3.5-flash-lite", "provider_status": "success",
+        "model_call_count": 1, "task_status": "completed", "task_attempts": 1,
+        "source_tools": ["web_research"], "citation_count": 2,
+        "source_urls": ["https://www.samsung.com/vn", "https://www.samsung.com/vn/about-us/company-info"],
+        "source_evidence_kind": "page_text", "source_excerpt_lengths": [8837, 9000],
+        "agent_task_latency_ms": 14691, "web_research_latency_ms": 3789,
+        "output_guard": {"rule": "web_numeric_evidence_boundary", "affected_lines": 1},
+        "verified": "Actual website collection now runs. Both saved sources are Samsung official pages with readable text. Listed products and website-operator legal details are supported. Appointment date/title/budget are not invented; three questions and no-action status present. No private-source tool or Google write observed. Actual line breaks retained; no length penalty.",
+        "findings": "Report and clarification questions silently substitute Samsung Vina (the website operator) for the requested customer Samsung Electronics Vietnam without proving that mapping. Global-vs-requested-unit distinction remains insufficient. News section contains only the numeric guard's generic replacement, not a clear statement of the requested 30-day search limitation. Address/registration details do not establish employee/revenue scale, which the answer correctly leaves unknown.",
+        "root_cause_scope": "Trace proves one delivered line was replaced by the numeric guard; the pre-guard line is not persisted. Offline reproduction proves that a cited, negated 30-day search limitation is treated as an unsupported business number. This is a reproducible mechanism, not proof of the exact original Samsung sentence. Entity mapping is an observed answer defect; the current instruction distinguishes global/group scope but not website operator versus requested customer/contact.",
+        "next_action": "Keep this receipt; do not rerun Samsung or deploy a one-example patch. Read the two remaining affected-route locked cases once on this same image before deciding the smallest shared fix. No new cases, PDF retries, private reads or aggregate score.",
+        "quality_score": null
+      }
+    },
     "pending_cases": {
-      "company-03": {"status": "ONE_AFFECTED_ROUTE_CHAT_CHECK_PENDING", "next_action": "Run the existing Samsung case once in a new Chat on this image, source Auto. Do not repeat the whole three-case batch before checking this result. Current sidebar getTab fails kernel_pid 9544 with helper_unknown_error: setup refresh had errors; one manual submission is required."},
-      "remaining_locked_cases": "Company and freshness gaps retain their actual historical findings. No unrelated model calls or PDF retries. Assess the first affected-route result before requesting the remaining locked cases."
+      "company-04": {"status": "AFFECTED_ROUTE_CHECK_PENDING", "next_action": "Run the existing Shopee prompt once in a fresh Chat, source Auto, on the unchanged e1de733 image. No private sources or writes."},
+      "company-05": {"status": "AFFECTED_ROUTE_CHECK_PENDING", "next_action": "Run the existing Viettel prompt once in a fresh Chat, source Auto, on the unchanged e1de733 image. No private sources or writes."},
+      "remaining_locked_cases": "Samsung route check is complete but report quality is partial. Retain existing company/freshness and historical B limits. Read Shopee/Viettel before a shared fix; do not add cases or repeat passed/PDF workflows. No aggregate score."
     },
     "unchanged_path_evidence": "Historical workflow, memory, scheduler and approved Google Doc receipts retain original release and functional scope, including W01/W05 reassessment above. Do not rerun unaffected steps just to relabel them as new.",
     "quality_score": null,

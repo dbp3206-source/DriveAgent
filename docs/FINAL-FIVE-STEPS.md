@@ -20,12 +20,23 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   11:25:04 trong phạm vi đọc. Đây là kiểm triển khai, không phải xác nhận
   khóa Gemini của quản trị, kết nối Google hoặc chất lượng Chat. Đóng
   bước triển khai ứng viên; main và điểm E chưa chốt.
-- Công cụ thanh bên vẫn không khởi tạo được (kernel 9544, setup refresh
-  had errors). Lượt tiếp chỉ gửi một câu Samsung đã khóa trên ảnh mới,
-  phiên Chat mới và nguồn Tự động. Đọc kết quả trước khi yêu cầu thêm
-  các ca còn thiếu; không gửi cả lô ba câu, không kiểm lại phần B đã đạt
-  hoặc PDF đã tạm gác. Biên nhận bản ffbac81 được giữ riêng, không đổi
-  thành kết quả của e1de733.
+- Samsung đã chạy trên ảnh mới ngày 09/10: một lượt Gemini,
+  công cụ web 3,789 giây, toàn tác vụ 14,691 giây.
+  Hai nguồn Samsung có toàn văn; đóng riêng lỗi bỏ qua website. Báo cáo
+  còn tự gắn người liên hệ/cuộc hẹn với Samsung Vina dù đầu vào là
+  Samsung Electronics Vietnam; mục tin bị bộ kiểm số thay thành câu
+  chung. Chưa đóng chất lượng A hoặc tính điểm E. Không phải lỗi Gemini.
+- Đã tái hiện trong máy: lời báo chưa xác minh tin trong 30 ngày có dẫn
+  nguồn cũng bị coi là số liệu nghiệp vụ thiếu bằng chứng. Dấu vết thật
+  chứng minh một dòng bị thay, nhưng không lưu dòng trước khi thay nên
+  không khẳng định nguyên văn ban đầu. Hướng dẫn hiện tại cũng chưa tách
+  rõ đơn vị vận hành website với khách hàng/người liên hệ được hỏi.
+- Giữ Samsung, không gửi lại hoặc triển khai riêng một ví dụ. Chỉ gửi
+  hai câu Shopee/Viettel đã khóa, mỗi câu một lần ở phiên mới trên cùng
+  ảnh, nguồn Tự động; đọc chung rồi quyết định sửa tối thiểu. Thanh bên
+  bị chặn khởi tạo nên hai lượt nhập này cần người dùng thực hiện.
+  Không kiểm lại B đã đạt hoặc PDF đã tạm gác; không thêm ca/khóa/ghi
+  Google. Biên nhận ffbac81 giữ riêng, không đổi thành kết quả e1de733.
 
 ### Lịch sử chuẩn bị trước khi bản mới Live
 
@@ -444,10 +455,12 @@ Thiếu hạn mức/quyền/dữ liệu không phải lý do bịa kết quả. 
 Ba ca dưới đã có biên nhận ngày 09/10 nhưng chưa đạt bằng chứng web.
 Không coi đây là yêu cầu gửi lại ngay; trước tiên phải cập nhật ảnh
 f43a6614f572 và xác nhận Live đúng nguồn (đã xác nhận 09/10 lúc 11:24).
-Hiện chỉ gửi Samsung trước, chưa gửi Shopee/Viettel. Chỉ kiểm tuyến bị sửa,
-không lặp các quy trình đã đạt hoặc gọi lại vì độ dài.
+Samsung đã gửi và đối soát; không gửi lại. Tiếp tục riêng Shopee/Viettel
+để gom kết quả của tuyến bị sửa, không lặp quy trình đã đạt hoặc gọi lại
+vì độ dài. Câu Samsung dưới đây chỉ lưu làm nguồn đầu vào của biên nhận.
 
-Tạo ba cuộc trò chuyện mới, chọn nguồn **Tự động**, gửi mỗi câu đúng một lần.
+Tạo hai cuộc trò chuyện mới cho Shopee/Viettel, chọn nguồn **Tự động**,
+gửi mỗi câu đúng một lần.
 Đợi một câu hoàn tất rồi mới gửi câu kế tiếp; không gửi lại khi đang chạy.
 Không đổi khóa, mô hình, hạn mức hoặc triển khai trong lô này. Độ dài không phải
 điều kiện chặn; ưu tiên thông tin đúng, rõ nguồn và những điều chưa biết.

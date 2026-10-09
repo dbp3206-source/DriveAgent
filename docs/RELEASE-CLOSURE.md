@@ -7,7 +7,11 @@ Trạng thái triển khai và việc còn lại được cập nhật tại
 `backend/evals/release_acceptance.json`. Ngày 09/10, URL đã chạy đúng
 e1de733/ảnh f43a6614f572, Render dep-db46o4cs728c739ovno0 Live lúc
 11:24 ngày 09/10, kết nối DB/kho tệp tốt. Chưa chốt chất lượng Chat,
-điểm E hoặc main. Các đoạn dưới là lịch sử theo thời điểm ghi, không phải yêu cầu
+điểm E hoặc main. Samsung đã đọc web thật bằng một lượt Gemini;
+đóng lỗi bỏ qua website, còn nhầm phạm vi khách hàng/đơn vị vận hành và
+câu báo thiếu tin chưa rõ. Giữ kết quả, chỉ kiểm hai ca Shopee/Viettel
+đã khóa trước khi gộp sửa; không chạy lại Samsung hay PDF.
+Các đoạn dưới là lịch sử theo thời điểm ghi, không phải yêu cầu
 triển khai lại những bản cũ hoặc chứng nhận chất lượng của bản hiện tại.
 Phạm vi A/B/E/F, C/D loại khỏi đợt và P06 hoãn vẫn giữ nguyên.
 
@@ -16,16 +20,17 @@ Không dùng số từ cứng làm điều kiện chặn nghiệm thu hoặc lý
 mô hình; ưu tiên chính xác, nguồn phù hợp, bố cục và trả lời đúng yêu cầu.
 Không nới các điều kiện về sự thật, quyền, phép tính hoặc dữ liệu giả.
 
-Đối soát ba câu Samsung/Shopee/Viettel ngày 09/10: đều trả lời nhưng
+Đối soát ba câu Samsung/Shopee/Viettel trước triển khai e1de733 ngày 09/10: đều trả lời nhưng
 không đọc web, không có trích dẫn thật; chưa đạt. Dấu vết chọn
 memory_agent là nhánh trả lời thường, không chứng minh đã đọc bộ nhớ.
 Lỗi chung đã tái hiện: Dùng + URL chưa được nhận là lựa chọn nguồn
 công khai. Bản sửa và phép kiểm gộp đang được ghi ở tài liệu trạng thái;
 không đổi các lượt này thành đạt hoặc gọi thêm mô hình trên bản cũ.
 Sau kiểm nguồn thật đã gộp thêm sửa lọc đúng website vào e1de733; CI
-37881913880 đạt và ảnh f43a6614f572 đã xuất bản. Render vẫn dùng ảnh
-b57abd1696b3, bước tự triển khai bị bỏ qua. Thao tác cập nhật ảnh và
-biên nhận W05 đã đối soát được ghi ở đầu FINAL-FIVE-STEPS.md.
+37881913880 đạt và ảnh f43a6614f572 đã xuất bản. Render đã chạy đúng
+ảnh f43a6614f572 lúc 11:24 ngày 09/10; bước tự triển khai trong CI bị
+bỏ qua, người dùng cập nhật nguồn ảnh. Biên nhận mới và W05 lịch sử
+được ghi ở đầu FINAL-FIVE-STEPS.md.
 
 ## Lịch sử đối soát — 07/10/2026
 
