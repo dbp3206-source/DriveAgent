@@ -30,6 +30,15 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   định lại mã triển khai của từng lượt; không gọi chuỗi trên ảnh hiện tại.
   Không chạy lại quy trình không bị ảnh hưởng chỉ để làm mới biên nhận.
 
+- Đã đọc lại triển khai: lần gần nhất vẫn là dep-db456kbtqb8s73e48gn0,
+  không có lần triển khai mới đang chạy để đợi. Truy vấn Chat từ 06/10
+  chỉ tìm thấy ba câu ASIAD hôm nay, chưa có biên nhận U02/U03. Đối soát
+  dấu vết từ 01/10 chỉ có hai vai trò được ghi nhận chọn/chuyển cùng
+  lượt mô hình thành công: bộ nhớ/tài liệu và nghiên cứu web. Không suy
+  bảy vai trò đã chạy từ danh sách sẵn sàng; các biên nhận Gmail/lịch/duyệt
+  qua công cụ vẫn giữ đúng phạm vi chức năng. Không thêm ca hoặc bắt gọi
+  bảy lượt mô hình để tạo dấu vết. B/E còn thiếu chứng minh, chưa đóng.
+
 ### Chi tiết kiểm chứng và các cập nhật trước
 
 - Ba câu Samsung, Shopee, Viettel đã chạy lúc 03:28–03:29 UTC; đã đọc
@@ -415,7 +424,12 @@ tăng số phép thử. Một lỗi bắt buộc chưa giải quyết thì báo 
 không phát sinh danh sách hoàn thiện mới hoặc tự cấp nhãn sẵn sàng phát hành.
 Thiếu hạn mức/quyền/dữ liệu không phải lý do bịa kết quả. Không yêu cầu thêm khóa.
 
-## Lô thủ công tiếp theo — đúng ba ca thiếu biên nhận
+## Ba câu đã dùng — chưa gửi lại trước khi triển khai đúng ảnh
+
+Ba ca dưới đã có biên nhận ngày 09/10 nhưng chưa đạt bằng chứng web.
+Không coi đây là yêu cầu gửi lại ngay; trước tiên phải cập nhật ảnh
+f43a6614f572 và xác nhận Live đúng nguồn. Sau đó chỉ kiểm tuyến bị sửa,
+không lặp các quy trình đã đạt hoặc gọi lại vì độ dài.
 
 Tạo ba cuộc trò chuyện mới, chọn nguồn **Tự động**, gửi mỗi câu đúng một lần.
 Đợi một câu hoàn tất rồi mới gửi câu kế tiếp; không gửi lại khi đang chạy.

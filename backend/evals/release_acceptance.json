@@ -72,6 +72,13 @@
       "next_manual_batch": [],
       "subsequent_readback": "The user completed company-03/04/05 on 09/10 at 03:28-03:29 UTC. Receipts below supersede the missing-execution observation, but all three failed grounding. Do not resend on the unchanged image."
     },
+    "remaining_evidence_readback": {
+      "method": "Owner-scoped persisted Chat SELECT and aggregate trace readback, without new model calls, Google reads/writes or deployments.",
+      "U02_U03": "The named-request query from 06/10 onward for ASIAD, men's football, yesterday or tomorrow returns only three U01 submissions. No U02/U03 receipt found by this scoped query; absence of a match is not a successful schedule check.",
+      "role_selection_coverage_since_20261001": {"memory_agent": 75, "web_research_agent": 10},
+      "role_coverage_scope": "Counts of distinct owner requests with recorded successful selection/handoff and at least one successful model event. This neither proves correct answers nor assigns a model event to every handoff. Five other declared roles have no matching selected/handoff event in this query. multi_agent ready lists seven definitions, not seven executed roles. Existing compiler/tool-based Gmail, calendar and approval receipts retain their own functional scope; no claim that those functions failed or that all seven ADK roles ran.",
+      "render_revalidation": "Latest deploy is still dep-db456kbtqb8s73e48gn0 on b57abd1696b3ff5d940278ade743a0e2321b620a2055e5e73504ddebf8e3e1ed, Live and terminal. No new deploy handle exists to wait on. Manual image update remains the next required external action."
+    },
     "execution_blocker": "Sidebar getState failed after runtime reset: windows sandbox failed: helper_unknown_error: setup refresh had errors, kernel_pid=2624 exited code=1. No authenticated alternate browser or bypass used. Three manual Chat receipts now exist; deploying the new image still requires the normal Render dashboard because the deploy hook is skipped and available Render tools cannot change imagePath."
   },
   "current_results": {
