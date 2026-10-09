@@ -926,6 +926,27 @@ async def test_safe_direct_route_uses_compiler_without_coordinator_model_turn():
     orchestrator.compiler.run.assert_awaited_once()
 
 
+@pytest.mark.parametrize("url", [
+    "https://www.samsung.com/vn",
+    "https://help.shopee.vn/portal/4/article/77245",
+    "https://solutions.viettel.vn/vi",
+])
+async def test_company_explicit_url_bypasses_unsourced_adk_agent(url):
+    orchestrator = AdkOrchestrator(Settings(_env_file=None), ToolRegistry())
+    expected = SimpleNamespace(answer="Báo cáo từ nguồn đã đọc")
+    orchestrator.compiler.run = AsyncMock(return_value=expected)
+    result = await orchestrator.run(
+        user=SimpleNamespace(id="user-a"), session_id="session-a", request_id="company-url",
+        user_message=(
+            f"Thư giả lập: khách hàng cần trao đổi. Dùng {url} và nguồn chính thức "
+            "để chuẩn bị báo cáo tư vấn, quy mô và tin 30 ngày gần đây. "
+            "Không đọc Gmail, Drive, lịch, tài liệu local hoặc bộ nhớ; không ghi dữ liệu."
+        ),
+    )
+    assert result is expected
+    orchestrator.compiler.run.assert_awaited_once()
+
+
 async def test_local_source_request_uses_deterministic_compiler_gather():
     orchestrator = AdkOrchestrator(Settings(_env_file=None), ToolRegistry())
     expected = SimpleNamespace(answer="local")

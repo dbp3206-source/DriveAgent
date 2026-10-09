@@ -14,6 +14,23 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Ba câu Samsung, Shopee, Viettel đã chạy lúc 03:28–03:29 UTC; đã đọc
+  câu trả lời, nguồn, dấu vết, chế độ chọn và nhật ký đúng ba lượt.
+  Cả ba dùng nguồn tự động nhưng đi vào nhánh trả lời không có bằng chứng:
+  không gọi công cụ web, không có trích dẫn đã đọc; Gemini vẫn thành công.
+  Samsung/Viettel nói chưa kiểm tin; Shopee lại nói đã rà soát nguồn và
+  nêu tin 30 ngày dù không đọc nguồn. Không đạt A và không chấm điểm E.
+  Nguyên nhân đã tái hiện trong máy: cách viết Dùng + URL không khớp
+  bộ nhận yêu cầu đọc website, nên rơi vào nhánh trả lời thường; không
+  phải truy cập bộ nhớ thật. Câu hướng dẫn cấm nguồn riêng cũng thu hẹp
+  sai thành chỉ dùng tin nhắn. Đang kiểm bản sửa chung hai điểm này,
+  giữ nguyên cấm nguồn riêng, không gửi dữ liệu người liên hệ ra tìm web.
+  Không gửi lại ba câu trên bản cũ và không gọi Gemini thêm để kiểm độ dài.
+  Sau sửa: 287 phép kiểm chọn/đọc nguồn, điều phối, hướng dẫn và tổng hợp
+  đạt; 80 phép kiểm tìm web, suy luận, nguồn lỗi và thông tin cập nhật đạt.
+  Kiểm mã và cấu trúc tệp biên nhận đạt. Đây là kiểm trong máy với kết nối
+  giả, không phải 367 câu trả lời Gemini thật. Chưa triển khai bản sửa.
+
 - Đối soát biên nhận, không gọi lại mô hình: tìm được U05
   cd9d0cbd-2131-4e2c-96f8-7564e614d506 đạt phân biệt giá cũ/giá hiện tại.
   W01 trong phiên eb5eaf81 ngày 08/10 có cùng chuỗi đọc/tính, hỏi tiếp,

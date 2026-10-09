@@ -125,6 +125,43 @@ def test_explicit_web_prohibition_blocks_company_website_gather():
     assert not any(source.tool == "web_research" for source in route.sources)
 
 
+@pytest.mark.parametrize("selection", [
+    "Dùng https://www.samsung.com/vn và nguồn công khai chính thức liên quan",
+    "Sử dụng https://help.shopee.vn/portal/4/article/77245",
+    "Đọc https://solutions.viettel.vn/vi",
+])
+def test_company_url_imperative_gathers_public_source_not_forbidden_memory(selection):
+    message = (
+        'Thư giả lập: người liên hệ bí mật viết "Đính kèm hồ sơ năng lực". '
+        f'{selection} để chuẩn bị báo cáo tư vấn: tổng quan, quy mô, tin 30 ngày. '
+        'Không đọc Gmail, Drive, lịch, tài liệu local hoặc bộ nhớ; không ghi dữ liệu.'
+    )
+    route = route_request(message)
+    assert route.required_sources == ("web",)
+    assert [source.tool for source in route.sources] == ["web_research"]
+    assert route.sources[0].arguments["domain"] == selection.split()[1 if selection.startswith(
+        ("Dùng", "Đọc")
+    ) else 2]
+    assert "bí mật" not in route.sources[0].arguments["question"]
+    assert "Đính kèm" not in route.sources[0].arguments["question"]
+
+
+@pytest.mark.parametrize("prohibition", ["Không đọc web.", "Đừng dùng internet."])
+def test_company_url_imperative_respects_public_source_prohibition(prohibition):
+    route = route_request(
+        "Thư giả lập: cần hồ sơ doanh nghiệp. Dùng https://example.org/company "
+        f"để chuẩn bị báo cáo tư vấn. {prohibition}"
+    )
+    assert not any(source.tool == "web_research" for source in route.sources)
+
+
+def test_company_url_mentioned_only_as_prohibited_input_is_not_selected():
+    route = route_request(
+        "Báo cáo tư vấn chỉ dùng thư giả lập. Không dùng https://example.org/company."
+    )
+    assert not route.sources and route.tool != "web_research"
+
+
 def test_named_local_documents_are_all_required():
     route = route_request("So sánh hai tài liệu local banking.pdf và power.pdf theo nguồn.")
     assert [source.arguments["query"] for source in route.sources] == [

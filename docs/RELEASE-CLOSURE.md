@@ -14,6 +14,13 @@ Không dùng số từ cứng làm điều kiện chặn nghiệm thu hoặc lý
 mô hình; ưu tiên chính xác, nguồn phù hợp, bố cục và trả lời đúng yêu cầu.
 Không nới các điều kiện về sự thật, quyền, phép tính hoặc dữ liệu giả.
 
+Đối soát ba câu Samsung/Shopee/Viettel ngày 09/10: đều trả lời nhưng
+không đọc web, không có trích dẫn thật; chưa đạt. Dấu vết chọn
+memory_agent là nhánh trả lời thường, không chứng minh đã đọc bộ nhớ.
+Lỗi chung đã tái hiện: Dùng + URL chưa được nhận là lựa chọn nguồn
+công khai. Bản sửa và phép kiểm gộp đang được ghi ở tài liệu trạng thái;
+không đổi các lượt này thành đạt hoặc gọi thêm mô hình trên bản cũ.
+
 ## Lịch sử đối soát — 07/10/2026
 
 5267996 đã Live đúng ảnh sửa định dạng tổng hợp web:

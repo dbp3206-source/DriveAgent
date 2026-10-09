@@ -29,8 +29,14 @@ from app.tools.registry import ToolRegistry
 
 @pytest.mark.parametrize("missing_first, drop_questions", [(False, False), (True, False),
                                                          (False, True)])
+@pytest.mark.parametrize("source_selection", [
+    "website chính thức https://example.org/company",
+    "Dùng https://example.org/company",
+    "Sử dụng https://example.org/company",
+    "Đọc https://example.org/company",
+])
 async def test_company_compiler_receives_separate_web_evidence_and_date_contract(
-    runtime, monkeypatch, missing_first, drop_questions,
+    runtime, monkeypatch, missing_first, drop_questions, source_selection,
 ):
     from datetime import UTC, datetime
 
@@ -42,6 +48,8 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
 
     async def execute(name, arguments, context):
         calls.append(name)
+        assert arguments["domain"] == "https://example.org/company"
+        assert "An Bình" not in arguments["question"]
         assert context.source == "compiler_gather"
         assert context.metadata == {"defer_web_synthesis": True}
         return WebResearchOutput(
@@ -72,6 +80,7 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
         assert "chưa có ngày giờ" in instruction
         assert "không gắn trích dẫn web cho lời báo thiếu đó" in instruction
         assert "Không tìm thấy không có nghĩa" in instruction
+        assert "chỉ dùng nội dung người dùng cung cấp trực tiếp" not in instruction
         schema = request.config.response_json_schema
         assert "clarification_questions" in schema["required"]
         generations.append(prompt)
@@ -114,15 +123,17 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
         with pytest.raises(ToolError) as caught:
             await runner.run(
                 user=user, session_id=session_id, request_id="company-questions-lost",
-                user_message="Báo cáo tư vấn từ website chính thức https://example.org/company.",
+                user_message=f"Báo cáo tư vấn. {source_selection}.",
             )
         assert caught.value.code == "incomplete_consultation_report"
         assert calls == ["web_research"] and len(generations) == 1
         return
     result = await runner.run(
         user=user, session_id=session_id, request_id="company-source-contract",
-        user_message="Dữ liệu giả lập: khách hàng An Bình. Báo cáo tư vấn từ website "
-                     "chính thức https://example.org/company. Không đọc Gmail hoặc Drive.",
+        user_message=(
+            f"Dữ liệu giả lập: khách hàng An Bình. Báo cáo tư vấn. {source_selection}. "
+            "Không đọc Gmail, Drive, lịch, tài liệu local hoặc bộ nhớ; không ghi dữ liệu."
+        ),
     )
     assert calls == ["web_research"]
     assert len(generations) == (2 if missing_first else 1)

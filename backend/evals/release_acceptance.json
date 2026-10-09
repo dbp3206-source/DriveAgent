@@ -56,10 +56,11 @@
       "release_scope": "Historical receipt; exact deployment at run time not newly determined in this readback."
     },
     "company_coverage": {
-      "cloud_receipts_found": ["company-01", "company-02", "company-06"],
-      "cloud_receipts_not_found_by_named_request_query": ["company-03", "company-04", "company-05"],
-      "limits": "Query covered all owner message history matching the six company names. This is not proof of absence of unnamed/local-only executions and not proof of answer quality. Existing FPT/Vinamilk/Bosch content limitations remain; no new score assigned.",
-      "next_manual_batch": ["company-03", "company-04", "company-05"]
+      "cloud_receipts_found": ["company-01", "company-02", "company-03", "company-04", "company-05", "company-06"],
+      "cloud_receipts_not_found_by_named_request_query": [],
+      "limits": "The first query lacked Samsung/Shopee/Viettel; the subsequent manual batch now provides all six named company executions. Execution coverage is not answer-quality acceptance. New company-03/04/05 receipts all lack retrieved web evidence; existing FPT/Vinamilk/Bosch limitations remain. No aggregate score assigned.",
+      "next_manual_batch": [],
+      "subsequent_readback": "The user completed company-03/04/05 on 09/10 at 03:28-03:29 UTC. Receipts below supersede the missing-execution observation, but all three failed grounding. Do not resend on the unchanged image."
     },
     "execution_blocker": "Sidebar getTab failed after runtime reset: windows sandbox failed: helper_unknown_error: setup refresh had errors, kernel exited code=1. No authenticated alternate browser or bypass used. Manual batch is needed to produce the missing Chat receipts."
   },
@@ -79,6 +80,45 @@
       "scope": "Deployment and connections only; no new model answer or whole-release quality inferred"
     },
     "cases": {
+      "company-03": {
+        "status": "FAIL_NO_WEB_EVIDENCE",
+        "request_id": "5a9d5273-74ed-4920-8084-211c98e98d16",
+        "assistant_message_id": "aaf965d4-94ed-4939-933f-1cdb4d812035",
+        "session_id": "87972fb1-d84f-4ece-b4d8-19bb4da96bf6",
+        "submitted_at": "2026-10-09T03:28:59.596097Z",
+        "model": "gemini-3.5-flash-lite", "provider_status": "success",
+        "server_answer_status": "completed", "task_status": "completed", "task_attempts": 1,
+        "selected_agent": "memory_agent", "selection_mode": "server_routed",
+        "source_tools": [], "citation_count": 0, "agent_task_latency_ms": 12435,
+        "findings": "Keeps appointment time/title/budget unknown and provides three questions, but claims company structure/products without retrieved evidence. Explicitly admits no web tools used. A supplied URL is not evidence of a read; no word-count penalty.",
+        "quality_score": null
+      },
+      "company-04": {
+        "status": "FAIL_NO_WEB_EVIDENCE",
+        "request_id": "3786ca47-b59a-4a74-8694-ffcd163ca6a9",
+        "assistant_message_id": "3f6920ad-f241-458c-be53-38a3fbac7602",
+        "session_id": "3a74bf3a-bdd6-418a-81fb-5af9f7b6389b",
+        "submitted_at": "2026-10-09T03:29:37.902713Z",
+        "model": "gemini-3.5-flash-lite", "provider_status": "success",
+        "server_answer_status": "completed", "task_status": "completed", "task_attempts": 1,
+        "selected_agent": "memory_agent", "selection_mode": "server_routed",
+        "source_tools": [], "citation_count": 0, "agent_task_latency_ms": 8875,
+        "findings": "Explains OCR and keeps contact role/budget/appointment unknown, with three questions. However, asserts reviewed sources and 30-day news themes although no source was read; unsupported scale/industry claims. Some unnecessary English wording. No word-count penalty.",
+        "quality_score": null
+      },
+      "company-05": {
+        "status": "FAIL_NO_WEB_EVIDENCE",
+        "request_id": "db4306c8-9da5-4171-98ee-936b26100f46",
+        "assistant_message_id": "84783fa2-5fdf-4d5e-9dfa-4e56069a7930",
+        "session_id": "f414d675-3a06-4f26-9f11-8a07fee4b193",
+        "submitted_at": "2026-10-09T03:29:57.493042Z",
+        "model": "gemini-3.5-flash-lite", "provider_status": "success",
+        "server_answer_status": "completed", "task_status": "completed", "task_attempts": 1,
+        "selected_agent": "memory_agent", "selection_mode": "server_routed",
+        "source_tools": [], "citation_count": 0, "agent_task_latency_ms": 8694,
+        "findings": "Does not pretend to read the absent attachment and keeps appointment/budget unknown, with three questions. Separates group/local scope in prose but product/scale statements have no retrieved evidence; admits no live web read. No word-count penalty.",
+        "quality_score": null
+      },
       "W01_first_turn": {
         "status": "ACCEPTED_CONTENT_WITH_PRESENTATION_NOTE",
         "request_id": "b23c9f6b-aba4-407f-852f-d6c693beab8e",

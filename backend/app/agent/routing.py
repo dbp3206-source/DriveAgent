@@ -257,6 +257,20 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
             r"(?:\s+thật)?\s+(?:từ|tại)\s*(https://[^\s<>`\"']+)",
             text, re.I,
         )
+    if website is None:
+        # A selected URL is still an explicit read constraint when the user
+        # says "Dùng https://...", not only "website chính thức ...". Keep
+        # contact text out of the public query and ignore negative imperatives.
+        for candidate in re.finditer(
+            r"\b(?:dùng|sử dụng|đọc|tra cứu|kiểm tra|truy cập)\s+"
+            r"(https://[^\s<>`\"']+)", text, re.I,
+        ):
+            if not re.search(
+                r"\b(?:không|đừng|chưa|do\s+not|don't)\s*$",
+                text[:candidate.start()], re.I,
+            ):
+                website = candidate
+                break
     web_forbidden = re.search(
         r"\b(?:không|đừng|chưa)\s+(?:(?:đọc|dùng|truy cập|tìm|tìm kiếm)\s+)?"
         r"(?:web|internet|website|trang web|nguồn\s+công khai)\b", text, re.I,

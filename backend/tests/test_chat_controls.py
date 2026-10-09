@@ -38,6 +38,14 @@ def test_not_saving_memory_does_not_prohibit_explicit_memory_read():
     assert "memory_search" in controls.allowed_tool_names(TOOLS)
 
 
+def test_private_source_exclusions_do_not_instruct_model_to_discard_allowed_web():
+    controls = ChatControls().enforce_explicit_source_exclusions(
+        "Dùng nguồn web đã chọn. Không đọc Gmail, Drive, tài liệu local hoặc bộ nhớ."
+    )
+    assert "web_research" in controls.allowed_tool_names([*TOOLS, "web_research"])
+    assert "chỉ dùng nội dung người dùng cung cấp trực tiếp" not in controls.instruction()
+
+
 def test_local_command_keeps_both_explicit_files_after_negative_drive_scope():
     message = (
         "/local Đọc cả hai tài liệu giả lập 01-yeu-cau-khach-hang.md và "

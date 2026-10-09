@@ -452,8 +452,9 @@ class ChatControls(BaseModel):
             excluded = ", ".join(sorted(self.excluded_sources))
             parts.append(
                 f"Nguồn bị cấm trong yêu cầu này: {excluded}. Không đọc, gọi công cụ, "
-                "hoặc tái sử dụng dữ liệu/citation từ các nguồn đó; chỉ dùng nội dung "
-                "người dùng cung cấp trực tiếp trong lượt hiện tại."
+                "hoặc tái sử dụng dữ liệu/citation từ các nguồn đó. Các nguồn khác được "
+                "yêu cầu rõ và được cấp quyền vẫn có thể dùng; chỉ dẫn chứng nội dung "
+                "đã đọc thật, không coi đường dẫn người dùng gửi là bằng chứng đã đọc."
             )
         if self.workflow != "auto":
             parts.append(f"Quy trình cần theo: {workflow_labels[self.workflow]}.")
