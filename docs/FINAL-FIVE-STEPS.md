@@ -14,13 +14,20 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Bản tách ngày 6b83775 đã qua toàn bộ CI 37958115551: cơ sở dữ liệu,
+  máy chủ, giao diện, kiểm ngoại tuyến, ảnh chạy và xuất PDF tiếng Việt.
+  Ảnh đã xuất và đối chiếu mã cố định bằng HTTP 200:
+  `ghcr.io/dbp3206-source/veridra@sha256:671b17494f20625a014008eaa3bf3acce295a7d9d604c3e7b8440f3a1501f9eb`.
+  Bước tự triển khai bị bỏ qua. Thao tác tiếp theo: Render → Settings →
+  Update Source → Existing Image → dán ảnh này → Connect → chờ Live.
+  Chưa xác nhận cloud chạy bản này; không dùng CI để cấp điểm E hoặc đóng F.
 - Viettel trên 6be4459 đã hoàn tất: một lượt Gemini, tác vụ 14,681 giây,
   đọc web 1,550 giây, năm nguồn và ba câu hỏi; không còn bị chặn trước
   tổng hợp ở lần này. Còn lỗi trộn ba mốc cũ vào tin 30 ngày. Đã sửa chung
   bằng khoảng ngày tuyệt đối và tách mục có ngày ngoài khoảng sau lần
   viết lại cuối; giữ dẫn nguồn, không thêm lượt mô hình. Kiểm trực tiếp
   câu đã lưu trong bộ nhớ giữ hai tin trong khoảng, tách ba tin ngoài
-  khoảng; 307 phép kiểm liên quan đạt, kiểm mã đạt. Chờ CI/ảnh mới.
+  khoảng; 307 phép kiểm liên quan đạt, kiểm mã và CI đạt. Chờ triển khai.
   Không gửi lại Viettel chỉ để kiểm bước tách ngày này. Chưa cấp điểm E,
   chưa gộp main hoặc gọi toàn bộ báo cáo đạt từ kết quả chạy thành công.
 - Render dep-db4gps60tbcc73eb9jcg đã Live đúng 6be4459/ảnh 2235dc5d3898

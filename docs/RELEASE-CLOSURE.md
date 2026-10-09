@@ -8,8 +8,14 @@ Trạng thái triển khai và việc còn lại được cập nhật tại
 6be4459/ảnh 2235dc5d3898, Render dep-db4gps60tbcc73eb9jcg Live lúc
 22:50:58, kết nối DB/kho tệp tốt. Chưa chốt chất lượng Chat, điểm E hoặc
 main. Samsung/Shopee trước sửa có bằng chứng web nhưng còn hạn chế chất
-lượng; Viettel bị giới hạn Veridra trước tổng hợp, không phải Gemini lỗi.
-Đã sửa gộp và kiểm CI; chỉ kiểm đúng câu Viettel nguyên bản sau triển khai.
+lượng. Viettel trên 6be4459 đã tổng hợp thành công với năm nguồn và một
+lượt Gemini; lỗi giới hạn xử lý trước đó không lặp ở lần này. Đối soát
+phát hiện ba mốc ngoài khoảng 30 ngày trong phần tin gần đây. Bản sửa
+6b83775 đã lên GitHub, tách đúng ba mốc khi kiểm lại câu đã lưu trong bộ
+nhớ và qua 307 phép kiểm liên quan; CI 37958115551 đã đạt toàn bộ, ảnh
+671b17494f20 đã xuất bản và đối chiếu theo đúng commit. Chưa triển khai
+bản sửa này, chưa tính điểm E hoặc gộp main. Không gửi lại Viettel
+chỉ để kiểm bước tách ngày đã kiểm được mà không dùng lượt mô hình.
 Giữ các biên nhận cũ theo bản; không chạy lại cả lô, Samsung hoặc PDF.
 Các đoạn dưới là lịch sử theo thời điểm ghi, không phải yêu cầu
 triển khai lại những bản cũ hoặc chứng nhận chất lượng của bản hiện tại.
