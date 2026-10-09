@@ -5,12 +5,12 @@
 Trạng thái triển khai và việc còn lại được cập nhật tại
 [FINAL-FIVE-STEPS.md](FINAL-FIVE-STEPS.md); biên nhận theo bản nằm trong
 `backend/evals/release_acceptance.json`. Ngày 09/10, URL đã chạy đúng
-e1de733/ảnh f43a6614f572, Render dep-db46o4cs728c739ovno0 Live lúc
-11:24 ngày 09/10, kết nối DB/kho tệp tốt. Chưa chốt chất lượng Chat,
-điểm E hoặc main. Samsung đã đọc web thật bằng một lượt Gemini;
-đóng lỗi bỏ qua website, còn nhầm phạm vi khách hàng/đơn vị vận hành và
-câu báo thiếu tin chưa rõ. Giữ kết quả, chỉ kiểm hai ca Shopee/Viettel
-đã khóa trước khi gộp sửa; không chạy lại Samsung hay PDF.
+6be4459/ảnh 2235dc5d3898, Render dep-db4gps60tbcc73eb9jcg Live lúc
+22:50:58, kết nối DB/kho tệp tốt. Chưa chốt chất lượng Chat, điểm E hoặc
+main. Samsung/Shopee trước sửa có bằng chứng web nhưng còn hạn chế chất
+lượng; Viettel bị giới hạn Veridra trước tổng hợp, không phải Gemini lỗi.
+Đã sửa gộp và kiểm CI; chỉ kiểm đúng câu Viettel nguyên bản sau triển khai.
+Giữ các biên nhận cũ theo bản; không chạy lại cả lô, Samsung hoặc PDF.
 Các đoạn dưới là lịch sử theo thời điểm ghi, không phải yêu cầu
 triển khai lại những bản cũ hoặc chứng nhận chất lượng của bản hiện tại.
 Phạm vi A/B/E/F, C/D loại khỏi đợt và P06 hoãn vẫn giữ nguyên.

@@ -14,12 +14,18 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Render dep-db4gps60tbcc73eb9jcg đã Live đúng 6be4459/ảnh 2235dc5d3898
+  lúc 22:50:58 giờ Việt Nam ngày 09/10. HTTP health 200, máy chủ/kết nối
+  cơ sở dữ liệu và kho tệp tốt; không có nhật ký mức lỗi từ 22:49:04 đến
+  22:51:26 trong phạm vi đọc. Đóng bước triển khai ứng viên, chưa đóng chất
+  lượng A/B/E hoặc main. Chỉ kiểm đúng một câu Viettel nguyên bản trong
+  phiên mới; không gửi lại cả lô, PDF hoặc các bước B không bị ảnh hưởng.
+  Biên nhận e1de733 được giữ riêng, không đổi thành kết quả của bản mới.
 - Ứng viên gộp 6be4459 đã qua toàn bộ CI 37953367139, gồm máy chủ,
   giao diện, bộ kiểm ngoại tuyến và dựng/kiểm ảnh chạy. Kho ảnh đã xuất
   đúng bản: `ghcr.io/dbp3206-source/veridra@sha256:2235dc5d3898860d727829abb03eb2a4876ebfc3c0e8d3ec40192fe8c665e459`.
-  Bước tự triển khai bị bỏ qua; Render vẫn trỏ ảnh f43a6614 của e1de733.
-  Cần một thao tác: Settings → Update Source → Existing Image → dán ảnh
-  trên → Connect. Chưa gửi lại câu hỏi, chưa gọi chất lượng thật đã đạt,
+  Bước tự triển khai bị bỏ qua; người dùng đã đổi ảnh và xác nhận Live như
+  cập nhật trên. Không cập nhật ảnh hoặc triển khai lại. Chưa gọi chất lượng thật đã đạt,
   chưa gộp main. Công cụ hiện tại không đổi được nguồn ảnh của dịch vụ.
 - Hai lượt Shopee/Viettel đã được đối soát, không yêu cầu gửi lại cả lô.
   Shopee đọc quy chế chính thức, một lượt Gemini, toàn tác vụ 17,445 giây;
@@ -35,8 +41,8 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   đạt trong 60,61 giây, gồm dữ liệu web lồng trong công cụ và đánh lại số
   nguồn; kiểm mã đạt. Chưa triển khai hoặc khẳng định đầu ra thật đã đạt.
   Không cộng với các lượt 283/288 trước đó. Chỉ chuẩn bị một
-  ứng viên chung; CI đã đạt như trên, chờ đổi ảnh trên Render. Không gửi
-  lại Samsung/Shopee/Viettel ngay.
+  ứng viên chung; CI và triển khai đã đạt như trên. Chỉ câu Viettel được
+  chọn cho lượt kiểm bị ảnh hưởng; không gửi lại cả lô.
 - Render dep-db46o4cs728c739ovno0 đã Live đúng e1de733/ảnh f43a6614f572
   lúc 11:24:25 giờ Việt Nam ngày 09/10. HTTP health 200, status ok,
   database/object_storage true; không có nhật ký mức lỗi từ 11:22:41 đến
