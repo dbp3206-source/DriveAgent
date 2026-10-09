@@ -14,6 +14,13 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Người dùng xác nhận lần triển khai dep-db4hbtijnfac73bculhg đã Live sau
+  hướng dẫn dùng ảnh 671b17494f20. URL trả HTTP 200, status ok, cơ sở dữ
+  liệu và kho tệp tốt; máy chủ bắt đầu lúc 23:29:27 giờ Việt Nam. Đây là
+  xác nhận triển khai thủ công và kiểm URL; công cụ Render chưa có trong
+  phiên nên chưa đọc độc lập được Image URL hoặc nhật ký của lần này.
+  Chuyển tiếp kiểm các ca còn thiếu theo FINAL-MANUAL-BATCH.md, không yêu
+  cầu triển khai lại, đổi khóa, lặp Viettel, PDF hoặc phần B đã có biên nhận.
 - Đối soát phần nhớ/quên và bản lưu/xuất trong B mà không gọi mô hình:
   ghi chú thử sau xóa vẫn không còn; câu trả lời đã lưu sau xóa báo đúng
   không tìm thấy. Các biên nhận trước đó chứng minh sửa và nhớ bốn mục
@@ -27,16 +34,15 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
   máy chủ, giao diện, kiểm ngoại tuyến, ảnh chạy và xuất PDF tiếng Việt.
   Ảnh đã xuất và đối chiếu mã cố định bằng HTTP 200:
   `ghcr.io/dbp3206-source/veridra@sha256:671b17494f20625a014008eaa3bf3acce295a7d9d604c3e7b8440f3a1501f9eb`.
-  Bước tự triển khai bị bỏ qua. Thao tác tiếp theo: Render → Settings →
-  Update Source → Existing Image → dán ảnh này → Connect → chờ Live.
-  Chưa xác nhận cloud chạy bản này; không dùng CI để cấp điểm E hoặc đóng F.
+  Bước tự triển khai bị bỏ qua. Người dùng đã xác nhận Live như cập nhật
+  trên; không yêu cầu cập nhật ảnh lần nữa. Không dùng CI để cấp điểm E hoặc đóng F.
 - Viettel trên 6be4459 đã hoàn tất: một lượt Gemini, tác vụ 14,681 giây,
   đọc web 1,550 giây, năm nguồn và ba câu hỏi; không còn bị chặn trước
   tổng hợp ở lần này. Còn lỗi trộn ba mốc cũ vào tin 30 ngày. Đã sửa chung
   bằng khoảng ngày tuyệt đối và tách mục có ngày ngoài khoảng sau lần
   viết lại cuối; giữ dẫn nguồn, không thêm lượt mô hình. Kiểm trực tiếp
   câu đã lưu trong bộ nhớ giữ hai tin trong khoảng, tách ba tin ngoài
-  khoảng; 307 phép kiểm liên quan đạt, kiểm mã và CI đạt. Chờ triển khai.
+  khoảng; 307 phép kiểm liên quan đạt, kiểm mã và CI đạt. Live đã được người dùng xác nhận.
   Không gửi lại Viettel chỉ để kiểm bước tách ngày này. Chưa cấp điểm E,
   chưa gộp main hoặc gọi toàn bộ báo cáo đạt từ kết quả chạy thành công.
 - Render dep-db4gps60tbcc73eb9jcg đã Live đúng 6be4459/ảnh 2235dc5d3898

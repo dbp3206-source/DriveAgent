@@ -159,6 +159,24 @@
     "unlisted_cases": "NOT VERIFIED on this image. Main not merged; whole-product readiness unproven."
   },
   "current_results": {
+    "status": "USER_REPORTED_LIVE_PUBLIC_HEALTH_VERIFIED",
+    "reported_release_commit": "6b83775b7a39f20ea4e7b83c10a82e676dfecd71",
+    "expected_image_digest": "sha256:671b17494f20625a014008eaa3bf3acce295a7d9d604c3e7b8440f3a1501f9eb",
+    "deployment": {
+      "ci_run_id": "37958115551", "ci_status": "success",
+      "render_deploy_id": "dep-db4hbtijnfac73bculhg",
+      "render_status_source": "User confirms the prescribed deployment is Live.",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"http_status": 200, "status": "ok", "database": true, "object_storage": true},
+      "runtime_started_at": "2026-10-09T23:29:27.448066+07:00",
+      "image_verification_limit": "Render tools are absent and the connector was reported not installed in this session. Exact imagePath is not independently read; a health restart alone does not establish image identity. No scoped log read claimed."
+    },
+    "cases": {},
+    "pending_cases": "Use the fixed remaining manual batch only: five unaccepted company cases and U01/U02/U03. Retain the real Viettel receipt plus deterministic date replay and historical B component receipts; do not repeat them merely to refresh dates. PDF remains deferred.",
+    "quality_score": null,
+    "unlisted_cases": "NOT VERIFIED; no whole-product acceptance or main merge."
+  },
+  "prior_6be4459_results": {
     "release_commit": "6be4459ad468e7a01d2576779000c8386e0f6734",
     "image_digest": "sha256:2235dc5d3898860d727829abb03eb2a4876ebfc3c0e8d3ec40192fe8c665e459",
     "observed_date": "2026-10-09",
@@ -212,7 +230,7 @@
     "deployment_verified": true
   },
   "news_window_fix_20261009": {
-    "status": "CI_VERIFIED_AWAITING_DEPLOYMENT",
+    "status": "CI_VERIFIED_MANUAL_LIVE_REPORTED_HEALTH_VERIFIED",
     "code_commit": "6b83775b7a39f20ea4e7b83c10a82e676dfecd71",
     "ci": {"run_id": "37958115551", "conclusion": "success", "postgres_state": "success", "verify": "success", "publish_image": "success", "render_deploy_hook": "skipped"},
     "image_reference": "ghcr.io/dbp3206-source/veridra@sha256:671b17494f20625a014008eaa3bf3acce295a7d9d604c3e7b8440f3a1501f9eb",
@@ -220,7 +238,7 @@
     "root_cause": "Literal-number grounding does not enforce the requested calendar window. Archive page text contains mixed publication/event dates; model instructions alone left older dated items in the recent-news section.",
     "change": "Supply absolute inclusive calendar bounds to report synthesis. After the last rewrite, relocate independently cited single-date items outside the requested interval into an explicitly labelled context section; preserve all source markers. Other sections, local sources and ambiguous multi-date comparisons stay unchanged. No added model call or quota change.",
     "verification": "307 relevant tests passed in 86.95 seconds; Ruff and diff checks pass. Includes actual ADK compiler provider-boundary simulation after a final rewrite, date boundaries, non-web/control cases and idempotence. Original persisted reply replayed in memory: three outside items relocated, both in-window items and all source markers retained; no model call. Preliminary 17/139 test passes overlap this final batch and are not added.",
-    "limits": "This validates explicit dated-item presentation, not semantic correctness of every fact or publication/event inference. No new live answer or aggregate E score. Current cloud still runs 6be4459 until new image deployment is verified.",
+    "limits": "This validates explicit dated-item presentation, not semantic correctness of every fact or publication/event inference. User reports the prescribed new deployment Live and public health confirms a new runtime. Exact Render imagePath is not independently available in this session. No new live answer or aggregate E score.",
     "ci_verified": true, "deployment_verified": false
   },
   "prior_ffbac81_results": {
