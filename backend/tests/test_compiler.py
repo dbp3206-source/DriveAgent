@@ -1509,6 +1509,36 @@ async def test_direct_calculation_has_zero_model_calls(runtime, monkeypatch):
     assert not any(item.get("stage") == "model" for item in result.trace)
 
 
+@pytest.mark.parametrize("source, message", [
+    ("auto", "Đọc cả hai tài liệu local và tổng hợp báo cáo."),
+    ("local", "Đọc cả hai tài liệu local và tổng hợp báo cáo."),
+    ("local", "Đọc cả ba tài liệu và tổng hợp báo cáo."),
+])
+async def test_ambiguous_multi_local_read_has_no_tool_or_model_calls(
+    runtime, monkeypatch, source, message
+):
+    async def forbidden_model(*args, **kwargs):
+        raise AssertionError("Ambiguous source selection must not call Gemini")
+        yield
+
+    async def forbidden_tool(*args, **kwargs):
+        raise AssertionError("Ambiguous source selection must not read a ranked source")
+
+    monkeypatch.setattr(Gemini, "generate_content_async", forbidden_model)
+    runner, user, session_id = runtime
+    monkeypatch.setattr(runner.registry, "execute", forbidden_tool)
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="ambiguous-multi-local",
+        user_message=message,
+        controls=ChatControls(source=source),
+    )
+    assert "tên" in result.answer
+    assert result.trace[-1]["status"] == "needs_clarification"
+    assert result.trace[-1]["required_sources"] == ["local"]
+    assert not result.citations
+    assert not any(item.get("stage") in {"model", "tool"} for item in result.trace)
+
+
 async def test_gmail_source_clarification_does_not_call_model_and_reports_correct_source(
     runtime, monkeypatch
 ):

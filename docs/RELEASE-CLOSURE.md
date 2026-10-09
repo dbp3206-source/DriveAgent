@@ -9,6 +9,11 @@ ffbac81. Các đoạn dưới là lịch sử theo thời điểm ghi, không ph
 triển khai lại những bản cũ hoặc chứng nhận chất lượng của bản hiện tại.
 Phạm vi A/B/E/F, C/D loại khỏi đợt và P06 hoãn vẫn giữ nguyên.
 
+Xác nhận mới của người dùng 09/10: độ dài câu trả lời chỉ áng chừng.
+Không dùng số từ cứng làm điều kiện chặn nghiệm thu hoặc lý do gọi lại
+mô hình; ưu tiên chính xác, nguồn phù hợp, bố cục và trả lời đúng yêu cầu.
+Không nới các điều kiện về sự thật, quyền, phép tính hoặc dữ liệu giả.
+
 ## Lịch sử đối soát — 07/10/2026
 
 5267996 đã Live đúng ảnh sửa định dạng tổng hợp web:

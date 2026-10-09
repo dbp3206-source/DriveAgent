@@ -27,6 +27,27 @@ _EXPLICIT_FILE_ID = re.compile(
 )
 
 
+def _unnamed_local_read_clarification(message: str) -> Route | None:
+    """Do not collapse an unnamed multi-document read into one ranked match."""
+    if (
+        not re.search(r"[\w.-]+\.(?:md|txt|csv|ipynb|pdf|docx|xlsx)\b", message, re.I)
+        and re.search(r"\b(?:đọc|tóm tắt|so sánh|đối chiếu|tổng hợp|phân tích)\b", message, re.I)
+        and re.search(
+            r"\b(?:[2-9]|[1-9]\d+|hai|ba|bốn|tư|năm|sáu|bảy|tám|chín|mười)"
+            r"\s+(?:tài liệu|tệp|file)\b", message, re.I
+        )
+    ):
+        return Route(
+            direct=True,
+            clarification=(
+                "Bạn muốn đọc những tài liệu nào? Hãy ghi tên từng tệp để tôi "
+                "đọc đủ và đúng nguồn, không tự chọn một tài liệu thay cho cả nhóm."
+            ),
+            required_sources=("local",),
+        )
+    return None
+
+
 def extract_explicit_file_id(message: str) -> str | None:
     """Return a user-supplied Drive id, when the request names one explicitly.
 
@@ -418,6 +439,12 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
         r"import local|trong local|fixture local|local fixture)\b"
     )
     if re.search(local_terms, text, re.I):
+        # An explicit multi-document read cannot be satisfied by one ranked
+        # search result. Ask for source names before any read/model call.
+        # Listing inventory and requests that prohibit local access are not reads.
+        clarification = _unnamed_local_read_clarification(text)
+        if "local" not in exclusions and clarification:
+            return clarification
         # A generic question about the local fixture is a request to inspect
         # the user's imported local sources, not a literal full-text search for
         # the rest of the sentence.  An empty query lets the source tool list

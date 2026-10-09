@@ -14,6 +14,22 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Lượt 03:05 UTC, b23c9f6b-aba4-407f-852f-d6c693beab8e trên ffbac81:
+  đã đọc đúng hai tệp Minh Phát; dùng 24 người thay 30. Các đại lượng
+  5760 phút ban đầu, 1152 phút giảm giả định và 4608 phút còn lại đúng,
+  có phân biệt giả thuyết với hiệu quả đã đo và đủ ba câu hỏi từ nguồn.
+  Tác vụ hoàn tất; Gemini thành công; dấu vết xử lý 9429 ms, hai nguồn.
+  Báo cáo có 170 tiếng/số, máy chủ còn nhãn incomplete do yêu cầu 200–240.
+  Người dùng đã xác nhận độ dài chỉ áng chừng, ưu tiên chính xác và bố cục:
+  chấp nhận nội dung lượt đầu, không chạy lại hoặc triển khai vì số từ.
+  Ghi chú rõ ràng còn lại: chưa nêu trực tiếp ngân sách chưa xác nhận;
+  không bịa ngân sách. Không gọi phần việc chung là diễn giải nghiệp vụ
+  đầy đủ. Đây không phải bằng chứng chuỗi mới đủ ba lượt trên cùng bản.
+  Các biên nhận hỏi tiếp/lưu trước đây giữ nguyên phạm vi và bản gốc.
+  Ngân sách bảo vệ khóa hiện tại: 4/16, còn 12 lượt thông thường;
+  không đồng nghĩa với hạn mức Google. Đối soát E tiếp theo dùng các
+  biên nhận này, không mở thêm mẫu hoặc quay lại kiểm độ dài W01.
+
 - Lượt 02:55 UTC trên ffbac81 chưa kiểm được W01 đúng bộ nguồn:
   31c6aa35-df60-4dc3-94b8-397b79d5e398 đọc một PDF về lao động, không
   đọc hai tệp Minh Phát. Câu kiểm tôi cung cấp thiếu tên tệp; bộ chọn

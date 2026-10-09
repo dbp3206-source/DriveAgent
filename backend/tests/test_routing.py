@@ -1,3 +1,5 @@
+import pytest
+
 from app.agent.routing import extract_explicit_file_id, route_request
 
 
@@ -129,6 +131,19 @@ def test_named_local_documents_are_all_required():
         "banking.pdf", "power.pdf"
     ]
     assert all(source.read_match for source in route.sources)
+
+
+@pytest.mark.parametrize("quantity", ["hai", "ba", "2", "4"])
+def test_unnamed_multiple_local_reads_ask_for_sources(quantity):
+    route = route_request(f"Đọc cả {quantity} tài liệu local và tổng hợp báo cáo.")
+    assert route.direct and route.clarification
+    assert route.required_sources == ("local",)
+    assert route.tool is None and not route.sources
+
+
+def test_prohibited_multiple_local_reads_do_not_request_source_selection():
+    route = route_request("Chỉ dùng nội dung tôi cung cấp. Không đọc hai tài liệu local.")
+    assert route.clarification is None
 
 
 def test_local_report_with_short_source_prohibition_keeps_both_documents():

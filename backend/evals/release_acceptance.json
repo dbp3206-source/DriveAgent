@@ -6,6 +6,7 @@
   "score_threshold": 8.7,
   "important_group_threshold": 9,
   "rules": [
+    "Theo xác nhận của người dùng ngày 09/10/2026, độ dài trong bộ nghiệm thu là hướng dẫn áng chừng, không phải điều kiện chặn. Ưu tiên dữ kiện và phép tính chính xác, nguồn phù hợp, phân biệt giả thuyết và bố cục rõ. Vẫn ghi nhận lệch độ dài; không bù chữ, hạ yêu cầu sự thật hoặc gọi lại mô hình chỉ để đạt số từ.",
     "Không dùng điểm kiểm máy thay điểm chất lượng câu trả lời.",
     "Mỗi kết quả phải ghi bản ứng dụng, ảnh triển khai, thời điểm, nguồn, dấu vết và đối soát.",
     "Một chuỗi chỉ đạt khi mọi lượt và thao tác cuối đạt; không cộng các bước rời thành chuỗi đạt.",
@@ -50,9 +51,29 @@
       "evidence_method": "Render MCP get_deploy, scoped error log query and public health read; exact image confirmed independently",
       "scope": "Deployment and connections only; no new model answer or whole-release quality inferred"
     },
-    "cases": {},
+    "cases": {
+      "W01_first_turn": {
+        "status": "ACCEPTED_CONTENT_WITH_PRESENTATION_NOTE",
+        "request_id": "b23c9f6b-aba4-407f-852f-d6c693beab8e",
+        "session_id": "87643088-7adf-440d-b65d-0d5844a57347",
+        "assistant_message_id": "1f078808-3d23-4041-876d-0f52ada6aa94",
+        "completed_at": "2026-10-09T03:05:35.544303Z",
+        "task_status": "completed", "server_answer_status": "incomplete",
+        "server_format_violations": ["below_explicit_word_minimum"],
+        "body_word_groups": 170, "requested_word_range": [200, 240],
+        "source_names": ["02-dieu-chinh-pham-vi.md", "01-yeu-cau-khach-hang.md"],
+        "verified_content": "Reads both required files; uses revised 24 instead of initial 30, retains 12 minutes/person/day and 20 days/month. Baseline 5760 minutes (96 hours), hypothetical savings 1152 minutes, hypothetical remaining 4608 minutes are arithmetically correct and distinguished. Explicitly says 20% requires real verification; retains the three source clarification questions. No budget amount or Google write is asserted.",
+        "notes": "Budget unknown is not stated explicitly; the answer does not invent a budget. Source text identifies 12 minutes as mail/document synthesis; the answer's generic work wording is less precise. Both are clarity notes, not false factual claims. Length warning remains in the deployed UI; evaluator accepts approximate length under the user's updated instruction. Do not repeat this turn solely for length.",
+        "model": "gemini-3.5-flash-lite", "provider_status": "success",
+        "primary_model_call_count": 1, "agent_task_latency_ms": 9429,
+        "tools": ["local_source_search", "local_source_read", "local_source_search", "local_source_read", "calculate"],
+        "evidence_method": "Exact owner-scoped persisted message, citations, trace, task and audit readback; independent arithmetic comparison to the two repository fixtures. Tool trace proves calculate execution, not its hidden expression. No additional model call or browser verification claimed.",
+        "scope": "First-turn content only on ffbac81. Previous follow-up/save receipts keep their original releases; this is not a newly executed whole chain or whole A/B/E acceptance.",
+        "quality_score": null
+      }
+    },
     "pending_cases": {
-      "W01": {"status": "NOT VERIFIED WITH REQUIRED SOURCES AFTER FIX", "next_action": "User submission omitted both fixture filenames and UI controls do not transmit selected file IDs. Specify both existing filenames in the same locked question before the next first-turn check. Do not repeat accepted follow-up/save steps or infer arithmetic-transfer quality from an unrelated PDF response."}
+      "W01": {"status": "FIRST TURN ACCEPTED; WHOLE-CHAIN RECEIPTS REMAIN RELEASE-SCOPED", "next_action": "Do not rerun the now-accepted first turn for length. Retain historical follow-up/save receipts without relabelling them as current runs; remaining A/B/E closure must state its actual evidence scope."}
     },
     "invalid_acceptance_attempts": [
       {
@@ -74,10 +95,10 @@
       }
     ],
     "quota_observation": {
-      "observed_at": "2026-10-09T02:58Z", "protection_day": "2026-10-08",
-      "calls_today": 2, "regular_calls_remaining": 14,
+      "observed_date": "2026-10-09", "after_request_id": "b23c9f6b-aba4-407f-852f-d6c693beab8e", "protection_day": "2026-10-08",
+      "calls_today": 4, "regular_calls_remaining": 12,
       "next_regular_day_at": "2026-10-09T14:00:00+07:00",
-      "scope": "Owner-scoped active credential metadata after user-selected key change; not a measurement of Google's project quota. No model call, counter reset or reserve use. Previous active credential had 16 calls used and zero regular calls remaining at 02:43Z."
+      "scope": "Owner-scoped active credential metadata and flash reservations after the corrected user submission; not a measurement of Google's project quota. An initial read used the wrong bucket name calls and returned zero; corrected flash query returned four. No model call, counter reset or reserve use by the evaluator."
     },
     "unchanged_path_evidence": "Historical passing workflow receipts retain original release and scope; not new runs on this image.",
     "unlisted_cases": "Not verified on this release. No aggregate score or A/B/E/F acceptance inferred from CI."

@@ -65,7 +65,12 @@ from app.agent.response_guard import (
     enforce_explicit_source_restriction,
     source_restriction_instruction,
 )
-from app.agent.routing import Route, _rag_arguments, route_request
+from app.agent.routing import (
+    Route,
+    _rag_arguments,
+    _unnamed_local_read_clarification,
+    route_request,
+)
 from app.agent.source_calculations import (
     SOURCE_CALCULATION_INSTRUCTION,
     CalculatedWireAnswer,
@@ -1782,7 +1787,15 @@ class CompilerOrchestrator:
             return Route()
         if controls.source == "general":
             return Route()
+        if (route.direct and route.clarification
+                and controls.source in {"auto", *route.required_sources}):
+            # Source-selection questions must survive the /local fallback;
+            # otherwise it silently starts a broad search instead of asking.
+            return route
         if controls.source == "local":
+            clarification = _unnamed_local_read_clarification(message)
+            if clarification:
+                return clarification
             # The leading /local command has already been consumed. Resolve
             # explicit filenames using the selected source, not the heuristic
             # Drive route or the entire (possibly long) instruction as a query.
