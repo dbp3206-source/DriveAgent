@@ -14,6 +14,18 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Lượt 02:55 UTC trên ffbac81 chưa kiểm được W01 đúng bộ nguồn:
+  31c6aa35-df60-4dc3-94b8-397b79d5e398 đọc một PDF về lao động, không
+  đọc hai tệp Minh Phát. Câu kiểm tôi cung cấp thiếu tên tệp; bộ chọn
+  Chat chỉ truyền loại nguồn, không có danh sách tệp. Đường tìm local
+  chung chưa giữ ràng buộc cần hai nguồn. Đã đối chiếu trong máy: ghi
+  đủ hai tên tệp tạo hai tuyến đọc bắt buộc. Không coi đây là bằng chứng
+  đạt bản sửa phép tính hoặc lỗi Gemini; mô hình đã trả thành công,
+  câu trả lời vẫn chưa đạt (sai nguồn, nội dung và quá độ dài). Giữ
+  lượt này ngoài điểm E; ngân sách khóa mới còn 14/16. Không gọi thêm
+  mô hình hoặc triển khai sửa đoán. Lượt tiếp phải ghi hai tên tệp ngay
+  trong câu hỏi; không yêu cầu thao tác chọn tệp không có trong giao diện.
+
 - Cập nhật 09/10 lúc 02:43 UTC: đã xác nhận qua Render lần triển khai
   dep-db456kbtqb8s73e48gn0 Live đúng ảnh b57abd1696b3... của ffbac81,
   hoàn tất lúc 02:38:58 UTC. CI xuất bản 37874873548 đạt. URL health

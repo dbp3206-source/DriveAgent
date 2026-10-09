@@ -52,11 +52,30 @@
     },
     "cases": {},
     "pending_cases": {
-      "W01": {"status": "NOT VERIFIED AFTER FIX", "next_action": "Active credential now has 16 regular calls available. One locked first-turn check via the authenticated UI; sidebar automation failed to initialize, so user submission is required. Do not repeat accepted follow-up/save steps; retain historical partial response."}
+      "W01": {"status": "NOT VERIFIED WITH REQUIRED SOURCES AFTER FIX", "next_action": "User submission omitted both fixture filenames and UI controls do not transmit selected file IDs. Specify both existing filenames in the same locked question before the next first-turn check. Do not repeat accepted follow-up/save steps or infer arithmetic-transfer quality from an unrelated PDF response."}
     },
+    "invalid_acceptance_attempts": [
+      {
+        "case_id": "W01", "status": "WRONG_SOURCE_RESPONSE_INPUT_NOT_BOUND",
+        "request_id": "31c6aa35-df60-4dc3-94b8-397b79d5e398",
+        "session_id": "87643088-7adf-440d-b65d-0d5844a57347",
+        "assistant_message_id": "9975e8f4-344a-463d-8eb7-f3008761b7c5",
+        "completed_at": "2026-10-09T02:55:55.785528Z",
+        "task_status": "completed", "answer_status": "incomplete",
+        "body_word_groups": 261, "required_word_range": [200, 240],
+        "tools": ["local_source_search", "local_source_read", "calculate"],
+        "actual_source_names": ["The_He_Cho_Duoc_Hieu_aa1ad8d7a3.pdf"],
+        "required_source_names": ["01-yeu-cau-khach-hang.md", "02-dieu-chinh-pham-vi.md"],
+        "observed": "Answer concerns workforce training and an unsupported 12+4=16-day estimate, not the supplied Minh Phat fixtures. No acceptance score awarded.",
+        "cause": "Evaluator-provided submission omitted fixture filenames; Chat controls carry source category, not selected file IDs. Current unnamed local route performs one broad search/read and does not enforce the requested two-source cardinality. Offline route inspection confirms adding both names produces two required local search/read routes. This does not prove live answer quality or resolve the generic ambiguity defect.",
+        "evidence_method": "Exact owner-scoped message, task payload, audit and quota readback; offline route_request execution. No additional model call or UI claim.",
+        "model": "gemini-3.5-flash-lite", "provider_status": "success",
+        "agent_task_latency_ms": 16399, "quality_score": null
+      }
+    ],
     "quota_observation": {
-      "observed_at": "2026-10-09T02:54Z", "protection_day": "2026-10-08",
-      "calls_today": 0, "regular_calls_remaining": 16,
+      "observed_at": "2026-10-09T02:58Z", "protection_day": "2026-10-08",
+      "calls_today": 2, "regular_calls_remaining": 14,
       "next_regular_day_at": "2026-10-09T14:00:00+07:00",
       "scope": "Owner-scoped active credential metadata after user-selected key change; not a measurement of Google's project quota. No model call, counter reset or reserve use. Previous active credential had 16 calls used and zero regular calls remaining at 02:43Z."
     },
