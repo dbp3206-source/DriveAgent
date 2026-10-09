@@ -14,6 +14,18 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Đối soát biên nhận, không gọi lại mô hình: tìm được U05
+  cd9d0cbd-2131-4e2c-96f8-7564e614d506 đạt phân biệt giá cũ/giá hiện tại.
+  W01 trong phiên eb5eaf81 ngày 08/10 có cùng chuỗi đọc/tính, hỏi tiếp,
+  lưu; các dữ kiện và phép tính của bản gốc đúng. Theo xác nhận độ dài
+  áng chừng mới, chấp nhận nội dung chuỗi lịch sử này, giữ đúng bản 81665f7
+  và biên nhận mở lại do người dùng xác nhận. Không ghép lượt đầu mới với
+  lượt hỏi tiếp cũ để gọi một chuỗi mới, không chạy lại hỏi tiếp/lưu.
+  Truy vấn yêu cầu có tên công ty chưa tìm được biên nhận Chat Samsung,
+  Shopee, Viettel; lô tiếp theo chỉ gồm ba ca này. Thanh bên vẫn lỗi
+  khởi tạo sandbox sau reset; cần gửi thủ công ba câu ở cuối tài liệu.
+  Không cấp điểm E hoặc gộp main từ biên nhận thiếu.
+
 - Lượt 03:05 UTC, b23c9f6b-aba4-407f-852f-d6c693beab8e trên ffbac81:
   đã đọc đúng hai tệp Minh Phát; dùng 24 người thay 30. Các đại lượng
   5760 phút ban đầu, 1152 phút giảm giả định và 4608 phút còn lại đúng,
@@ -314,8 +326,9 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
    nội bộ không thay sáu tác vụ Chat trong bộ đã khóa. Tự tìm nguồn chính thức
    của U01 vẫn thiếu bằng chứng; không chốt từ câu trả lời "chưa xác minh".
 3. B: giữ các biên nhận hỏi tiếp, nhớ/quên, lưu/xuất, hẹn giờ và tài liệu đã
-   có đúng phạm vi. Chỉ xử lý lượt đầu W01 chưa đủ độ dài và những đoạn còn
-   thiếu bằng chứng; không chạy lại các thao tác đã đạt hoặc ghi Google thêm.
+   có đúng phạm vi. W01 đã có nội dung lượt đầu hiện tại đạt và chuỗi lịch sử
+   được đối soát theo độ dài áng chừng; không chạy lại vì số từ. Chỉ đóng những
+   đoạn thật sự còn thiếu bằng chứng; không ghi Google thêm.
 4. E: chỉ tính điểm từ kết quả hợp lệ của bộ đã khóa, không từ số phép kiểm
    mã hoặc đủ đề mục. P06 giữ hoãn. Hướng dẫn và bài demo đã có nhưng chỉ
    thay biên nhận sau nghiệm thu, không trình bày bản xem lại như lần chạy mới.
@@ -331,9 +344,9 @@ Biên nhận lịch sử không được đổi nhãn thành lần chạy mới 
 | Phần trong bộ đã khóa | Bằng chứng đang có | Việc còn lại đúng phạm vi |
 |---|---|---|
 | company-01–06 | FPT từng lỗi nguồn; Vinamilk và Bosch còn một phần. Chưa có bộ sáu báo cáo đạt đầy đủ sau sửa. | Đối soát báo cáo và nguồn thật từng công ty; không dùng kiểm cấu trúc hoặc báo cáo nội bộ thay tác vụ Chat. |
-| U01–06 | U04 có biên nhận đạt; xử lý nguồn không truy cập được có biên nhận a0916d11. U01 còn thiếu nghiệm thu nguồn chính thức; chưa đủ biên nhận U02/U03/U05. | Giữ U04 đã đóng. Chỉ xét các câu còn thiếu trong bộ; biên nhận nguồn lỗi chỉ chứng minh trả đúng giới hạn, không phải tìm được lịch. |
+| U01–06 | U04 có biên nhận đạt; U05 cd9d0cbd phân biệt đúng giá cũ; nguồn không truy cập được có biên nhận a0916d11. U01 còn thiếu nghiệm thu tự tìm nguồn chính thức; chưa đủ biên nhận U02/U03. | Giữ U04/U05 đã đối soát. Chỉ xét câu còn thiếu; biên nhận nguồn lỗi chỉ chứng minh trả đúng giới hạn, không phải tìm được lịch. |
 | P01–05 | P02/P03 có kết quả lịch sử đã đối soát; P01 còn cách diễn đạt, P04 thiếu ngày/trạng thái dự báo, P05 thiếu đối soát đơn vị riêng. | Giữ đúng hạn chế, không gọi lại PDF hoặc sửa thêm theo quyết định tạm gác. Không biến các mục này thành đạt hoặc đưa chúng vào điểm hợp lệ. |
-| W01 | Hỏi tiếp/lưu có biên nhận; lượt đầu a834ce4 còn ngắn và nghĩa phép tính chưa rõ. | Một lượt đầu theo câu đã khóa sau khi có ngân sách; không lặp hỏi tiếp/lưu đã đạt. |
+| W01 | Lượt đầu ffbac81 đúng nguồn và các đại lượng. Cùng chuỗi lịch sử 81665f7 đọc/tính → hỏi tiếp → lưu đã được đối soát và chấp nhận theo độ dài áng chừng. | Giữ đúng bản/phạm vi biên nhận. Không lặp đọc, hỏi tiếp hoặc lưu vì số từ; không gọi các bước khác bản là chuỗi mới. |
 | W02/W04 | Có đủ chuỗi ba lượt đạt đúng đáp án trên bản đã ghi. | Giữ nguyên biên nhận và phiên bản; không chạy lại chỉ để tạo mẫu mới. |
 | W03/W05/W06 | Có bằng chứng quên; đổi đầu vào An Bình; bản kết quả v2 và ba tệp xuất. Một số bằng chứng là từng bước, chưa chứng nhận cả chuỗi cùng bản. | Ghép biên nhận đúng mã/phạm vi; không tạo lại ghi chú đã xóa, xuất lặp hoặc ghi Google thêm. Nếu chuỗi thiếu bằng chứng thì giữ chưa đóng. |
 
@@ -356,3 +369,28 @@ Gộp sửa và kiểm trong một đợt; không kiểm lại phần không b�
 tăng số phép thử. Một lỗi bắt buộc chưa giải quyết thì báo đúng mục bị chặn,
 không phát sinh danh sách hoàn thiện mới hoặc tự cấp nhãn sẵn sàng phát hành.
 Thiếu hạn mức/quyền/dữ liệu không phải lý do bịa kết quả. Không yêu cầu thêm khóa.
+
+## Lô thủ công tiếp theo — đúng ba ca thiếu biên nhận
+
+Tạo ba cuộc trò chuyện mới, chọn nguồn **Tự động**, gửi mỗi câu đúng một lần.
+Đợi một câu hoàn tất rồi mới gửi câu kế tiếp; không gửi lại khi đang chạy.
+Không đổi khóa, mô hình, hạn mức hoặc triển khai trong lô này. Độ dài không phải
+điều kiện chặn; ưu tiên thông tin đúng, rõ nguồn và những điều chưa biết.
+
+### company-03 — Samsung
+
+```text
+Thư giả lập: Sarah Lee từ Samsung Electronics Vietnam viết “Xin hẹn buổi giới thiệu giải pháp vào tuần tới.” Dùng https://www.samsung.com/vn và nguồn công khai chính thức liên quan để chuẩn bị báo cáo tư vấn bằng tiếng Việt: tổng quan, ngành, sản phẩm, quy mô, tin 30 ngày gần đây, bối cảnh người liên hệ, ghi chú cuộc hẹn, nguồn, trạng thái chưa thực hiện hành động và ba câu hỏi cần làm rõ. Phân biệt Samsung toàn cầu với đơn vị Việt Nam, ngày đăng với ngày sự kiện. Thiếu bằng chứng thì ghi chưa xác minh; không tự gán chức danh, ngân sách hoặc ngày/giờ hẹn. Không đọc Gmail, Drive, lịch, tài liệu local hoặc bộ nhớ; không ghi dữ liệu.
+```
+
+### company-04 — Shopee
+
+```text
+Thư giả lập: David Chen từ Shopee Vietnam viết “Chúng tôi quan tâm đến giải pháp OCR.” Dùng https://help.shopee.vn/portal/4/article/77245 và nguồn công khai chính thức liên quan Shopee Việt Nam để chuẩn bị báo cáo tư vấn bằng tiếng Việt: tổng quan, ngành, sản phẩm, quy mô, tin 30 ngày gần đây, bối cảnh người liên hệ, ghi chú cuộc hẹn, nguồn, trạng thái chưa thực hiện hành động và ba câu hỏi cần làm rõ. Giải thích OCR là nhận chữ từ ảnh hoặc bản quét. Phân biệt ngày đăng với ngày sự kiện. Thiếu bằng chứng thì ghi chưa xác minh; không tự gán chức danh, ngân sách hoặc lịch hẹn. Không đọc Gmail, Drive, lịch, tài liệu local hoặc bộ nhớ; không ghi dữ liệu.
+```
+
+### company-05 — Viettel
+
+```text
+Thư giả lập: Nguyễn Hoàng Anh từ Viettel Solutions viết “Đính kèm hồ sơ năng lực để hai bên tham khảo.” Chưa cung cấp tệp đính kèm, không giả định đã đọc tệp. Dùng https://solutions.viettel.vn/vi và nguồn công khai chính thức liên quan để chuẩn bị báo cáo tư vấn bằng tiếng Việt: tổng quan, ngành, sản phẩm, quy mô, tin 30 ngày gần đây, bối cảnh người liên hệ, ghi chú cuộc hẹn, nguồn, trạng thái chưa thực hiện hành động và ba câu hỏi cần làm rõ. Phân biệt tập đoàn Viettel với Viettel Solutions, ngày đăng với ngày sự kiện. Thiếu bằng chứng thì ghi chưa xác minh; không tự gán chức danh, ngân sách hoặc lịch hẹn. Không đọc Gmail, Drive, lịch, tài liệu local hoặc bộ nhớ; không ghi dữ liệu.
+```

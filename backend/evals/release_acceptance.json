@@ -36,6 +36,33 @@
   ],
   "memory_manifest":"docs/MEMORY-QUALITY-PLAN.md",
   "historical_results_are_not_current":true,
+  "evidence_reassessment_20261009": {
+    "method": "Owner-scoped persisted message and saved-artifact readback. No new Gemini call or deployment. Historical receipts retain their original release and do not become current-image runs.",
+    "W01": {
+      "status": "ACCEPTED_HISTORICAL_CHAIN_UNDER_REVISED_LENGTH_POLICY",
+      "release_commit": "81665f7f941c53b77b12daba388ff17c46f5e9f4",
+      "session_id": "eb5eaf81-edd9-48f1-88fe-f2f6598d8077",
+      "run_ids": ["766df02c-e80b-4a34-8436-9af39ab3205a", "82bea3d1-e3e7-43a8-b45b-d0185bab8758"],
+      "artifact_id": "a8e73a8e-a363-4f4c-91fc-1af7b847c051", "artifact_revision": 1,
+      "verified": "Original delivered first answer reads both fixtures, uses 24 people, 12 minutes/day, 20 days/month, 5760 baseline minutes and 1152 hypothetical savings. Follow-up keeps 24/12 and 20% hypothesis, asks budget rather than asserting one, has three questions and no new source tool calls. Saved active revision 1 matches follow-up text plus both source links; prior user-confirmed reopening retained. All these belong to the same observed historical session, not a composite of the new first turn and old follow-up.",
+      "limitations": "The server stored the first turn as incomplete for short length and a rejected repair's changed citations. The original answer, not the rejected candidate, is reassessed under the user's 09/10 approximate-length instruction. No new visual reopening evidence or aggregate E score claimed."
+    },
+    "U05": {
+      "status": "ACCEPTED_HISTORICAL_CONTENT",
+      "request_id": "cd9d0cbd-2131-4e2c-96f8-7564e614d506",
+      "assistant_message_id": "9bb468c2-b950-4cef-9dfe-4bdf802fd332",
+      "completed_at": "2026-10-06T03:58:49.797054Z",
+      "verified": "Correctly rejects treating the supplied 100000 VND dated 01/01/2024 as current; distinguishes source date from current evidence. No source tool calls or invented current price. Model gemini-3.5-flash-lite returned successfully. Do not rerun solely because the previous closure summary omitted this receipt.",
+      "release_scope": "Historical receipt; exact deployment at run time not newly determined in this readback."
+    },
+    "company_coverage": {
+      "cloud_receipts_found": ["company-01", "company-02", "company-06"],
+      "cloud_receipts_not_found_by_named_request_query": ["company-03", "company-04", "company-05"],
+      "limits": "Query covered all owner message history matching the six company names. This is not proof of absence of unnamed/local-only executions and not proof of answer quality. Existing FPT/Vinamilk/Bosch content limitations remain; no new score assigned.",
+      "next_manual_batch": ["company-03", "company-04", "company-05"]
+    },
+    "execution_blocker": "Sidebar getTab failed after runtime reset: windows sandbox failed: helper_unknown_error: setup refresh had errors, kernel exited code=1. No authenticated alternate browser or bypass used. Manual batch is needed to produce the missing Chat receipts."
+  },
   "current_results": {
     "release_commit": "ffbac816fabfdd160a22b9678865bf0581669006",
     "image_digest": "sha256:b57abd1696b3ff5d940278ade743a0e2321b620a2055e5e73504ddebf8e3e1ed",

@@ -26,13 +26,15 @@ ba công việc này, không trình bày thành các sản phẩm rời rạc.
 
 ## 1:00–3:30 — Đọc đúng nguồn và xử lý điều chỉnh
 
-Mở Tài liệu local, chọn hai tệp giả lập Minh Phát. Chỉ tải lên nếu chưa có;
-không nạp thêm dữ liệu thật trong buổi trình bày.
+Mở Tài liệu local, kiểm hai tệp giả lập Minh Phát có sẵn. Chỉ tải lên nếu chưa
+có; không nạp thêm dữ liệu thật trong buổi trình bày. Chat chỉ chọn loại nguồn,
+không truyền danh sách tệp: phải ghi rõ tên cả hai tệp trong câu hỏi.
 
 Yêu cầu chính:
 
-> Chỉ dùng hai tài liệu giả lập Minh Phát đã chọn. Chuẩn bị báo cáo tư vấn
-> 200–240 từ, nêu dữ kiện đã thay đổi, tính thời gian tổng hợp mỗi tháng bằng
+> Chỉ dùng hai tài liệu local 01-yeu-cau-khach-hang.md và
+> 02-dieu-chinh-pham-vi.md. Chuẩn bị báo cáo tư vấn Minh Phát khoảng 220 từ,
+> nêu dữ kiện đã thay đổi, tính thời gian tổng hợp mỗi tháng bằng
 > công cụ, phân biệt giả thuyết với kết quả đã đo. Dẫn đúng nguồn, ghi điều
 > chưa biết và ba câu hỏi cần làm rõ. Không đọc nguồn khác, không ghi Google.
 
@@ -40,6 +42,8 @@ Mở dẫn nguồn. Đối chiếu số người **24**, không phải 30; ngân
 Phép tính đúng là **96 giờ/tháng**. Giả thuyết giảm 20% cho **19,2 giờ có thể
 tiết kiệm**, không phải lợi ích đã đo hoặc khoản tiền tiết kiệm đã chứng minh.
 Không dùng câu trả lời của mô hình làm đáp án thay cho hai tệp nguồn.
+Độ dài chỉ áng chừng, không chạy lại để đủ số từ. Ưu tiên dữ kiện và ý nghĩa
+của phép tính, nguồn phù hợp, phân biệt giả thuyết với kết quả đã đo.
 
 ## 3:30–4:30 — Nhớ đúng điều vừa sửa
 

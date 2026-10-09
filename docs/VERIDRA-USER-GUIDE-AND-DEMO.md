@@ -42,7 +42,9 @@ Ba quy trình trên là trục demo; các màn hình Skills, Bộ nhớ, Nhật 
 Hai tệp [yêu cầu khách hàng](demo/01-yeu-cau-khach-hang.md) và
 [điều chỉnh phạm vi](demo/02-dieu-chinh-pham-vi.md) là dữ liệu giả lập, có thể dùng
 ngay mà không đọc thư thật. Tải hai tệp lên mục Tài liệu local, đợi xử lý xong, rồi
-kiểm tra nội dung đã trích xuất. Yêu cầu: “Chỉ dùng hai tài liệu vừa chọn, lập bảng
+kiểm tra nội dung đã trích xuất. Chat không truyền danh sách tệp đã chọn;
+ghi tên rõ trong yêu cầu: “Chỉ dùng hai tài liệu local 01-yeu-cau-khach-hang.md
+và 02-dieu-chinh-pham-vi.md, lập bảng
 dữ kiện ban đầu, điều chỉnh mới và câu hỏi còn thiếu; mỗi dòng dẫn đúng nguồn.
 Không đọc Gmail, Drive, web hoặc bộ nhớ; không lưu hay tạo dữ liệu.”
 
