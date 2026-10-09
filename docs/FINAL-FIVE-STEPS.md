@@ -14,12 +14,21 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Viettel trên 6be4459 đã hoàn tất: một lượt Gemini, tác vụ 14,681 giây,
+  đọc web 1,550 giây, năm nguồn và ba câu hỏi; không còn bị chặn trước
+  tổng hợp ở lần này. Còn lỗi trộn ba mốc cũ vào tin 30 ngày. Đã sửa chung
+  bằng khoảng ngày tuyệt đối và tách mục có ngày ngoài khoảng sau lần
+  viết lại cuối; giữ dẫn nguồn, không thêm lượt mô hình. Kiểm trực tiếp
+  câu đã lưu trong bộ nhớ giữ hai tin trong khoảng, tách ba tin ngoài
+  khoảng; 307 phép kiểm liên quan đạt, kiểm mã đạt. Chờ CI/ảnh mới.
+  Không gửi lại Viettel chỉ để kiểm bước tách ngày này. Chưa cấp điểm E,
+  chưa gộp main hoặc gọi toàn bộ báo cáo đạt từ kết quả chạy thành công.
 - Render dep-db4gps60tbcc73eb9jcg đã Live đúng 6be4459/ảnh 2235dc5d3898
   lúc 22:50:58 giờ Việt Nam ngày 09/10. HTTP health 200, máy chủ/kết nối
   cơ sở dữ liệu và kho tệp tốt; không có nhật ký mức lỗi từ 22:49:04 đến
   22:51:26 trong phạm vi đọc. Đóng bước triển khai ứng viên, chưa đóng chất
-  lượng A/B/E hoặc main. Chỉ kiểm đúng một câu Viettel nguyên bản trong
-  phiên mới; không gửi lại cả lô, PDF hoặc các bước B không bị ảnh hưởng.
+  lượng A/B/E hoặc main. Câu Viettel nguyên bản đã chạy và được đối soát
+  như trên; không gửi lại cả lô, PDF hoặc các bước B không bị ảnh hưởng.
   Biên nhận e1de733 được giữ riêng, không đổi thành kết quả của bản mới.
 - Ứng viên gộp 6be4459 đã qua toàn bộ CI 37953367139, gồm máy chủ,
   giao diện, bộ kiểm ngoại tuyến và dựng/kiểm ảnh chạy. Kho ảnh đã xuất

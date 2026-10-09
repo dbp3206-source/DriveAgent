@@ -46,6 +46,7 @@ from app.agent.evidence import (
     source_references,
 )
 from app.agent.freshness import server_time_context
+from app.agent.news_window import bound_recent_news, news_window_context
 from app.agent.orchestrator import (
     SYSTEM_PROMPT,
     AgentNotConfiguredError,
@@ -1283,6 +1284,9 @@ class CompilerOrchestrator:
             {
                 "current_user_request": user_message,
                 "server_time": server_time_context(self.settings.local_timezone),
+                "requested_news_window": news_window_context(
+                    user_message, self.settings.local_timezone,
+                ),
                 "history_untrusted": history_data,
                 "evidence_untrusted": model_context_data,
                 "source_references": source_references(citations),
@@ -1690,6 +1694,14 @@ class CompilerOrchestrator:
                     "Nguồn chỉ có tiêu đề chưa đủ cho báo cáo đúng yêu cầu trình bày; "
                     "chưa thực hiện thao tác ghi.", code="incomplete_source_report",
                 )
+        answer, dated_items = bound_recent_news(
+            answer, citations, request=user_message, timezone=self.settings.local_timezone,
+        )
+        if dated_items:
+            trace.append({
+                "stage": "output_guard", "status": "corrected",
+                "rule": "requested_news_window", "relocated_items": dated_items,
+            })
         answer = normalize_math_notation(answer)
         answer, _ = normalize_markdown_boundaries(answer)
         if reused_sources:

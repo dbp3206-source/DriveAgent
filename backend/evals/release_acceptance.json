@@ -162,9 +162,22 @@
       "evidence_method": "Render MCP get_service/get_deploy confirms exact immutable image, public health HTTP 200 and scoped error-level log read. No user-specific Gemini or Google Workspace probe inferred.",
       "scope": "Deployment and DB/object-storage connections only; no new answer-quality acceptance."
     },
-    "cases": {},
+    "cases": {
+      "company-05": {
+        "status": "COMPLETED_REAL_WEB_REPORT_WITH_NEWS_WINDOW_LIMIT",
+        "receipt_reference": "Owner-scoped persisted readback, 09/10/2026. New request/session/message identifiers and private reply text are not published.",
+        "task_status": "completed", "task_attempts": 1, "error_message": null,
+        "model": "gemini-3.5-flash-lite", "model_call_count": 1,
+        "prompt_token_count": 15918, "candidates_token_count": 606,
+        "agent_task_latency_ms": 14681, "web_research_latency_ms": 1550,
+        "citation_count": 5, "proposal_count": 0,
+        "verified": "Actual official web read and one successful synthesis. Prior application-minute-limit failure did not recur in this run. Overview/products and three clarification questions present; no private-source tool or Google write. Does not claim to have read the absent attachment or invent a meeting date.",
+        "findings": "Recent-news paragraph mixes two dates in the requested 30-day calendar window with three outside dates (26/08, 12/08 and 19/03/2026). Awards from a 2021 source are presented in the scale section without the source year; staffing/finance are explicitly unknown. No whole-report or aggregate PASS inferred.",
+        "quality_score": null
+      }
+    },
     "pending_cases": {
-      "company-05": {"status": "AWAITING_ONE_ORIGINAL_PROMPT_RECHECK", "next_action": "Single original Viettel prompt in a new session, automatic source selection, no private reads or writes. Do not repeat the whole batch, reset quotas or change keys. Prior failures remain under prior_e1de733_results."},
+      "company-05": {"status": "RUNTIME_FAILURE_CLOSED_NEWS_WINDOW_CORRECTION_LOCAL_VERIFIED", "next_action": "Do not resubmit the completed prompt solely to test deterministic date separation. Verify and deploy the grouped date correction; original answer remains a release-scoped receipt with its quality limits. Prior failures remain under prior_e1de733_results."},
       "other_locked_cases": "Retain existing company/freshness limitations and historical B evidence scope. Do not infer all A/B/E/F complete from the Viettel recheck; no PDF or unaffected-workflow repeats."
     },
     "unchanged_path_evidence": "Prior workflow, memory, scheduler, exports and approved Google Doc receipts retain their own releases and functional scope; not newly executed on this image.",
@@ -172,7 +185,7 @@
     "unlisted_cases": "NOT VERIFIED on this image; no aggregate score or whole-product readiness claim. Main not merged."
   },
   "candidate_fix_20261009": {
-    "status": "DEPLOYED_VERIFIED_AWAITING_LIVE_ANSWER_READBACK",
+    "status": "DEPLOYED_READBACK_COMPLETE_WITH_NEWS_WINDOW_LIMIT",
     "code_commit": "6be4459ad468e7a01d2576779000c8386e0f6734",
     "ci": {"run_id": "37953367139", "conclusion": "success", "postgres_state": "success", "verify": "success", "publish_image": "success", "render_deploy_hook": "skipped"},
     "image_reference": "ghcr.io/dbp3206-source/veridra@sha256:2235dc5d3898860d727829abb03eb2a4876ebfc3c0e8d3ec40192fe8c665e459",
@@ -186,6 +199,14 @@
     "live_quality_verified": false,
     "ci_verified": true,
     "deployment_verified": true
+  },
+  "news_window_fix_20261009": {
+    "status": "LOCAL_VERIFIED_AWAITING_CI_AND_DEPLOYMENT",
+    "root_cause": "Literal-number grounding does not enforce the requested calendar window. Archive page text contains mixed publication/event dates; model instructions alone left older dated items in the recent-news section.",
+    "change": "Supply absolute inclusive calendar bounds to report synthesis. After the last rewrite, relocate independently cited single-date items outside the requested interval into an explicitly labelled context section; preserve all source markers. Other sections, local sources and ambiguous multi-date comparisons stay unchanged. No added model call or quota change.",
+    "verification": "307 relevant tests passed in 86.95 seconds; Ruff and diff checks pass. Includes actual ADK compiler provider-boundary simulation after a final rewrite, date boundaries, non-web/control cases and idempotence. Original persisted reply replayed in memory: three outside items relocated, both in-window items and all source markers retained; no model call. Preliminary 17/139 test passes overlap this final batch and are not added.",
+    "limits": "This validates explicit dated-item presentation, not semantic correctness of every fact or publication/event inference. No new live answer or aggregate E score. Current cloud still runs 6be4459 until new image deployment is verified.",
+    "ci_verified": false, "deployment_verified": false
   },
   "prior_ffbac81_results": {
     "release_commit": "ffbac816fabfdd160a22b9678865bf0581669006",

@@ -22,6 +22,7 @@ from app.agent.evidence import (
     bound_web_numeric_claims,
     retain_referenced_citations,
 )
+from app.agent.news_window import bound_recent_news
 from app.agent.presentation import PRESENTATION_POLICY, normalize_math_notation
 from app.agent.quantitative import inventory_facts
 from app.agent.routing import Route, route_request
@@ -458,6 +459,14 @@ class AgentOrchestrator:
             trace.append({
                 "stage": "output_guard", "status": "corrected",
                 "rule": "headline_evidence_boundary", "affected_lines": headline_lines,
+            })
+        answer, dated_items = bound_recent_news(
+            answer, citations, request=user_message, timezone=self.settings.local_timezone,
+        )
+        if dated_items:
+            trace.append({
+                "stage": "output_guard", "status": "corrected",
+                "rule": "requested_news_window", "relocated_items": dated_items,
             })
         return AgentRunResult(
             answer=answer,

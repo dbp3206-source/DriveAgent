@@ -42,6 +42,7 @@ from app.agent.evidence import (
     source_references,
 )
 from app.agent.freshness import server_time_context
+from app.agent.news_window import bound_recent_news, news_window_context
 from app.agent.orchestrator import (
     SYSTEM_PROMPT,
     AgentNotConfiguredError,
@@ -478,6 +479,10 @@ class AdkOrchestrator:
                 f"{controls.instruction()}"
                 + "\nThời điểm của lượt hiện tại: "
                 + json.dumps(server_time_context(self.settings.local_timezone), ensure_ascii=False)
+                + "\nKhoảng tin được yêu cầu: "
+                + json.dumps(news_window_context(
+                    user_message, self.settings.local_timezone,
+                ), ensure_ascii=False)
                 + (f"\n{source_constraint}" if source_constraint else "")
                 + (f"\n{action_constraint}" if action_constraint else "")
                 + (
@@ -629,6 +634,14 @@ class AdkOrchestrator:
                 records.append({
                     "stage": "output_guard", "status": "corrected",
                     "rule": "headline_evidence_boundary", "affected_lines": headline_lines,
+                })
+            answer, dated_items = bound_recent_news(
+                answer, citations, request=user_message, timezone=self.settings.local_timezone,
+            )
+            if dated_items:
+                records.append({
+                    "stage": "output_guard", "status": "corrected",
+                    "rule": "requested_news_window", "relocated_items": dated_items,
                 })
             if reused_sources:
                 answer = label_historical_sources(answer, citations)

@@ -162,6 +162,64 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
     assert "3. Kết quả mong muốn được đánh giá bằng cách nào?" in result.answer
 
 
+async def test_company_news_window_is_supplied_and_applied_after_last_rewrite(runtime, monkeypatch):
+    from datetime import UTC, date, datetime
+
+    from app.agent.news_window import bound_recent_news, news_window_context
+    from app.tools.web_research import WebResearchOutput, WebSource
+
+    runner, user, session_id = runtime
+    calls = []
+    fixed_day = date(2026, 10, 9)
+
+    async def execute(name, arguments, context):
+        calls.append(name)
+        return WebResearchOutput(
+            summary="Tin trên website.",
+            sources=[WebSource(title="Tin", url="https://example.org/company",
+                               evidence_kind="page_text",
+                               evidence_excerpt="Thông báo 29/09/2026. Bài viết 26/08/2026.")],
+            observed_at=datetime.now(UTC), model="test-boundary",
+        )
+
+    async def generate(self, request, stream=False):
+        assert "2026-09-10" in str(request.contents)
+        assert "2026-10-09" in str(request.contents)
+        yield LlmResponse(content=types.Content(role="model", parts=[types.Part(text=json.dumps({
+            "answer": "Tin gần đây\nThông báo 29/09/2026 [1].",
+            "clarification_questions": ["Cần làm gì?", "Nguồn nào?", "Khi nào trao đổi?"],
+        }))]))
+
+    async def presentation(**kwargs):
+        # A final rewrite can reintroduce an older dated item. The boundary
+        # must run afterwards, keeping the newer item and all original refs.
+        return kwargs["answer"].replace("Thông báo 29/09/2026 [1].",
+                                         "Thông báo 29/09/2026 [1], bài viết 26/08/2026 [1].")
+
+    monkeypatch.setattr(runner.registry, "execute", execute)
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(compiler, "enforce_presentation_contract", presentation)
+    monkeypatch.setattr(compiler, "news_window_context", lambda request, timezone:
+                        news_window_context(request, timezone, today=fixed_day))
+    monkeypatch.setattr(compiler, "bound_recent_news", lambda answer, citations, **kwargs:
+                        bound_recent_news(answer, citations, today=fixed_day, **kwargs))
+    result = await runner.run(
+        user=user, session_id=session_id, request_id="company-news-window",
+        user_message=(
+            "Dữ liệu giả lập: khách hàng An Bình. Báo cáo tư vấn. "
+            "Dùng https://example.org/company. Tin 30 ngày gần đây. "
+            "Không đọc Gmail, Drive, lịch, tài liệu local hoặc bộ nhớ; không ghi dữ liệu."
+        ),
+    )
+    assert "Mốc ngoài khoảng" in result.answer, result.answer
+    recent, background = result.answer.split("Mốc ngoài khoảng", 1)
+    assert "29/09/2026 [1]" in recent and "26/08/2026" not in recent
+    assert "26/08/2026 [1]" in background
+    assert "3. Khi nào trao đổi?" in result.answer
+    assert calls == ["web_research"]
+    assert any(item.get("rule") == "requested_news_window" for item in result.trace)
+
+
 @pytest.mark.parametrize("questions", [None, [], ["Một?", "Hai?"],
     ["Một?", "Hai?", ""], ["Một?", "Một?", "Ba?"],
     ["Một?", "Hai?", "Ba?", "Bốn?"], ["Một?", "Hai?", "x" * 1001],
