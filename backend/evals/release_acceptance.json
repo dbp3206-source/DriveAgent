@@ -52,13 +52,13 @@
     },
     "cases": {},
     "pending_cases": {
-      "W01": {"status": "NOT VERIFIED AFTER FIX", "next_action": "One locked first-turn check after regular quota naturally renews. Do not repeat accepted follow-up/save steps; retain historical partial response."}
+      "W01": {"status": "NOT VERIFIED AFTER FIX", "next_action": "Active credential now has 16 regular calls available. One locked first-turn check via the authenticated UI; sidebar automation failed to initialize, so user submission is required. Do not repeat accepted follow-up/save steps; retain historical partial response."}
     },
     "quota_observation": {
-      "observed_at": "2026-10-09T02:43Z", "protection_day": "2026-10-08",
-      "calls_today": 16, "regular_calls_remaining": 0,
+      "observed_at": "2026-10-09T02:54Z", "protection_day": "2026-10-08",
+      "calls_today": 0, "regular_calls_remaining": 16,
       "next_regular_day_at": "2026-10-09T14:00:00+07:00",
-      "scope": "Owner-scoped active credential metadata only; not a measurement of Google's project quota. No model call, counter reset or reserve use."
+      "scope": "Owner-scoped active credential metadata after user-selected key change; not a measurement of Google's project quota. No model call, counter reset or reserve use. Previous active credential had 16 calls used and zero regular calls remaining at 02:43Z."
     },
     "unchanged_path_evidence": "Historical passing workflow receipts retain original release and scope; not new runs on this image.",
     "unlisted_cases": "Not verified on this release. No aggregate score or A/B/E/F acceptance inferred from CI."
