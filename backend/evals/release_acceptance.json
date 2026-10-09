@@ -148,7 +148,11 @@
     "unlisted_cases": "NOT VERIFIED on this image. Main not merged; whole-product readiness unproven."
   },
   "candidate_fix_20261009": {
-    "status": "LOCAL_VERIFIED_NOT_DEPLOYED",
+    "status": "CI_AND_IMAGE_VERIFIED_AWAITING_RENDER_IMAGE_UPDATE",
+    "code_commit": "6be4459ad468e7a01d2576779000c8386e0f6734",
+    "ci": {"run_id": "37953367139", "conclusion": "success", "postgres_state": "success", "verify": "success", "publish_image": "success", "render_deploy_hook": "skipped"},
+    "image_reference": "ghcr.io/dbp3206-source/veridra@sha256:2235dc5d3898860d727829abb03eb2a4876ebfc3c0e8d3ec40192fe8c665e459",
+    "image_evidence": "Anonymous GHCR manifest read for the exact code-commit tag returned HTTP 200 and Docker-Content-Digest matching this image. Render get_service still reports the prior f43a6614 image; no update performed.",
     "changes": [
       "Retain a whole-sentence unverified-news search limitation only when its day window was explicitly requested; remove false source attribution. Mixed business claims, unsupported numbers and unrequested windows remain blocked. Shared by compiler, ADK and legacy answer paths.",
       "Clarify website operator versus requested customer/contact, avoid treating registration/address as scale and use a neutral recent-news heading. Prompt-policy correction is not proof of model compliance.",
@@ -156,7 +160,7 @@
     ],
     "verification": "Before behavior fix, 6 regression cases fail and 7 negative controls pass. The final grouped run passes 289 tests in 60.61 seconds across evidence, compiler, ADK, legacy orchestration and creation schema, including actual nested web payload and post-retention reference remapping. Ruff and diff checks pass. Tests use fake provider boundaries, not Gemini answer-quality evidence. Earlier 283/288-test runs and a failed 12-case mapping check overlap this final run; do not add the counts or treat the intermediate run as final.",
     "live_quality_verified": false,
-    "ci_verified": false,
+    "ci_verified": true,
     "deployment_verified": false
   },
   "prior_ffbac81_results": {
