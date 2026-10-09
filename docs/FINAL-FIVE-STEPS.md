@@ -14,6 +14,24 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 
 ## Trạng thái hiện hành — 09/10/2026
 
+- Bản gộp e1de733 đã qua toàn bộ CI 37881913880 và đã xuất ảnh bất biến:
+  `ghcr.io/dbp3206-source/veridra@sha256:f43a6614f5728a611e5a68538212046acdd817cf622ff64f8ddf258906820f7f`.
+  Chứa cả sửa nhận Dùng + URL và lọc đúng website; không triển khai ảnh
+  3cd8643 thiếu sửa lọc. Render vẫn trỏ ảnh b57abd1696b3; bước tự triển khai
+  trong CI bị bỏ qua. Thao tác duy nhất cần ngay: Render → Settings →
+  Update Source → Existing Image → dán ảnh trên → Connect, chờ Live.
+  Chưa gửi lại câu hỏi trên ảnh cũ, chưa gộp main hoặc chấm E từ CI.
+
+- Đối soát W05 không gọi Gemini: quy trình qa_final_tu_van bản 2 được lưu
+  trước khi chạy; cùng phiên 27db3d74 có lần đọc/tính Minh Phát đúng hai
+  nguồn, rồi đổi sang An Bình 8 người chỉ hỏi ba câu làm rõ. Lần đổi thành
+  công không đọc nguồn hoặc tính, không giữ dữ kiện cũ. Giữ cả hai lần
+  đổi bị lỗi trước đó. Đây là bằng chứng lịch sử đúng thao tác, chưa xác
+  định lại mã triển khai của từng lượt; không gọi chuỗi trên ảnh hiện tại.
+  Không chạy lại quy trình không bị ảnh hưởng chỉ để làm mới biên nhận.
+
+### Chi tiết kiểm chứng và các cập nhật trước
+
 - Ba câu Samsung, Shopee, Viettel đã chạy lúc 03:28–03:29 UTC; đã đọc
   câu trả lời, nguồn, dấu vết, chế độ chọn và nhật ký đúng ba lượt.
   Cả ba dùng nguồn tự động nhưng đi vào nhánh trả lời không có bằng chứng:
@@ -374,7 +392,8 @@ Biên nhận lịch sử không được đổi nhãn thành lần chạy mới 
 | P01–05 | P02/P03 có kết quả lịch sử đã đối soát; P01 còn cách diễn đạt, P04 thiếu ngày/trạng thái dự báo, P05 thiếu đối soát đơn vị riêng. | Giữ đúng hạn chế, không gọi lại PDF hoặc sửa thêm theo quyết định tạm gác. Không biến các mục này thành đạt hoặc đưa chúng vào điểm hợp lệ. |
 | W01 | Lượt đầu ffbac81 đúng nguồn và các đại lượng. Cùng chuỗi lịch sử 81665f7 đọc/tính → hỏi tiếp → lưu đã được đối soát và chấp nhận theo độ dài áng chừng. | Giữ đúng bản/phạm vi biên nhận. Không lặp đọc, hỏi tiếp hoặc lưu vì số từ; không gọi các bước khác bản là chuỗi mới. |
 | W02/W04 | Có đủ chuỗi ba lượt đạt đúng đáp án trên bản đã ghi. | Giữ nguyên biên nhận và phiên bản; không chạy lại chỉ để tạo mẫu mới. |
-| W03/W05/W06 | Có bằng chứng quên; đổi đầu vào An Bình; bản kết quả v2 và ba tệp xuất. Một số bằng chứng là từng bước, chưa chứng nhận cả chuỗi cùng bản. | Ghép biên nhận đúng mã/phạm vi; không tạo lại ghi chú đã xóa, xuất lặp hoặc ghi Google thêm. Nếu chuỗi thiếu bằng chứng thì giữ chưa đóng. |
+| W05 | Đã đối soát quy trình lưu bản 2 và hai lần chạy thành công cùng phiên: Minh Phát đúng nguồn/tính; An Bình 8 người không lẫn dữ kiện cũ. Hai lần đổi lỗi trước đó vẫn được ghi. | Giữ bằng chứng lịch sử, chưa xác minh lại mã triển khai từng lượt; không gọi đây là chuỗi mới cùng ảnh, không chạy lại phần không bị ảnh hưởng. |
+| W03/W06 | Có bằng chứng quên; bản kết quả v2 và ba tệp xuất. Một số bằng chứng là từng bước, chưa chứng nhận cả chuỗi cùng bản. | Ghép biên nhận đúng mã/phạm vi; không tạo lại ghi chú đã xóa, xuất lặp hoặc ghi Google thêm. Nếu chuỗi thiếu bằng chứng thì giữ chưa đóng. |
 
 Hẹn giờ có một bản tin thật; lịch trống và nhãn bảy vai trò sẵn sàng
 không chứng minh cuộc hẹn có dữ liệu hoặc cả bảy vai trò đã làm việc.

@@ -20,6 +20,10 @@ memory_agent là nhánh trả lời thường, không chứng minh đã đọc b
 Lỗi chung đã tái hiện: Dùng + URL chưa được nhận là lựa chọn nguồn
 công khai. Bản sửa và phép kiểm gộp đang được ghi ở tài liệu trạng thái;
 không đổi các lượt này thành đạt hoặc gọi thêm mô hình trên bản cũ.
+Sau kiểm nguồn thật đã gộp thêm sửa lọc đúng website vào e1de733; CI
+37881913880 đạt và ảnh f43a6614f572 đã xuất bản. Render vẫn dùng ảnh
+b57abd1696b3, bước tự triển khai bị bỏ qua. Thao tác cập nhật ảnh và
+biên nhận W05 đã đối soát được ghi ở đầu FINAL-FIVE-STEPS.md.
 
 ## Lịch sử đối soát — 07/10/2026
 

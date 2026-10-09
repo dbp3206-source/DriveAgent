@@ -55,6 +55,16 @@
       "verified": "Correctly rejects treating the supplied 100000 VND dated 01/01/2024 as current; distinguishes source date from current evidence. No source tool calls or invented current price. Model gemini-3.5-flash-lite returned successfully. Do not rerun solely because the previous closure summary omitted this receipt.",
       "release_scope": "Historical receipt; exact deployment at run time not newly determined in this readback."
     },
+    "W05": {
+      "status": "HISTORICAL_SAVED_WORKFLOW_AND_SAME_SESSION_INPUT_SWITCH_VERIFIED",
+      "session_id": "27db3d74-a78e-4700-9f4c-8776b2cf2b20",
+      "skill": {"id": "e52e6f6c-f931-4daf-82c6-7704b5353677", "name": "qa_final_tu_van", "revision": 2, "active": true, "created_at": "2026-10-06T03:15:07.810700Z", "updated_at": "2026-10-06T03:15:33.527618Z"},
+      "successful_request_ids": ["4eb14493-689f-494d-828b-b2ccae65ee18", "6f88a691-2ceb-4dbb-ad6a-2d29fc6e584e"],
+      "assistant_message_ids": ["d19e778f-4377-4c1a-b5f6-85dde8798e44", "beb571ac-8e6c-4eb8-9741-69c58eef277e"],
+      "failed_intermediate_request_ids": ["f18aa29f-8026-4de1-ba04-c1d89467b7e2", "f7edd88b-fc66-49b5-93df-b921ead9b807"],
+      "verified": "Persisted active revision 2 predates both observed runs. Same saved skill selected in both task controls and skill_run traces. Minh Phat run reads both correct fixtures and calculates 5760 baseline, 1152 hypothetical savings and 4608 remaining minutes. Successful replacement uses An Binh and 8 people, asks three document-discovery questions, has no source/calculation tool calls or citations and retains no Minh Phat figures. Earlier failed switch attempts remain recorded, not relabelled as success.",
+      "limits": "Historical operation evidence; exact deployment identity for each 06/10 run is not newly established. No same-image full-chain claim, new Gemini call, aggregate E score or additional Google write. Use these receipts instead of repeating the unaffected workflow."
+    },
     "company_coverage": {
       "cloud_receipts_found": ["company-01", "company-02", "company-03", "company-04", "company-05", "company-06"],
       "cloud_receipts_not_found_by_named_request_query": [],
@@ -62,7 +72,7 @@
       "next_manual_batch": [],
       "subsequent_readback": "The user completed company-03/04/05 on 09/10 at 03:28-03:29 UTC. Receipts below supersede the missing-execution observation, but all three failed grounding. Do not resend on the unchanged image."
     },
-    "execution_blocker": "Sidebar getTab failed after runtime reset: windows sandbox failed: helper_unknown_error: setup refresh had errors, kernel exited code=1. No authenticated alternate browser or bypass used. Manual batch is needed to produce the missing Chat receipts."
+    "execution_blocker": "Sidebar getState failed after runtime reset: windows sandbox failed: helper_unknown_error: setup refresh had errors, kernel_pid=2624 exited code=1. No authenticated alternate browser or bypass used. Three manual Chat receipts now exist; deploying the new image still requires the normal Render dashboard because the deploy hook is skipped and available Render tools cannot change imagePath."
   },
   "current_results": {
     "release_commit": "ffbac816fabfdd160a22b9678865bf0581669006",
@@ -143,14 +153,20 @@
       "W01": {"status": "FIRST TURN ACCEPTED; WHOLE-CHAIN RECEIPTS REMAIN RELEASE-SCOPED", "next_action": "Do not rerun the now-accepted first turn for length. Retain historical follow-up/save receipts without relabelling them as current runs; remaining A/B/E closure must state its actual evidence scope."}
     },
     "company_corrective_work_20261009": {
-      "status": "CODE_VERIFIED_LOCALLY_AWAITING_NEW_IMAGE",
+      "status": "CI_AND_IMAGE_VERIFIED_AWAITING_RENDER_IMAGE_UPDATE",
+      "combined_code_commit": "e1de733d453b8fa5c5badb9d5e2b482bf8134591",
+      "combined_publication_ci": {"run_id": "37881913880", "conclusion": "success", "postgres_state": "success", "verify": "success", "publish_image": "success", "render_deploy_hook": "skipped"},
+      "image_digest": "sha256:f43a6614f5728a611e5a68538212046acdd817cf622ff64f8ddf258906820f7f",
+      "image_reference": "ghcr.io/dbp3206-source/veridra@sha256:f43a6614f5728a611e5a68538212046acdd817cf622ff64f8ddf258906820f7f",
+      "image_evidence": "Anonymous GHCR manifest response Docker-Content-Digest for the exact e1de733d453b8fa5c5badb9d5e2b482bf8134591 tag after its successful publication CI. No registry token or image layers saved in the report.",
+      "render_observation": "Service srv-dav5v560tbcc73dpjlc0 still points to b57abd1696b3ff5d940278ade743a0e2321b620a2055e5e73504ddebf8e3e1ed; the new image is not deployed. Main not merged.",
       "routing_fix_commit": "3cd8643720468cf126e3635f51f6c06be09e0e29",
       "review_ci": {"run_id": "37880671347", "conclusion": "success"},
       "routing_publication_ci": {"run_id": "37881169319", "conclusion": "success"},
       "additional_root_cause": "A real public-only source probe read 6 Samsung, 6 Shopee and 4 Viettel pages but mixed unrelated advertising into the evidence bundle. Tavily prefer mode and missing application-side selected-host validation caused source pollution. No Gemini was called; these are retrieval diagnostics, not accepted company reports.",
       "source_authority_fix": "For an explicitly selected domain, use restrict mode and enforce exact host or child-host matching. Foreign/lookalike results cannot replace an unreadable selected website. General searches without a selected domain are unchanged. No extra synthesis or paid fallback added.",
       "local_checks": {"routing_controls_compiler_adk_passed": 287, "web_and_tavily_passed": 112, "ruff": "passed", "diff_check": "passed"},
-      "limits": "The 112-test web set repeats the previous 80 web checks; do not add overlapping counts as unique tests. Host filtering is not in 3cd8643 and requires the next image. No current cloud acceptance or aggregate E score inferred from these checks."
+      "limits": "The 112-test web set repeats the previous 80 web checks; do not add overlapping counts as unique tests. Both routing and host filtering are in the verified e1de733 image, but not in the currently deployed image. No current cloud acceptance or aggregate E score inferred from these checks."
     },
     "invalid_acceptance_attempts": [
       {
