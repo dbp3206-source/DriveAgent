@@ -85,7 +85,7 @@ from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Sett
 from app.core.source_pages import explicit_page_numbers
 from app.db.models import Message, User
 from app.db.session import SessionFactory
-from app.services.quota import conservative_tokens
+from app.services.quota import conservative_tokens, reserve_generation_quota
 from app.services.relational_circuit import circuit_store
 from app.services.relational_quota import quota_guard
 from app.tools.calculator import CalculateInput, calculate
@@ -1341,9 +1341,10 @@ class CompilerOrchestrator:
             )
             if any(item.name == "web_research" for item in evidence):
                 instruction += WEB_CONSULTATION_INSTRUCTION
-        await asyncio.to_thread(
-            self.quota.reserve, "flash",
+        await reserve_generation_quota(
+            self.quota,
             conservative_tokens(prompt + instruction + json.dumps(wire_schema), 8192),
+            generation_runway_seconds=35 if consultation_report else 20,
         )
         model_attempts: list[dict[str, Any]] = []
         sessions = InMemorySessionService()
@@ -1452,10 +1453,10 @@ class CompilerOrchestrator:
                         # either pass, so a failed repair still remains fail-closed.
                         invalid_raw = original_raw[:40000]
         if not answer and invalid_raw:
-            await asyncio.to_thread(
-                self.quota.reserve,
-                "flash",
+            await reserve_generation_quota(
+                self.quota,
                 conservative_tokens(invalid_raw + instruction, 8192),
+                generation_runway_seconds=35 if consultation_report else 20,
             )
             repair_session_id = request_id + "-schema-repair"
             await sessions.create_session(
@@ -1673,7 +1674,9 @@ class CompilerOrchestrator:
         # The bounded model rewrite can restore inline headings/steps or TeX
         # that were already cleaned in the first pass. Apply only content-neutral
         # boundary normalization; do not synthesize new answer sections here.
-        answer, numeric_lines = bound_web_numeric_claims(answer, citations, request=user_message)
+        answer, numeric_lines = bound_web_numeric_claims(
+            answer, citations, request=user_message, timezone=self.settings.local_timezone,
+        )
         if numeric_lines:
             trace.append({
                 "stage": "output_guard", "status": "corrected",

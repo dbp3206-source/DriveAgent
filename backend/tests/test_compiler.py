@@ -130,9 +130,10 @@ async def test_company_compiler_receives_separate_web_evidence_and_date_contract
     monkeypatch.setattr(compiler, "enforce_presentation_contract", presentation)
     numeric_guard = compiler.bound_web_numeric_claims
 
-    def check_numeric_guard(answer, citations, *, request):
+    def check_numeric_guard(answer, citations, *, request, timezone):
         assert source_selection in request
-        return numeric_guard(answer, citations, request=request)
+        assert timezone == runner.settings.local_timezone
+        return numeric_guard(answer, citations, request=request, timezone=timezone)
 
     monkeypatch.setattr(compiler, "bound_web_numeric_claims", check_numeric_guard)
     if drop_questions:

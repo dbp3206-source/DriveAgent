@@ -31,6 +31,7 @@ from app.api.schemas import (
 from app.core.cursor import decode_cursor, encode_cursor
 from app.core.json_utils import json_list, json_object
 from app.db.models import AuditEvent, AuditStatus, ChatSession, CreationProposalRecord, Message
+from app.services.quota import request_quota_deadline
 from app.tools.contracts import ToolError, ToolScopeError
 
 router = APIRouter(prefix="/api/chat", tags=["chat"])
@@ -728,7 +729,8 @@ async def chat(payload: ChatRequest, request: Request, user: CurrentUser, db: Db
             "veridra.agent", record_exception=False, set_status_on_exception=False
         ) as span:
             span.set_attribute("request_id", request_id)
-            result = await asyncio.wait_for(resolve_and_run(), timeout=60)
+            with request_quota_deadline(60):
+                result = await asyncio.wait_for(resolve_and_run(), timeout=60)
             span.set_attribute("outcome", "success")
         output_contract_incomplete = any(
             event.get("stage") == "output_contract"

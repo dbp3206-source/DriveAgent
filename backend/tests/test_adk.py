@@ -306,10 +306,6 @@ async def test_fallback_reserves_quota_for_every_real_provider_attempt(
         def reserve(self, bucket, tokens):
             reservations.append((bucket, tokens))
 
-        def reserve_with_wait(self, bucket, tokens, *, max_wait_seconds):
-            assert max_wait_seconds == 60
-            self.reserve(bucket, tokens)
-
     async def generate(self, request, stream=False):
         attempts.append(self.model)
         if self.model == "gemini-primary":
@@ -344,22 +340,32 @@ async def test_adk_bounded_quota_wait_never_calls_provider_without_reservation(m
     attempts, waits = [], []
 
     class Quota:
-        def reserve_with_wait(self, bucket, tokens, *, max_wait_seconds):
-            waits.append((bucket, max_wait_seconds))
+        def reserve(self, bucket, tokens):
+            waits.append((bucket, tokens))
             raise ToolError("limit reached", code=code)
+
+    async def reserve_without_wait(guard, tokens, **kwargs):
+        from app.services.quota import reserve_generation_quota
+
+        return await reserve_generation_quota(guard, tokens, max_wait_seconds=0)
 
     async def generate(self, request, stream=False):
         attempts.append(self.model)
         yield  # pragma: no cover
 
     monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    monkeypatch.setattr(
+        "app.agent.recoverable_model.reserve_generation_quota", reserve_without_wait,
+    )
     model = RecoverableGemini(
         model="gemini-primary", fallback_model="gemini-fallback",
         quota=Quota(), reserve_primary=True,
     )
     with pytest.raises(ToolError, match="limit reached"):
         [response async for response in model.generate_content_async(LlmRequest())]
-    assert waits == [("flash", 60)]
+    assert len(waits) == 1
+    assert waits[0][0] == "flash"
+    assert waits[0][1] >= 8192
     assert not attempts
 
 
@@ -439,6 +445,48 @@ async def test_quota_exhaustion_blocks_fallback_provider_attempt(monkeypatch):
         ]
 
     assert attempts == ["gemini-primary"]
+
+
+async def test_open_fallback_circuit_does_not_consume_reservation(monkeypatch):
+    from google.adk.models import Gemini
+    from google.adk.models.llm_request import LlmRequest
+    from google.adk.models.llm_response import LlmResponse
+    from google.genai.errors import ServerError
+
+    from app.tools.contracts import ToolError
+
+    attempts, reservations = [], []
+
+    class Quota:
+        def reserve(self, bucket, tokens):
+            reservations.append(bucket)
+
+    class Circuit:
+        def before_request(self, capability):
+            if capability == "generate:gemini-3.8-flash":
+                raise ToolError("unavailable", code="gemini_circuit_open")
+
+        def failure(self, *args):
+            pass
+
+        def success(self, *args):
+            pass
+
+    async def generate(self, request, stream=False):
+        attempts.append(self.model)
+        if self.model == "gemini-3.5-flash-lite":
+            raise ServerError(503, {"error": {"message": "unavailable"}})
+        yield LlmResponse(content=types.Content(parts=[types.Part(text="OK")]))
+
+    monkeypatch.setattr(Gemini, "generate_content_async", generate)
+    model = RecoverableGemini(
+        model="gemini-3.5-flash-lite", fallback_model="gemini-3.8-flash",
+        quota=Quota(), circuit=Circuit(), reserve_primary=True,
+    )
+    replies = [reply async for reply in model.generate_content_async(LlmRequest())]
+    assert replies[0].content.parts[0].text == "OK"
+    assert attempts == ["gemini-3.5-flash-lite", "gemini-3.6-flash"]
+    assert reservations == ["flash", "flash"]
 
 
 async def test_adk_session_persists_and_isolates_user(tmp_path):

@@ -159,7 +159,7 @@
     "unlisted_cases": "NOT VERIFIED on this image. Main not merged; whole-product readiness unproven."
   },
   "current_results": {
-    "status": "USER_REPORTED_LIVE_PUBLIC_HEALTH_VERIFIED",
+    "status": "EIGHT_CASE_READBACK_COMPLETE_FINAL_GROUPED_FIX_LOCAL_ONLY",
     "reported_release_commit": "6b83775b7a39f20ea4e7b83c10a82e676dfecd71",
     "expected_image_digest": "sha256:671b17494f20625a014008eaa3bf3acce295a7d9d604c3e7b8440f3a1501f9eb",
     "deployment": {
@@ -171,10 +171,34 @@
       "runtime_started_at": "2026-10-09T23:29:27.448066+07:00",
       "image_verification_limit": "Render tools are absent and the connector was reported not installed in this session. Exact imagePath is not independently read; a health restart alone does not establish image identity. No scoped log read claimed."
     },
-    "cases": {},
-    "pending_cases": "Use the fixed remaining manual batch only: five unaccepted company cases and U01/U02/U03. Retain the real Viettel receipt plus deterministic date replay and historical B component receipts; do not repeat them merely to refresh dates. PDF remains deferred.",
+    "readback_date": "2026-10-10",
+    "original_run_date": "2026-10-09",
+    "receipt_privacy": "Owner-scoped persisted messages, source excerpts and traces read in memory. No new user/session/request identifiers or raw replies published.",
+    "execution_count": {"submitted": 8, "completed": 7, "failed_before_synthesis": 1, "scope": "Execution only, not quality pass count."},
+    "cases": {
+      "company-01": {"status": "DELIVERED_WITH_SCALE_COUNTER_AND_NEWS_WINDOW_DEFECTS", "citation_count": 1, "observed": "Repeated incomplete 1+ source counters are described as scale. News paragraph declares a reversed window and shares one citation across ten explicit publication-date items, including three outside the requested window.", "fix_replay": "Actual stored reply replayed with original 2026-10-09 clock: seven dates retained in 10/09-09/10, three old items moved with citations; incomplete counters explained, 2025/3800/32% facts retained. Idempotent. No new model output."},
+      "company-02": {"status": "CONTENT_ACCEPTED_ON_REPORTED_6B_IMAGE", "citation_count": 6, "observed": "2024 revenue 61824 billion VND, growth 2.2%, net profit 9453 billion VND and growth 4.8% match the saved official annual-report text; fourteen farms and fourteen factories match the company source. States lack of verified recent news rather than absence of events. No extra length/style run required.", "scope": "Answer-content acceptance; independent imagePath and whole-product release are not inferred."},
+      "company-03": {"status": "ENTITY_SCOPE_CORRECT_NEWS_GUARD_WORDING_LIMIT", "citation_count": 3, "observed": "Retains Samsung Electronics Vietnam as the requested customer, not Samsung Vina. Global television history is scoped globally. Delivered news limitation contains the numeric guard replacement; the pre-guard sentence is not persisted, so its exact original wording is unknown."},
+      "company-04": {"status": "FAILED_APPLICATION_MINUTE_QUOTA_BEFORE_SYNTHESIS", "citation_count": 0, "error_code": "quota_minute_exhausted", "observed": "Web collection succeeded but model admission failed at the application rolling-minute guard. No completed assistant answer. This is not evidence of Gemini timeout or daily-budget exhaustion."},
+      "company-06": {"status": "GLOBAL_FACTS_SUPPORTED_NEWS_GUARD_WORDING_LIMIT", "citation_count": 1, "observed": "Global 2025 figures including revenue 91 billion EUR, workforce 412800, R&D staff 82100 and R&D expense 7.9 billion EUR match the saved company page and are scoped to the group. News guard wording and a web citation on application no-action status remain quality limits."},
+      "U01": {"status": "CLOCK_RETURNED_EVENT_TOPIC_LOST", "citation_count": 5, "observed": "Copied inline Markdown fence makes the first-clause selector retain the clock question rather than ASIAD. Correct current day is returned, event remains unverified with unrelated collected sources.", "fix_replay": "Normalized original question retains ASIAD. None of the old five sources establishes official event evidence; not relabelled as a successful source discovery."},
+      "U02": {"status": "UNKNOWN_WITHOUT_REQUESTED_ABSOLUTE_DAY", "citation_count": 5, "observed": "No verified schedule conclusion, but requested yesterday is not stated as 08/10/2026 at the original clock.", "fix_replay": "Absolute-day behavior covered by frozen-clock tests. Original source set contains one eligible government subject source; secondary pages are not allowed supports. No new model answer."},
+      "U03": {"status": "CONCLUSION_USES_SECONDARY_SOURCE_DESPITE_OFFICIAL_REQUIREMENT", "citation_count": 5, "observed": "The no-match conclusion uses a secondary sports outlet rather than the requested official source. Kiểm nguồn chính thức is missed by the old narrow request check.", "fix_replay": "Original request is recognized; one subject-matching government source is eligible and the secondary sports outlet is disallowed. Quote validation is not claimed to establish semantic truth."}
+    },
+    "pending_cases": "Only locked company-04 and U01 may be checked once after the final grouped candidate passes CI and is deployed. Do not resend the eight-case batch, Viettel, PDF or unaffected B workflows. Preserve remaining historical evidence scope; no main merge or aggregate E score from offline tests.",
     "quality_score": null,
     "unlisted_cases": "NOT VERIFIED; no whole-product acceptance or main merge."
+  },
+  "final_grouped_web_fix_20261010": {
+    "scope": "Exactly five locked issues in docs/FINAL-WEB-CLOSEOUT.md; no feature or benchmark expansion.",
+    "status": "LOCAL_GROUPED_VERIFICATION_PASSED_NOT_DEPLOYED",
+    "base_commit": "1a79697",
+    "verification": {"grouped_pytest_passed": 490, "duration_seconds": 130.19, "ruff": "passed", "diff_check": "passed", "secret_scan_git_visible_files": 573, "secret_scan": "passed"},
+    "replay": {"actual_fpt_reply_in_memory": true, "original_clock_date": "2026-10-09", "news_dates_in_window": 7, "news_dates_relocated": 3, "outside_citations_retained": true, "scale_facts_retained": true, "idempotent": true, "official_source_contract_checked_on_original_U02_U03": true},
+    "quota_policy": "Unchanged limits, counters, key and 60-second Chat deadline. Cancellable rolling-minute wait capped at 15 seconds with generation runway. Daily exhaustion returns immediately; no refund or paid fallback.",
+    "external_calls_during_local_verification": {"gemini": 0, "tavily": 0, "google_writes": 0},
+    "next_action": "One CI-verified immutable image, one deployment, at most two already-locked affected live cases. Then record real outcome and close this web-fix scope; no style optimization or repeated batch.",
+    "limits": "Offline checks and deterministic readback transformations do not prove new Gemini answer quality or same-image A/B/E/F completion. C/D excluded, PDF deferred, one admin only, historical B components retain original release."
   },
   "prior_6be4459_results": {
     "release_commit": "6be4459ad468e7a01d2576779000c8386e0f6734",

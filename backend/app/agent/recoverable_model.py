@@ -12,7 +12,7 @@ from google.genai import errors, types
 from pydantic import Field
 
 from app.core.config import APPROVED_GEMINI_MODELS
-from app.services.quota import conservative_tokens
+from app.services.quota import conservative_tokens, reserve_generation_quota
 from app.tools.contracts import ToolError, ToolScopeError
 
 
@@ -68,11 +68,9 @@ class RecoverableGemini(Gemini):
             if self.circuit is not None:
                 await asyncio.to_thread(self.circuit.before_request, primary_capability)
             if self.quota is not None and self.reserve_primary:
-                await asyncio.to_thread(
-                    self.quota.reserve_with_wait,
-                    "flash",
+                await reserve_generation_quota(
+                    self.quota,
                     conservative_tokens(serialized_request, 8192),
-                    max_wait_seconds=60,
                 )
             async for response in super().generate_content_async(llm_request, stream=False):
                 self._validate_tool_calls(response, llm_request)
@@ -98,14 +96,6 @@ class RecoverableGemini(Gemini):
             retryable = exc.code in {404, 429, 500, 502, 503, 504}
             if emitted or not retryable or not self.enable_fallback:
                 raise
-            if self.quota is not None:
-                # Fallback is another real provider request. It must not reuse
-                # the primary reservation or silently bypass the daily/RPM cap.
-                await asyncio.to_thread(
-                    self.quota.reserve,
-                    "flash",
-                    conservative_tokens(serialized_request, 8192),
-                )
             fallback_candidates = [effective_fallback_model]
             for candidate in sorted(APPROVED_GEMINI_MODELS):
                 if candidate != self.model and candidate not in fallback_candidates:
@@ -158,6 +148,14 @@ class RecoverableGemini(Gemini):
                                 last_fallback_exc = circuit_err
                                 continue
                             raise
+                    if self.quota is not None:
+                        # Reserve after circuit admission, exactly once per real
+                        # fallback attempt; never charge an unavailable candidate.
+                        await reserve_generation_quota(
+                            self.quota,
+                            conservative_tokens(serialized_request, 8192),
+                            generation_runway_seconds=10.0,
+                        )
                     async for response in fallback.generate_content_async(request, stream=False):
                         self._validate_tool_calls(response, request)
                         yield response
@@ -178,12 +176,6 @@ class RecoverableGemini(Gemini):
                     if fallback_exc.code in {404, 429, 500, 502, 503, 504} and idx + 1 < len(
                         fallback_candidates
                     ):
-                        if self.quota is not None:
-                            await asyncio.to_thread(
-                                self.quota.reserve,
-                                "flash",
-                                conservative_tokens(serialized_request, 8192),
-                            )
                         continue
                     raise
             if last_fallback_exc:

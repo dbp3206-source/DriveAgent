@@ -447,7 +447,9 @@ class AgentOrchestrator:
         answer = normalize_math_notation(answer)
         answer, citations = retain_referenced_citations(answer, citations, auto_reference=True)
         trace = list(final_state.get("trace", [])) + execution_records
-        answer, numeric_lines = bound_web_numeric_claims(answer, citations, request=user_message)
+        answer, numeric_lines = bound_web_numeric_claims(
+            answer, citations, request=user_message, timezone=self.settings.local_timezone,
+        )
         if numeric_lines:
             trace.append({
                 "stage": "output_guard", "status": "corrected",

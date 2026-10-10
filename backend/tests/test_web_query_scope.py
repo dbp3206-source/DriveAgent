@@ -26,6 +26,15 @@ from app.tools.web_research import (
     ("Python latest release? Chỉ trả lời ngắn. Không đọc thư.",
      "Python latest release", []),
     ("Google API pricing? Chỉ trả lời ngắn.", "Google API pricing", ["API"]),
+    ("```text Hôm nay theo giờ Việt Nam là ngày nào? ASIAD 2026 còn đang diễn ra không? "
+     "Chỉ kết luận từ nguồn chính thức; không đọc dữ liệu riêng.```",
+     "ASIAD 2026 còn đang diễn ra không", ["ASIAD"]),
+    ("> NASA công bố gì hôm qua? ESA công bố gì hôm qua? Không đọc Gmail.",
+     "NASA công bố gì hôm qua. ESA công bố gì hôm qua", ["NASA", "ESA"]),
+    ("Theo nguồn chính thức, ASIAD ngày mai có lịch bóng đá không?",
+     "ASIAD ngày mai có lịch bóng đá không", ["ASIAD"]),
+    ("Không có lịch ASIAD hôm qua là đúng không? NASA có tin gì? Không ghi dữ liệu.",
+     "Không có lịch ASIAD hôm qua là đúng không. NASA có tin gì", ["ASIAD", "NASA"]),
 ])
 def test_query_retains_subject_without_answer_controls(question, query, anchors):
     assert _public_query_topic(question) == (query, anchors)

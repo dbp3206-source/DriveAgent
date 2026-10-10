@@ -5,6 +5,8 @@ import re
 from datetime import date
 from typing import Any
 
+from app.agent.news_window import news_window_context
+
 HISTORICAL_SOURCE_INSTRUCTION = (
     "Nguồn đã đọc trong cuộc trò chuyện này, chưa xác minh lại. "
     "Chỉ dùng khi tiếp nối dữ kiện cũ; không coi là thông tin mới. "
@@ -107,8 +109,68 @@ def compact_web_evidence(payload: Any, citations: list[dict[str, Any]]) -> Any:
     return {**payload, "sources": sources}
 
 
+def _calendar_search_limitation(
+    text: str, request: str, timezone: str, today: date | None,
+) -> str | None:
+    """Recognize a search limitation, never a missing-event or business claim.
+
+    Calendar bounds come from the request/clock, not the cited website. A mixed
+    numerical assertion cannot borrow this exception just by saying 'chưa'.
+    """
+    context = news_window_context(request, timezone, today=today)
+    if not context or not re.match(
+        r"\s*(?:[-*]\s*)?(?:Trong\s+[^.!?\n]{0,200}?\s+)?"
+        r"(?:(?:hệ thống|tôi)\s+)?chưa\b", text, re.I,
+    ) or not re.search(
+        r"\bchưa\s+(?:(?:thể\s+)?(?:xác minh|xác nhận|kiểm chứng|thu thập|đọc)\s+được|"
+        r"tìm\s+(?:được|thấy)|"
+        r"có\s+đủ\s+(?:bằng chứng|dữ liệu)\s+để\s+(?:xác minh|kiểm chứng))"
+        r"\s+(?:bản\s+)?(?:tin(?:\s+(?:tức|sự kiện|mới))*|thông tin cập nhật)\b",
+        text, re.I,
+    ):
+        return None
+    # Keep financial/operating assertions subject to the normal evidence check,
+    # including numbers already occurring in the requested period.
+    if re.search(
+        r"%|\b(?:doanh thu|lợi nhuận|nhân viên|nhân sự|nhà máy|chi nhánh|"
+        r"ngân sách|giá bán|tỷ lệ|công suất|nhưng|đồng thời|ngoài ra)\b|"
+        r"\bkhông\s+có\s+(?:tin|trận|sự kiện)\b", text, re.I,
+    ):
+        return None
+    spans = list(re.finditer(r"(?<!\w)(\d{1,2})/(\d{1,2})/(\d{4})(?!\w)", text))
+    expected = {date.fromisoformat(context[key]) for key in ("start_date", "end_date")}
+    try:
+        actual = {date(int(m[3]), int(m[2]), int(m[1])) for m in spans}
+    except ValueError:
+        return None
+    period = re.compile(r"(?<!\w)(\d{1,3})\s+ngày\s+(?:gần đây|vừa qua|qua)\b", re.I)
+    periods = period.findall(text)
+    if (actual and actual != expected) or any(int(n) != context["days"] for n in periods):
+        return None
+    if not actual and not periods:
+        return None
+    stripped = re.sub(r"(?<!\w)\d{1,2}/\d{1,2}/\d{4}(?!\w)", "", text)
+    stripped = period.sub("", stripped)
+    if re.search(r"\d", stripped):
+        return None
+    start, end = (date.fromisoformat(context[key]) for key in ("start_date", "end_date"))
+    return (f"Chưa xác minh được tin trong khoảng {start:%d/%m/%Y}–{end:%d/%m/%Y} "
+            "từ các nguồn đã đọc.")
+
+
+def _repeated_incomplete_scale_counters(sources: list[dict[str, Any]]) -> bool:
+    labels = re.compile(
+        r"(?<!\d)[01]\+\s*(branches(?:\s*&\s*representative offices)?|"
+        r"global clients|employees|countries\s*&\s*territories|"
+        r"nhân viên|khách hàng|chi nhánh|quốc gia)\b", re.I,
+    )
+    return any(len({m[1].casefold() for m in labels.finditer(str(source.get("snippet", "")))})
+               >= 3 for source in sources)
+
+
 def bound_web_numeric_claims(
     answer: str, citations: list[dict[str, Any]], *, request: str = "",
+    timezone: str = "Asia/Bangkok", today: date | None = None,
 ) -> tuple[str, int]:
     """Reject missing literal numbers in cited web-page claims, without a model call.
 
@@ -184,7 +246,18 @@ def bound_web_numeric_claims(
     result: list[str] = []
     affected = 0
     bibliography = False
-    for line in answer.splitlines():
+    # Split only independently cited sentences when the source contains repeated
+    # incomplete scale counters. Preserve the other supported facts on the line.
+    lines = []
+    for original in answer.splitlines():
+        indices = [int(n) for match in marker.finditer(original)
+                   for n in re.findall(r"\d+", match[1])]
+        selected = [citations[n - 1] for n in indices if 1 <= n <= len(citations)]
+        if _repeated_incomplete_scale_counters(selected):
+            lines.extend(re.split(r"(?<=\][.!?])\s+(?=\S)", original))
+        else:
+            lines.append(original)
+    for line in lines:
         if line.lstrip().startswith("#"):
             bibliography = bool(re.match(r"^#+\s*(?:nguồn|tài liệu tham khảo)\s*$", line, re.I))
             result.append(line)
@@ -203,6 +276,22 @@ def bound_web_numeric_claims(
         limitation = news_limit.fullmatch(plain)
         if limitation and limitation["days"] in requested_days:
             result.append(re.sub(r"\s+([.!])", r"\1", plain).rstrip())
+            affected += 1
+            continue
+        calendar_limitation = _calendar_search_limitation(plain, request, timezone, today)
+        if calendar_limitation is not None:
+            result.append(calendar_limitation)
+            affected += 1
+            continue
+        if _repeated_incomplete_scale_counters(selected) and re.search(
+            r"(?<!\d)[01]\s*\+|(?:mốc|số|giá trị)[^.!?]{0,50}\bmột\b|"
+            r"(?:lớn hơn|hơn)\s+một\b", plain, re.I,
+        ):
+            refs = ", ".join(str(index) for index in indices)
+            result.append(
+                "Đoạn nguồn đang hiển thị số đếm chưa đầy đủ; chưa đủ căn cứ xác nhận "
+                f"các số đo quy mô tương ứng [{refs}]."
+            )
             affected += 1
             continue
         claims = numbers(plain)

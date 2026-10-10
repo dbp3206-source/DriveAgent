@@ -23,7 +23,7 @@ from sqlalchemy import (
 from sqlalchemy.engine import Engine
 
 from app.core.config import Settings
-from app.services.quota import QuotaGuard, quota_limits, quota_namespace
+from app.services.quota import QuotaGuard, check_reservation_active, quota_limits, quota_namespace
 from app.services.relational_state import state_engine, state_transaction
 from app.tools.contracts import ToolError
 
@@ -78,6 +78,7 @@ class RelationalQuotaGuard(QuotaGuard):
         limits_by_bucket = quota_limits()
         if bucket not in limits_by_bucket or tokens < 1:
             raise ValueError("Invalid quota reservation")
+        check_reservation_active()
         stamp = time.time() if now is None else now
         day = datetime.fromtimestamp(stamp, ZoneInfo("America/Los_Angeles")).date().isoformat()
         limits = limits_by_bucket[bucket]
@@ -99,6 +100,7 @@ class RelationalQuotaGuard(QuotaGuard):
                     "Request vượt ngân sách API trong phút; hãy giảm ngữ cảnh hoặc thử sau.",
                     code="quota_minute_exhausted",
                 )
+            check_reservation_active()
             db.execute(delete(reservations).where(
                 reservations.c.namespace == self.namespace,
                 reservations.c.timestamp < stamp - 30 * 86400,

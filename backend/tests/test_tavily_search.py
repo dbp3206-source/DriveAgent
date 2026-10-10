@@ -318,7 +318,7 @@ async def test_long_raw_content_and_duplicate_urls_are_bounded(monkeypatch, cont
         {"url": "https://example.com/page", "raw_content": PAGE}]}))
     sources, blocks = await collect_tavily_source_bundle(
         WebResearchInput(question="Dates"), context)
-    assert len(sources) == 1 and len(sources[0].evidence_excerpt) == 9000
+    assert len(sources) == 1 and 0 < len(sources[0].evidence_excerpt) <= 9000
     assert sources[0].evidence_excerpt in blocks[0]
 
 

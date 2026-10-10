@@ -1,13 +1,17 @@
 """Conservative, durable reservations; no API key or prompt is stored."""
 
+import asyncio
 import hashlib
 import os
 import sqlite3
 import time
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
-from typing import Literal
+from threading import Event
+from typing import Any, Literal
 from zoneinfo import ZoneInfo
 
 from app.tools.contracts import ToolError
@@ -32,6 +36,82 @@ RELAXED_LIMITS = {
 
 
 LIMITS = DEFAULT_LIMITS
+
+_request_deadline: ContextVar[float | None] = ContextVar("quota_request_deadline", default=None)
+_reservation_cancelled: ContextVar[Event | None] = ContextVar(
+    "quota_reservation_cancelled", default=None,
+)
+
+
+@contextmanager
+def request_quota_deadline(timeout_seconds: float):
+    """Share the existing request deadline without extending it on nested calls."""
+    deadline = time.monotonic() + timeout_seconds
+    existing = _request_deadline.get()
+    token = _request_deadline.set(min(existing, deadline) if existing is not None else deadline)
+    try:
+        yield
+    finally:
+        _request_deadline.reset(token)
+
+
+def check_reservation_active() -> None:
+    """An in-flight atomic DB check must not reserve after its waiter is cancelled."""
+    cancelled = _reservation_cancelled.get()
+    if cancelled is not None and cancelled.is_set():
+        raise asyncio.CancelledError
+    deadline = _request_deadline.get()
+    if deadline is not None and time.monotonic() >= deadline:
+        raise TimeoutError("Request deadline elapsed before quota admission")
+
+
+async def reserve_generation_quota(
+    guard: Any,
+    tokens: int,
+    *,
+    reserve_call: bool = False,
+    max_wait_seconds: float = 15.0,
+    generation_runway_seconds: float = 20.0,
+) -> dict[str, int]:
+    """Admit one real generation attempt, with a short cancellable minute wait.
+
+    Only rolling-minute exhaustion can recover by waiting. Daily exhaustion,
+    invalid/context-sized requests and all other errors are returned immediately.
+    The atomic reservation remains durable; cancellation never refunds a call.
+    Polling sleeps live in the coroutine, not an abandoned worker thread.
+    """
+    if tokens < 1:
+        raise ValueError("Invalid quota reservation")
+    if tokens > quota_limits()["flash"].tpm:
+        raise ToolError(
+            "Request vượt ngân sách API trong phút; hãy giảm ngữ cảnh hoặc thử sau.",
+            code="quota_minute_exhausted",
+        )
+    started = time.monotonic()
+    wait_budget = min(15.0, max(0.0, max_wait_seconds))
+    request_deadline = _request_deadline.get()
+    if request_deadline is not None:
+        wait_budget = min(
+            wait_budget,
+            max(0.0, request_deadline - started - max(0.0, generation_runway_seconds)),
+        )
+    wait_deadline = started + wait_budget
+    cancelled = Event()
+    token = _reservation_cancelled.set(cancelled)
+    try:
+        while True:
+            check_reservation_active()
+            try:
+                kwargs = {"reserve_call": True} if reserve_call else {}
+                return await asyncio.to_thread(guard.reserve, "flash", tokens, **kwargs)
+            except ToolError as exc:
+                remaining = wait_deadline - time.monotonic()
+                if exc.code != "quota_minute_exhausted" or remaining <= 0:
+                    raise
+                await asyncio.sleep(min(1.0, remaining))
+    finally:
+        cancelled.set()
+        _reservation_cancelled.reset(token)
 
 
 def quota_limits() -> dict[str, QuotaLimits]:
@@ -87,6 +167,7 @@ class QuotaGuard:
         limits_by_bucket = quota_limits()
         if bucket not in limits_by_bucket or tokens < 1:
             raise ValueError("Invalid quota reservation")
+        check_reservation_active()
         stamp = time.time() if now is None else now
         day = datetime.fromtimestamp(stamp, ZoneInfo("America/Los_Angeles")).date().isoformat()
         limits = limits_by_bucket[bucket]
@@ -115,6 +196,7 @@ class QuotaGuard:
                     "Request vượt ngân sách API trong phút; hãy giảm ngữ cảnh hoặc thử sau.",
                     code="quota_minute_exhausted",
                 )
+            check_reservation_active()
             db.execute(
                 "INSERT INTO quota_reservations"
                 "(bucket,timestamp,day,tokens,namespace) VALUES(?,?,?,?,?)",

@@ -621,7 +621,7 @@ class AdkOrchestrator:
             answer = normalize_math_notation(answer)
             answer, _ = normalize_markdown_boundaries(answer)
             answer, numeric_lines = bound_web_numeric_claims(
-                answer, citations, request=user_message,
+                answer, citations, request=user_message, timezone=self.settings.local_timezone,
             )
             if numeric_lines:
                 records.append({

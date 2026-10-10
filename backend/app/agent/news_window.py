@@ -1,6 +1,8 @@
 """Apply explicit recent-news calendar bounds without another model request.
 
 Only independently cited, single-date items in a news section are relocated.
+Explicit publication-date lists may share a trailing citation; that citation is
+retained on each separated item. Requested-window framing is corrected separately.
 Dates in comparisons, appointments, source titles and other sections stay intact.
 This does not establish whether a date is a publication date or an event date.
 """
@@ -20,6 +22,88 @@ _OTHER = re.compile(
     r"(?:tổng quan|quy mô|nhu cầu|cuộc hẹn|ghi chú|câu hỏi|nguồn|bối cảnh|"
     r"ngành|sản phẩm|trạng thái|liên hệ|bước tiếp theo)\b", re.I,
 )
+_DATE_TEXT = r"\d{1,2}[/.-]\d{1,2}[/.-]\d{4}"
+_PUBLICATION = (
+    rf"(?:ngày\s+đăng|đăng\s+ngày|ngày\s+công\s+bố|công\s+bố\s+ngày)"
+    rf"\s*:?\s*{_DATE_TEXT}"
+)
+_TRAILING_REFS = re.compile(rf"(?P<refs>(?:{_MARKER.pattern}\s*)+)[.!]?\s*$", re.I)
+
+
+def _correct_window_frame(line: str, start: date, end: date, *, heading: bool) -> str:
+    """Correct the report's declared interval, never a dated event or comparison."""
+    if heading:
+        pattern = (
+            rf"\(\s*(?:từ\s+)?(?:ngày\s+)?(?P<first>{_DATE_TEXT})\s+"
+            rf"(?:đến|tới)\s+(?:ngày\s+)?(?P<last>{_DATE_TEXT})\s*\)"
+        )
+    else:
+        pattern = (
+            rf"^\s*(?:[-*]\s*)?(?:Trong|Xét|Với)\s+khoảng(?:\s+thời gian)?\s+"
+            rf"từ\s+(?:ngày\s+)?(?P<first>{_DATE_TEXT})\s+(?:đến|tới)\s+"
+            rf"(?:ngày\s+)?(?P<last>{_DATE_TEXT})(?=\s*[,;:])"
+        )
+    match = re.search(pattern, line, re.I)
+    if not match:
+        return line
+    # An ordinary event range can also begin a paragraph. Require news/report
+    # framing after the interval before replacing either boundary.
+    if not heading and not re.search(
+        r"^\s*[,;:]\s*(?:(?:các\s+)?(?:tin(?:\s+tức)?|thông tin|bài viết|thông báo)\b"
+        r"|(?:chưa|không)\s+(?:có|tìm|ghi nhận|xác minh|đối chiếu)\b"
+        r"|(?:trang(?:\s+web)?|nguồn|cổng\s+thông\s+tin)(?:\s+chính\s+thức)?\s+"
+        r"(?:đã\s+)?(?:ghi\s+nhận|liệt\s+kê|tổng\s+hợp)\s+(?:các\s+)?"
+        r"(?:tin(?:\s+tức)?|thông tin|bài viết|thông báo)\b)",
+        line[match.end():], re.I,
+    ):
+        return line
+    try:
+        for raw in (match["first"], match["last"]):
+            day, month, year = re.split(r"[/.-]", raw)
+            date(int(year), int(month), int(day))
+    except ValueError:
+        return line
+    return (
+        line[:match.start("first")] + f"{start:%d/%m/%Y}"
+        + line[match.end("first"):match.start("last")] + f"{end:%d/%m/%Y}"
+        + line[match.end("last"):]
+    )
+
+
+def _shared_publication_items(
+    line: str, citations: list[dict[str, Any]],
+) -> tuple[str, list[str]] | None:
+    """Separate an explicit publication list, retaining its shared attribution.
+
+    Separators alone are not enough: every item must declare a publication date.
+    This excludes event ranges, prose comparisons and unrelated dated clauses.
+    """
+    trailing = _TRAILING_REFS.search(line)
+    if not trailing:
+        return None
+    refs_text = trailing["refs"].strip()
+    refs = [int(n) for n in re.findall(r"\d+", refs_text)]
+    if not refs or any(
+        not 1 <= n <= len(citations) or citations[n - 1].get("evidence_kind") != "page_text"
+        for n in refs
+    ):
+        return None
+    body = line[:trailing.start()].rstrip()
+    if _MARKER.search(body):
+        return None
+    first = re.search(_PUBLICATION, body, re.I)
+    if not first:
+        return None
+    prefix = body[:first.start()]
+    # A preceding introduction must end in a list colon, not a factual clause.
+    if prefix.strip() and not re.search(r":\s*$", prefix) and prefix.strip() not in {"-", "*"}:
+        return None
+    parts = re.split(
+        rf"[;,]\s*(?:và\s+)?(?={_PUBLICATION})", body[first.start():], flags=re.I,
+    )
+    if len(parts) < 2 or any(not re.match(_PUBLICATION, part, re.I) for part in parts):
+        return None
+    return prefix, [f"{part.strip().rstrip(' ,;.')} {refs_text}" for part in parts]
 
 
 def news_window_context(
@@ -63,6 +147,7 @@ def bound_recent_news(
     in_news = False
     news_has_content = False
     affected = 0
+    frame_changed = False
 
     def flush() -> None:
         if outside:
@@ -88,12 +173,20 @@ def bound_recent_news(
             flush()
             in_news = is_news
             news_has_content = False
+        if in_news:
+            corrected = _correct_window_frame(line, start, end, heading=is_news)
+            frame_changed = frame_changed or corrected != line
+            line = corrected
         if not in_news or is_heading or not _MARKER.search(line):
             result.append(line)
             continue
         # A separator after a citation marks an independently attributed item.
         # Never split a date range or an uncited comparison into unrelated facts.
-        parts = re.split(r"(?<=\])\s*[,;]\s*(?:và\s+)?|(?<=\])\.\s+(?=\S)", line)
+        shared = _shared_publication_items(line, citations)
+        prefix = shared[0] if shared else ""
+        parts = shared[1] if shared else re.split(
+            r"(?<=\])\s*[,;]\s*(?:và\s+)?|(?<=\])\.\s+(?=\S)", line,
+        )
         kept: list[str] = []
         moved: list[str] = []
         for part in parts:
@@ -122,9 +215,9 @@ def bound_recent_news(
         affected += len(moved)
         outside.extend(moved)
         if kept:
-            result.append("; ".join(kept).rstrip(" ,;.") + ".")
+            result.append(prefix + "; ".join(kept).rstrip(" ,;.") + ".")
             news_has_content = True
     flush()
-    if not affected:
+    if not affected and not frame_changed:
         return answer, 0
     return "\n".join(result).rstrip(), affected

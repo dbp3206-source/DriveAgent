@@ -2,6 +2,12 @@
 
 ## Nơi đọc trạng thái hiện hành
 
+Cập nhật 10/10: đọc [FINAL-WEB-CLOSEOUT.md](FINAL-WEB-CLOSEOUT.md) để biết
+đúng năm vấn đề cuối và điểm dừng. Các bản triển khai và yêu cầu thao tác
+trong lịch sử dưới đây không thay thế trạng thái hiện hành hoặc yêu cầu
+triển khai lại ảnh cũ. Lô tám câu đã chạy; chỉ hai ca bị ảnh hưởng được
+giữ cho kiểm ngắn sau bản sửa gộp, không mở thêm bộ kiểm.
+
 Trạng thái triển khai và việc còn lại được cập nhật tại
 [FINAL-FIVE-STEPS.md](FINAL-FIVE-STEPS.md); biên nhận theo bản nằm trong
 `backend/evals/release_acceptance.json`. Ngày 09/10, URL đã chạy đúng

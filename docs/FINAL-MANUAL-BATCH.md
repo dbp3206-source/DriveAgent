@@ -1,5 +1,9 @@
 # Đợt kiểm còn thiếu — không thêm ca ngoài bộ đã khóa
 
+**Lô này đã chạy và đã đối soát. Không nhập lại tám câu bên dưới.**
+Giữ nguyên câu hỏi làm tài liệu gốc; việc còn lại và giới hạn hai lượt
+kiểm sau triển khai nằm tại [FINAL-WEB-CLOSEOUT.md](FINAL-WEB-CLOSEOUT.md).
+
 Chỉ tám câu đã có trong bộ A: năm hồ sơ doanh nghiệp còn chưa đạt và
 U01/U02/U03. Không gọi lại Viettel chỉ để tách ngày, không kiểm PDF,
 bộ nhớ, phép tính hoặc xuất tệp lần nữa. Đây chưa phải biên bản đạt.

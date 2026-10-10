@@ -4,6 +4,11 @@ Ngày chốt: 07/10/2026. Phạm vi: A/B/E/F theo RELEASE-CLOSURE.md.
 Không thêm tính năng, vòng thiết kế hay bộ đo mới. C/D loại khỏi đợt demo;
 P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành đạt.
 
+**Cập nhật 10/10:** phạm vi năm lỗi cuối, nguyên nhân, sửa chung và điểm
+dừng nằm tại [FINAL-WEB-CLOSEOUT.md](FINAL-WEB-CLOSEOUT.md). Tám câu phía
+dưới đã chạy và được đọc lại; không yêu cầu gửi lại cả lô. Bản sửa gộp
+đạt 490 phép kiểm trong máy; chưa dùng kết quả này để cấp điểm E hay đóng F.
+
 | Bước | Làm gì | Điều kiện đóng |
 |---|---|---|
 | 1 — Khóa bản | Đẩy một đợt sửa chung về bằng chứng web, chạy kiểm tự động và triển khai đúng ảnh; sau đó cố định bản nghiệm thu. | Kiểm GitHub đạt, dịch vụ chạy đúng bản; không dùng trạng thái triển khai của bản cũ. |
