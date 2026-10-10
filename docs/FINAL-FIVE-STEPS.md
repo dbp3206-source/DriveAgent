@@ -7,7 +7,9 @@ P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành
 **Cập nhật 10/10:** phạm vi năm lỗi cuối, nguyên nhân, sửa chung và điểm
 dừng nằm tại [FINAL-WEB-CLOSEOUT.md](FINAL-WEB-CLOSEOUT.md). Tám câu phía
 dưới đã chạy và được đọc lại; không yêu cầu gửi lại cả lô. Bản sửa gộp
-đạt 490 phép kiểm trong máy; chưa dùng kết quả này để cấp điểm E hay đóng F.
+đạt 490 phép kiểm trong máy. Bfa018a đã qua toàn bộ CI, Render chạy đúng
+ảnh 5087f3ed, hai phép kiểm cuối đã đối soát; phần web dừng sửa và giữ rõ
+giới hạn ASIAD chưa xác minh nguồn. Chưa cấp điểm E hoặc đóng toàn bộ F.
 
 | Bước | Làm gì | Điều kiện đóng |
 |---|---|---|

@@ -33,7 +33,7 @@ trả lời rõ; không lấy khả năng của mô hình đánh giá làm chu�
   U02/U03 có một nguồn cơ quan phù hợp được phép dùng, nguồn báo không
   được dùng thay nguồn chính thức. U01 cũ không có nguồn đúng chủ đề:
   đây là giới hạn của lần thu nguồn cũ, không được đổi thành kết quả đạt.
-- Chưa gọi Gemini hoặc Tavily thật trong đợt sửa này. Các phép kiểm trong
+- Không gọi Gemini hoặc Tavily thật trong giai đoạn kiểm trong máy. Các phép kiểm trong
   máy và đối soát lại không phải câu trả lời mới trên bản triển khai.
 
 ## Bước bàn giao còn lại của riêng phần này
@@ -50,3 +50,43 @@ Không lấy kiểm tự động làm điểm chất lượng E. Không gọi to
 sẵn sàng vận hành đầy đủ khi C/D đã được loại khỏi đợt demo hoặc các bằng
 chứng bắt buộc còn thiếu. Không gộp main trước điều kiện nghiệm thu đã khóa.
 Không đưa mã người dùng/phiên, khóa hoặc nguyên văn nội dung riêng lên GitHub.
+
+## Kết quả cuối — đã triển khai, dừng sửa phần này
+
+- Mã ứng dụng: **bfa018a78ae7eb46f91bd8904df2dccc2e9d2c51**.
+  [Kiểm GitHub 38059563702](https://github.com/dbp3206-source/DriveAgent/actions/runs/38059563702)
+  đạt toàn bộ: PostgreSQL thật, máy chủ, giao diện, kiểm ngoại tuyến,
+  đóng gói, chạy ảnh và xuất PDF tiếng Việt. Bước tự triển khai bị bỏ qua;
+  đã triển khai bằng giao diện Render trong thanh bên, không dùng Chrome.
+- Ảnh bất biến:
+  ghcr.io/dbp3206-source/veridra@sha256:5087f3edba1d6ca87f70a05a4983b8b4833d2acf9ec14cd5bcdd707a6d86f79e
+  được đối chiếu HTTP 200 theo thẻ commit. Render hiển thị đúng mã ảnh,
+  lần dep-db54p6nlot8c73dnkk80 thành công lúc 21:34:52 ngày 10/10 giờ Việt Nam.
+  URL health trả HTTP 200, máy chủ/cơ sở dữ liệu/kho tệp tốt; đây không phải
+  phép kiểm kết nối Gemini hoặc Google riêng của người dùng.
+- Đã tự gửi đúng hai câu gốc trong hai phiên mới, đọc kết quả trên giao
+  diện và đối soát bằng Supabase chỉ đọc, theo tài khoản quản trị.
+  Không đọc thêm thư, tài liệu riêng hoặc ghi Google.
+- **Shopee:** tác vụ thành công, một lần thử, một lượt Gemini, sáu nguồn
+  có văn bản từ đúng website. Thời gian tác vụ máy chủ 18,509 giây; giao
+  diện ghi 23,4 giây, không trộn hai số đo. Có giải thích nhận chữ từ ảnh,
+  ba câu hỏi, lời báo thiếu tin đúng khoảng 11/09–10/10 và trạng thái
+  chưa thực hiện hành động. Không còn lỗi giới hạn trong phút ở lượt này.
+  Phần nhu cầu vẫn có diễn giải khả năng dùng nhận chữ để xử lý tài liệu,
+  chưa phải xác nhận quy trình thực tế của khách hàng. Không mở vòng sửa
+  văn phong hoặc coi tên bài hướng dẫn là bằng chứng hiệu quả kinh doanh.
+- **ASIAD:** tác vụ thành công, một lần thử; máy chủ 8,205 giây, giao diện
+  13,1 giây. Trả đúng 10/10/2026, không mất chủ đề vì định dạng khối mã.
+  Năm nguồn thu được chưa đủ điều kiện nguồn chính thức đúng chủ đề,
+  nên trả chưa xác minh, không dẫn báo thứ cấp để kết luận. Không gọi
+  Gemini cho phần chưa có bằng chứng này. **Chưa xác minh được khoảng
+  sự kiện; không ghi thành tìm nguồn thành công hoặc điểm chất lượng đạt.**
+- Tổng hai yêu cầu dùng **một lượt Gemini**, không đổi khóa, bộ đếm, hạn
+  mức, gói dịch vụ hoặc gọi lại cả lô. Có ảnh xác nhận trong thư mục riêng
+  design-work/qa/screenshots/final-web-20261010/; không đưa ảnh phiên vào Git.
+
+**Điểm dừng:** mã phần web đã khóa sau lượt này, không sửa hoặc kiểm lặp
+để chọn câu trả lời đẹp. Giới hạn thu nguồn ASIAD được giữ công khai.
+Chưa cấp điểm E, chưa gộp main hoặc chứng nhận đầy đủ A/B/E/F từ hai ca này.
+Các bước tiếp theo chỉ là đối soát phạm vi còn lại và quyết định phát hành,
+không tự mở lại vòng sửa web.

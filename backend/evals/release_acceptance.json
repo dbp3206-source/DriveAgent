@@ -158,7 +158,7 @@
     "quality_score": null,
     "unlisted_cases": "NOT VERIFIED on this image. Main not merged; whole-product readiness unproven."
   },
-  "current_results": {
+  "prior_6b83775_results": {
     "status": "EIGHT_CASE_READBACK_COMPLETE_FINAL_GROUPED_FIX_LOCAL_ONLY",
     "reported_release_commit": "6b83775b7a39f20ea4e7b83c10a82e676dfecd71",
     "expected_image_digest": "sha256:671b17494f20625a014008eaa3bf3acce295a7d9d604c3e7b8440f3a1501f9eb",
@@ -189,15 +189,52 @@
     "quality_score": null,
     "unlisted_cases": "NOT VERIFIED; no whole-product acceptance or main merge."
   },
+  "current_results": {
+    "status": "FINAL_WEB_FIX_FROZEN_AFTER_TWO_LIVE_CHECKS",
+    "release_commit": "bfa018a78ae7eb46f91bd8904df2dccc2e9d2c51",
+    "image_digest": "sha256:5087f3edba1d6ca87f70a05a4983b8b4833d2acf9ec14cd5bcdd707a6d86f79e",
+    "observed_date": "2026-10-10",
+    "deployment": {
+      "ci_run_id": "38059563702", "ci_status": "success",
+      "render_deploy_id": "dep-db54p6nlot8c73dnkk80", "render_status": "live",
+      "live_at": "2026-10-10T21:34:52+07:00",
+      "public_url": "https://veridra-closed-beta.onrender.com",
+      "health": {"http_status": 200, "status": "ok", "database": true, "object_storage": true, "gemini_connectivity": "not_probed", "google_workspace_connectivity": "not_probed"},
+      "runtime_started_at": "2026-10-10T21:34:41.533358+07:00",
+      "evidence_method": "Successful full GitHub CI; public GHCR manifest HEAD 200 at the exact commit tag; sidebar Render image update, exact digest and Deploy succeeded | Live visibly read; anonymous public health GET. Automatic deploy step skipped, normal dashboard deployment performed once.",
+      "screenshot_reference": "Private local QA: design-work/qa/screenshots/final-web-20261010/render-live-bfa018a.jpg."
+    },
+    "cases": {
+      "company-04": {
+        "status": "LIVE_REPORT_DELIVERED_CORE_FUNCTION_VERIFIED_WITH_CONTENT_LIMIT",
+        "task_status": "completed", "attempts": 1, "model": "gemini-3.5-flash-lite", "model_call_count": 1,
+        "citation_count": 6, "source_evidence_kind": "page_text",
+        "agent_task_latency_ms": 18509, "web_research_latency_ms": 5757, "ui_duration_seconds": 23.4,
+        "verified": "Original locked input sent once in a new conversation via sidebar. Official Shopee operation rules support the core overview and delivery/voucher/marketplace description. OCR explained as reading text from images/scans; three questions, unknown meeting/scale and uncited search limitation for 11/09-10/10/2026 present. No minute-quota failure in this run, private-source tools or Google writes.",
+        "limits": "The need section expands interest in OCR into possible document/automation use without confirming the customer's actual process. Additional help-article names are not proof of business effectiveness. Not upgraded to universal official-claim grounding or full product acceptance; no style-only rerun."
+      },
+      "U01": {
+        "status": "LIVE_CLOCK_AND_SAFE_OFFICIAL_BOUNDARY_VERIFIED_EVENT_DATES_UNRESOLVED",
+        "task_status": "completed", "attempts": 1, "model_call_count": 0, "citation_count": 5,
+        "agent_task_latency_ms": 8205, "web_research_latency_ms": 5797, "ui_duration_seconds": 13.1,
+        "verified": "Original copied inline-code-fence question sent once in a separate new conversation. Exact current day 10/10/2026 returned and ASIAD topic retained in collection. No eligible official source establishes the event interval, so the answer explicitly remains unverified and does not promote secondary pages into an event conclusion. No unnecessary synthesis call.",
+        "limits": "Event interval and official-source discovery remain unresolved. Safe refusal is not a successful discovery or full benchmark PASS. This is a frozen limitation, not a trigger for another search/model/deployment loop."
+      }
+    },
+    "live_model_calls": 1,
+    "pending_cases": "No further web-fix tests or code changes in this round. Preserve the official-source discovery limit and prior company/date replay evidence. Remaining B/E/F decisions use the locked scope and existing receipts; no PDF or unaffected-workflow reruns.",
+    "quality_score": null,
+    "unlisted_cases": "Historical receipts retain release scope. Whole A/B/E/F completion and main merge not inferred."
+  },
   "final_grouped_web_fix_20261010": {
     "scope": "Exactly five locked issues in docs/FINAL-WEB-CLOSEOUT.md; no feature or benchmark expansion.",
-    "status": "LOCAL_GROUPED_VERIFICATION_PASSED_NOT_DEPLOYED",
+    "status": "CI_AND_EXACT_IMAGE_DEPLOYMENT_VERIFIED_WEB_SCOPE_FROZEN",
     "base_commit": "1a79697",
-    "verification": {"grouped_pytest_passed": 490, "duration_seconds": 130.19, "ruff": "passed", "diff_check": "passed", "secret_scan_git_visible_files": 573, "secret_scan": "passed"},
+    "verification": {"grouped_pytest_passed": 490, "duration_seconds": 130.19, "ruff": "passed", "diff_check": "passed", "secret_scan_git_visible_files": 574, "secret_scan": "passed", "full_ci_run_id": "38059563702", "full_ci_status": "success"},
     "replay": {"actual_fpt_reply_in_memory": true, "original_clock_date": "2026-10-09", "news_dates_in_window": 7, "news_dates_relocated": 3, "outside_citations_retained": true, "scale_facts_retained": true, "idempotent": true, "official_source_contract_checked_on_original_U02_U03": true},
     "quota_policy": "Unchanged limits, counters, key and 60-second Chat deadline. Cancellable rolling-minute wait capped at 15 seconds with generation runway. Daily exhaustion returns immediately; no refund or paid fallback.",
     "external_calls_during_local_verification": {"gemini": 0, "tavily": 0, "google_writes": 0},
-    "next_action": "One CI-verified immutable image, one deployment, at most two already-locked affected live cases. Then record real outcome and close this web-fix scope; no style optimization or repeated batch.",
+    "next_action": "Completed one CI-verified image deployment and two locked live checks. Freeze this web-fix scope; do not repeat or optimize style. Continue only remaining B/E/F evidence reconciliation and release decision.",
     "limits": "Offline checks and deterministic readback transformations do not prove new Gemini answer quality or same-image A/B/E/F completion. C/D excluded, PDF deferred, one admin only, historical B components retain original release."
   },
   "prior_6be4459_results": {
