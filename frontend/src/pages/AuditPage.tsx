@@ -19,6 +19,7 @@ import {
 import { ArrowDownload24Regular, ArrowSync24Regular } from '@fluentui/react-icons'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api, formatDate } from '../api'
+import { summarizeAudit } from '../auditMetrics.mjs'
 import { EmptyState, ErrorState, LoadingState } from '../components/AsyncState'
 import type { HarnessOverviewData } from '../harnessScenarios'
 import type { AuditEvent } from '../types'
@@ -129,29 +130,13 @@ function AuditPerformanceChart({ events, p95 }: { events: AuditEvent[]; p95: num
     y: number
   } | null>(null)
 
-  const validEvents = events
-    .filter((e) => e.status !== 'started' && e.latency_ms !== null && Number.isFinite(e.latency_ms) && e.latency_ms >= 0)
-    .slice(0, 24)
-    .reverse()
-
-  const toolStats = events.reduce<Record<string, { total: number; success: number; error: number; totalLat: number }>>(
-    (acc, ev) => {
-      const name = ev.tool_name
-      if (!acc[name]) acc[name] = { total: 0, success: 0, error: 0, totalLat: 0 }
-      acc[name].total += 1
-      if (ev.status === 'success') acc[name].success += 1
-      else acc[name].error += 1
-      if (ev.latency_ms && Number.isFinite(ev.latency_ms)) acc[name].totalLat += ev.latency_ms
-      return acc
-    },
-    {}
+  const { latencyEvents, toolStats, successCount: totalSuccess, errorCount: totalError } = useMemo(
+    () => summarizeAudit(events), [events]
   )
+  const validEvents = latencyEvents.slice(0, 24).reverse()
   const sortedTools = Object.entries(toolStats)
     .sort((a, b) => b[1].total - a[1].total)
     .slice(0, 8)
-
-  const totalSuccess = events.filter((e) => e.status === 'success').length
-  const totalError = events.filter((e) => e.status !== 'started' && e.status !== 'success').length
 
   const svgWidth = 540
   const svgHeight = 200
@@ -332,7 +317,7 @@ function AuditPerformanceChart({ events, p95 }: { events: AuditEvent[]; p95: num
           {sortedTools.map(([toolName, stats]) => {
             const successPct = Math.round((stats.success / stats.total) * 100)
             const errorPct = 100 - successPct
-            const avgLatSec = (stats.totalLat / stats.total / 1000).toFixed(2)
+            const avgLatSec = stats.latencyCount ? `${(stats.totalLat / stats.latencyCount / 1000).toFixed(2)}s` : null
             const firstTool = sortedTools[0]
             const maxToolCount = (firstTool ? firstTool[1].total : 1) || 1
             const widthPct = Math.round((stats.total / maxToolCount) * 100)
@@ -342,7 +327,7 @@ function AuditPerformanceChart({ events, p95 }: { events: AuditEvent[]; p95: num
                 <div className="bar-tool-info">
                   <code className="bar-tool-name">{toolName}</code>
                   <span className="bar-tool-meta">
-                    <strong>{stats.total}</strong> lượt · {successPct}% thành công · TB: {avgLatSec}s
+                    <strong>{stats.total}</strong> lượt · {successPct}% thành công{avgLatSec !== null ? ` · TB: ${avgLatSec}` : ''}
                   </span>
                 </div>
                 <div className="bar-track-dual">
@@ -474,22 +459,9 @@ export function AuditPage() {
     }
   }
 
-  const completed = useMemo(
-    () => events.filter((e) => e.status !== 'started' && e.latency_ms !== null && Number.isFinite(e.latency_ms) && e.latency_ms >= 0),
-    [events]
+  const { completed, latencyEvents, avgLatency, p95, successCount, successPercent } = useMemo(
+    () => summarizeAudit(events), [events]
   )
-  const avgLatency = useMemo(
-    () => completed.length ? Math.round(completed.reduce((sum, e) => sum + (e.latency_ms ?? 0), 0) / completed.length) : null,
-    [completed]
-  )
-  const p95: number | null = useMemo(() => {
-    if (!completed.length) return null
-    const sorted = [...completed].map((e) => e.latency_ms ?? 0).sort((a, b) => a - b)
-    const val = sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * 0.95))]
-    return val !== undefined ? val : null
-  }, [completed])
-
-  const successCount = useMemo(() => completed.filter((e) => e.status === 'success').length, [completed])
 
   const benchmarkRows = useMemo(() => {
     const evaluation = benchmark?.evaluation
@@ -687,7 +659,7 @@ export function AuditPage() {
 
           <div className="kpi-cards-grid kpi-cards-grid--5">
             {/* KPI 1: Latency in Seconds */}
-            {completed.length > 0 && <div className="kpi-card">
+            {latencyEvents.length > 0 && <div className="kpi-card">
               <span className="kpi-label">Thời gian đợi trung bình</span>
               <span className="kpi-value kpi-value--highlight">
                 {avgLatency === null ? 'Chưa có' : `${(avgLatency / 1000).toFixed(2)} s`}
@@ -724,7 +696,7 @@ export function AuditPage() {
             {completed.length > 0 && <div className="kpi-card">
               <span className="kpi-label">Tỷ lệ thực thi thành công</span>
               <span className="kpi-value">
-                {completed.length ? `${Math.round((successCount / completed.length) * 100)}%` : 'N/A'}
+                {successPercent}%
               </span>
               <span className="kpi-subtext">{successCount}/{completed.length} sự kiện kết thúc suôn sẻ</span>
             </div>}

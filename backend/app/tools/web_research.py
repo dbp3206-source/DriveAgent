@@ -106,18 +106,39 @@ class _VisibleTextParser(HTMLParser):
 
     _ignored = {"script", "style", "noscript", "svg", "template"}
 
-    def __init__(self) -> None:
+    def __init__(self, base_url: str = "") -> None:
         super().__init__(convert_charrefs=True)
         self._ignore_depth = 0
         self.parts: list[str] = []
+        self.base_url = base_url
+        self._link: str | None = None
 
-    def handle_starttag(self, tag: str, _attrs: list[tuple[str, str | None]]) -> None:
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if tag.casefold() in self._ignored:
             self._ignore_depth += 1
+        elif tag.casefold() == "a" and not self._ignore_depth:
+            # Preserve the destination beside its visible label. Authority
+            # discovery needs this evidence; anchor text alone loses the URL.
+            self._link = None
+            href = dict(attrs).get("href")
+            if href and len(href) <= 2000 and not href.startswith("#"):
+                candidate = urljoin(self.base_url, href.strip())
+                try:
+                    parsed = urlsplit(candidate)
+                    if (parsed.scheme == "https" and parsed.hostname
+                            and not parsed.username and not parsed.password
+                            and parsed.port in {None, 443}):
+                        self._link = candidate
+                except ValueError:
+                    pass
 
     def handle_endtag(self, tag: str) -> None:
         if tag.casefold() in self._ignored and self._ignore_depth:
             self._ignore_depth -= 1
+        elif tag.casefold() == "a" and not self._ignore_depth:
+            if self._link:
+                self.parts.append(self._link)
+            self._link = None
 
     def handle_data(self, data: str) -> None:
         if not self._ignore_depth and data.strip():
@@ -216,8 +237,8 @@ async def _fetch_with_retry(client: httpx.AsyncClient, url: str, maximum: int) -
     ) from last_error
 
 
-def _html_text(payload: bytes, maximum: int = 12_000) -> str:
-    parser = _VisibleTextParser()
+def _html_text(payload: bytes, maximum: int = 12_000, *, base_url: str = "") -> str:
+    parser = _VisibleTextParser(base_url)
     parser.feed(payload.decode("utf-8", errors="replace"))
     return re.sub(r"\s+", " ", " ".join(parser.parts)).strip()[:maximum]
 
@@ -561,7 +582,8 @@ async def _collect_tavily_source_bundle(
                 try:
                     async with asyncio.timeout(5):
                         raw_text = _html_text(
-                            await _fetch_bounded(http, url, 600_000), maximum=100_000)
+                            await _fetch_bounded(http, url, 600_000), maximum=100_000,
+                            base_url=url)
                         text = relevant_excerpt(raw_text, normalized_question)
                 except (ToolError, httpx.HTTPError, TimeoutError, ValueError):
                     return None
@@ -852,7 +874,8 @@ async def collect_public_source_bundle(
     news_payloads = [result for result in news_results if isinstance(result, bytes)]
     # Synthesis and the persisted source snapshot must see identical text.
     # A longer prompt-only tail cannot be quoted against the bounded receipt.
-    official_text = relevant_excerpt(_html_text(official_raw, maximum=100_000), payload.question)
+    official_text = relevant_excerpt(
+        _html_text(official_raw, maximum=100_000, base_url=official_url or ""), payload.question)
     official_available = bool(official_url and len(official_text) >= 80)
     if not news_payloads and not official_available:
         if isinstance(official_result, ToolError):

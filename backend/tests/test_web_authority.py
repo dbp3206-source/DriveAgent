@@ -14,6 +14,8 @@ from app.tools.web_research import (
     PublicSupport,
     WebResearchInput,
     WebSource,
+    _html_text,
+    _official_link_targets,
     _official_source_ids,
     _reason_over_sources,
     _render_public_answer,
@@ -118,7 +120,10 @@ def test_relevant_lower_page_text_and_source_identity_survive_the_9000_character
     assert excerpt.split("\n[…]\n")[-1] in raw
 
 
-async def test_discovered_official_link_is_bounded_without_extra_search_or_key_leak(monkeypatch):
+@pytest.mark.parametrize("anchor_html", [False, True])
+async def test_discovered_official_link_is_bounded_without_extra_search_or_key_leak(
+    monkeypatch, anchor_html,
+):
     requests = []
     page = ("ORBIT 2026 official website: https://organizer.example/schedule. "
             "The public agency announces the ORBIT event. ")
@@ -128,12 +133,18 @@ async def test_discovered_official_link_is_bounded_without_extra_search_or_key_l
         if request.method == "POST":
             return httpx.Response(200, json={"results": [
                 {"url": "https://agency.gov.vn/orbit", "title": "ORBIT announcement",
-                 "raw_content": page},
+                 "raw_content": None if anchor_html else page},
                 {"url": "https://news.example/orbit", "title": "ORBIT report",
                  "raw_content": "ORBIT report from the media. " * 5},
             ]})
-        assert request.url == "https://organizer.example/schedule"
         assert "authorization" not in request.headers
+        if request.url == "https://agency.gov.vn/orbit":
+            return httpx.Response(200, text=(
+                '<p>The public agency announces ORBIT 2026. '
+                '<a href="https://organizer.example/schedule">ORBIT official website</a>. '
+                'Read the event schedule from the organizer.</p>'
+            ))
+        assert request.url == "https://organizer.example/schedule"
         return httpx.Response(200, text="<html>ORBIT 2026 schedule dates: "
                               "19/09/2026 through 04/10/2026. " * 3 + "</html>")
 
@@ -147,7 +158,7 @@ async def test_discovered_official_link_is_bounded_without_extra_search_or_key_l
     payload = WebResearchInput(
         question="Theo nguồn chính thức, ORBIT ngày mai có lịch gì?", max_sources=2)
     sources, blocks = await collect_tavily_source_bundle(payload, context)
-    assert len(requests) == 2
+    assert len(requests) == (3 if anchor_html else 2)
     assert len([request for request in requests if request.method == "POST"]) == 1
     assert "10/10/2026" in json.loads(requests[0].content)["query"]
     assert {source.url for source in sources} == {
@@ -155,3 +166,30 @@ async def test_discovered_official_link_is_bounded_without_extra_search_or_key_l
     assert _official_source_ids(payload, sources) == {1, 2}
     assert all(source.evidence_excerpt in block
                for source, block in zip(sources, blocks, strict=True))
+
+
+def test_visible_anchor_keeps_relative_destination_and_authority_context():
+    text = _html_text(
+        b'<p>ORBIT official website: <a href="/events/orbit">Visit ORBIT</a></p>',
+        base_url="https://agency.gov.vn/announcement",
+    )
+    source = WebSource(title="ORBIT", url="https://agency.gov.vn/announcement",
+                       evidence_kind="page_text", evidence_excerpt=text)
+    assert "Visit ORBIT https://agency.gov.vn/events/orbit" in text
+    assert _official_link_targets(WebResearchInput(question="ORBIT official website"),
+                                  [source]) == ["https://agency.gov.vn/events/orbit"]
+
+
+@pytest.mark.parametrize("href", [
+    "javascript:alert(1)", "http://example.org/", "https://secret@example.org/",
+    "https://example.org:8080/", "mailto:person@example.org", "#navigation",
+])
+def test_anchor_preservation_rejects_unsafe_or_non_web_destinations(href):
+    text = _html_text(f'<p>ORBIT official website: <a href="{href}">Visit</a></p>'.encode())
+    assert text == "ORBIT official website: Visit"
+
+
+def test_anchors_in_ignored_content_never_establish_authority():
+    text = _html_text(b'<template><a href="https://hidden.example/">ORBIT official website'
+                      b'</a></template><p>ORBIT announcement without a link.</p>')
+    assert text == "ORBIT announcement without a link."

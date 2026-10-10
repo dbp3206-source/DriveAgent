@@ -8,7 +8,9 @@
 
 **Trạng thái bàn giao: người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026.**
 Mở [Veridra trên Render](https://veridra-closed-beta.onrender.com).
-Mã ứng dụng được khóa ở `bfa018a`; phần tìm kiếm web không mở thêm vòng sửa.
+Đợt cuối theo yêu cầu mới gồm sửa mất liên kết nguồn và thống nhất tỷ lệ
+Nhật ký; trạng thái kiểm/triển khai và điểm dừng được ghi tại
+[biên bản nghiệm thu cuối](docs/FINAL-ACCEPTANCE-20261010.md).
 [Biên bản bàn giao](docs/DEMO-HANDOFF-20261010.md) ghi phạm vi, bằng chứng,
 giới hạn và cách quay lui; [kịch bản 10 phút](docs/DEMO-10-PHUT.md) chỉ dùng
 các kết quả có biên nhận. Đây không phải chứng nhận toàn bộ sản phẩm sẵn sàng

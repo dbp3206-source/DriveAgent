@@ -840,6 +840,15 @@
     ],
     "handoff_rule": "Fast-forward main only, run main CI, deploy its verified immutable image and read existing UI results. No new Gemini call, Google write, quota change or web repair. Record final GitHub/Render receipts in the handoff output."
   },
+  "final_bounded_acceptance_20261010": {
+    "status": "IMPLEMENTED_PENDING_CI_AND_LIVE_VERIFICATION",
+    "scope_authority": "docs/FINAL-ACCEPTANCE-20261010.md",
+    "scope": ["Preserve HTML anchor destinations for authority discovery", "Use the same completed-event denominator for audit success rates", "One grouped verification and exact-image handoff"],
+    "supersedes": "The previous no-further-web-edits handoff rule only for these two user-authorized defects.",
+    "local_verification": {"backend_related_passed": 129, "frontend_passed": 190},
+    "full_benchmark_score": null,
+    "full_benchmark_decision": "NOT VERIFIED; disclosed limits retained"
+  },
   "score":null,
   "release_decision":"NOT VERIFIED"
 }
