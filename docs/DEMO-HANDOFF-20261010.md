@@ -1,5 +1,10 @@
 # Veridra — bàn giao bản demo đã chốt
 
+**Biên nhận hiện hành:** [nghiệm thu cuối](FINAL-ACCEPTANCE-20261010.md).
+Sau biên bản này, người dùng duyệt đúng hai lỗi còn lại; bản f1c91ea đã sửa,
+kiểm và triển khai. Các mã ảnh và quy tắc bên dưới là lịch sử bàn giao trước;
+dùng biên nhận hiện hành để xác định bản đang chạy và ảnh quay lui.
+
 Ngày 10/10/2026, người dùng đã trả lời “ok” cho câu hỏi chấp nhận bản demo
 có giới hạn để đưa lên main. Quyết định này cho phép bàn giao, không phải
 chứng nhận toàn bộ sản phẩm sẵn sàng vận hành. Dừng sửa phần web.

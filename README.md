@@ -8,8 +8,9 @@
 
 **Trạng thái bàn giao: người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026.**
 Mở [Veridra trên Render](https://veridra-closed-beta.onrender.com).
-Đợt cuối theo yêu cầu mới gồm sửa mất liên kết nguồn và thống nhất tỷ lệ
-Nhật ký; trạng thái kiểm/triển khai và điểm dừng được ghi tại
+Đợt cuối đã đóng lỗi mất liên kết nguồn và thống nhất tỷ lệ Nhật ký.
+Bản f1c91ea đã qua kiểm GitHub, chạy đúng ảnh trên Render và được kiểm gộp
+trong thanh bên ngày 10/10/2026. Đã kết thúc đợt sửa; biên nhận nằm tại
 [biên bản nghiệm thu cuối](docs/FINAL-ACCEPTANCE-20261010.md).
 [Biên bản bàn giao](docs/DEMO-HANDOFF-20261010.md) ghi phạm vi, bằng chứng,
 giới hạn và cách quay lui; [kịch bản 10 phút](docs/DEMO-10-PHUT.md) chỉ dùng

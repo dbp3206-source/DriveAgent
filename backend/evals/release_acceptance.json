@@ -841,11 +841,17 @@
     "handoff_rule": "Fast-forward main only, run main CI, deploy its verified immutable image and read existing UI results. No new Gemini call, Google write, quota change or web repair. Record final GitHub/Render receipts in the handoff output."
   },
   "final_bounded_acceptance_20261010": {
-    "status": "IMPLEMENTED_PENDING_CI_AND_LIVE_VERIFICATION",
+    "status": "ACCEPTED_BOUNDED_USE_AND_DEMO",
     "scope_authority": "docs/FINAL-ACCEPTANCE-20261010.md",
     "scope": ["Preserve HTML anchor destinations for authority discovery", "Use the same completed-event denominator for audit success rates", "One grouped verification and exact-image handoff"],
     "supersedes": "The previous no-further-web-edits handoff rule only for these two user-authorized defects.",
     "local_verification": {"backend_related_passed": 129, "frontend_passed": 190},
+    "application_commit": "f1c91eac98f29d7decc7023a57bb04dff62399c9",
+    "ci": {"run_id": "38064377009", "conclusion": "success", "postgres_passed": 12, "backend_passed": 1575, "backend_skipped": 13, "backend_coverage_percent": 88.02, "frontend_passed": 190},
+    "image": "ghcr.io/dbp3206-source/veridra@sha256:ff67916a457dc46fa4521972e011f7a9d7a15194223282326815d1706d4a079c",
+    "render": {"deploy_id": "dep-db55ql0473hc73a03sc0", "status": "live", "finished_at": "2026-10-10T15:46:04.777927Z", "health_http": 200},
+    "live_verification": {"audit_sample": 100, "audit_completed": 98, "audit_success": 84, "kpi_and_chart_percent": 86, "drive_filters": true, "saved_artifact_revision_2": true, "memory_retained": true, "chat_history_retained": true, "user_image_loaded": true, "observed_console_errors": 0, "gemini_calls": 0, "google_writes": 0},
+    "application_changes_frozen": true,
     "full_benchmark_score": null,
     "full_benchmark_decision": "NOT VERIFIED; disclosed limits retained"
   },

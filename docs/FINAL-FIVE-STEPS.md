@@ -1,5 +1,11 @@
 # Năm bước chốt nghiệm thu
 
+**Trạng thái hiện hành 10/10/2026:** đã bàn giao main và nghiệm thu bản
+dùng thật có giới hạn/demo theo quyết định của người dùng; hai lỗi cuối
+đã đóng. Xem [biên nhận cuối](FINAL-ACCEPTANCE-20261010.md). Các mục bên dưới
+giữ để truy nguyên, không phải danh sách phải chạy lại. Không tuyên bố
+bộ nghiệm thu đầy đủ hoặc điểm tổng đã đạt.
+
 Ngày chốt: 07/10/2026. Phạm vi: A/B/E/F theo RELEASE-CLOSURE.md.
 Không thêm tính năng, vòng thiết kế hay bộ đo mới. C/D loại khỏi đợt demo;
 P06 hoãn; chỉ một quản trị thật. Không đổi các mục này thành đạt.
