@@ -823,6 +823,23 @@
     },
     "unlisted_cases": "NOT VERIFIED on this release; no score inferred from historical or automated results"
   },
+  "demo_handoff_20261010": {
+    "status": "USER_ACCEPTED_DEMO_WITH_DISCLOSED_LIMITATIONS",
+    "human_confirmation": "User replied ok to the explicit question accepting the limited demo for handoff to main. This does not certify the original full benchmark or authorize relabelling missing evidence as PASS.",
+    "application_commit": "bfa018a78ae7eb46f91bd8904df2dccc2e9d2c51",
+    "scope_authority": "docs/DEMO-HANDOFF-20261010.md",
+    "web_changes_frozen": true,
+    "full_benchmark_score": null,
+    "full_benchmark_decision": "NOT VERIFIED",
+    "limits_retained": [
+      "Official-source event discovery for ASIAD remains unresolved; safe unknown is not retrieval success.",
+      "Shopee use-case interpretation is not a confirmed real customer process.",
+      "W03 and W06 retain historical component evidence, not a new complete same-image chain; Word visual layout unverified.",
+      "No real-calendar meeting evidence or complete seven-role business execution trace.",
+      "No valid aggregate E score; PDF deferred, C/D excluded from this demo, one real admin only."
+    ],
+    "handoff_rule": "Fast-forward main only, run main CI, deploy its verified immutable image and read existing UI results. No new Gemini call, Google write, quota change or web repair. Record final GitHub/Render receipts in the handoff output."
+  },
   "score":null,
   "release_decision":"NOT VERIFIED"
 }

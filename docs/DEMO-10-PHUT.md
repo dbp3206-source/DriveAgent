@@ -2,9 +2,9 @@
 
 ## Điều kiện trước buổi trình bày
 
-- Đây là kịch bản chuẩn bị, chưa phải biên bản nghiệm thu. Chỉ dùng bản
-  phát hành đã đóng A/B/E/F cho buổi demo chính thức; không nói các mục chưa
-  đạt đã hoàn tất. Xem trạng thái trong `docs/FINAL-FIVE-STEPS.md`.
+- Người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026. Xem
+  [biên bản bàn giao](DEMO-HANDOFF-20261010.md); không giới thiệu đây là
+  chứng nhận đầy đủ A/B/E/F hoặc nói các mục chưa đạt đã hoàn tất.
 - Mở https://veridra-closed-beta.onrender.com và đăng nhập tài khoản được mời.
 - Không chia sẻ màn hình khóa, biến cấu hình, thư thật hoặc tài liệu riêng.
 - Chuẩn bị hai nguồn giả lập tại `docs/demo/`, đọc đáp án trong `docs/demo/README.md`.
@@ -67,14 +67,14 @@ website và các tin được dẫn. Chỉ ra:
 - Ngày đăng tin không phải ngày sự kiện; nguồn tin tóm lược chưa phải toàn văn.
 - Thông tin chưa có phải ghi chưa xác nhận, không tự gán ngân sách/chức danh.
 
-Chỉ chọn hội thoại theo mã lượt và bản đã ghi trong báo cáo nghiệm thu;
-nếu là xem lại, nói rõ không phải tin vừa tìm. Hiện chưa có hồ sơ trên bản
-cuối được xác nhận đạt toàn bộ: không dùng kết quả Bosch cũ hoặc kết quả
-Vinamilk nội bộ còn một phần để tuyên bố mục này đã nghiệm thu. Sau khi
-đóng A, điền đúng biên nhận đã đạt; không dùng ngày mặc định hoặc điểm giả.
-Nếu đủ ngân sách và muốn tìm mới, chỉ dùng câu hỏi đã chuẩn bị; không đưa nội
-dung thư riêng vào truy vấn công khai. Mở Nhật ký để đối chiếu lần dùng công cụ
-thật; có công cụ chạy thành công chưa chứng minh mọi kết luận đều đúng.
+Mở lại hội thoại Shopee đã chạy ngày 10/10 trên mã ứng dụng bfa018a.
+Đây là xem lại kết quả có biên nhận, không phải tin vừa tìm. Tổng quan có
+nguồn website, giải thích nhận chữ từ ảnh và ba câu hỏi; nhu cầu ứng dụng
+vẫn cần khách hàng xác nhận. Không dùng mục này để tuyên bố hồ sơ đã đạt
+mọi tiêu chí hoặc hiệu quả đã được đo. Không gửi lại câu hỏi chỉ để demo.
+ASIAD giữ lời báo chưa xác minh nguồn chính thức, không trình bày như một
+lần tìm lịch sự kiện thành công. Mở Nhật ký nếu cần đối chiếu lần dùng
+công cụ thật; công cụ chạy thành công không chứng minh mọi kết luận đúng.
 
 ## 6:00–7:00 — Người dùng duyệt trước khi ghi
 

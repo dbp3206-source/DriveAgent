@@ -6,11 +6,15 @@
 
 Định vị và phương pháp đã chốt tại [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md); các hành vi chưa được triển khai/kiểm chứng không được coi là đã hoàn thiện chỉ vì có trong tài liệu. Đợt demo hiện tại dùng [bốn nhóm nghiệm thu A, B, E, F](docs/RELEASE-CLOSURE.md). [Bộ kiểm đầy đủ trước đó](docs/ACCEPTANCE-CHECKLIST.md) được giữ để tham chiếu lịch sử.
 
-**Trạng thái phát hành: chưa nghiệm thu toàn bộ.** Đã có URL thử nghiệm
-[Veridra trên Render](https://veridra-closed-beta.onrender.com), nhưng chưa đủ bằng chứng
-cho toàn bộ nghiệp vụ, bốn người dùng thật và cùng bản phát hành. Kết quả kiểm thử mẫu
-không thay thế nghiệm thu thực tế. Theo dõi bằng chứng ở checklist và `design-work/qa/`,
-không đưa danh sách công việc nội bộ lên giao diện hoặc dùng điểm trung bình mẫu làm nhãn sẵn sàng.
+**Trạng thái bàn giao: người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026.**
+Mở [Veridra trên Render](https://veridra-closed-beta.onrender.com).
+Mã ứng dụng được khóa ở `bfa018a`; phần tìm kiếm web không mở thêm vòng sửa.
+[Biên bản bàn giao](docs/DEMO-HANDOFF-20261010.md) ghi phạm vi, bằng chứng,
+giới hạn và cách quay lui; [kịch bản 10 phút](docs/DEMO-10-PHUT.md) chỉ dùng
+các kết quả có biên nhận. Đây không phải chứng nhận toàn bộ sản phẩm sẵn sàng
+vận hành: chưa có điểm tổng hợp hợp lệ của bộ nghiệm thu, chưa kiểm đủ bốn
+người dùng và một số chuỗi nghiệp vụ. Giữ nguyên các kết quả chưa đủ bằng chứng,
+không dùng kiểm mã hoặc trạng thái triển khai thành công để đổi chúng thành đạt.
 
 Chạy local không cần Docker. Stack quan sát nặng là tùy chọn; xem
 [phạm vi tài nguyên](docs/RESOURCE-PROFILE.md). PDF có lớp text tối đa 25 MiB được xử lý nền

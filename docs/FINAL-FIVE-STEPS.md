@@ -11,15 +11,39 @@ dưới đã chạy và được đọc lại; không yêu cầu gửi lại c�
 ảnh 5087f3ed, hai phép kiểm cuối đã đối soát; phần web dừng sửa và giữ rõ
 giới hạn ASIAD chưa xác minh nguồn. Chưa cấp điểm E hoặc đóng toàn bộ F.
 
+## Kết luận đối soát cuối — 10/10/2026
+
+Đây là quyết định theo bằng chứng đã có, không phải một đợt kiểm mới.
+Không sửa mã, gọi thêm mô hình, tạo dữ liệu thử hoặc mở thêm tiêu chí
+trong lần đối soát này. Phần web đã khóa ở bfa018a; không mở lại để
+cải thiện câu chữ hoặc tìm một câu trả lời đẹp hơn.
+
+| Phần | Kết luận hiện tại | Phần chưa đủ bằng chứng |
+|---|---|---|
+| A — trả lời và nguồn | Bản sửa chung đã qua kiểm GitHub và chạy đúng ảnh trên Render. Shopee đã trả lời; nguồn, ngày và giới hạn đã đối soát. Dừng sửa phần web. | ASIAD chưa tìm được nguồn chính thức đủ để kết luận khoảng sự kiện. Shopee có diễn giải khả năng ứng dụng, không phải nhu cầu thực tế đã xác nhận. Không đổi các giới hạn này thành kết quả đạt toàn bộ. |
+| B — chuỗi công việc | Giữ biên nhận lịch sử hợp lệ của W01, W02, W04, quy trình đã lưu/đổi đầu vào, sửa/cất/xóa bộ nhớ, bản kết quả và xuất tệp; không chạy lại các bước này chỉ để đổi ngày kiểm. | W03 chưa đủ bằng chứng trọn chuỗi trước/sau sửa trên cùng bản; W06 chưa kiểm hình thức Word. Lịch thật đang trống; chưa đủ dấu vết cả bảy vai trò trong chuỗi nghiệp vụ. Đây là khoảng trống kiểm chứng, không tự kết luận tính năng bị lỗi. |
+| E — đánh giá chất lượng | Đã phân biệt tác vụ chạy thành công, nội dung đạt và kết quả lịch sử. Không lấy 490 phép kiểm mã làm điểm chất lượng. | Chưa có tổng điểm hợp lệ của bộ đã khóa theo ngưỡng 8,7/10 và các nhóm quan trọng 9/10. Không loại ca chưa đạt khỏi mẫu số để làm đẹp điểm. PDF đã hoãn và C/D đã loại khỏi đợt demo phải được ghi riêng. |
+| F — bàn giao | Mã ứng dụng đã lên nhánh staging và Render đúng ảnh; kịch bản demo, hướng dẫn và biên nhận có sẵn. | Chưa gộp main. Điều kiện nghiệm thu đầy đủ A/B/E chưa đạt; không dùng trạng thái Live hoặc CI xanh thay cho nghiệm thu. |
+
+**Quyết định đã chốt ngày 10/10/2026:** người dùng trả lời “ok” cho yêu cầu
+xác nhận chấp nhận **bản demo có các giới hạn trên để bàn giao lên main**.
+Tiến hành bàn giao đúng phạm vi này; không sửa thêm ứng dụng, không tự cấp
+điểm E hoặc đổi các điều kiện đầy đủ A/B/E thành đạt. Quyết định demo và
+kết quả bộ nghiệm thu đầy đủ là hai việc riêng. Xem
+[biên bản bàn giao](DEMO-HANDOFF-20261010.md).
+
+Các kết quả cũ phía dưới chỉ giữ để truy nguyên; không phải danh sách
+phải triển khai lại. Không mở lại C/D, PDF, xin thêm khóa hoặc tăng hạn mức.
+
 | Bước | Làm gì | Điều kiện đóng |
 |---|---|---|
 | 1 — Khóa bản | Đẩy một đợt sửa chung về bằng chứng web, chạy kiểm tự động và triển khai đúng ảnh; sau đó cố định bản nghiệm thu. | Kiểm GitHub đạt, dịch vụ chạy đúng bản; không dùng trạng thái triển khai của bản cũ. |
 | 2 — Đóng A | Kiểm lại tuyến website bằng một ca hồ sơ doanh nghiệp sau sửa; đối soát từng nhận định với nguồn đã đọc, phạm vi doanh nghiệp và ngày tin. Hoàn tất các ca hồ sơ/thông tin cập nhật còn thiếu trong bộ đã khóa. | Có lần đọc web thật; dẫn nguồn hỗ trợ kết luận; không bịa lịch/ngân sách hoặc coi thiếu bằng chứng là đạt. |
 | 3 — Đóng B | Hoàn tất phần còn thiếu của ba quy trình: đầu ngày, chuẩn bị tư vấn, xem trước/duyệt/đọc lại; kiểm hỏi tiếp đổi phạm vi, quy trình đã lưu, nhớ/quên và kết quả xuất. Dùng lại biên nhận hợp lệ, không tạo thêm tài liệu Google hoặc đọc thêm thư ngoài phép. | Chuỗi đủ bước, đầu vào mới không lẫn dữ kiện cũ; lưu/mở lại đúng; ghi rõ lịch trống và dấu vết vai trò thực sự có. |
 | 4 — Đóng E | Đối soát kết quả 24 tác vụ đã khóa, P06 giữ hoãn; không chạy thêm mẫu ngoài bộ. Chỉ tính số đo từ bằng chứng thật, công bố mẫu số/ngoại lệ và kết quả chưa đạt. Chốt hướng dẫn và bài demo 10 phút bằng các kết quả này. | Đủ bằng chứng cho các tác vụ áp dụng; điểm theo ngưỡng đã khóa, không có điểm giả hoặc lỗi chức năng chính bị bỏ qua. Không dùng kết quả lịch sử khác bản như phép kiểm mới. |
-| 5 — Đóng F | Khi 1–4 đạt: gộp staging vào main, kiểm CI main, triển khai đúng ảnh; kiểm ngắn đăng nhập, nguồn, kết quả đã lưu và URL. Công bố bản/mã ảnh, báo cáo nghiệm thu, giới hạn và cách quay lui. | Main và Render cùng bản đã nghiệm thu; URL dùng được; bàn giao đủ. Dừng chỉnh sửa sau bước này. |
+| 5 — Bàn giao theo quyết định mới | Theo xác nhận demo ngày 10/10: đưa bản đã khóa lên main, kiểm GitHub trên main, triển khai ảnh đã qua kiểm; chỉ mở lại nguồn, kết quả đã lưu và URL, không gọi thêm mô hình. | Main chứa đúng mã ứng dụng đã khóa; Render dùng ảnh đã kiểm, URL và các màn hình chính mở được; công bố đúng các giới hạn đã chấp nhận. Không gọi A/B/E đầy đủ đã đạt. Dừng chỉnh sửa sau bàn giao. |
 
-## Trạng thái hiện hành — 09/10/2026
+## Lịch sử đối soát — 09/10/2026
 
 - Người dùng xác nhận lần triển khai dep-db4hbtijnfac73bculhg đã Live sau
   hướng dẫn dùng ảnh 671b17494f20. URL trả HTTP 200, status ok, cơ sở dữ
