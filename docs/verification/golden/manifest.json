@@ -1,0 +1,64 @@
+{
+  "dataset_version": "demo-20261011-public.1",
+  "created_on": "2026-10-11",
+  "source_commit": "8e74fc46c35220403a12f19490c0e17994133a6b",
+  "synthetic_inputs": 5,
+  "demo_cases": 10,
+  "security_governance_control_mappings": 15,
+  "fixture_input_files_synthetic": true,
+  "private_screenshots_included": false,
+  "private_google_files_included": false,
+  "hash_encoding": "SHA-256 over exact published UTF-8 bytes; LF line endings",
+  "notes": [
+    "Bộ chuẩn kỹ thuật backend/evals được giữ nguyên, có hướng dẫn và giới hạn riêng.",
+    "Ma trận bảo mật/kiểm soát hành động ánh xạ kiểm đang có, không phải 15 kiểm độc lập bổ sung.",
+    "Đáp án độc lập không lấy từ đầu ra mô hình; kết quả lịch sử không được thay để làm đẹp."
+  ],
+  "files": [
+    {
+      "path": "docs/verification/golden/expected-answers.md",
+      "sha256": "6a69841f270234f9d26b1689d5e24700269a4a9ef3f5d10fe61b63274a20a29a",
+      "bytes": 1790
+    },
+    {
+      "path": "docs/verification/golden/inputs/GD01-minh-phat.md",
+      "sha256": "e4748b4bf81cadff86abdd67cebcc69b2e282227f37df76557da15bedbbcd277",
+      "bytes": 724
+    },
+    {
+      "path": "docs/verification/golden/inputs/GD02-an-binh.csv",
+      "sha256": "d9cf0c9958238bb41245c02b3530bb07ab8f30a88e087dc55b6b052e1e278404",
+      "bytes": 99
+    },
+    {
+      "path": "docs/verification/golden/inputs/GD03-hoa-mai.md",
+      "sha256": "a5583622a9093b0a80d9d63f0bdaf08b6a89bcc50481151562a09056f697d0c1",
+      "bytes": 492
+    },
+    {
+      "path": "docs/verification/golden/inputs/GD04-lam-son.md",
+      "sha256": "973a7fa9e14d559b42f18afe0f8047e535a7a0867a51648cd695c0e18b3b8801",
+      "bytes": 385
+    },
+    {
+      "path": "docs/verification/golden/inputs/GD05-thu-gia-lap.md",
+      "sha256": "de4f8302bc034b58db345869d9e3655d8fea21f7a7e8cc90cbfe866ba54c0c07",
+      "bytes": 464
+    },
+    {
+      "path": "docs/verification/golden/README.md",
+      "sha256": "2428ccaa4a31315fd0ff01d7c399409e8308d51c30e97e12db5f995a7fb00132",
+      "bytes": 3937
+    },
+    {
+      "path": "docs/verification/golden/security-governance-cases.json",
+      "sha256": "e7d298dd444f76bb680d28ab4e8076b896af221b40c351d2e5dbab1afc93292e",
+      "bytes": 8216
+    },
+    {
+      "path": "docs/verification/golden/testcases.json",
+      "sha256": "5c3a254c185071f0ca9724ede656e781680ba9581b9b11f52ea57ed93c4715e2",
+      "bytes": 10592
+    }
+  ]
+}

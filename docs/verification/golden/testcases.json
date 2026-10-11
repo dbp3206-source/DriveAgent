@@ -1,0 +1,107 @@
+{
+  "schema_version": 1,
+  "dataset_version": "demo-20261011-public.1",
+  "language": "vi",
+  "purpose": "Bộ ca kiểm kết hợp; không tự chạy Google hoặc gửi dữ liệu ra ngoài.",
+  "privacy": "GD01–GD05 hoàn toàn giả lập. Không kèm tài khoản, thư thật, định danh tài liệu hoặc ảnh riêng. Ca nguồn thật cần chấp thuận riêng.",
+  "grading": "Đạt khi đủ bằng chứng cho toàn bộ tiêu chí bắt buộc; đạt một phần khi chỉ một số bước đạt; chưa đạt khi bước đã chạy trái kỳ vọng; chưa chạy không tính thành công.",
+  "cases": [
+    {
+      "id": "TC01",
+      "title": "Mở sản phẩm và xác nhận phạm vi sử dụng",
+      "areas": "Bắt đầu, Cài đặt, Phân quyền, Cách Agent hoạt động",
+      "requirement": "Mở các trang đang có, nhận biết kết nối, hạn mức và vai trò; ảnh mô tả quy trình tải được.",
+      "input": "Phiên kiểm thử của chính bạn; không đổi khóa hoặc quyền.",
+      "steps": "Mở trang chủ; xem Cài đặt và Phân quyền; mở Cách Agent hoạt động và ảnh; ghi hạn mức ở Trò chuyện.",
+      "expected": "Không mất phiên; trạng thái rõ; không lộ khóa; ảnh hiển thị. Không coi quyền quản trị là bằng chứng cách ly bốn tài khoản."
+    },
+    {
+      "id": "TC02",
+      "title": "Tìm tài liệu gần đây và dùng bộ lọc Drive",
+      "areas": "Drive, tìm kiếm, nguồn Google",
+      "requirement": "Không cần nhớ tên tài liệu để bắt đầu tìm.",
+      "input": "Tài khoản đang kết nối; bộ lọc Tất cả, Thư mục, Tệp, Đã gắn sao; từ khóa Veridra.",
+      "steps": "Mở Drive mặc định; chọn lần lượt chỉ thư mục, chỉ tệp, đã gắn sao; tìm Veridra; mở tài liệu giả lập do chính bạn tạo hoặc được phép truy cập.",
+      "expected": "Mặc định Gần đây trước; lọc đúng loại; sao hoạt động cùng bộ lọc; kết quả tìm có liên kết. Không lập chỉ mục tài liệu riêng ngoài phạm vi."
+    },
+    {
+      "id": "TC03",
+      "title": "Nhập hồ sơ và đối soát dữ liệu",
+      "areas": "Tài liệu local, Trò chuyện, tính toán, nguồn",
+      "requirement": "Đọc đúng hồ sơ hiệu chỉnh và bảng số liệu thay vì suy đoán.",
+      "input": "GD01-minh-phat.md, GD02-an-binh.csv, GD03-hoa-mai.md.",
+      "steps": "Nhập từng tệp; xem nội dung đã nhập; hỏi từ đúng tệp; đối chiếu phép tính độc lập.",
+      "prompt": "Chỉ dùng nguồn local GD01-minh-phat.md tôi vừa nhập. Hồ sơ Minh Phát có bao nhiêu người đang trong phạm vi? Tính tổng giờ tìm tài liệu mỗi tháng, giả thuyết giảm 20% tiết kiệm và còn bao nhiêu giờ. Nêu ngân sách và ba điều cần xác nhận. Không đọc Gmail, Drive, lịch, web hay bộ nhớ; không ghi dữ liệu.",
+      "expected": "24 người; 96 giờ; tiết kiệm 19,2 giờ; còn 76,8 giờ; ngân sách chưa xác nhận; nguồn đúng. CSV: -5/+3/0; tổng có dấu +50.000 đồng; lệch tuyệt đối 550.000 đồng. Hoa Mai: 60%/25%/15%; không suy doanh thu."
+    },
+    {
+      "id": "TC04",
+      "title": "Nhớ nội dung hỏi tiếp và đổi khách hàng",
+      "areas": "Trò chuyện, lịch sử, bộ nhớ ngắn hạn",
+      "requirement": "Nhớ đúng hiệu chỉnh, không trộn khách hàng.",
+      "input": "Hội thoại TC03.",
+      "steps": "Hỏi tiếp 25%; tải lại trang và mở lại hội thoại; đổi sang An Bình.",
+      "prompt": "Giữ các dữ kiện hiệu lực ở trên, chỉ đổi giả thuyết tiết kiệm thành 25%. Tính lại giờ tiết kiệm và còn lại. Không đọc thêm nguồn hoặc ghi dữ liệu.",
+      "followup": "Chuyển hoàn toàn sang dữ liệu giả lập An Bình có 8 người. Chỉ hỏi làm rõ nhu cầu tìm tài liệu; không giữ số người, phép tính hoặc dữ kiện Minh Phát. Nguồn duy nhất là câu này; không đọc nguồn khác; không ghi dữ liệu.",
+      "expected": "25%: 24 giờ tiết kiệm, còn 72 giờ. An Bình 8 người, câu hỏi làm rõ; không mang số 24 người/96 giờ thành dữ kiện khách mới."
+    },
+    {
+      "id": "TC05",
+      "title": "Quản lý ghi chú dài hạn có phạm vi",
+      "areas": "Bộ nhớ, Trò chuyện mới",
+      "requirement": "Tạo, sửa, sử dụng và lưu trữ riêng ghi chú thử.",
+      "input": "GD04-lam-son.md; nhãn GD-LS-20261011.",
+      "steps": "Tạo loại Ngữ cảnh; sửa thêm yêu cầu ghi nguồn; hỏi ở hội thoại mới; lưu trữ; xem mục lưu trữ. Không xóa vĩnh viễn.",
+      "prompt": "Với riêng hồ sơ giả lập Lam Sơn mã GD-LS-20261011, tôi đã lưu quy ước nào về bố cục? Chỉ dùng ghi chú đúng phạm vi; không suy ngân sách hay áp dụng khách khác.",
+      "expected": "Bốn mục và yêu cầu ghi nguồn đúng phạm vi; sau lưu trữ không được dùng như ghi chú hoạt động. UI lưu/sửa/lưu trữ và nhớ qua mô hình được đánh giá riêng."
+    },
+    {
+      "id": "TC06",
+      "title": "Lưu và dùng quy trình làm rõ nhu cầu",
+      "areas": "Skills, Trò chuyện, đổi ngành",
+      "requirement": "Quy trình có tham số, áp dụng đúng khách mới.",
+      "input": "Tên gd_lam_ro_20261011; customer; GD03 Hoa Mai và An Bình.",
+      "steps": "Tạo quy trình; lưu; sửa yêu cầu phân biệt dữ kiện và điều chưa biết; nạp vào chat; chạy với Hoa Mai rồi đổi An Bình khi còn hạn mức.",
+      "prompt": "Chạy quy trình gd_lam_ro_20261011 với customer=Hoa Mai. Dữ liệu giả lập: 40 hồ sơ, 24 đăng ký, 10 từ chối, 6 đang chờ. Chỉ tính tỷ lệ và hỏi làm rõ nguồn tài liệu chuẩn, người duyệt, quyền xử lý và ngân sách. Không đọc nguồn riêng hoặc ghi dữ liệu.",
+      "expected": "Lưu và nạp đúng quy trình; Hoa Mai 60%/25%/15%; không suy doanh thu; đổi khách không lẫn dữ kiện."
+    },
+    {
+      "id": "TC07",
+      "title": "Đọc thư và chuẩn bị phản hồi không gửi",
+      "areas": "Gmail, HTML, ảnh, soạn thư, duyệt",
+      "requirement": "Kiểm các chế độ xem thư; bản soạn thử không tạo thư gửi.",
+      "input": "GD05 để soạn thử, địa chỉ demo@example.com; chỉ dùng thư thật khi chủ tài khoản cho phép riêng.",
+      "steps": "Dùng thư giả lập hoặc thư được phép kiểm; mở HTML, Văn bản, Bản thô; kiểm ảnh và tệp nếu có; chuẩn bị bản soạn giả lập GD05; dừng ở xem trước. Không gửi hoặc lưu nháp nếu chưa được phép riêng.",
+      "prompt": "Dựa duy nhất nội dung giả lập GD05: soạn thư xác nhận hẹn Minh Phát lúc 14 giờ 30 ngày 14/10/2026 và hỏi nơi lưu tài liệu chuẩn, người duyệt, ngân sách. Địa chỉ minh họa demo@example.com. Chỉ bản xem trước, không gửi hoặc tự lưu Gmail, không đọc thư thật.",
+      "expected": "Nội dung các chế độ đọc nhất quán; ảnh đúng trạng thái cho phép/chặn; bản soạn đúng ngày giờ và không tự gửi. Thư không có đính kèm không chứng minh tính năng đọc đính kèm."
+    },
+    {
+      "id": "TC08",
+      "title": "Chuẩn bị đầu ngày và trước cuộc hẹn",
+      "areas": "Bắt đầu, Gmail, lịch, Drive, Trò chuyện",
+      "requirement": "Nạp đúng câu hỏi mẫu; chỉ đọc nguồn đã cho phép, không bịa lịch hẹn.",
+      "input": "Hai nút nhanh trang chủ; nếu chạy nguồn thật cần xác nhận tối đa 5 thư và lịch 24 giờ tới gửi phần liên quan tới Gemini.",
+      "steps": "Mở hai nút nhanh và xem nội dung nạp; nếu đủ hạn mức và chấp thuận thì chạy một lượt; kiểm giờ, nguồn và điều cần xác nhận.",
+      "expected": "Câu hỏi đúng mục đích; chưa gửi khi mới nạp; nếu không có lịch hẹn phải nói rõ; không sửa hoặc gửi Google."
+    },
+    {
+      "id": "TC09",
+      "title": "Nghiên cứu nguồn công khai và lưu kết quả",
+      "areas": "Web, Trò chuyện, Kết quả đã lưu, xuất tệp, Google Doc",
+      "requirement": "Có tổng hợp theo yêu cầu, nguồn hỗ trợ kết luận và đầu ra lưu được.",
+      "input": "Vinamilk và Viettel; kết quả giả lập GD01 để kiểm thao tác không phụ thuộc mô hình.",
+      "steps": "Hỏi một lượt gộp hai doanh nghiệp nếu còn hạn mức; kiểm nguồn; tạo riêng ghi chú thử; sửa phiên bản; xuất Markdown; chỉ tạo Google Doc giả lập nếu qua duyệt và quyền hiện có.",
+      "prompt": "Từ nguồn công khai chính thức của Vinamilk và Viettel, mỗi doanh nghiệp chọn một nhu cầu nghiệp vụ có thể phù hợp trợ lý tìm tài liệu có kiểm chứng. Tách dữ kiện nguồn, suy luận đề xuất và điều phải hỏi lại; không nói họ là khách hàng hoặc đã mua. Kèm liên kết hỗ trợ từng dữ kiện. Không đọc dữ liệu riêng hay ghi Google.",
+      "expected": "Nguồn liên quan hỗ trợ dữ kiện; không sao chép danh sách nguồn thay cho trả lời. Kết quả lưu, sửa, xuất đọc lại đúng nội dung. Không tính ghi chú thủ công là chất lượng câu trả lời web."
+    },
+    {
+      "id": "TC10",
+      "title": "Đối chiếu nhật ký và giới hạn của kết quả",
+      "areas": "Nhật ký, các bước công cụ, xuất báo cáo",
+      "requirement": "Có truy nguyên thao tác, không dùng số thiếu để kết luận toàn bộ.",
+      "input": "Sự kiện mới phát sinh từ bộ kiểm.",
+      "steps": "Mở nhật ký, xem tỷ lệ và công cụ; lọc sự kiện; xuất nếu thao tác sẵn; đối chiếu với nhập tệp, bộ nhớ, quy trình và kết quả.",
+      "expected": "Có sự kiện đúng kết quả; số có mẫu và đơn vị; không đánh đồng mọi sự kiện thành công với chất lượng câu trả lời; không xác nhận bảy vai trò nếu không có vết chạy."
+    }
+  ]
+}

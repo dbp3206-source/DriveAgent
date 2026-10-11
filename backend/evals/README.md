@@ -1,5 +1,17 @@
 # Evaluation Harness
 
+## Hồ sơ công khai và cách chạy lại
+
+[Mục lục kiểm chứng](../../docs/verification/README.md) tập hợp bộ dữ liệu chuẩn,
+đáp án, kết quả nội bộ và kết quả chạy thật, tách riêng từng phạm vi. Bộ demo mới
+có [5 đầu vào giả lập và 10 ca kết hợp](../../docs/verification/golden/README.md).
+Bộ kiểm [bảo mật và kiểm soát hành động](../../docs/verification/HARNESS-COVERAGE.md)
+trỏ tới kiểm pytest thật và biên nhận; không chỉ là mô tả tính năng.
+
+Các bộ chuẩn ở thư mục này được giữ nguyên. Nguồn ngoài kho của Gate 2 vẫn cần
+quyền sử dụng và đúng tệp, không được đưa vào bộ công khai chỉ để làm validator
+thành công. Không xem kết quả nội bộ ngày 11/10 là chạy lại mô hình hoặc Google.
+
 DriveAgent tách các phép đo để tránh biến một con số đẹp thành kết luận sai:
 
 | Lớp đánh giá | Đang đo bằng gì | Ý nghĩa |

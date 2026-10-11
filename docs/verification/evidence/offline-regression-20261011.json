@@ -1,0 +1,31 @@
+{
+  "measured_at": "2026-10-11T13:43:41.943830+00:00",
+  "dataset_sha256": "80f484161ac18bb37bb97cf46fa0c3b6118a1c8ff000fb9e5569658c792d663b",
+  "scope": "offline regression only; not product correctness or live model quality",
+  "suites": {
+    "routing": {
+      "passed": 12,
+      "total": 12,
+      "pass_rate": 1.0
+    },
+    "output_evaluator": {
+      "passed": 12,
+      "total": 12,
+      "pass_rate": 1.0
+    },
+    "answer_contract": {
+      "passed": 16,
+      "total": 16,
+      "pass_rate": 1.0
+    },
+    "mutation_guard": {
+      "passed": 160,
+      "total": 160,
+      "pass_rate": 1.0
+    }
+  },
+  "model_calls": 0,
+  "cloud_writes": 0,
+  "gate_passed": true,
+  "failures": []
+}

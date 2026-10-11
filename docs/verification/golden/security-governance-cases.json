@@ -1,0 +1,157 @@
+{
+  "version": "20261011.1",
+  "purpose": "Bản đồ các kiểm đang có, không tạo thêm công cụ bảo mật hay tự gọi dịch vụ.",
+  "grading": "Mỗi selector được pytest kiểm; kết quả toàn bộ lần chạy nằm trong biên nhận. Các kiểm giao nhau không được cộng thành số độc lập.",
+  "cases": [
+    {
+      "id": "S01",
+      "area": "security",
+      "title": "Che bí mật và mã hóa dữ liệu thử",
+      "selector": "backend/tests/test_security.py",
+      "expected": "Không để giá trị bí mật thử xuất hiện ở đầu ra; mã hóa/giải mã đúng.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "S02",
+      "area": "security",
+      "title": "Người đăng nhập đầu không tự nhận quản trị",
+      "selector": "backend/tests/test_oauth_callback.py::test_closed_beta_first_invited_user_cannot_claim_admin",
+      "expected": "Vai trò chủ được xác định từ cấu hình, không theo thứ tự đăng nhập.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "S03",
+      "area": "security",
+      "title": "Thu hồi lời mời làm mất hiệu lực phiên",
+      "selector": "backend/tests/test_oauth_callback.py::test_closed_beta_revokes_existing_session_when_invite_removed",
+      "expected": "Phiên người không còn trong danh sách bị từ chối.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "S04",
+      "area": "security",
+      "title": "Cách ly người dùng giả lập",
+      "selector": "backend/tests/test_five_user_isolation.py",
+      "expected": "Năm người dùng thử không đọc chéo chat/tài liệu/bộ nhớ/tệp xuất; khóa tách theo người.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "S05",
+      "area": "security",
+      "title": "Khóa quyền bảng phiên cũ",
+      "selector": "backend/tests/test_framework_security.py",
+      "expected": "Kiểm câu SQL qua kết nối mô phỏng; không xóa/di chuyển hàng. Không chứng minh quyền cloud thực.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "S06",
+      "area": "security",
+      "title": "Không coi chỉ dẫn trong HTML là lệnh",
+      "selector": "backend/tests/test_protonx_hardgates.py::test_html_text_discards_instructions_and_grounds_visible_copy",
+      "expected": "Lọc nội dung theo dữ liệu thử; không chứng minh chống mọi kiểu chỉ dẫn độc hại.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "S07",
+      "area": "security",
+      "title": "Giao thức công cụ cần xác thực",
+      "selector": "backend/tests/test_protocols.py",
+      "expected": "Dùng SDK MCP/A2A thật trong kiểm cục bộ, yêu cầu người dùng; không gọi mô hình.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G01",
+      "area": "governance",
+      "title": "Quyền vai trò và quyền Google độc lập",
+      "selector": "backend/tests/test_document_policy.py",
+      "expected": "Các tổ hợp vai trò/quyền/nguồn hợp lệ được phép, không hợp lệ bị chặn.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G02",
+      "area": "governance",
+      "title": "Chặn ghi ngoài trước khi gọi dịch vụ",
+      "selector": "backend/tests/test_registry.py",
+      "expected": "Chốt ghi ngoài chặn handler và vẫn ghi nhật ký; quyền chủ thử Doc không mở các quyền ghi khác.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G03",
+      "area": "governance",
+      "title": "Nội dung xem trước cố định",
+      "selector": "backend/tests/test_document_tool_execution.py::test_docs_prepare_persists_an_immutable_preview",
+      "expected": "Lưu bản xem trước không bị đổi ngầm.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G04",
+      "area": "governance",
+      "title": "Giành quyền thực thi đúng một lần",
+      "selector": "backend/tests/test_document_tool_execution.py::test_docs_execute_claims_once_checkpoints_and_finishes",
+      "expected": "Lần thực thi lưu mốc và kết thúc theo dữ liệu thử.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G05",
+      "area": "governance",
+      "title": "Lỗi chưa chắc đã ghi phải được giữ riêng",
+      "selector": "backend/tests/test_document_tool_execution.py::test_docs_execute_marks_generic_failures_uncertain_and_preserves_error",
+      "expected": "Không coi lỗi chưa xác định là thành công hoặc tự phát lại ghi.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G06",
+      "area": "governance",
+      "title": "Mã hành động dùng một lần",
+      "selector": "backend/tests/test_relational_remote_actions.py",
+      "expected": "Kiểm sổ hành động dùng chung qua SQLite thử; không phải kiểm nhiều máy chủ cloud.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G07",
+      "area": "governance",
+      "title": "Chỉ thử lại lỗi tạm thời",
+      "selector": "backend/tests/test_registry.py::test_registry_retries_only_retryable_errors",
+      "expected": "Không thử lại lỗi không thể khắc phục bằng chờ/thử lại.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    },
+    {
+      "id": "G08",
+      "area": "governance",
+      "title": "Nhật ký và giao dịch khi lỗi",
+      "selector": "backend/tests/test_registry.py",
+      "expected": "Từ chối/lỗi có nhật ký an toàn; dữ liệu chưa commit được hoàn tác khi handler lỗi.",
+      "evidence": "security-governance-20261011.json; toàn bộ tệp tương ứng được chọn và đạt",
+      "environment": "local_test_double_or_fixture",
+      "live_cloud_verified": false
+    }
+  ]
+}

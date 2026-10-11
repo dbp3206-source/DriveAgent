@@ -1,5 +1,9 @@
 # Mẫu thực hành chuẩn bị tư vấn
 
+Xem thêm [bộ dữ liệu chuẩn 5 tệp, 10 ca kết hợp](../verification/golden/README.md)
+và [báo cáo chạy thật ngày 11/10/2026](../verification/DEMO-REPORT-20261011.md).
+Hai tệp bên dưới là mẫu thực hành cũ, không bị thay thế hoặc đổi đáp án.
+
 Hai tài liệu trong thư mục này hoàn toàn giả lập, không chứa dữ liệu riêng. Có thể tải lên Veridra để thử mà không cần tài khoản Google có thư thật. Đây là một tình huống trong bộ nghiệm thu, không thay sáu doanh nghiệp hoặc sáu PDF đã chốt.
 
 ## Thao tác

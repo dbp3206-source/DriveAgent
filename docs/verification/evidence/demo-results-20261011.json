@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "date": "2026-10-11",
+  "url": "https://veridra-closed-beta.onrender.com/",
+  "scope": "Kiểm thử trực tiếp bằng tài khoản quản trị trong thanh bên; không sửa mã sản phẩm",
+  "model": "Gemini 3.5 Flash Lite theo giao diện và dấu vết lượt chạy",
+  "provenance": "Tổng hợp từ biên bản chạy thật ngày 11/10/2026. Không chạy lại trong đợt đóng gói hồ sơ. Đã loại định danh yêu cầu, URL tài liệu và ảnh riêng; không công bố bản gốc.",
+  "summary": {
+    "passed": 3,
+    "partial": 6,
+    "failed": 1,
+    "total": 10,
+    "submitted_model_questions": 10,
+    "completed_text_responses": 8,
+    "failed_model_requests": 2
+  },
+  "cases": [
+    {
+      "id": "TC01",
+      "status": "Đạt",
+      "actual": "Trang chủ, Cài đặt, Phân quyền và Cách Agent hoạt động mở được trong phiên quản trị. Ảnh hành trình mới tải thành công, kích thước gốc 1672 × 941. Danh sách quyền có đọc lịch, đọc Gmail và Drive; quyền gửi thư chưa được Google cấp. Không đổi khóa hoặc quyền.",
+      "assessment": "Đạt phạm vi kiểm giao diện và trạng thái hiện có. Không suy ra đăng nhập mới, cách ly nhiều người dùng hoặc tốc độ sau ngủ đã đạt."
+    },
+    {
+      "id": "TC02",
+      "status": "Đạt một phần",
+      "actual": "Drive mặc định Gần đây trước. Danh sách mặc định 50 mục; bộ lọc thư mục và tệp trả đúng loại trong các hàng đã quan sát; Đã gắn sao trả 25 mục. Tìm Veridra bị HTTP 403: Sorting is not supported for queries with fullText terms. Không mở được tài liệu từ kết quả tìm này.",
+      "assessment": "Bộ lọc dùng được; tìm theo từ khóa chưa đạt. Thông báo lỗi từ Google chỉ ra kết hợp tìm toàn văn và sắp xếp không được hỗ trợ, không phải bằng chứng người dùng thiếu quyền. Giao diện hướng người dùng kiểm quyền là không phù hợp lỗi đã thấy."
+    },
+    {
+      "id": "TC03",
+      "status": "Đạt một phần",
+      "actual": "Nhập GD01 Markdown thành công, xem trước 556 ký tự. Câu trả lời dùng 24 người sau hiệu chỉnh, 96 giờ/tháng, giả thuyết giảm 20% tiết kiệm 19,2 giờ và còn 76,8 giờ; ngân sách chưa xác nhận, có nguồn đúng tệp. Thời gian giao diện 32,0 giây. Nhập GD02 CSV thành công, xem trước đủ ba hàng và 99 ký tự; câu hỏi đối soát sau đó kết thúc với Không thể hoàn tất yêu cầu. GD03 được chuẩn bị trong bộ dữ liệu nhưng chưa nhập qua giao diện.",
+      "assessment": "Đọc hồ sơ hiệu chỉnh và tính toán GD01 đạt. Nạp CSV đạt nhưng trả lời từ CSV chưa đạt; không có bằng chứng đủ để quy lỗi cho Gemini hoặc sản phẩm ở yêu cầu CSV. Không thay đáp án kỳ vọng thành kết quả thực tế."
+    },
+    {
+      "id": "TC04",
+      "status": "Đạt",
+      "actual": "Hỏi tiếp đổi giả thuyết thành 25% trả đúng 24 giờ tiết kiệm, còn 72 giờ, giữ nền 96 giờ. Thời gian 37,7 giây. Sau tải lại, hai lượt trước vẫn hiện. Chuyển sang An Bình 8 người trả lời hỏi thời gian tìm tài liệu và số ngày làm việc, không mang 24 người hoặc 96 giờ của Minh Phát sang. Thời gian 35,9 giây.",
+      "assessment": "Đạt ba bước hỏi tiếp, giữ lịch sử sau tải lại và đổi khách trong chuỗi đã kiểm. Không suy rộng thành mọi hội thoại dài đều đúng."
+    },
+    {
+      "id": "TC05",
+      "status": "Đạt một phần",
+      "actual": "Tạo và sửa ghi chú Ngữ cảnh GD-LS-20261011 thành công; thêm yêu cầu ghi nguồn. Câu hỏi tự chọn nguồn trả chưa tìm thấy, dấu vết không có tra bộ nhớ. Khi chọn /memory trực tiếp, trả đúng bốn mục và yêu cầu nguồn, đúng phạm vi Lam Sơn. Sau cất ghi chú, hội thoại mới dùng /memory trả không có ghi chú đang hoạt động; nhật ký có memory_search thành công. Thời gian lần lượt 31,7; 36,8; 18,1 giây.",
+      "assessment": "Quản lý ghi chú và tra trực tiếp, không dùng ghi chú đã cất đạt. Tự chọn bộ nhớ chưa đạt trong lượt này; chưa đủ căn cứ xác định lỗi nằm ở bộ chọn nguồn hay thời điểm đồng bộ. Không xóa vĩnh viễn."
+    },
+    {
+      "id": "TC06",
+      "status": "Đạt một phần",
+      "actual": "Quy trình gd_lam_ro_20261011 đã được tạo v1, dù màn hình lần lưu tiếp theo báo Skill đã thay đổi; tải lại trước khi lưu. Nhật ký ghi lần đầu thành công, lần tiếp theo revision_conflict. Mở lại xác nhận bản tồn tại; sửa bước tách dữ kiện và điều chưa xác nhận lưu v2 thành công. Nạp customer=An Bình hiển thị đúng mục tiêu An Bình. Chạy quy trình đã có qa_final_tu_van với dữ liệu Hoa Mai trả đúng 60%, 25%, 15%, không suy doanh thu; thời gian 19,9 giây. Chưa chạy mô hình với chính quy trình mới hoặc lượt đổi khách của quy trình đó.",
+      "assessment": "Tạo, sửa và thay tham số của quy trình mới có bằng chứng. Chất lượng chạy Hoa Mai chỉ chứng minh quy trình đã có, không chứng minh quy trình mới. Cần phân biệt xung đột lần lưu tiếp theo với thất bại tạo mới."
+    },
+    {
+      "id": "TC07",
+      "status": "Đạt một phần",
+      "actual": "Tìm thư Medium, mở bản HTML, văn bản và bản thô; tiêu đề và đoạn giới thiệu nhất quán. HTML vẫn có ảnh vỡ dù cho phép tải ảnh ngoài và hiện cảnh báo tuyến dự phòng. Thư được chọn không có tệp đính kèm. Soạn thủ công thư giả lập GD05 tới demo@example.com, đúng 14 giờ 30 ngày 14/10/2026; mở bản xem trước chờ xác nhận lưu nháp. Không bấm lưu vào Gmail và không gửi.",
+      "assessment": "Đọc và xem trước thư đạt. Ảnh thư chưa đạt. Chưa nghiệm thu tệp đính kèm, lưu nháp thật hoặc sinh thư bằng mô hình; bản soạn thủ công không được tính là chất lượng sinh câu trả lời."
+    },
+    {
+      "id": "TC08",
+      "status": "Chưa đạt",
+      "actual": "Hai nút đầu ngày và trước cuộc hẹn nạp câu hỏi đúng mục đích, chưa tự gửi. Sau xác nhận của chủ sản phẩm, chạy một lượt gộp giới hạn tối đa 5 thư từ noreply@medium.com và lịch 24 giờ tới, không đọc nguồn khác hoặc ghi Google. Câu trả lời sau 8,1 giây nói không có công cụ email/lịch được kết nối. Dấu vết chỉ có xử lý mô hình và lượng văn bản; nhật ký cùng mã yêu cầu không có công cụ đọc Gmail hoặc lịch, trong khi Gmail vừa đọc được và Cài đặt có quyền calendar.readonly.",
+      "assessment": "Nút nạp câu hỏi đạt; tổng hợp nguồn thật chưa đạt. Không thể kết luận hộp thư hoặc lịch trống khi không có lần đọc nguồn. Lời giải thích thiếu quyền không có căn cứ từ các bằng chứng đã quan sát."
+    },
+    {
+      "id": "TC09",
+      "status": "Đạt một phần",
+      "actual": "Một câu hỏi gộp Vinamilk và Viettel không trả kết quả: chạm giới hạn xử lý trong một phút của Veridra. Nhật ký cùng mã có một web_research thành công rồi một web_research lỗi quota_minute_exhausted; agent_task lỗi application_guard. Tạo hồ sơ giả lập thủ công, lưu v1, sửa nguồn thành v2 và xuất Markdown thành công. Đọc lại tệp tải xuống khớp 24 người, 96 giờ, giả thuyết 25%, tiết kiệm 24 giờ, còn 72 giờ và nguồn GD01. Khi nối lại phiên, dùng nút Xuất Google Doc trên câu trả lời GD01, xem bản nội dung đã khóa rồi xác nhận tạo đúng một tài liệu. Ứng dụng báo đã tạo và đọc lại thành công. Mở Google Docs thật và xuất Markdown đối chiếu: đúng 24 người, 96 giờ, giả thuyết 20%, tiết kiệm 19,2 giờ, còn 76,8 giờ, ngân sách chưa xác nhận và liên kết nguồn GD01. Không gọi thêm mô hình hoặc đổi quyền.",
+      "assessment": "Lưu, sửa, xuất tệp và tạo Google Doc qua duyệt rồi đọc lại đạt. Chưa có đầu ra web để chấm độ chính xác hoặc khả năng tổng hợp. Đây là giới hạn bảo vệ ứng dụng theo nhật ký, không phải bằng chứng Google hết hạn mức. Không dùng ghi chú thủ công hoặc tài liệu xuất từ GD01 để thay thế ca web."
+    },
+    {
+      "id": "TC10",
+      "status": "Đạt",
+      "actual": "Mở nhật ký và xuất JSON thành công. Đối chiếu được đọc nguồn local, tính toán, bộ nhớ, quy trình, Gmail, lưu hồ sơ và các lỗi Drive/web theo mã yêu cầu. Giao diện ghi mẫu 100 sự kiện, thành công 91/100, cảnh báo 2, lỗi 7; trung bình 5,00 giây và thời gian của 95% lượt 16,45 giây. Các con số là ảnh chụp tập nhật ký tại 00:26 ngày 11/10/2026, không phải điểm chất lượng mười ca mới.",
+      "assessment": "Đạt khả năng xem, xuất và truy nguyên các thao tác đã quan sát. Chưa kiểm mọi vai trò trợ lý; các bộ đo cũ trên trang không thay thế đối chiếu nội dung với đáp án độc lập."
+    }
+  ],
+  "limitations": [
+    "Chỉ một tài khoản quản trị; chưa nghiệm thu nhiều tài khoản, khôi phục hoặc tốc độ sau ngủ.",
+    "Không coi các kiểm nội bộ, câu trả lời mẫu hoặc ghi chú thủ công là chất lượng mô hình chạy thật.",
+    "Nguồn thư và lịch cần quyền và chấp thuận riêng. Không cung cấp tài khoản dùng chung hoặc khóa API trong bộ dữ liệu.",
+    "Bộ ca công khai đã thay thao tác chọn thư thật cụ thể bằng dữ liệu của người chạy; kết quả lịch sử bên dưới không phải kết quả của một lần chạy lại bộ công khai."
+  ]
+}

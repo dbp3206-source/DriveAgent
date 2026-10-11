@@ -4,6 +4,27 @@
 
 Đối tượng chính là chuyên viên tư vấn giải pháp AI/phần mềm trước bán hàng. Sản phẩm đang được chuẩn hóa theo ba quy trình: đọc yêu cầu khách hàng, chuẩn bị báo cáo trước cuộc hẹn, phản hồi và lưu kết quả sau khi duyệt. Gmail, Drive/tài liệu riêng, thông tin doanh nghiệp và Calendar là nguồn; Gemini hỗ trợ phân tích và tổng hợp. Mọi công cụ đi qua kiểm tra đầu vào, xác thực, phân quyền, hạn mức và nhật ký.
 
+## Xem và kiểm chứng nhanh
+
+- [Mở sản phẩm](https://veridra-closed-beta.onrender.com/) — bản thử giới hạn người được mời; không có tài khoản hoặc khóa API dùng chung. Dịch vụ miễn phí có thể cần thời gian khởi động sau khi ngủ.
+- [Kịch bản demo 10 phút](docs/DEMO-10-PHUT.md) và [bộ dữ liệu giả lập, 10 ca kiểm, đáp án độc lập](docs/verification/golden/README.md).
+- [Báo cáo chạy thật ngày 11/10/2026](docs/verification/DEMO-REPORT-20261011.md), không chỉ kiểm phần trò chuyện: có Drive, nhập tệp, bộ nhớ, quy trình, Gmail, lịch, kết quả đã lưu và nhật ký.
+- [Các bộ kiểm chất lượng, bảo mật và kiểm soát hành động](docs/verification/README.md), kèm kết quả có ngày đo và phạm vi cụ thể.
+- [Kiến trúc và lựa chọn kỹ thuật](docs/ARCHITECTURE.md), [hướng dẫn đọc mã](docs/CODE_TOUR.md), [mục lục tài liệu](docs/README.md).
+
+**Kết quả cần đọc đúng phạm vi:** bộ kiểm chạy thật ngày 11/10 có 3 ca đạt,
+6 ca đạt một phần và 1 ca chưa đạt. Kiểm nội bộ cùng ngày đạt 200/200 kiểm hồi quy
+và 78/78 kiểm được chọn về bảo mật, phân quyền, duyệt và thực thi. Các kiểm nội bộ
+không gọi mô hình hoặc Google, không thay thế nghiệm thu chạy thật và không phải
+chứng nhận bảo mật hay sẵn sàng vận hành toàn diện. Bản báo cáo Word và ảnh gốc
+có dữ liệu riêng được giữ nội bộ; kho công khai chỉ chứa dữ liệu giả lập và bản
+tổng hợp đã loại định danh riêng.
+
+Quy trình tiêu biểu: nhập yêu cầu khách hàng → xác định dữ kiện có hiệu lực →
+đối chiếu tài liệu và tính toán → chuẩn bị báo cáo có nguồn → xem trước, duyệt
+nếu cần tạo tài liệu → đọc lại và kiểm nhật ký. Giá trị hướng tới là giảm thao tác
+tìm, ghép và kiểm lại thông tin; chưa công bố số giờ tiết kiệm thực tế khi chưa đo.
+
 Định vị và phương pháp đã chốt tại [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md); các hành vi chưa được triển khai/kiểm chứng không được coi là đã hoàn thiện chỉ vì có trong tài liệu. Đợt demo hiện tại dùng [bốn nhóm nghiệm thu A, B, E, F](docs/RELEASE-CLOSURE.md). [Bộ kiểm đầy đủ trước đó](docs/ACCEPTANCE-CHECKLIST.md) được giữ để tham chiếu lịch sử.
 
 **Trạng thái bàn giao: người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026.**
@@ -124,6 +145,11 @@ scripts/       Setup, run và verify trên Windows
 - Không commit `.env`, OAuth JSON, database hoặc Qdrant data.
 
 ## Kiểm thử
+
+Bắt đầu ở [hồ sơ kiểm chứng công khai](docs/verification/README.md). Hồ sơ phân biệt
+kiểm hồi quy, kiểm bảo mật/kiểm soát hành động bằng dữ liệu thử và kết quả chạy
+thật. Bộ dữ liệu chuẩn, đáp án và kết quả không yêu cầu công khai thư, khóa hoặc
+tài khoản riêng. Những ca dùng nguồn Google thật cần quyền và chấp thuận riêng.
 
 ```powershell
 .\scripts\verify.ps1

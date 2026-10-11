@@ -1,0 +1,58 @@
+{
+  "timestamp": "2026-10-11T20:43:49.098367+07:00",
+  "duration_seconds": 31.033,
+  "passed": 78,
+  "total": 78,
+  "failed": 0,
+  "errors": 0,
+  "skipped": 0,
+  "files": [
+    {
+      "file": "backend/tests/test_document_policy.py",
+      "count": 10
+    },
+    {
+      "file": "backend/tests/test_document_tool_execution.py",
+      "count": 6
+    },
+    {
+      "file": "backend/tests/test_five_user_isolation.py",
+      "count": 2
+    },
+    {
+      "file": "backend/tests/test_framework_security.py",
+      "count": 4
+    },
+    {
+      "file": "backend/tests/test_oauth_callback.py",
+      "count": 11
+    },
+    {
+      "file": "backend/tests/test_protocols.py",
+      "count": 1
+    },
+    {
+      "file": "backend/tests/test_protonx_hardgates.py",
+      "count": 15
+    },
+    {
+      "file": "backend/tests/test_registry.py",
+      "count": 18
+    },
+    {
+      "file": "backend/tests/test_relational_remote_actions.py",
+      "count": 1
+    },
+    {
+      "file": "backend/tests/test_security.py",
+      "count": 10
+    }
+  ],
+  "source_commit": "8e74fc46c35220403a12f19490c0e17994133a6b",
+  "scope": "Kiểm nội bộ được chọn về bảo mật, kiểm soát hành động và hợp đồng nghiệp vụ. Không phải kiểm xâm nhập hoặc nghiệm thu tích hợp cloud.",
+  "command": "backend/.venv/Scripts/python.exe -m pytest backend/tests/test_document_policy.py backend/tests/test_document_tool_execution.py backend/tests/test_five_user_isolation.py backend/tests/test_framework_security.py backend/tests/test_oauth_callback.py backend/tests/test_protocols.py backend/tests/test_protonx_hardgates.py backend/tests/test_registry.py backend/tests/test_relational_remote_actions.py backend/tests/test_security.py -q -p no:cacheprovider --basetemp=tmp/public-harness-20261011 --junitxml=tmp/public-harness-20261011.xml",
+  "evidence": "Tóm tắt từ JUnit XML của lần chạy thật; không công bố nội dung đầu ra, máy chủ, đường dẫn máy hoặc dữ liệu riêng trong XML gốc.",
+  "model_calls": 0,
+  "google_calls": 0,
+  "cloud_writes": 0
+}
