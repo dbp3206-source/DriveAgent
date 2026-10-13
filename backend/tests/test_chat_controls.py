@@ -26,7 +26,9 @@ def test_context_only_followup_cannot_read_memory_named_in_save_prohibition():
         "Gọi công cụ calculate để tính giờ còn lại. Không lưu bộ nhớ."
     )
     controls = ChatControls().enforce_explicit_source_exclusions(request)
-    assert controls.excluded_sources == frozenset({"drive", "gmail", "local", "memory"})
+    assert controls.excluded_sources == frozenset(
+        {"drive", "gmail", "local", "memory", "calendar", "web"}
+    )
     assert controls.allowed_tool_names(TOOLS) == {"calculate", "skill_run"}
     assert controls.filter_excluded_route(route_request(request)).tool is None
 
@@ -221,7 +223,7 @@ def test_source_prohibition_does_not_include_sources_named_before_it():
     controls = ChatControls().enforce_explicit_source_exclusions(
         "Chỉ đọc hai tài liệu local và trả lời, không Gmail, Drive, lịch, web."
     )
-    assert controls.excluded_sources == {"gmail", "drive"}
+    assert controls.excluded_sources == {"gmail", "drive", "calendar", "web"}
     assert "local_source_search" in controls.allowed_tool_names(TOOLS)
 
 

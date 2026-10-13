@@ -4,9 +4,13 @@ import re
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from app.agent.intent import explicit_source_exclusions
+
 
 def needs_public_evidence(message: str) -> bool:
     text = message.casefold()
+    if "web" in explicit_source_exclusions(message):
+        return False
     # "Latest" may refer to the user's current conversation state, not public
     # news. Never send a reformulation/correction of that state to web search.
     # Keep the guard specific to preserving conversation state: a question
@@ -35,7 +39,12 @@ def needs_public_evidence(message: str) -> bool:
     )
     if re.search(
         r"\b(?:gmail|email|mail|drive|calendar|lịch của tôi|cuộc họp|local|"
-        r"tài liệu|tệp|file|bộ nhớ|ghi nhớ|memory|skill)\b",
+        r"bộ nhớ|ghi nhớ|memory|skill)\b|"
+        r"\b(?:tài liệu|tệp|file)\s+(?:riêng|cá nhân|nội bộ|khách hàng|"
+        r"của tôi|của chúng tôi|đã (?:chọn|tải|gửi)|đính kèm|"
+        r"mới (?:chỉnh sửa|nhất)|gần đây|vừa (?:nhập|tải))\b|"
+        r"\b[\w.-]+\.(?:pdf|docx|xlsx|csv|md|txt)\b|"
+        r"https://(?:docs|drive|mail)\.google\.com/",
         text,
     ):
         return False
@@ -56,7 +65,12 @@ def needs_public_evidence(message: str) -> bool:
         and re.search(r"\b(?:kiểm nguồn|đọc nguồn|kiểm chứng|xác minh|đọc trang)\b", text)
         and not re.search(r"\b(?:không|đừng)\s+(?:đọc|dùng|truy cập|tìm)\s+web\b", text)
     )
-    return bool(explicit or unstable or selected_public_source)
+    requested_web = re.search(
+        r"\b(?:tìm(?: kiếm)?|tra cứu|đọc|kiểm tra|tìm hiểu)\s+"
+        r"(?:(?:trên|bằng|qua|nguồn|thông tin|từ)\s+){0,2}"
+        r"(?:web|internet|nguồn công khai)\b", text,
+    )
+    return bool(explicit or unstable or selected_public_source or requested_web)
 
 
 def server_time_context(timezone: str = "Asia/Bangkok") -> dict[str, str]:

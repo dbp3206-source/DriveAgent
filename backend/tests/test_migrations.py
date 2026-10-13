@@ -6,6 +6,8 @@ from app.db.migrations import apply_sqlite_migrations
 def test_message_lifecycle_migration_upgrades_existing_database_once(tmp_path):
     engine = create_engine(f"sqlite:///{tmp_path / 'legacy.db'}")
     with engine.begin() as connection:
+        connection.exec_driver_sql("CREATE TABLE users (id VARCHAR(36) PRIMARY KEY)")
+        connection.exec_driver_sql("INSERT INTO users(id) VALUES ('legacy-user')")
         connection.exec_driver_sql(
             "CREATE TABLE messages (id VARCHAR(36) PRIMARY KEY, content TEXT NOT NULL)"
         )
@@ -20,6 +22,9 @@ def test_message_lifecycle_migration_upgrades_existing_database_once(tmp_path):
             "SELECT content, status, request_id FROM messages WHERE id='legacy'"
         ).one()
         versions = connection.exec_driver_sql("SELECT version FROM schema_migrations").all()
+        assert connection.exec_driver_sql(
+            "SELECT auth_version FROM users WHERE id='legacy-user'"
+        ).scalar_one() == ""
         company_columns = {
             row[1] for row in connection.exec_driver_sql("PRAGMA table_info(company_profiles)")
         }
@@ -31,5 +36,5 @@ def test_message_lifecycle_migration_upgrades_existing_database_once(tmp_path):
     assert tuple(row) == ("Nội dung cũ", "completed", None)
     assert {"user_id", "domain", "source_url", "last_verified_at"}.issubset(company_columns)
     assert {"user_id", "kind", "dedupe_key", "lease_token"}.issubset(scheduled_columns)
-    assert versions == [(1,), (2,), (3,), (4,), (5,), (6,)]
+    assert versions == [(1,), (2,), (3,), (4,), (5,), (6,), (7,)]
     engine.dispose()

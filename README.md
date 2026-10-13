@@ -1,8 +1,10 @@
 # Veridra
 
-**Veridra — Trợ lý chuẩn bị tư vấn khách hàng doanh nghiệp.**
+**Veridra — Trợ lý AI cho công việc nội bộ doanh nghiệp.**
 
-Đối tượng chính là chuyên viên tư vấn giải pháp AI/phần mềm trước bán hàng. Sản phẩm đang được chuẩn hóa theo ba quy trình: đọc yêu cầu khách hàng, chuẩn bị báo cáo trước cuộc hẹn, phản hồi và lưu kết quả sau khi duyệt. Gmail, Drive/tài liệu riêng, thông tin doanh nghiệp và Calendar là nguồn; Gemini hỗ trợ phân tích và tổng hợp. Mọi công cụ đi qua kiểm tra đầu vào, xác thực, phân quyền, hạn mức và nhật ký.
+Giúp người thường xuyên xử lý tài liệu, thư và họp: hiểu tài liệu, nắm tình hình, phân tích phương án, chuẩn bị cuộc họp và hoàn thiện nội dung. Trợ lý cần đề xuất hướng làm và bước tiếp hữu ích khi tham vấn, không chỉ tóm tắt hoặc hỏi gì đáp nấy. Nguồn dùng theo quyền và yêu cầu; không tự thực hiện đề xuất. Bản đầu giới hạn tối đa bốn tài khoản được mời, dữ liệu riêng; chưa phải không gian cộng tác toàn doanh nghiệp.
+
+Định hướng hiện hành ngày 13/10: [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md), [hợp đồng trợ lý](docs/ASSISTANT-CONTRACT.md), [ba bộ giả lập và mười ca nghiệm thu](docs/verification/internal-assistant/README.md), [sổ triển khai](docs/PRODUCTION-EXECUTION-20261013.md). Các thay đổi mới đang được kiểm, chưa triển khai và chưa có chứng nhận sẵn sàng vận hành. Báo cáo bên dưới giữ nguyên phạm vi lịch sử, không tự chuyển thành đạt theo định hướng mới.
 
 ## Xem và kiểm chứng nhanh
 
@@ -20,12 +22,12 @@ chứng nhận bảo mật hay sẵn sàng vận hành toàn diện. Bản báo 
 có dữ liệu riêng được giữ nội bộ; kho công khai chỉ chứa dữ liệu giả lập và bản
 tổng hợp đã loại định danh riêng.
 
-Quy trình tiêu biểu: nhập yêu cầu khách hàng → xác định dữ kiện có hiệu lực →
-đối chiếu tài liệu và tính toán → chuẩn bị báo cáo có nguồn → xem trước, duyệt
+Quy trình tiêu biểu: nhận việc cần hoàn thành → chọn đúng nguồn →
+đối chiếu, phân tích hoặc soạn → kiểm kết quả → xem trước, duyệt
 nếu cần tạo tài liệu → đọc lại và kiểm nhật ký. Giá trị hướng tới là giảm thao tác
 tìm, ghép và kiểm lại thông tin; chưa công bố số giờ tiết kiệm thực tế khi chưa đo.
 
-Định vị và phương pháp đã chốt tại [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md); các hành vi chưa được triển khai/kiểm chứng không được coi là đã hoàn thiện chỉ vì có trong tài liệu. Đợt demo hiện tại dùng [bốn nhóm nghiệm thu A, B, E, F](docs/RELEASE-CLOSURE.md). [Bộ kiểm đầy đủ trước đó](docs/ACCEPTANCE-CHECKLIST.md) được giữ để tham chiếu lịch sử.
+Định vị và phương pháp ở [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md) không thay thế bằng chứng thực thi. [Bốn nhóm nghiệm thu A, B, E, F](docs/RELEASE-CLOSURE.md) và [bộ kiểm đầy đủ trước đó](docs/ACCEPTANCE-CHECKLIST.md) giữ để tham chiếu lịch sử; đợt triển khai hiện hành dùng mười ca T01–T10 trong bộ chuẩn mới.
 
 **Trạng thái bàn giao: người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026.**
 Mở [Veridra trên Render](https://veridra-closed-beta.onrender.com).

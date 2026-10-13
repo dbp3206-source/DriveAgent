@@ -73,21 +73,21 @@ const STARTER_PRESETS = [
     kind: 'preference' as MemoryKind,
     icon: '🎯',
     title: 'Trả lời ngắn gọn và có nguồn',
-    content: 'Tôi muốn các câu trả lời ngắn gọn, có cấu trúc phân tích chuyên sâu, kèm trích dẫn số liệu rõ ràng và không dùng lời chào rườm rà.',
+    content: 'Tôi muốn câu trả lời ngắn, chia ý rõ và dẫn nguồn khi dùng tài liệu. Nói rõ điều chưa biết, không chào hỏi rườm rà.',
     tags: ['phong_cach', 'nguon'],
   },
   {
     kind: 'preference' as MemoryKind,
     icon: '📌',
-    title: 'Chuẩn bị tư vấn khách hàng',
-    content: 'Khi chuẩn bị tư vấn khách hàng, tôi muốn tách dữ kiện đã xác nhận, điều chưa biết, câu hỏi cần làm rõ và việc cần làm tiếp. Không tự giả định ngân sách hoặc người ra quyết định.',
-    tags: ['tu_van', 'khach_hang'],
+    title: 'Đề xuất hướng giải quyết',
+    content: 'Khi cần tham vấn, hãy tách dữ kiện và điều chưa biết, so các hướng khả thi, nêu hướng ưu tiên và việc nên làm tiếp. Không bịa chi phí hoặc lợi ích.',
+    tags: ['de_xuat', 'cong_viec'],
   },
   {
     kind: 'procedural' as MemoryKind,
     icon: '💡',
     title: 'Quy trình xử lý thư quan trọng',
-    content: 'Khi đọc email từ khách hàng hoặc đối tác, luôn nêu việc cần làm, thời hạn và người liên quan lên đầu. Nếu nguồn không nêu rõ thì ghi là chưa xác nhận.',
+    content: 'Khi tổng hợp thư công việc, nêu điều đã chốt, việc còn mở, người phụ trách và thời hạn nếu thư có ghi. Điều thiếu thì nói chưa xác nhận.',
     tags: ['quy_trinh', 'gmail'],
   },
   {
@@ -672,7 +672,7 @@ export function MemoryPage() {
                     id="memory-content"
                     name="content"
                     value={content}
-                    placeholder="Ví dụ: Khi chuẩn bị tư vấn, tách dữ kiện, điều chưa biết và việc tiếp theo."
+                    placeholder="Ví dụ: Báo cáo cần có nguồn và việc nên làm tiếp."
                     onChange={(_, data) => setContent(data.value)}
                     resize="vertical"
                     rows={4}

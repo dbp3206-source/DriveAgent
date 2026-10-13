@@ -284,11 +284,13 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
         <StatusLine
           label="Google OAuth"
           ready={status.oauth_configured}
-          detail={workspaceReadReady
-            ? 'Đã cấu hình đăng nhập Google; tài khoản đã cấp quyền đọc Drive và Gmail.'
-            : driveReadReady
-              ? 'Đã cấu hình đăng nhập Google; tài khoản chưa cấp quyền đọc Gmail.'
-              : 'Đã cấu hình đăng nhập Google; tài khoản chưa cấp đủ quyền đọc Drive.'}
+          detail={!status.oauth_configured
+            ? 'Máy chủ chưa cấu hình đăng nhập Google.'
+            : workspaceReadReady
+              ? 'Đã cấu hình đăng nhập Google; tài khoản đã cấp quyền đọc Drive và Gmail.'
+              : driveReadReady
+                ? 'Đã cấu hình đăng nhập Google; tài khoản chưa cấp quyền đọc Gmail.'
+                : 'Đã cấu hình đăng nhập Google; tài khoản chưa cấp đủ quyền đọc Drive.'}
         />
       </div>
     </section>
@@ -461,7 +463,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
     <section id="settings-security" className="settings-security settings-group" aria-labelledby="settings-security-title">
       <h3 id="settings-security-title">Bảo mật và phiên làm việc</h3>
       <MessageBar intent="info"><MessageBarBody>Veridra không lưu khóa Gemini trên trình duyệt. Thông tin cấp quyền Google được mã hóa trên máy chủ trước khi lưu vào cơ sở dữ liệu.</MessageBarBody></MessageBar>
-      <div className="danger-zone"><div><h3>Rời phiên hiện tại</h3><p>Đăng xuất chỉ xóa cookie trên trình duyệt, không xóa dữ liệu hoặc quyền Google.</p></div><Button icon={<ArrowExit24Regular />} onClick={logout}>Đăng xuất</Button></div>
+      <div className="danger-zone"><div><h3>Đăng xuất tài khoản</h3><p>Kết thúc mọi phiên đăng nhập Veridra của tài khoản này. Dữ liệu và quyền Google vẫn được giữ.</p></div><Button icon={<ArrowExit24Regular />} onClick={logout}>Đăng xuất</Button></div>
     </section>
   </section>
 }

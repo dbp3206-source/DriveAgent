@@ -210,10 +210,9 @@ def route_request(message: str, *, timezone: str = "Asia/Bangkok") -> Route:
     calendar_requested = bool(re.search(
         r"\b(?:google\s+calendar|calendar|lịch(?:\s+hẹn)?|cuộc hẹn)\b", text, re.I
     ))
-    calendar_forbidden = bool(re.search(
-        r"\b(?:không|đừng|chưa)\s+[^.;!?\n]{0,100}?"
-        r"(?:google\s+calendar|calendar|lịch)\b", text, re.I
-    ))
+    from app.agent.intent import explicit_source_exclusions
+
+    calendar_forbidden = "calendar" in explicit_source_exclusions(text)
     next_day = bool(re.search(r"\b24\s*(?:giờ|h)\s*(?:tới|tiếp theo)\b", text, re.I))
     if calendar_requested and next_day and not calendar_forbidden:
         from app.agent.controls import ChatControls

@@ -5,11 +5,13 @@
 1. [Sản phẩm giải quyết vấn đề gì](PRODUCT-FOUNDATION.md).
 2. [Kiến trúc, luồng xử lý và lựa chọn kỹ thuật](ARCHITECTURE.md).
 3. [Chạy trên máy](START_LOCAL.md) và [cấu hình Google](SETUP_GOOGLE.md).
-4. [Dữ liệu giả lập, 10 ca kiểm và đáp án](verification/golden/README.md).
+4. [Ba hồ sơ giả lập, 10 ca kiểm và đáp án hiện hành](verification/internal-assistant/README.md).
 5. [Kết quả kiểm chứng và giới hạn](verification/README.md).
 
 ## Dành cho người xem demo
 
+- [Hợp đồng trợ lý và phạm vi hiện hành](ASSISTANT-CONTRACT.md), [sổ triển khai](PRODUCTION-EXECUTION-20261013.md).
+- [Bộ dữ liệu chuẩn trước đây](verification/golden/README.md), giữ làm lịch sử.
 - [Kịch bản 10 phút](DEMO-10-PHUT.md).
 - [Báo cáo kiểm tổng thể ngày 11/10/2026](verification/DEMO-REPORT-20261011.md).
 - [Biên bản bàn giao trước đó, ngày 10/10/2026](DEMO-HANDOFF-20261010.md).

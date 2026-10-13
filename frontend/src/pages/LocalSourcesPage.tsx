@@ -74,6 +74,7 @@ export function LocalSourcesPage() {
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState('')
   const [previewCopied, setPreviewCopied] = useState(false)
+  const pendingChat = useRef<string | null>(null)
 
   async function load() {
     try {
@@ -173,6 +174,13 @@ export function LocalSourcesPage() {
   }
 
   function handleChatNow(fileName: string) {
+    if (previewSource) {
+      // Let the modal finish closing before its page unmounts. Otherwise its
+      // accessibility mask can remain on the new chat page.
+      pendingChat.current = fileName
+      setPreviewSource(null)
+      return
+    }
     const launch = localChatLaunch(fileName)
     const {prompt} = launch
     try {
@@ -190,6 +198,15 @@ export function LocalSourcesPage() {
       /* storage fallback */
     }
     window.location.hash = '#/chat'
+  }
+
+  function finishPreviewClose(_: null, data: { direction: 'enter' | 'exit' }) {
+    if (data.direction !== 'exit' || !pendingChat.current) return
+    const fileName = pendingChat.current
+    pendingChat.current = null
+    // The motion callback runs before the surface is removed. Give modal
+    // cleanup a frame, then hand the selected source to the chat composer.
+    requestAnimationFrame(() => handleChatNow(fileName))
   }
 
   async function openPreview(source: Source) {
@@ -516,6 +533,7 @@ export function LocalSourcesPage() {
       <Dialog
         open={Boolean(previewSource)}
         onOpenChange={(_, data) => !data.open && setPreviewSource(null)}
+        surfaceMotion={{ onMotionFinish: finishPreviewClose }}
       >
         <DialogSurface className="local-preview-dialog-surface">
           <DialogBody>

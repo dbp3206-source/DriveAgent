@@ -86,6 +86,9 @@ jobs:
       - name: Run versioned offline evaluation gate
         run: python scripts/evaluate_release_offline.py --output release-evaluation.json
 
+      - name: Validate fixed internal assistant acceptance inputs
+        run: python scripts/validate_internal_assistant_dataset.py
+
       - name: Preserve evaluation evidence
         uses: actions/upload-artifact@v4
         with:

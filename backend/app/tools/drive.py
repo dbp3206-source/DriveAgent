@@ -142,10 +142,47 @@ async def drive_file_metadata(
 
 def _translate_http_error(exc: HttpError) -> ToolError:
     status = getattr(exc.resp, "status", 500)
+    # A 403 can mean quota, file access or configuration, not an expired login.
+    # Provider messages may contain private file IDs; expose only safe guidance.
+    try:
+        error = json.loads(exc.content).get("error", {})
+        reasons = {item.get("reason") for item in error.get("errors", []) if isinstance(item, dict)}
+    except (ValueError, AttributeError, TypeError):
+        reasons = set()
+    code = f"google_drive_{status}"
     retryable = status in {408, 429, 500, 502, 503, 504}
+    message = "Google Drive chưa xử lý được yêu cầu. Thử lại sau; công việc của bạn vẫn được giữ."
+    if status == 401:
+        message = "Phiên Google không còn hợp lệ. Hãy kết nối lại Google rồi tiếp tục."
+    elif reasons & {"rateLimitExceeded", "userRateLimitExceeded", "dailyLimitExceeded"}:
+        code = "google_drive_rate_limited"
+        retryable = "dailyLimitExceeded" not in reasons
+        message = (
+            "Google Drive đang giới hạn lượt truy cập. "
+            "Hãy đợi rồi thử lại; không cần đăng nhập lại."
+        )
+    elif reasons & {
+        "insufficientPermissions", "insufficientFilePermissions", "appNotAuthorizedToFile"
+    }:
+        code = "google_drive_permission_denied"
+        message = "Chưa có quyền đọc nguồn này. Kiểm tra quyền của tài liệu và quyền Google đã cấp."
+    elif reasons & {"accessNotConfigured", "domainPolicy"}:
+        code = "google_drive_misconfigured"
+        message = (
+            "Google Drive đang bị tắt hoặc bị chính sách tổ chức chặn. "
+            "Cần quản trị viên kiểm tra."
+        )
+    elif status == 400:
+        code = "google_drive_invalid_query"
+        message = (
+            "Yêu cầu tìm hoặc đọc Drive chưa hợp lệ. "
+            "Không cần đăng nhập lại; hãy thử điều kiện khác."
+        )
+    elif status == 404:
+        message = "Không tìm thấy tài liệu hoặc bạn không có quyền đọc tài liệu này."
     return ToolError(
-        f"Google Drive trả về HTTP {status}: {exc.reason}",
-        code=f"google_drive_{status}",
+        message,
+        code=code,
         retryable=retryable,
     )
 
@@ -206,7 +243,9 @@ async def search_drive_files(
                 q=" and ".join(clauses),
                 pageSize=payload.page_size,
                 pageToken=payload.page_token,
-                orderBy="recency desc" if payload.sort_order == "recent" else "modifiedTime desc",
+                # Google rejects explicit ordering for full-text queries.
+                # Preserve server result order and pagination; recent browsing
+                # remains separately sorted in list_drive_files.
                 fields=(
                     "nextPageToken,files(id,name,mimeType,modifiedTime,size,webViewLink,owners)"
                 ),

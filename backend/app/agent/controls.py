@@ -11,6 +11,7 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.agent.evidence import context_only_followup
+from app.agent.intent import explicit_source_exclusions
 
 _COMMAND_PATCHES: dict[str, dict[str, str]] = {
     "/auto": {"source": "auto"},
@@ -41,7 +42,7 @@ _COMMAND_PATCHES: dict[str, dict[str, str]] = {
 }
 
 SourceChoice = Literal["auto", "drive", "rag", "gmail", "local", "memory", "general"]
-RestrictedSource = Literal["drive", "gmail", "local", "memory"]
+RestrictedSource = Literal["drive", "gmail", "local", "memory", "calendar", "web"]
 AgentChoice = Literal["auto", "research", "communication", "study", "workspace"]
 OutputChoice = Literal["chat", "document", "spreadsheet"]
 WorkflowChoice = Literal[
@@ -264,47 +265,8 @@ class ChatControls(BaseModel):
         # A context-only follow-up must not acquire new private evidence merely
         # because the request mentions memory in a prohibition on saving it.
         if context_only_followup(message):
-            exclusions.update({"drive", "gmail", "local", "memory"})
-        clauses = re.split(r"[.!?;\n]+", message.casefold())
-        negative_action = re.compile(
-            r"(?:\b(?:không|khong|đừng|dung|no)\s+"
-            r"(?:(?:trực\s+tiếp|truy\s+cập|truy\s+cap|dùng|dung|đọc|doc|"
-            r"tra\s+cứu|tra\s+cuu|tìm\s+kiếm|tim\s+kiem|lấy|lay|"
-            r"access|use|read|search|query|fetch|look\s+up)\s+){1,4}"
-            r"|\b(?:không|khong|đừng|no)\s+"
-            r"(?=(?:gmail|e-?mail|mail|hộp\s+thư|google\s+drive|drive|"
-            r"tài\s+liệu\s+local|local\s+files?|bộ\s+nhớ|memory)\b)"
-            r"|\b(?:do\s+not|don't|dont|without)\s+"
-            r"(?:(?:directly|access|accessing|use|using|read|reading|search|"
-            r"query|fetch|looking\s+up)\s+){1,4})",
-            re.IGNORECASE,
-        )
-        source_patterns: dict[str, re.Pattern[str]] = {
-            "gmail": re.compile(r"\b(?:gmail|e-?mail|mail|hộp\s+thư)\b", re.I),
-            "drive": re.compile(r"\b(?:google\s+drive|drive)\b", re.I),
-            "local": re.compile(r"\b(?:tài\s+liệu\s+local|local\s+files?)\b", re.I),
-            "memory": re.compile(r"\b(?:bộ\s+nhớ|memory)\b", re.I),
-        }
-        for clause in clauses:
-            # A contrast or an explicit positive action starts a new scope:
-            # "don't use Gmail, but do use Drive" must block only Gmail.
-            scoped_clauses = re.split(
-                r"\b(?:nhưng|mà|trái\s+lại|but|however|instead)\b|"
-                r"(?:\b(?:and|và)\s+(?:use|access|read|search|query|fetch|"
-                r"dùng|truy\s+cập|đọc|tra\s+cứu|tìm\s+kiếm)\b)",
-                clause,
-                flags=re.I,
-            )
-            for scoped_clause in scoped_clauses:
-                prohibition = negative_action.search(scoped_clause)
-                if prohibition is None:
-                    continue
-                prohibited_scope = scoped_clause[prohibition.end():]
-                exclusions.update(
-                    source
-                    for source, pattern in source_patterns.items()
-                    if pattern.search(prohibited_scope)
-                )
+            exclusions.update({"drive", "gmail", "local", "memory", "calendar", "web"})
+        exclusions.update(explicit_source_exclusions(message))
         if exclusions == set(self.excluded_sources):
             return self
         return self.model_copy(update={"excluded_sources": frozenset(exclusions)})
@@ -321,6 +283,8 @@ class ChatControls(BaseModel):
             "drive": ("drive_", "rag_"),
             "local": ("local_source_",),
             "memory": ("memory_",),
+            "calendar": ("calendar_",),
+            "web": ("web_research",),
         }
 
         def is_excluded(tool_name: str | None) -> bool:
@@ -416,6 +380,8 @@ class ChatControls(BaseModel):
             "drive": ("drive_", "rag_"),
             "local": ("local_source_",),
             "memory": ("memory_",),
+            "calendar": ("calendar_",),
+            "web": ("web_research",),
         }
         names = {
             name

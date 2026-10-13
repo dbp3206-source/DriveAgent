@@ -251,6 +251,7 @@ async def test_auth_status_demo_login_google_start_and_logout_are_explicitly_gua
         get=AsyncMock(return_value=None),
         scalar=AsyncMock(return_value=None),
         commit=AsyncMock(),
+        flush=AsyncMock(),
     )
     db.add = MagicMock(side_effect=lambda row: setattr(row, "id", "demo-user"))
     status = await auth.auth_status(request, db, settings)
@@ -288,7 +289,7 @@ async def test_auth_status_demo_login_google_start_and_logout_are_explicitly_gua
     assert flow_factory.call_args.kwargs["workspace"] is True
     assert flow_factory.call_args.kwargs["gmail_compose"] is True
 
-    await auth.logout(oauth_request)
+    await auth.logout(oauth_request, db)
     assert oauth_request.session == {}
 
 
@@ -324,11 +325,17 @@ async def test_auth_status_counts_only_the_signed_in_users_active_byok_key(tmp_p
             )
             await db.commit()
 
+            from app.auth.sessions import establish_session
+
+            owner_session, other_session = {}, {}
+            establish_session(owner_session, owner)
+            establish_session(other_session, other)
+            await db.commit()
             owner_status = await auth.auth_status(
-                SimpleNamespace(session={"user_id": owner.id}), db, settings
+                SimpleNamespace(session=owner_session), db, settings
             )
             other_status = await auth.auth_status(
-                SimpleNamespace(session={"user_id": other.id}), db, settings
+                SimpleNamespace(session=other_session), db, settings
             )
             anonymous_status = await auth.auth_status(
                 SimpleNamespace(session={}), db, settings

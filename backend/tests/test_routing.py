@@ -26,6 +26,16 @@ def test_forbidden_calendar_does_not_trigger_upcoming_read():
     assert not any(source.tool == "calendar_list_upcoming" for source in route.sources)
 
 
+@pytest.mark.parametrize("suffix", [
+    "Nếu không có lịch hẹn thì nói rõ, không bịa.",
+    "Không tạo lịch mới, chỉ đọc các cuộc hẹn.",
+    "Không gửi thư; nếu lịch trống hãy báo vậy.",
+])
+def test_calendar_absence_or_write_prohibition_does_not_forbid_read(suffix):
+    route = route_request("Đọc lịch 24 giờ tới. " + suffix)
+    assert [source.tool for source in route.sources] == ["calendar_list_upcoming"]
+
+
 def test_calendar_prohibition_in_a_source_list_is_respected():
     route = route_request("Đọc Gmail. Không mở Drive, local hoặc lịch 24 giờ tới.")
     assert not any(source.tool == "calendar_list_upcoming" for source in route.sources)

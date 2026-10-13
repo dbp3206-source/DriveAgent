@@ -296,10 +296,56 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 5
+            )).scalar_one() == 6
+            assert db.execute(text(
+                "SELECT column_default FROM information_schema.columns "
+                "WHERE table_schema='veridra_private' AND table_name='users' "
+                "AND column_name='auth_version'"
+            )).scalar_one() is not None
             assert db.execute(text(
                 "SELECT has_schema_privilege('public', 'veridra_private', 'USAGE')"
             )).scalar_one() is False
+    finally:
+        engine.dispose()
+
+
+def test_postgres_session_revocation_column_upgrade_preserves_legacy_user():
+    from sqlalchemy import insert, text
+
+    from app.db.migrations import _auth_version
+    from app.db.models import Base, User
+    from app.services.relational_state import prepare_state_schema
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; revocation upgrade not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Revocation upgrade only permits the isolated veridra_ci database")
+    engine = create_engine(url).execution_options(
+        schema_translate_map={None: "veridra_private"}
+    )
+    try:
+        prepare_state_schema(engine)
+        Base.metadata.create_all(engine)
+        with engine.connect() as db:
+            transaction = db.begin()
+            try:
+                db.execute(text("SET LOCAL lock_timeout='5s'"))
+                owner = str(uuid4())
+                db.execute(insert(User).values(
+                    id=owner, email=f"{owner}@example.test", display_name="Legacy QA"
+                ))
+                # Simulate schema v5 only in the disposable CI database; roll back below.
+                db.execute(text("ALTER TABLE veridra_private.users DROP COLUMN auth_version"))
+                _auth_version(db)
+                _auth_version(db)
+                row = db.execute(text(
+                    "SELECT display_name, auth_version FROM veridra_private.users WHERE id=:id"
+                ), {"id": owner}).one()
+                assert tuple(row) == ("Legacy QA", "")
+            finally:
+                transaction.rollback()
     finally:
         engine.dispose()
 

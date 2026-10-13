@@ -48,9 +48,9 @@ const navItems: NavItemDef[] = [
   { key: 'chat', label: 'Trò chuyện', icon: <Chat24Regular /> },
   { key: 'drive', label: 'Google Drive', icon: <Folder24Regular /> },
   { key: 'gmail', label: 'Gmail', icon: <Mail24Regular /> },
-  { key: 'local', label: 'Tài liệu local', icon: <Folder24Regular /> },
+  { key: 'local', label: 'Tài liệu đã nhập', icon: <Folder24Regular /> },
   { key: 'artifacts', label: 'Kết quả đã lưu', icon: <DocumentBulletList24Regular /> },
-  { key: 'skills', label: 'Skills của tôi', icon: <Wand24Regular /> },
+  { key: 'skills', label: 'Mẫu công việc', icon: <Wand24Regular /> },
   { key: 'memory', label: 'Bộ nhớ', icon: <Database24Regular /> },
   { key: 'harness', label: 'Cách Agent hoạt động', icon: <LearningApp24Regular /> },
   { key: 'audit', label: 'Nhật ký', icon: <DocumentBulletList24Regular /> },
@@ -243,7 +243,7 @@ export function AppShell({
             onClick={() => setMobileOpen(true)}
           />
           <div>
-            <p className="topbar__context">Chuẩn bị tư vấn khách hàng</p>
+            <p className="topbar__context">Trợ lý cho công việc nội bộ</p>
             <h1>{current.label}</h1>
           </div>
           <div className="topbar__actions">

@@ -174,7 +174,7 @@ interface ChatResult {
 }
 
 const prompts = [
-  'Tìm hồ sơ khách hàng trong Drive; hỏi tên khách hàng nếu chưa đủ thông tin',
+  'Tìm tài liệu phù hợp trong Drive; hỏi ngắn về chủ đề nếu chưa đủ thông tin',
   'Tóm tắt tệp mới chỉnh sửa gần đây nhất',
   'Quét thư Gmail chưa đọc từ tối qua và tóm tắt',
   'Tôi đã lưu sở thích trình bày nào?',
@@ -1321,7 +1321,7 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
           {messages.length === 0 ? (
             <EmptyState
               title="Bạn muốn bắt đầu từ đâu?"
-              description="Nêu việc bạn cần hoàn thành hoặc chọn một gợi ý. Veridra sẽ tìm nguồn, giải thích và xin bạn duyệt trước mọi thao tác ghi."
+              description="Nêu việc cần làm hoặc chọn một gợi ý. Veridra dùng nguồn được phép và giúp bạn hoàn thiện kết quả; tạo tài liệu bên ngoài cần bạn duyệt."
               action={
                 <div className="prompt-grid">
                   {prompts.map((prompt, index) => (
@@ -1901,7 +1901,7 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
 
         <MessageBar intent="info">
           <MessageBarBody>
-            Bạn luôn được xem trước và duyệt trước khi ghi dữ liệu hoặc gửi email.
+            Tạo tài liệu bên ngoài cần bạn xem trước và duyệt. Đề xuất không tự được thực hiện.
           </MessageBarBody>
         </MessageBar>
       </section>

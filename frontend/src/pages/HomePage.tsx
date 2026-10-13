@@ -19,30 +19,30 @@ const journeys: Array<{
 }> = [
   {
     title: 'Hỏi từ tài liệu',
-    description: 'Tìm, đọc và trả lời có trích nguồn từ Drive hoặc tài liệu local.',
+    description: 'Tìm, đọc và trả lời có trích nguồn từ tài liệu bạn chọn.',
     target: 'chat',
     icon: <Chat24Regular />,
   },
   {
-    title: 'Chuẩn bị hồ sơ khách hàng',
-    description: 'Chọn tệp, kiểm tra nội dung và lập chỉ mục để dùng lại lâu dài.',
+    title: 'Chọn tài liệu trên Drive',
+    description: 'Xem gần đây, lọc nhanh và chọn đúng tài liệu cần dùng.',
     target: 'drive',
     icon: <Folder24Regular />,
   },
   {
     title: 'Xử lý email cần chú ý',
-    description: 'Tìm, đọc và chuẩn bị phản hồi Gmail. Xem trước rồi lưu nháp; Agent không tự gửi.',
+    description: 'Tìm, đọc chuỗi thư và chuẩn bị nội dung phản hồi.',
     target: 'gmail',
     icon: <Mail24Regular />,
   },
   {
-    title: 'Dạy Agent một quy trình',
-    description: 'Lưu cách làm của riêng bạn thành Skill và dùng lại với dữ liệu mới.',
+    title: 'Lưu cách làm để dùng lại',
+    description: 'Giữ mẫu công việc của riêng bạn và dùng với dữ liệu mới.',
     target: 'skills',
     icon: <Wand24Regular />,
   },
   {
-    title: 'Quản lý điều Agent nhớ',
+    title: 'Quản lý điều trợ lý nhớ',
     description: 'Xem, sửa hoặc lưu trữ sở thích và ngữ cảnh của riêng bạn.',
     target: 'memory',
     icon: <Database24Regular />,
@@ -56,9 +56,11 @@ const journeys: Array<{
 ]
 
 const quickStarts: Array<{label: string; detail: string; prompt: string; controls: ChatControls}> = [
-  {label: 'Chuẩn bị đầu ngày', detail: 'Đọc thư · làm rõ yêu cầu tư vấn', prompt: 'Tổng hợp email chưa đọc hôm nay liên quan tới yêu cầu tư vấn. Nêu yêu cầu đã xác nhận, thông tin còn thiếu và việc cần phản hồi. Chỉ ghi thời hạn khi thư nêu rõ; không tự suy ra ngân sách.', controls: {source: 'gmail', agent: 'communication', output: 'chat', workflow: 'email_digest'}},
-  {label: 'Chuẩn bị trước cuộc hẹn', detail: 'Lịch · thư · hồ sơ liên quan', prompt: 'Chuẩn bị cho cuộc hẹn tư vấn tôi sẽ chỉ định. Hỏi tôi tên hoặc thời điểm cuộc hẹn và tài liệu liên quan nếu chưa đủ để chọn đúng nguồn. Sau đó lập báo cáo gồm mục tiêu, dữ kiện có nguồn, điều chưa biết và câu hỏi cần xác nhận. Không tạo hoặc sửa lịch.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
-  {label: 'Tiếp nối cuộc trao đổi', detail: 'Ghi chú · bản phản hồi chờ duyệt', prompt: 'Từ ghi chú cuộc trao đổi tôi sẽ cung cấp, tách quyết định, việc cần làm, người phụ trách và thời hạn. Thiếu thông tin thì ghi chưa xác nhận. Soạn phản hồi để tôi xem trước, hỏi rõ người nhận và nơi lưu; không gửi hoặc ghi Google khi chưa được duyệt.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
+  {label: 'Hiểu tài liệu', detail: 'Tra cứu · đối chiếu · chỉ rõ nguồn', prompt: 'Giúp tôi hiểu hướng dẫn hoặc đối chiếu hai tài liệu. Nếu tôi chưa chọn nguồn và câu hỏi, hỏi ngắn để chọn đúng. Trả lời trực tiếp, nêu nguồn, điểm khác biệt hoặc phần chưa rõ; phân biệt bản có hiệu lực với bản nháp. Không ghi dữ liệu.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
+  {label: 'Nắm tình hình', detail: 'Đã chốt · còn chờ · cần xác nhận', prompt: 'Giúp tôi tổng hợp tình hình từ thư hoặc cập nhật tôi sẽ chọn. Nếu chưa đủ để chọn đúng nguồn, hỏi ngắn. Tách điều đã chốt, còn mở và cần xác nhận; chỉ ghi người phụ trách hoặc thời hạn khi nguồn nêu rõ. Không gửi thư hoặc ghi dữ liệu.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
+  {label: 'Phân tích và đề xuất', detail: 'So phương án · đánh đổi · hướng ưu tiên', prompt: 'Giúp tôi phân tích một vấn đề hoặc chọn phương án. Tôi sẽ cung cấp mục tiêu, dữ kiện và ràng buộc. Làm phần đã đủ thông tin, chỉ hỏi điểm thiếu làm đổi kết quả. Nêu các hướng khả thi, đánh đổi, hướng ưu tiên có lý do và một hoặc hai bước tiếp hữu ích. Không bịa số liệu hoặc tự thực hiện hành động.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
+  {label: 'Chuẩn bị cuộc họp', detail: 'Mục tiêu · câu hỏi · điểm cần quyết định', prompt: 'Giúp tôi chuẩn bị cho cuộc họp tôi sẽ chỉ định. Nếu chưa đủ để chọn đúng cuộc họp hoặc tài liệu, hỏi ngắn. Nêu mục tiêu, dữ kiện có nguồn, câu hỏi và điểm cần quyết định. Khi tôi cung cấp ghi chú sau họp, cập nhật quyết định và việc còn mở. Không gửi thư, tạo hoặc sửa lịch.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
+  {label: 'Soạn và hoàn thiện', detail: 'Bản nháp · chỉnh sửa · bàn giao', prompt: 'Giúp tôi soạn hoặc chỉnh một báo cáo, đề xuất hay phản hồi từ thông tin tôi cung cấp. Hỏi mục đích, người nhận hoặc nguồn nếu thiếu chi tiết cần thiết. Soạn bản nháp để tôi xem, giữ dữ kiện đã xác nhận; không gửi hoặc tạo tài liệu bên ngoài khi chưa được duyệt.', controls: {source: 'auto', agent: 'auto', output: 'chat', workflow: 'auto'}},
 ]
 
 export function HomePage({ onNavigate }: { onNavigate: (page: PageKey) => void }) {
@@ -71,11 +73,11 @@ export function HomePage({ onNavigate }: { onNavigate: (page: PageKey) => void }
   return (
     <section className="home-page">
       <header className="home-hero">
-        <p className="home-kicker">Chuẩn bị tư vấn khách hàng doanh nghiệp</p>
-        <h2>Từ yêu cầu khách hàng,<br />chuẩn bị cuộc hẹn rõ ràng.</h2>
+        <p className="home-kicker">Trợ lý AI cho công việc nội bộ</p>
+        <h2>Bạn cần làm gì<br />hôm nay?</h2>
         <ul className="home-hero-points">
-          <li>Đối chiếu thư, lịch và tài liệu; làm rõ dữ kiện và điều còn thiếu.</li>
-          <li>Chuẩn bị báo cáo và phản hồi; bạn duyệt trước khi ghi hoặc gửi.</li>
+          <li>Hiểu tài liệu, nắm tình hình và chọn hướng giải quyết.</li>
+          <li>Chuẩn bị cuộc họp, hoàn thiện nội dung; bạn duyệt trước khi tạo tài liệu bên ngoài.</li>
         </ul>
         <button className="home-primary-action" type="button" onClick={() => onNavigate('chat')}>
           Bắt đầu một câu hỏi <ArrowRight20Regular />

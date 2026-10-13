@@ -99,7 +99,7 @@ def credentials_to_dict(credentials: Credentials) -> dict[str, Any]:
 
 def credentials_from_user(user: User, settings: Settings) -> Credentials:
     if not user.encrypted_google_credentials:
-        raise ToolAccessDeniedError("Tài khoản chưa kết nối Google Drive.")
+        raise ToolAccessDeniedError("Tài khoản chưa kết nối Google.")
     info = decrypt_json(user.encrypted_google_credentials, settings)
     # Tương thích credential đã lưu trước bản sửa; không buộc user cấp quyền lại.
     if info.get("expiry"):
@@ -130,7 +130,7 @@ async def refresh_and_store_if_needed(
             ) from exc
         except RefreshError as exc:
             raise ToolAccessDeniedError(
-                "Google không chấp nhận phiên hiện tại. Vui lòng kết nối lại Google Drive."
+                "Google không chấp nhận phiên hiện tại. Vui lòng kết nối lại Google."
             ) from exc
         user.encrypted_google_credentials = encrypt_json(credentials_to_dict(credentials), settings)
         await db.commit()

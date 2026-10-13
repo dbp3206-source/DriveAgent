@@ -7,6 +7,9 @@ data/
 .local-backups/
 .runtime/
 .qa_clean_*/
+# Generated backend QA state and historical raw evidence may contain private data.
+backend/.qa_*/
+backend/design-work/qa/
 ops/secrets/
 tools/Docker Desktop Installer.exe
 tools/tesseract-*/
@@ -73,3 +76,7 @@ frontend/public/*.visual-check.*
 frontend/public/harness/*.visual-check.*
 !frontend/public/harness/*.visual-check.1440x900.light.png
 !frontend/public/harness/*.visual-check.1440x900.dark.png
+
+# Raw local regression output is retained on the machine, not shipped as source.
+# Curated reports, manifests and synthetic UI screenshots remain publishable.
+design-work/production-20261013/qa/validation/

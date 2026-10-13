@@ -108,6 +108,19 @@ def _chat_tasks(connection: Connection) -> None:
     ChatTask.__table__.create(connection, checkfirst=True)
 
 
+def _auth_version(connection: Connection) -> None:
+    if connection.dialect.name == "sqlite":
+        if "auth_version" not in _columns(connection, "users"):
+            connection.exec_driver_sql(
+                "ALTER TABLE users ADD COLUMN auth_version VARCHAR(64) NOT NULL DEFAULT ''"
+            )
+    else:
+        connection.exec_driver_sql(
+            "ALTER TABLE veridra_private.users ADD COLUMN IF NOT EXISTS "
+            "auth_version VARCHAR(64) NOT NULL DEFAULT ''"
+        )
+
+
 MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (1, _message_lifecycle),
     (2, _company_profiles),
@@ -115,6 +128,7 @@ MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (4, _pdf_ingestion_jobs),
     (5, _scheduled_jobs),
     (6, _chat_tasks),
+    (7, _auth_version),
 )
 
 
@@ -155,6 +169,7 @@ def apply_postgres_migrations(connection: Connection) -> None:
     migrations: tuple[tuple[int, Migration], ...] = (
         (1, lambda _connection: None), (2, _scheduled_jobs), (3, _chat_tasks),
         (4, migrate_pgvector), (5, protect_legacy_framework_tables),
+        (6, _auth_version),
     )
     for version, migration in migrations:
         if version in applied:

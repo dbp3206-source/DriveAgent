@@ -7,6 +7,7 @@ from fastapi import Depends, HTTPException, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth.permissions import permissions_for_role
+from app.auth.sessions import session_is_current
 from app.core.config import Settings, get_settings
 from app.db.models import User
 from app.db.session import get_db
@@ -32,6 +33,12 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Tài khoản hoặc vai trò không được phép trong closed beta.",
+        )
+    if not session_is_current(request.session, user):
+        request.session.clear()
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Phiên đăng nhập đã kết thúc. Hãy đăng nhập lại.",
         )
     return user
 

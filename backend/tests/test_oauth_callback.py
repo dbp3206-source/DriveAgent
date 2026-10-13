@@ -141,6 +141,9 @@ def test_closed_beta_first_invited_user_cannot_claim_admin(monkeypatch):
             for index, user in enumerate(self.users):
                 user.id = f"user-{index}"
 
+        async def flush(self):
+            await self.commit()
+
     db = Db()
     monkeypatch.setattr(auth, "build_flow", factory)
     monkeypatch.setattr(auth, "fetch_google_profile", profile)

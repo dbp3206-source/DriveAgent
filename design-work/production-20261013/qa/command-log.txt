@@ -1,0 +1,40 @@
+Observed commands and browser actions, 2026-10-13. This is a curated command ledger, not a fabricated raw terminal transcript.
+
+backend/.venv/Scripts/python.exe design-work/production-20261013/working/run_offline_tests.py --cov=app --cov-report=term-missing --cov-fail-under=85
+  Earlier candidate step: backend-regression.xml records 1624 tests, 15 skipped, 0 errors, 0 failures. See qa-report.md for wrapper setup failures preserved separately.
+
+backend/.venv/Scripts/python.exe -m coverage report --precision=2 --skip-covered
+  Re-read current coverage evidence: 14268 statements, 1820 missed, 87.24%.
+
+backend/.venv/Scripts/python.exe -m ruff check backend
+backend/.venv/Scripts/python.exe -m ruff check --config backend/pyproject.toml scripts
+  Passed. Access-denied warnings for pre-existing historical QA directories recorded; those directories were not modified.
+
+backend/.venv/Scripts/python.exe scripts/validate_internal_assistant_dataset.py
+  Passed integrity: 10 cases, 4 fixtures, planned 9 model calls + 2 reserve.
+
+backend/.venv/Scripts/python.exe scripts/evaluate_release_offline.py --output design-work/production-20261013/qa/validation/offline-regression.json
+  Passed 12/12 + 12/12 + 16/16 + 160/160; model calls 0, cloud writes 0.
+
+C:/Program Files/nodejs/npm.cmd test (frontend cwd)
+  Passed 190/190, 0 skipped, 0 failures. Observed duration 20165.1413 ms.
+
+C:/Program Files/nodejs/npm.cmd run lint (frontend cwd)
+C:/Program Files/nodejs/npm.cmd run build (frontend cwd)
+  Final lint and build passed after preview/copy changes (sessions 34827 and 61016, exit 0; Vite 5.01 s). Preview change initially failed TS2353 for unsupported Dialog motion onMotionCancel; removed unsupported callback.
+
+git -c safe.directory=C:/Users/Bao Phuc/Documents/DriveAgent/drive-agent diff --check
+  Passed at earlier candidate stage; rerun before publication.
+
+backend/.venv/Scripts/python.exe design-work/production-20261013/working/run_local_ui.py
+  Real FastAPI startup completed at 127.0.0.1:8003 with isolated credential-free state.
+
+DRIVE_AGENT_DEV_API_TARGET=http://127.0.0.1:8003 npm run dev -- --host 127.0.0.1 --port 5175 --strictPort
+  Real Vite app ready at 127.0.0.1:5175.
+
+mcp__cua_repl.js
+  Browser documentation/DOM snapshots; desktop/mobile/intermediate viewport checks; demo login; five quick-start handoffs; Settings/logout; file chooser + import/readback; preview-to-chat failure/retest; memory create/edit/archive/restore; template v1/v2 with two different inputs; viewport JPEG screenshots. No model submit, no cloud mutation.
+  Browser API variable from previous process was absent; rebound known browser ID 2 after reading documentation. Previous local server handles were missing and no ports were listening; started fresh verified processes, not duplicate jobs.
+
+Local editing
+  apply_patch only. One attempt to delete/add the same ledger path in one patch was rejected; replaced with an Update File patch. No file was deleted by that attempt.

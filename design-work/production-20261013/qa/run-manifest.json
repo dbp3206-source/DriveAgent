@@ -1,0 +1,90 @@
+{
+  "target_output": "Real Veridra React UI and backend candidate; not a production acceptance certificate",
+  "source_files": [
+    "docs/ASSISTANT-CONTRACT.md",
+    "docs/verification/internal-assistant/testcases.json",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/LocalSourcesPage.tsx",
+    "frontend/src/pages/MemoryPage.tsx",
+    "frontend/src/pages/SkillsPage.tsx",
+    "frontend/src/pages/SettingsPage.tsx",
+    "backend/app/agent/intent.py",
+    "backend/app/auth/sessions.py"
+  ],
+  "primary_skill": null,
+  "primary_visual_direction": "Existing Veridra product design system; no new generation engine",
+  "specialist_skills": [],
+  "mcp_tools_used": [
+    "mcp__cua_repl.js"
+  ],
+  "commands_run": [
+    "backend/.venv/Scripts/python.exe -m coverage report --precision=2 --skip-covered (cwd backend)",
+    "backend/.venv/Scripts/python.exe -m ruff check backend",
+    "backend/.venv/Scripts/python.exe -m ruff check --config backend/pyproject.toml scripts",
+    "backend/.venv/Scripts/python.exe scripts/validate_internal_assistant_dataset.py",
+    "backend/.venv/Scripts/python.exe scripts/evaluate_release_offline.py --output design-work/production-20261013/qa/validation/offline-regression.json",
+    "C:/Program Files/nodejs/npm.cmd test (cwd frontend; final 190 passed, 0 skipped, 6275.8004 ms)",
+    "C:/Program Files/nodejs/npm.cmd run lint (cwd frontend; final exit 0)",
+    "C:/Program Files/nodejs/npm.cmd run build (cwd frontend; final exit 0, Vite 5.01 s)",
+    "backend/.venv/Scripts/python.exe scripts/scan_release_secrets.py (passed for 625 Git-visible files at time of run)",
+    "git -c safe.directory=C:/Users/Bao Phuc/Documents/DriveAgent/drive-agent diff --check (exit 0)"
+  ],
+  "repository_defined_outputs": [
+    "frontend/dist/index.html",
+    "frontend/src/pages",
+    "backend/app"
+  ],
+  "delivered_outputs": [
+    "docs/PRODUCTION-EXECUTION-20261013.md",
+    "docs/ASSISTANT-CONTRACT.md",
+    "docs/verification/internal-assistant",
+    "design-work/production-20261013/qa/qa-report.md",
+    "design-work/production-20261013/qa/screenshots"
+  ],
+  "verification": {
+    "structural": true,
+    "rendered": true,
+    "visual_review": true,
+    "content_fidelity": true,
+    "target_environment": true
+  },
+  "verification_scope": "Only the changed local UI paths described in qa-report.md. Cloud acceptance remains unproven.",
+  "backend_regression": {
+    "junit_tests": 1624,
+    "passed": 1609,
+    "skipped": 15,
+    "errors": 0,
+    "failures": 0,
+    "coverage_percent": 87.24,
+    "note": "Recorded before addition of the PostgreSQL-specific migration-upgrade test; real PostgreSQL CI still required."
+  },
+  "offline_gate": {
+    "routing": "12/12",
+    "output_evaluator": "12/12",
+    "answer_contract": "16/16",
+    "mutation_guard": "160/160",
+    "dataset_sha256": "80f484161ac18bb37bb97cf46fa0c3b6118a1c8ff000fb9e5569658c792d663b"
+  },
+  "model_calls_in_preparation": 0,
+  "cloud_writes_in_preparation": 0,
+  "quality_score": 85,
+  "quality_score_scope": "Manual design review of changed local Home/navigation/import handoff only; not product intelligence, market value, or production readiness.",
+  "known_limitations": [
+    "No integrated T01-T10 run of the new cloud release yet",
+    "PostgreSQL migration and container runtime require CI",
+    "Real-user isolation and restore DB/files not yet proved",
+    "Reduced-motion emulation and 20 cloud loads not yet verified",
+    "Agent explanation deferred to final user feedback",
+    "Private historical QA directories excluded; no claim to have read them"
+  ],
+  "screenshots": [
+    "home-desktop.jpg",
+    "home-mobile.jpg",
+    "home-tablet.jpg",
+    "logout-description.jpg",
+    "import-readback.jpg",
+    "import-chat-handoff.jpg",
+    "memory-edited.jpg",
+    "template-new-input.jpg"
+  ]
+}

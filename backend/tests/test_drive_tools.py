@@ -267,6 +267,10 @@ async def test_drive_list_and_search_build_expected_queries(monkeypatch) -> None
     )
     assert service.files_resource.list_calls[0]["orderBy"] == "modifiedTime desc"
     assert service.files_resource.list_calls[2]["orderBy"] == "recency desc"
+    # Full-text results use Google's relevance order; explicit ordering is rejected.
+    for index in (1, 3):
+        assert "fullText contains" in service.files_resource.list_calls[index]["q"]
+        assert "orderBy" not in service.files_resource.list_calls[index]
     assert "starred = true" in service.files_resource.list_calls[3]["q"]
     assert (
         "mimeType != 'application/vnd.google-apps.folder'"

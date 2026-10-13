@@ -194,15 +194,15 @@ const OUTPUT_FORMAT_OPTIONS = [
 
 const PRESET_TEMPLATES: Array<Omit<Skill, 'id' | 'revision' | 'active'>> = [
   {
-    name: 'consultation_meeting_brief',
-    title: 'Chuẩn bị cuộc hẹn tư vấn',
-    description: 'Đối chiếu hồ sơ khách hàng để chuẩn bị báo cáo và câu hỏi trao đổi',
-    goal: 'Chuẩn bị cuộc hẹn với khách hàng {customer} từ các nguồn được chỉ định',
+    name: 'project_meeting_brief',
+    title: 'Chuẩn bị họp dự án',
+    description: 'Tổng hợp điều đã chốt, việc còn mở và câu hỏi cần quyết định',
+    goal: 'Chuẩn bị cuộc họp dự án {project} từ các nguồn được chỉ định',
     procedure: [
-      'Xác nhận khách hàng, cuộc hẹn và tài liệu được phép dùng; hỏi lại nếu chưa đủ',
+      'Xác nhận dự án, cuộc họp và nguồn được phép dùng; chỉ hỏi phần còn thiếu',
       'Đọc nguồn liên quan và ghi vị trí bằng chứng cho từng dữ kiện quan trọng',
-      'Tách hiện trạng, vấn đề đã nêu, ảnh hưởng cần xác nhận và kết quả mong muốn',
-      'Lập báo cáo ngắn với điều chưa biết và câu hỏi cần trao đổi',
+      'Tách điều đã chốt, việc còn mở và điều cần xác nhận; người/hạn chỉ lấy từ nguồn',
+      'Soạn mục tiêu họp, câu hỏi cần quyết định và bước tiếp theo',
     ],
     constraints: ['Không suy đoán ngân sách hoặc lợi ích tài chính', 'Không ghi hoặc gửi Google khi chưa duyệt'],
     preferred_capabilities: ['drive', 'docs'],
@@ -225,13 +225,13 @@ const PRESET_TEMPLATES: Array<Omit<Skill, 'id' | 'revision' | 'active'>> = [
   {
     name: 'research_knowledge_brief',
     title: 'Tổng hợp tri thức nghiên cứu',
-    description: 'Tra cứu Semantic RAG từ tài liệu nội bộ và đúc kết báo cáo',
+    description: 'Tìm và đối chiếu tài liệu nội bộ để tổng hợp có nguồn',
     goal: 'Tổng hợp các phát hiện chính về chủ đề {topic} từ kho tài liệu',
     procedure: [
-      'Tìm kiếm tài liệu liên quan trong kho tri thức RAG',
+      'Tìm tài liệu liên quan trong nguồn được phép',
       'Trích xuất bằng chứng xác thực và số liệu then chốt',
       'So sánh các quan điểm khác nhau và đúc kết luận điểm',
-      'Đóng gói thành bản tóm tắt điều hành',
+      'Viết tóm tắt ngắn, tách dữ kiện với nhận xét và nêu điều còn thiếu',
     ],
     constraints: ['Chỉ sử dụng tài liệu đã được xác thực', 'Trích dẫn nguồn cụ thể'],
     preferred_capabilities: ['rag', 'docs', 'artifacts'],
@@ -509,15 +509,15 @@ export function SkillsPage() {
     <section className="stack-page skills-page">
       <header className="page-heading skills-page-heading">
         <div className="skills-heading-lockup">
-          <p className="home-kicker">Reusable Skills Workbench</p>
+          <p className="home-kicker">Mẫu công việc dùng lại</p>
           <div className="skills-heading-title-row">
-            <h2>Dạy Agent cách bạn muốn làm việc</h2>
-            <span className="skills-total-badge" title="Tổng số skill hiện có">
-              {items.length} skills
+            <h2>Lưu cách bạn muốn làm việc</h2>
+            <span className="skills-total-badge" title="Tổng số mẫu hiện có">
+              {items.length} mẫu
             </span>
           </div>
           <p className="skills-heading-lead">
-            Lưu mục tiêu, trình tự và nguyên tắc — không ghi lại cứng một chuỗi tool. Mỗi lần chạy sẽ lấy dữ liệu mới.
+            Lưu mục tiêu, các bước và nguyên tắc để dùng lại với đầu vào mới.
           </p>
         </div>
       </header>
@@ -529,8 +529,8 @@ export function SkillsPage() {
         <aside className="artifact-list skills-list-pane">
           <div className="skills-list-header">
             <div className="skills-list-header__title-group">
-              <span className="skills-list-caption">Skill đang dùng</span>
-              <span className="skills-count-badge skills-count">{items.length} skills</span>
+              <span className="skills-list-caption">Mẫu đang dùng</span>
+              <span className="skills-count-badge skills-count">{items.length} mẫu</span>
             </div>
             <Button
               appearance="primary"
@@ -542,7 +542,7 @@ export function SkillsPage() {
                 setError('')
               }}
             >
-              + Thêm skill
+              + Thêm mẫu
             </Button>
           </div>
 
@@ -551,8 +551,8 @@ export function SkillsPage() {
           ) : items.length === 0 ? (
             <div className="skills-empty-state">
               <Sparkle20Regular className="skills-empty-icon" />
-              <h4>Chưa có skill nào</h4>
-              <p>Hãy bắt đầu bằng cách nạp một mẫu có sẵn hoặc bấm <strong>+ Thêm skill</strong>.</p>
+              <h4>Chưa có mẫu nào</h4>
+              <p>Chọn mẫu gợi ý hoặc bấm <strong>+ Thêm mẫu</strong>.</p>
               <div className="skills-preset-quick-list">
                 <span className="skills-preset-label">Mẫu gợi ý:</span>
                 {PRESET_TEMPLATES.map((tmpl) => (
@@ -647,7 +647,7 @@ export function SkillsPage() {
                 </div>
                 <div>
                   <h3 className="skills-editor-headline">
-                    {selected.title ? selected.title : selected.name ? selected.name : 'Tạo Skill Mới'}
+                    {selected.title ? selected.title : selected.name ? selected.name : 'Tạo mẫu mới'}
                   </h3>
                   <span className="skills-editor-subline">
                     {selected.id ? `ID: ${selected.id} · Phiên bản v${selected.revision}` : 'Đang soạn thảo bản ghi mới'}
@@ -700,7 +700,7 @@ export function SkillsPage() {
                 <Input
                   id="skill-title"
                   value={selected.title}
-                  placeholder="Ví dụ: Chuẩn bị cuộc hẹn tư vấn"
+                  placeholder="Ví dụ: Chuẩn bị họp dự án"
                   onChange={(_, d) => setSelected({ ...selected, title: d.value })}
                 />
                 <small className="skills-field-hint">Tên hiển thị trực quan (3–120 ký tự)</small>
@@ -723,13 +723,13 @@ export function SkillsPage() {
             {/* Goal */}
             <div className="skills-input-group">
               <label className="artifact-label" htmlFor="skill-goal">
-                Kết quả cần đạt (Goal) <span className="skills-required-star">*</span>
+                Kết quả cần đạt <span className="skills-required-star">*</span>
               </label>
               <Textarea
                 id="skill-goal"
                 rows={2}
                 value={selected.goal}
-                placeholder="Ví dụ: Chuẩn bị báo cáo tư vấn cho khách hàng {customer}..."
+                placeholder="Ví dụ: Chuẩn bị cuộc họp dự án {project}..."
                 onChange={(_, d) => setSelected({ ...selected, goal: d.value })}
               />
               <small className="skills-field-hint">Dùng cú pháp {'{tên_biến}'} để tạo tham số đầu vào động</small>
@@ -740,7 +740,7 @@ export function SkillsPage() {
               <div className="skills-section-header">
                 <div className="skills-section-header__title">
                   <span className="skills-section-index">1</span>
-                  <strong>Quy trình thực hiện (Procedure)</strong>
+                  <strong>Các bước thực hiện</strong>
                   <span className="skills-count-pill">{selected.procedure.length} / 20 bước</span>
                 </div>
                 <small className="skills-section-desc">
@@ -792,7 +792,7 @@ export function SkillsPage() {
               <div className="skills-section-header">
                 <div className="skills-section-header__title">
                   <Tag20Regular />
-                  <strong>Nguyên tắc & Ràng buộc (Constraints)</strong>
+                  <strong>Nguyên tắc cần giữ</strong>
                   <span className="skills-count-pill">{selected.constraints.length} nguyên tắc</span>
                 </div>
                 <small className="skills-section-desc">
@@ -853,7 +853,7 @@ export function SkillsPage() {
               <div className="skills-section-header">
                 <div className="skills-section-header__title">
                   <Cube20Regular />
-                  <strong>Công cụ ưu tiên (Preferred Capabilities)</strong>
+                  <strong>Công cụ ưu tiên</strong>
                   <span className="skills-count-pill">
                     {selected.preferred_capabilities?.length || 0} đã chọn
                   </span>
@@ -898,7 +898,7 @@ export function SkillsPage() {
               <div className="skills-section-header">
                 <div className="skills-section-header__title">
                   <DocumentText20Regular />
-                  <strong>Định dạng kết quả đầu ra (Output Format)</strong>
+                  <strong>Định dạng kết quả</strong>
                   <span className="skills-output-preview-chip" title="Xem trước định dạng">
                     Định dạng: {currentFormatMeta.label}
                   </span>
@@ -949,7 +949,7 @@ export function SkillsPage() {
                 icon={saveSuccess ? <Checkmark20Regular /> : <Save20Regular />}
                 className={`skills-save-btn ${saveSuccess ? 'skills-save-btn--success' : ''}`}
               >
-                {saveSuccess ? 'Đã lưu thành công!' : 'Lưu skill'}
+                {saveSuccess ? 'Đã lưu thành công!' : 'Lưu mẫu'}
               </Button>
 
               {selected.id && (
@@ -960,7 +960,7 @@ export function SkillsPage() {
                   className="skills-archive-btn"
                   onClick={() => void archive()}
                 >
-                  Cất skill
+                  Cất mẫu
                 </Button>
               )}
             </div>
@@ -971,7 +971,7 @@ export function SkillsPage() {
             <section className="skill-runner skills-runner-panel">
               <div className="skills-runner-header">
                 <div>
-                  <h3 className="skills-runner-title">Chạy thử procedure</h3>
+                  <h3 className="skills-runner-title">Dùng mẫu với đầu vào mới</h3>
                   <p className="skills-runner-lead">
                     Điền thông tin của lần làm việc này. Agent sẽ áp dụng biến vào quy trình mà không nạp lại dữ liệu cũ.
                   </p>
@@ -996,7 +996,7 @@ export function SkillsPage() {
                 </div>
               ) : (
                 <p className="skills-no-placeholders-text">
-                  Kỹ năng này không chứa placeholder dạng {'{tên_biến}'}. Bạn có thể bấm Nạp procedure trực tiếp.
+                  Mẫu này không có ô thay thế dạng {'{tên_biến}'}. Bạn có thể nạp mẫu trực tiếp.
                 </p>
               )}
 
@@ -1008,7 +1008,7 @@ export function SkillsPage() {
                   onClick={() => void run()}
                   className="skills-run-button"
                 >
-                  {running ? 'Đang nạp procedure…' : 'Nạp procedure'}
+                  {running ? 'Đang nạp mẫu…' : 'Nạp mẫu'}
                 </Button>
               </div>
 
@@ -1018,7 +1018,7 @@ export function SkillsPage() {
                   <div className="run-result-header">
                     <div className="run-result-header__title">
                       <Sparkle20Regular />
-                      <strong>Kết quả nạp Procedure thành công</strong>
+                      <strong>Đã nạp mẫu với đầu vào mới</strong>
                     </div>
                     <Button
                       appearance="subtle"
@@ -1046,7 +1046,7 @@ export function SkillsPage() {
                       role="button"
                       tabIndex={0}
                     >
-                      <span className="run-result-accordion__title">Mục tiêu (Goal)</span>
+                      <span className="run-result-accordion__title">Mục tiêu</span>
                       <div className="run-result-accordion__tools" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"

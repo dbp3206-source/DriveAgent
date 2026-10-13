@@ -40,7 +40,9 @@ export function integrationFailureStatus(service, code, _httpStatus) {
     if (code === 'gmail_error' || /^gmail_(408|429|5\d\d)$/.test(code)) return 'degraded'
     return null
   }
-  if (code === 'google_drive_401' || code === 'google_drive_403') return 'permission'
+  if (code === 'google_drive_401' || code === 'google_drive_permission_denied') return 'permission'
+  if (code === 'google_drive_misconfigured') return 'misconfigured'
+  if (code === 'google_drive_rate_limited') return 'degraded'
   if (/^google_drive_(408|429|5\d\d)$/.test(code)) return 'degraded'
   return null
 }

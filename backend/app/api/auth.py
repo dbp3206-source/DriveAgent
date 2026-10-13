@@ -21,6 +21,7 @@ from app.auth.google_oauth import (
     credentials_to_dict,
     fetch_google_profile,
 )
+from app.auth.sessions import establish_session, revoke_user_sessions, session_is_current
 from app.core.config import Settings, get_settings
 from app.core.json_utils import json_list
 from app.core.security import decrypt_json, encrypt_json
@@ -53,8 +54,11 @@ async def auth_status(
         user = await db.get(User, user_id)
     authenticated = bool(
         user and user.is_active and settings.beta_identity_allowed(user.email, user.role)
+        and session_is_current(request.session, user)
     )
     gemini_configured = settings.gemini_is_configured
+    if user and not authenticated:
+        request.session.clear()
     if authenticated and not gemini_configured:
         # BYOK is scoped to this authenticated user. Never require an app-wide
         # Gemini key or reveal another user's key configuration at login.
@@ -94,8 +98,9 @@ async def demo_login(
             oauth_scopes_json="[]",
         )
         db.add(user)
-        await db.commit()
-    request.session["user_id"] = user.id
+        await db.flush()
+    establish_session(request.session, user)
+    await db.commit()
     return user_response(user)
 
 
@@ -290,11 +295,17 @@ async def google_callback(
         list(granted if granted is not None else credentials.scopes or [])
     )
     user.encrypted_google_credentials = encrypt_json(credential_payload, settings)
+    await db.flush()
+    establish_session(request.session, user)
     await db.commit()
-    request.session["user_id"] = user.id
     return RedirectResponse(f"{settings.frontend_origin}/?connected=1")
 
 
 @router.post("/logout", status_code=204)
-async def logout(request: Request):
+async def logout(request: Request, db: AsyncSession = Depends(get_db)):
+    if user_id := request.session.get("user_id"):
+        user = await db.get(User, user_id)
+        if user and session_is_current(request.session, user):
+            revoke_user_sessions(user)
+            await db.commit()
     request.session.clear()

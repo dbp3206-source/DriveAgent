@@ -1,135 +1,66 @@
-# Veridra — nền tảng sản phẩm đã chốt
+# Veridra — nền tảng sản phẩm
 
-Phiên bản định hướng: 01/10/2026. Đây là bản chuẩn về đối tượng, nghiệp vụ, phương pháp và giá trị; không phải chứng nhận mọi hành vi đã được triển khai hoặc nghiệm thu. Danh sách nghiệm thu hiện hành: [RELEASE-CLOSURE.md](RELEASE-CLOSURE.md).
+Định hướng hiện hành: 13/10/2026. Thay thế định hướng tư vấn trước bán hàng, BA/HR và ngân hàng trước đây. Lịch sử kiểm thử vẫn giữ nguyên ngày, phiên bản và phạm vi; thay đổi định vị không biến ca chưa đạt thành đạt.
 
-## 1. Một định vị duy nhất
+## 1. Sản phẩm dành cho ai, làm được việc gì?
 
-**Veridra — Trợ lý chuẩn bị tư vấn khách hàng doanh nghiệp.**
+**Veridra là trợ lý AI cho công việc nội bộ: tìm hiểu thông tin, nắm tình hình, phân tích phương án, chuẩn bị cuộc họp và hoàn thiện nội dung từ các nguồn được phép.**
 
-Veridra giúp chuyên viên tư vấn giải pháp AI/phần mềm biến yêu cầu qua email, hồ sơ tài liệu và thông tin doanh nghiệp thành báo cáo trước cuộc hẹn, câu hỏi cần làm rõ và phản hồi được duyệt.
+Người dùng thường xuyên xử lý tài liệu, thư và họp, phải tự tổng hợp để viết báo cáo, đề xuất hoặc phản hồi. Không giới hạn ngành hoặc chức danh; cũng không hứa hiểu mọi nghiệp vụ chuyên ngành. Bản đầu giới hạn tối đa bốn tài khoản được mời, dữ liệu riêng. Đây chưa phải không gian cộng tác và quản trị toàn doanh nghiệp.
 
-- Người dùng chính: chuyên viên tư vấn giải pháp AI/phần mềm trước bán hàng.
-- Nghiệp vụ: tiếp nhận yêu cầu, chuẩn bị và tiếp nối cuộc hẹn tư vấn.
-- Bối cảnh: nhóm cung cấp dịch vụ phần mềm sử dụng Gmail, Drive và Calendar.
-- Quy mô thử nghiệm: tối đa bốn người được mời; mỗi người có tài khoản, dữ liệu và khóa Gemini riêng. Không xây cộng tác nhóm chỉ vì có bốn tài khoản.
-- Người hưởng lợi trực tiếp: người chuẩn bị cuộc hẹn. Người quyết định mua và mức sẵn sàng trả tiền chưa được xác minh; không bịa mô hình doanh thu hoặc quy mô thị trường.
-- Lời hứa giá trị cần chứng minh: giảm công chuẩn bị và sửa lại, làm rõ điều còn thiếu, giữ bằng chứng và quyền duyệt hành động.
+Vấn đề cần giải quyết: thông tin rời rạc, mất công tìm và đối chiếu; tóm tắt chưa giúp chọn hướng làm; dữ kiện thay đổi khiến phải sửa nhiều nơi; kết quả khó tiếp nối hoặc dễ bị hiểu là đã thực hiện. Đây là giả thuyết cần đo với người dùng thật, không phải kết quả khảo sát thị trường đã xác nhận.
 
-Không phải hệ thống quản lý bán hàng, quản trị dự án, quản lý cuộc sống hoặc giải pháp chuyên ngành. Khách hàng thuộc nhiều ngành không đồng nghĩa Veridra giải quyết nghiệp vụ chuyên ngành của họ.
+Đơn vị giá trị là **một công việc được hoàn thành và chấp nhận**, tính cả tìm nguồn, chờ, kiểm tra, sửa và hỗ trợ — không phải số tin nhắn, số vai trò hoặc độ dài câu trả lời.
 
-## 2. Vấn đề trước, công nghệ sau
+## 2. Năm nhóm việc, cùng một trợ lý
 
-Khi nhận yêu cầu tìm hiểu giải pháp, người tư vấn phải tự tìm, ghép và kiểm tra thông tin từ thư, hồ sơ, Internet và lịch. Đầu ra thường là báo cáo chuẩn bị, câu hỏi trao đổi và phản hồi. Giả thuyết vấn đề:
+| Nhóm việc | Đầu ra có ích |
+|---|---|
+| Hiểu tài liệu | Trả lời trực tiếp, chỉ nguồn, phân biệt bản có hiệu lực với bản nháp, chỉ ra phần khác hoặc thiếu |
+| Nắm tình hình | Điều đã chốt, còn mở, cần xác nhận; người và hạn chỉ ghi khi nguồn có |
+| Phân tích và đề xuất | Hướng khả thi, đánh đổi, ưu tiên có lý do và một hoặc hai bước tiếp |
+| Chuẩn bị cuộc họp | Mục tiêu, câu hỏi, điểm cần quyết định; cập nhật từ ghi chú người dùng cung cấp |
+| Soạn và hoàn thiện | Bản nháp đúng mục đích, sửa được; trạng thái lưu hoặc tạo bên ngoài phải đúng thực tế |
 
-| Mã | Trở ngại | Câu hỏi phải giải quyết | Giá trị cần kiểm chứng |
-|---|---|---|---|
-| P1 | Yêu cầu chưa rõ, thư/attachment phân tán | Khách hàng muốn gì; điều nào đã nói rõ, điều nào chưa biết? | Giảm bỏ sót và hiểu sai |
-| P2 | Thiếu bối cảnh hoặc dùng thông tin cũ | Nguồn nào liên quan và còn phù hợp với cuộc hẹn? | Giảm công tìm và kiểm tra |
-| P3 | Tóm tắt nhiều nhưng chưa phục vụ trao đổi | Cần hỏi hoặc xác nhận điều gì để làm việc tiếp? | Báo cáo sử dụng được, không chỉ đủ chữ |
-| P4 | Phản hồi/lưu kết quả thủ công, dễ làm lại | Cần làm hành động nào, ai duyệt, đã thực hiện chưa? | Giảm sao chép, sai nơi và hành động trùng |
+Năm nhóm là lối bắt đầu công việc, không phải năm hệ thống hoặc năm vòng gọi mô hình. Câu hỏi đơn giản cần câu trả lời ngắn đủ; không ép thêm ba phương án. Khi tham vấn, trợ lý cần giúp chọn hướng, không chỉ liệt kê thông tin. Nếu chỉ một hướng khả thi thì giải thích rõ, không tạo lựa chọn yếu cho đủ số.
 
-Các vấn đề này có căn cứ từ yêu cầu ProtonX và tình huống sản phẩm đã gặp; chưa được coi là khảo sát thị trường. Không tuyên bố chưa ai giải quyết hoặc Veridra tốt hơn đối thủ khi chưa so sánh.
+## 3. Ba hành trình để kiểm chứng
 
-Đơn vị giá trị là **một cuộc hẹn được chuẩn bị và một bước tiếp theo được xử lý đúng**, không phải một tin nhắn, một model call hay một agent.
+| Hành trình | Chuỗi công việc | Giới hạn |
+|---|---|---|
+| A — Chọn nhà cung cấp | Ba báo giá → đối chiếu → đổi ngân sách → sửa đề xuất → soạn → duyệt lưu | Dữ liệu giả lập; không tự mua hoặc ký hợp đồng |
+| B — Họp dự án | Thư/lịch/tài liệu được chọn → nắm tình hình → chuẩn bị → nhận ghi chú sau họp → soạn tổng kết | Không tự nghe họp, gửi thư hoặc sửa lịch |
+| C — Áp dụng hướng dẫn | Bản có hiệu lực + bản nháp → hỏi cách làm → giải quyết mâu thuẫn → danh sách bước → nhớ/dùng lại/quên | Không coi bản mới nhất tự động là bản có hiệu lực |
 
-## 3. Phương pháp luận: hai lớp, không dùng tên khung làm trang trí
+Bộ chuẩn hiện hành: [dữ liệu giả lập và mười ca](verification/internal-assistant/README.md). Bộ chuẩn cũ vẫn là bằng chứng lịch sử, không tự động đại diện cho hướng mới.
 
-### Lớp thiết kế sản phẩm
+## 4. Cách trợ lý xử lý
 
-Xác định công việc khách hàng cần hoàn thành và bản đồ giá trị để chọn đúng vấn đề. Kiểm thử giả thuyết bằng cùng dữ liệu, yêu cầu và điều kiện hoàn thành. Ưu tiên phần chặn công việc hoặc gây rủi ro trước; chỉ dùng điểm RICE khi có dữ liệu về tác động/công sức, không điền số giả.
+Hiểu việc cần làm → chọn đúng nguồn → xử lý phù hợp → kiểm kết quả → trả lời hoặc trình duyệt → tiếp nối khi dữ kiện đổi.
 
-Tài liệu tham khảo: [Strategyn — công việc cần hoàn thành](https://strategyn.com/jobs-to-be-done-template/), [Strategyzer — kiểm tra giả thuyết quan trọng](https://www.strategyzer.com/library/how-to-test-your-idea-start-with-the-most-critical-hypotheses), [Intercom — ưu tiên](https://www.intercom.com/blog/rice-simple-prioritization-for-product-managers/).
+- Làm phần đã đủ thông tin; chỉ hỏi điểm thiếu làm thay đổi kết quả hoặc quyền.
+- Tách dữ kiện, nhận định, giả định và phần chưa biết. Không bịa nguồn, số liệu, người phụ trách hoặc việc đã làm.
+- Chủ động đề xuất bước có ích trong phạm vi, không biến đề xuất thành lệnh thực hiện.
+- Đầu vào mới thay phần cũ có liên quan; đổi hồ sơ phải tách phạm vi. Nguồn bị cấm vẫn bị cấm khi hỏi tiếp.
+- Ghi nhớ dài hạn do người dùng chủ động chọn; không tự giữ mọi nội dung hội thoại.
+- Ghi bên ngoài cần nội dung và đích cụ thể, xem trước, duyệt, thực hiện và đọc lại. Sửa bản đã duyệt thì cần duyệt lại. Kết quả chưa rõ phải đối soát, không phát lại mù.
 
-### Lớp nghiệp vụ trong sản phẩm
+Đặc tả thực thi: [hợp đồng trợ lý](ASSISTANT-CONTRACT.md). Trang giải thích “Cách trợ lý hoạt động” làm cuối, sau khi luồng chức năng ổn định; phải thông báo và nhận góp ý của chủ sản phẩm trước khi chốt.
 
-**Hiện trạng → vấn đề → ảnh hưởng cần xác nhận → kết quả khách hàng mong muốn.** Tham khảo bốn nhóm câu hỏi của SPIN từ [Huthwaite](https://www.huthwaiteinternational.com/spin-methodology). Đây là cách chuẩn bị câu hỏi tư vấn, không phải triển khai toàn bộ phương pháp bán hàng, chứng nhận đào tạo hoặc sử dụng tài liệu/template thương mại của bên thứ ba.
+## 5. Phạm vi và phần không hứa
 
-- Hiện trạng: quy trình, công cụ và bối cảnh đã biết từ nguồn; không hỏi lại vô ích.
-- Vấn đề: khó khăn khách hàng đã nêu; nếu chỉ có mong muốn chung thì đề xuất câu hỏi làm rõ.
-- Ảnh hưởng: câu hỏi về hậu quả cần xác nhận; không tự gán chi phí, doanh thu hay mức cấp bách.
-- Kết quả mong muốn: tiêu chí khách hàng dùng để đánh giá cải thiện; chưa biết thì hỏi, không tự hứa ROI.
+Nguồn bản đầu: tệp nhập loại đã kiểm, PDF có chữ, Drive, Gmail/lịch được phép và web công khai khi cần. Không bắt mọi công việc dùng Google hoặc tìm web. Chỉ quảng bá định dạng xuất và thao tác đã được đọc lại thành công.
 
-Ví dụ khách hàng viết “muốn AI quản lý tài liệu”: chưa đủ kết luận cần chatbot. Câu hỏi phù hợp: khó tìm tài liệu nào; mất thời gian ở bước nào; sai sót ảnh hưởng gì; cải thiện cần đo bằng tiêu chí nào. Không ép mọi báo cáo phải có đủ bốn mục nếu không liên quan.
+Hành động phát hành dự kiến: trả lời, soạn nháp, lưu kết quả trong Veridra; tạo Google Doc theo vai trò/quyền và duyệt đã kiểm. Mã có khả năng rộng hơn không đồng nghĩa đã được phép sử dụng. Gửi thư, sửa lịch, sửa tài liệu thật và chia sẻ ra ngoài không thuộc lời hứa bản đầu.
 
-Phân tích bằng chứng là quy tắc xuyên suốt: **dữ kiện / suy luận / giả định / chưa biết**. Thông tin thiếu phải được biểu diễn như khoảng trống, không bịa nội dung cho đầy mẫu.
+Hoãn: OCR, bảng lớn/đối soát chuyên sâu, ghi âm họp, quản lý dự án/giao việc tự động, cộng tác tổ chức, kết nối doanh nghiệp mới, nhiều nhà cung cấp mô hình, hạ tầng vi dịch vụ và mô hình chuyên ngành. Hẹn giờ/MCP/A2A/bảy vai trò giữ hồ sơ học phần và khu vực nâng cao; không mặc định gọi hết hoặc coi học phần đã hoàn tất chỉ vì có mã.
 
-## 4. Xương sống xử lý thống nhất
+Giữ kiến trúc và các kết nối hiện có. Không thêm công nghệ chỉ để sơ đồ trông lớn hơn. Phần không giúp A/B/C và không bắt buộc cho an toàn/vận hành thì không thêm trong bản này.
 
-| Bước | Câu hỏi nghiệp vụ | Đầu ra kiểm được | Thành phần hỗ trợ | Quy tắc dừng/chuyển |
-|---|---|---|---|---|
-| 1. Chốt phạm vi | Cuộc trao đổi nào, mục tiêu gì, nguồn nào được phép? | Yêu cầu, công ty, thread/tài liệu/lịch liên quan | Chat, Email Agent | Thiếu định danh làm sai nguồn: hỏi lại |
-| 2. Phân rã | Cần biết gì để chuẩn bị được cuộc hẹn? | Câu hỏi đã trả lời và còn thiếu | Điều phối, quy trình dùng lại | Không thêm nghiên cứu không phục vụ mục tiêu |
-| 3. Lấy bằng chứng | Nguồn nào trả lời từng câu hỏi? | Nội dung nguồn, vị trí, ngày và thời điểm lấy | Gmail, Drive/local, Web, Company Info, Calendar | Thiếu quyền/nguồn: báo rõ, không bịa |
-| 4. Đối soát | Bằng chứng có đúng thời điểm, mâu thuẫn hoặc cần tính toán? | Dữ kiện xác nhận, phép tính, giả định và khoảng trống | Công cụ lọc/tính, kiểm tra đầu ra | Không coi trích dẫn tồn tại là kết luận đúng |
-| 5. Tổng hợp | Người tư vấn cần mang gì vào cuộc hẹn? | Báo cáo, câu hỏi làm rõ, điểm cần chú ý | Report Agent | Đầu ra không bám mục đích: sửa trong ngân sách |
-| 6. Chuẩn bị hành động | Cần phản hồi hoặc lưu gì, cho ai, ở đâu? | Bản xem trước với nội dung/nơi nhận cụ thể | Gmail, Docs/Sheets, Human Approval | Không đủ duyệt: chưa thực hiện |
-| 7. Thực hiện và đọc lại | Hành động thực sự đã diễn ra đúng chưa? | Biên nhận và kết quả kiểm tra | Công cụ có kiểm soát, operation ledger | Chưa rõ trạng thái: đối soát, không phát lại mù |
-| 8. Giữ và tiếp nối | Lần sau dùng lại gì; thông tin nào cần cập nhật? | Kết quả cùng nguồn/bối cảnh, ngữ cảnh được xác nhận | Artifacts, Company Info, Memory, Skills | Thông tin cũ không tự thành sự thật hiện tại |
+## 6. Nghiệm thu kỹ thuật khác chứng minh đầu tư
 
-Đây là quy tắc đầu ra/thực thi quan sát được, không phải yêu cầu hiển thị suy nghĩ nội bộ của model. Không bắt mỗi lượt đi qua tất cả agent; thao tác lọc ngày, phân trang và tính toán dùng bước xác định khi phù hợp.
+Nghiệm thu kỹ thuật cần kết quả đúng, hoàn thành việc, đúng nguồn/quyền, phiên thu hồi bị từ chối, dữ liệu khôi phục đọc được, không chờ vô hạn hoặc ghi trùng, và bản trên GitHub/URL khớp bản đã kiểm. Kiểm ngoại tuyến không thay nghiệm thu nguồn thật. Trạng thái theo dõi: [sổ triển khai](PRODUCTION-EXECUTION-20261013.md).
 
-Không tự dựng module quản lý khách hàng mới. “Hồ sơ cuộc hẹn” là quan hệ nghiệp vụ giữa yêu cầu, nguồn, lịch, báo cáo và hành động; tận dụng cấu trúc hiện có rồi mới sửa đúng phần thiếu.
+Quyết định đầu tư cần thêm năm công việc so cặp và ba người dùng trong mười ngày làm việc. Tính cả ca thất bại, công kiểm/sửa/hỗ trợ, mức dùng lại và chi phí trên công việc được chấp nhận. Mục tiêu thăm dò: ít nhất bốn trong năm kết quả được chấp nhận, không sai trọng yếu, trung vị tổng thời gian giảm ít nhất 20%. Đây là ngưỡng thử chưa được chứng minh, không phải thành tích.
 
-## 5. Ba quy trình chính
-
-### W1 — Tiếp nhận đầu ngày
-
-Email mới → nhận diện yêu cầu cần chú ý → tìm hồ sơ công ty đã có → đối chiếu lịch → bản tổng hợp yêu cầu/thông tin thiếu/việc chuẩn bị. Phân biệt việc người dùng phải làm và job hệ thống xử lý. Không tự tạo lịch hoặc cam kết thời hạn.
-
-### W2 — Chuẩn bị trước cuộc hẹn
-
-Cuộc hẹn đã xác nhận + chuỗi email + tài liệu được chọn → bổ sung nguồn doanh nghiệp/tin phù hợp → báo cáo trước hẹn. Trigger tự động phải bền và đúng sự kiện; thao tác yêu cầu trực tiếp vẫn dùng được nếu trigger chưa sẵn sàng.
-
-Báo cáo gồm: bối cảnh; yêu cầu đã xác nhận; doanh nghiệp/ngành/sản phẩm/quy mô khi có nguồn; người liên hệ từ nguồn có thẩm quyền; thông tin mới liên quan; phân tích; điều chưa rõ; câu hỏi cần hỏi; việc tiếp theo; nguồn và trạng thái hành động. Không bắt số lượng nguồn cố định. Mốc tin 30 ngày được dùng khi testcase/yêu cầu cần tin gần đây, không làm nguồn nền tảng cũ tự trở thành vô giá trị.
-
-### W3 — Phản hồi và lưu kết quả
-
-Báo cáo hoặc ghi chú được người dùng cung cấp → bản nháp phản hồi/tài liệu → duyệt → thực hiện → đọc lại → lưu kết quả để tiếp nối. Không tự ghi âm, dự họp hoặc biết kết quả cuộc họp. Người dùng phải cung cấp nội dung mới.
-
-Calendar hiện được công bố là đọc lịch, không thay đổi lịch. Không thêm tạo/sửa lịch vào gate chỉ vì nghe phù hợp; yêu cầu chuẩn bị trước họp không bắt buộc chức năng này.
-
-## 6. Đầu ra và ranh giới
-
-Ba đầu ra chính: **bản xác định yêu cầu / báo cáo trước cuộc hẹn / bản nháp phản hồi hoặc tài liệu được duyệt**.
-
-Giữ cốt lõi: Gmail, Drive/local, web, Calendar đọc, Company Info, báo cáo và duyệt. Giữ hỗ trợ: Skills, Memory, kết quả đã lưu, quyền, quota, nhật ký và quan sát. Bảy agent ProtonX và các kiểm soát kỹ thuật vẫn phải có bằng chứng thật.
-
-Không mở rộng: định vị sinh viên/học tập; quản lý cuộc sống; danh sách việc học; CRM, scoring cơ hội, báo giá/hợp đồng; giải pháp chuyên ngành; agent hoặc dashboard chỉ để trình diễn. Khả năng đọc/tính dữ liệu ngành vẫn được giữ, nhưng không quảng bá thành nghiệp vụ chuyên ngành đã chứng nhận.
-
-OCR loại bỏ. PDF có text tối đa theo giới hạn đã chốt giữ khi test đạt; PDF ảnh/lỗi/khóa phải trả trạng thái đúng. Cả sáu PDF người dùng cung cấp vẫn nằm trong manifest; không tính file scan từ chối đúng là ca đọc thành công.
-
-Cloud miễn phí vẫn có ngủ/khởi động lại và lỗi dịch vụ ngoài. Không bảo đảm luôn bật, truy cập tức thì hay Gemini luôn thành công. Không dùng paid fallback hoặc khoá người khác. URL beta và đăng ký đại trà là hai phạm vi khác nhau.
-
-## 7. Concept, ngôn ngữ và hành trình giới thiệu
-
-Giữ tên Veridra, logo và hệ thiết kế. Hình ảnh chủ đạo: thông tin có nguồn được nối thành báo cáo và hành động kiểm soát được; không cần tạo lại brand hoặc vẽ thêm kiến trúc cho đẹp.
-
-- Trang chủ: “Chuẩn bị cuộc hẹn với khách hàng.”
-- Ba lối vào: “Đọc yêu cầu khách hàng” / “Chuẩn bị báo cáo trước cuộc hẹn” / “Soạn phản hồi và lưu kết quả”.
-- Trạng thái dễ hiểu: “Đang đọc thư”, “Đang đối chiếu hồ sơ”, “Chưa xác nhận”, “Bản nháp”, “Chờ bạn duyệt”, “Đã kiểm tra kết quả”.
-- Nguồn và chi tiết vận hành là lớp bổ sung; người dùng không cần chọn agent/giao thức để bắt đầu.
-- Pending chỉ hiển thị sự kiện thực thi thật. Một canvas caro sáng/tối; chuyển động tham khảo GetLayers là hoàn thiện có giới hạn, không dự án thiết kế mới.
-
-Demo 10 phút: tình huống email → trở ngại chuẩn bị → W2 chạy thật → kiểm bằng chứng và câu hỏi → W3 duyệt/đọc lại → kiến trúc bảy agent và kiểm soát → kết quả đo/giới hạn. W1 chứng minh bổ sung bằng job thật. Không ghép demo tách rời để tạo cảm giác một chuỗi đã chạy.
-
-## 8. Cách chứng minh giá trị
-
-Chỉ số chính: **thời gian đến báo cáo đủ điều kiện sử dụng, gồm kiểm tra và sửa**. Báo cáo thất bại phải tính vào tỷ lệ thất bại; không loại khỏi báo cáo chỉ để thời gian đẹp hơn.
-
-Chỉ số bổ sung: đúng yêu cầu; đúng bằng chứng; độ đầy đủ theo mục tiêu; số lỗi nội dung quan trọng/công sửa; hành động đúng và không trùng; khả năng tiếp nối.
-
-**Khả năng tiếp nối là chất lượng cốt lõi của Chat:** giữ đúng khách hàng/nguồn/ràng buộc trong cùng cuộc trò chuyện, thay đúng khi người dùng sửa và không lẫn với phiên khác. Bộ nhớ dài hạn chỉ lưu có chủ đích, có quản lý sửa/quên và quyền riêng tư; không đồng nghĩa lưu mọi lời thoại. Nghiệm thu theo [MEMORY-QUALITY-PLAN.md](MEMORY-QUALITY-PLAN.md), bằng hội thoại nhiều lượt gắn W1–W3 thay vì chỉ kiểm từng câu trả lời hoặc API lưu bộ nhớ.
-
-So sánh với cách hiện tại của cùng người tư vấn trên dữ liệu tương đương. Ít nhất hai công việc đại diện chạy theo cặp, đổi thứ tự/case tương đương để giảm hiệu ứng đã biết đáp án; ghi khác biệt điều kiện. Mẫu nhỏ chỉ là bằng chứng thăm dò, không suy rộng thành tiết kiệm toàn thị trường hay tăng doanh thu.
-
-Mục tiêu điểm tổng 8,7–9/10 theo quyết định hiện hành trong checklist; không có lỗi nghiêm trọng và mọi điều kiện bắt buộc phải đạt. Không có số liệu thực tế đầy đủ thì chưa tính điểm toàn sản phẩm. Điểm kiểm thử tự động không chứng nhận nghiệp vụ; chữ “đang chờ” không chứng minh đã chặn gửi; số nguồn không chứng minh tính đúng.
-
-Mỗi chức năng mới phải trả lời: giải quyết P1–P4 nào, phục vụ W1–W3 nào, đầu ra/metric nào thay đổi, bằng chứng tác động là gì. Nếu không, chỉ được làm khi bắt buộc ProtonX/an toàn/phát hành; còn lại hoãn.
-
-## 9. Bằng chứng hiện tại và phần cần chuyển thành mã
-
-Ngày 01/10/2026 đã chạy lại hồi quy: định tuyến 12/12, bộ chấm 12/12, hợp đồng mẫu 16/16, đối kháng 160/160; 35 test tập trung đạt. Không gọi Gemini/Google thật cho kết quả này.
-
-Nhận xét lịch sử ngày 01/10: Home còn nói học tập/ngân sách, bộ đo công ty còn dựa vào số mẫu 12 nguồn và 42 giây. Đến 03/10, mã đã có lối vào chuẩn bị đầu ngày và bộ chấm không tự ghi số thao tác trái phép bằng 0 khi thiếu bằng chứng. Những thay đổi này chưa chứng minh thực thi đầy đủ W1–W3; vẫn cần đối soát trực tiếp trên cùng bản phát hành, không lấy kết quả cũ làm chứng nhận.
-
-Phương pháp và nội dung ở trên đã chốt trong tài liệu, **chưa tự trở thành hành vi chạy trong sản phẩm**. Các bước thực hiện tiếp theo được giới hạn bởi checklist hiện hành.
+Trạng thái căn cứ gần nhất là UAT giới hạn, còn phát triển. Không gọi sản phẩm “Production toàn doanh nghiệp” khi mới tối đa bốn tài khoản hoặc thiếu bằng chứng vận hành. Không tự đặt điểm tổng hợp để che phần chưa kiểm. Kế hoạch giữ cố định mười ca và mười sáu gói; thay đổi phạm vi cần quyết định riêng.
