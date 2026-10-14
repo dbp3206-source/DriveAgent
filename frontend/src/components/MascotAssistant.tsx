@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { Mascot } from 'page-mascot'
 import {
   ArrowSwap16Regular,
@@ -9,12 +9,14 @@ import {
 } from '@fluentui/react-icons'
 import { api } from '../api'
 import type { ProviderCapacity } from '../types'
+import { chatActivityCopy, type ChatActivity } from '../chatActivity.mjs'
+import type { PageKey } from './AppShell'
 
 interface MascotAssistantProps {
-  status?: 'idle' | 'running' | 'completed' | 'failed'
-  statusText?: string
+  activity?: ChatActivity | null
   currentPage?: string
   onNavigateToChat?: () => void
+  onNavigateToPage?: (page: PageKey) => void
 }
 
 type MascotChoice = {
@@ -35,22 +37,25 @@ const MASCOT_CHOICES: MascotChoice[] = [
 ]
 
 const PAGE_TIPS: Record<string, string> = {
-  chat: 'Cần tra cứu Drive hay tóm tắt văn bản gì cứ nhắn mình nhé!',
-  gmail: 'Muốn tóm tắt email quan trọng? Bấm "Chat" để hỏi ngay!',
-  drive: 'Kho Google Drive đã đồng bộ. Bạn muốn tìm dữ liệu trong file nào? 📁',
-  local: 'Tài liệu local đã index vào RAG. Bạn có thể hỏi nội dung ngay! 💻',
-  skills: 'Dạy mình quy trình mới bằng các mẫu có sẵn phía trên nhé! ⚡',
-  artifacts: 'Soạn thảo Markdown với Live Preview và lưu nhanh bằng Ctrl+S! 📝',
-  memory: 'Đã có các gợi ý bộ nhớ 1-click, nạp ngay để cá nhân hóa nhé! 🧠',
-  harness: 'Xem báo cáo kiểm thử và chất lượng câu trả lời tại đây 📊',
-  settings: 'Quản trị hạn mức và cấu hình hệ thống an toàn tại đây ⚙️',
+  home: 'Nêu việc cần làm hoặc chọn một gợi ý. Bạn xem lại câu hỏi trước khi gửi.',
+  chat: 'Chọn nguồn cần dùng, rồi nêu việc bạn muốn hoàn thành. Tạo tài liệu bên ngoài cần bạn duyệt.',
+  gmail: 'Chọn thư cần xem. Nếu cần phản hồi, có thể chuẩn bị bản nháp trước; không tự gửi thư.',
+  drive: 'Dùng Gần đây, Đã gắn sao và loại tệp để tìm nhanh; không cần nhớ tên tài liệu.',
+  local: 'Nhập tài liệu rồi chọn Chat với tệp này. Khi hỏi, đoạn liên quan được gửi tới Gemini.',
+  skills: 'Lưu cách làm thành mẫu, rồi thay dữ kiện khi dùng lại cho công việc mới.',
+  artifacts: 'Sửa nội dung, kiểm bản đọc rồi lưu. Có thể xuất bản đã lưu sang tệp.',
+  memory: 'Bạn có thể xem, sửa hoặc cất điều đã lưu. Cất ghi chú không phải xóa vĩnh viễn.',
+  harness: 'Xem quy trình và vai trò của từng trợ lý. Chỉ coi kết quả đã kiểm là bằng chứng.',
+  settings: 'Xem kết nối và hạn mức ứng dụng. Số lượt tại đây không phải số dư Google.',
+  audit: 'Xem công cụ đã chạy và trạng thái thực tế của từng yêu cầu.',
+  access: 'Chỉ cấp những quyền cần cho công việc. Linh vật không tự thay quyền.',
 }
 
 export function MascotAssistant({
-  status = 'idle',
-  statusText,
+  activity = null,
   currentPage = 'chat',
   onNavigateToChat,
+  onNavigateToPage,
 }: MascotAssistantProps) {
   const [enabled, setEnabled] = useState(() => {
     const saved = localStorage.getItem('driveagent_mascot_enabled')
@@ -63,10 +68,19 @@ export function MascotAssistant({
   const [speech, setSpeech] = useState<string | null>(null)
   const [selectedMascotId, setSelectedMascotId] = useState(() => localStorage.getItem('driveagent_mascot_id') || 'fox')
   const [pickerOpen, setPickerOpen] = useState(false)
-  const [pokeCount, setPokeCount] = useState(0)
+  const [hiddenNotice, setHiddenNotice] = useState('')
   const [capacity, setCapacity] = useState<ProviderCapacity | null>(null)
   const speechTimer = useRef<number | null>(null)
   const mascot = MASCOT_CHOICES.find((choice) => choice.id === selectedMascotId) ?? MASCOT_CHOICES[0]!
+  const status = activity?.phase ?? 'idle'
+  const noticeKey = activity ? `${activity.taskId}:${activity.phase}` : ''
+  const showNotice = Boolean(activity?.unread && hiddenNotice !== noticeKey)
+  const copy = chatActivityCopy(activity?.phase)
+  const showSpeech = useCallback((text: string, duration = 6000) => {
+    if (speechTimer.current) window.clearTimeout(speechTimer.current)
+    setSpeech(text)
+    speechTimer.current = window.setTimeout(() => setSpeech(null), duration)
+  }, [])
 
   useEffect(() => {
     let active = true
@@ -114,36 +128,11 @@ export function MascotAssistant({
     }
     window.addEventListener('mascot-notify', handleNotify)
     return () => window.removeEventListener('mascot-notify', handleNotify)
-  }, [])
+  }, [showSpeech])
 
-  function showSpeech(text: string, duration = 4000) {
+  useEffect(() => () => {
     if (speechTimer.current) window.clearTimeout(speechTimer.current)
-    setSpeech(text)
-    speechTimer.current = window.setTimeout(() => setSpeech(null), duration)
-  }
-
-  // React to status changes
-  useEffect(() => {
-    if (status === 'running') {
-      showSpeech(statusText || 'Đang tra cứu dữ liệu & xử lý câu hỏi…', 5000)
-    } else if (status === 'completed') {
-      showSpeech('Xong rồi nha! Bạn kiểm tra kết quả nhé ✨', 4500)
-    } else if (status === 'failed') {
-      showSpeech('Có chút trục trặc nhỏ, bạn xem lại chi tiết nhé!', 4000)
-    }
-  }, [status, statusText])
-
-  // Contextual tip on page change
-  useEffect(() => {
-    if (minimized) return
-    const tip = PAGE_TIPS[currentPage]
-    if (tip) {
-      const timer = window.setTimeout(() => {
-        showSpeech(tip, 5000)
-      }, 1500)
-      return () => window.clearTimeout(timer)
-    }
-  }, [currentPage, minimized])
+  }, [])
 
   // Keep analytical pages readable: the expanded companion is useful in chat,
   // but it can cover charts and execution traces on narrower screens. Users
@@ -158,23 +147,8 @@ export function MascotAssistant({
   }, [currentPage])
 
   function handlePoke() {
-    setPokeCount((c) => c + 1)
-    if (capacity?.local_budget) {
-      showSpeech(
-        `Key hiệu lực ${capacity.display_name || capacity.credential_source}${capacity.failover_active ? ' (dự phòng)' : ''}: còn ${capacity.local_budget.daily_remaining}/${capacity.local_budget.daily_limit} lượt trong ledger local hôm nay.`,
-        5000,
-      )
-      return
-    }
-    const cheers = [
-      `Chào bạn! Mình là trợ lý ${mascot.label} của Veridra.`,
-      'Bấm vào nút "Chat" để hỏi mình bất kỳ lúc nào nhé!',
-      'Hôm nay làm việc năng suất lắm nè ✨',
-      'Đừng quên kiểm tra Bản tin sáng trên trang chủ nha!',
-      'File local của bạn đã nạp vào RAG rồi đấy, tra cứu rất nhanh!',
-      'Sẵn sàng rồi, cùng nhau làm việc nào!',
-    ]
-    showSpeech(cheers[pokeCount % cheers.length] ?? `Chào bạn! Mình là trợ lý ${mascot.label} của Veridra.`, 3500)
+    if (activity?.unread) { setHiddenNotice(''); return }
+    showSpeech(status === 'running' ? copy.text : PAGE_TIPS[currentPage] || 'Mình có thể giúp chọn nguồn và mở công việc cần làm.')
   }
 
   function selectMascot(id: string) {
@@ -187,7 +161,7 @@ export function MascotAssistant({
 
   function goToChat(e?: React.MouseEvent) {
     if (e) e.stopPropagation()
-    showSpeech('Mở khung trò chuyện ngay nè! ✨', 2500)
+    setSpeech(null)
     if (onNavigateToChat) {
       onNavigateToChat()
     } else {
@@ -209,8 +183,19 @@ export function MascotAssistant({
     <aside
       className={`mascot-companion ${minimized ? 'mascot-companion--minimized' : ''}`}
       aria-label="Trợ lý linh vật Veridra"
+      data-task-phase={status}
     >
-      {speech && !minimized ? (
+      {showNotice ? (
+        <section className={`mascot-notice mascot-notice--${status}`} role="status" aria-live="polite" aria-atomic="true" aria-label="Thông báo từ trợ lý">
+          <div className="mascot-speech__header">
+            <span className="mascot-speech__author">Trợ lý {mascot.label}</span>
+            <button type="button" className="mascot-speech__close" aria-label="Để thông báo lại sau" onClick={() => setHiddenNotice(noticeKey)}><Dismiss16Regular /></button>
+          </div>
+          <strong>{copy.title}</strong>
+          <p>{copy.text}</p>
+          <button type="button" className="mascot-speech__action" onClick={goToChat}><Chat16Regular />{copy.action}</button>
+        </section>
+      ) : speech && !minimized ? (
         <div className="mascot-speech" role="status" aria-live="polite">
           <div className="mascot-speech__header">
             <span className="mascot-speech__author">Trợ lý {mascot.label}</span>
@@ -224,11 +209,10 @@ export function MascotAssistant({
             </button>
           </div>
           <p className="mascot-speech__text">{speech}</p>
-          {currentPage !== 'chat' && (
-            <button type="button" className="mascot-speech__action" onClick={goToChat}>
-              <Chat16Regular /> Đi đến Trò chuyện
-            </button>
-          )}
+          <div className="mascot-shortcuts">
+            <button type="button" className="mascot-speech__action" onClick={goToChat}><Chat16Regular />Trò chuyện</button>
+            {onNavigateToPage ? <button type="button" className="mascot-speech__action" onClick={() => {setSpeech(null); onNavigateToPage(currentPage === 'drive' || currentPage === 'local' ? 'skills' : 'drive')}}>{currentPage === 'drive' || currentPage === 'local' ? 'Mẫu công việc' : 'Chọn tài liệu'}</button> : null}
+          </div>
         </div>
       ) : null}
 
@@ -239,13 +223,15 @@ export function MascotAssistant({
             className="mascot-restore-btn"
             onClick={(e) => {
               e.stopPropagation()
-              toggleMinimize()
+              if (activity?.unread) setHiddenNotice(hiddenNotice === noticeKey ? '' : noticeKey)
+              else toggleMinimize()
             }}
-            title="Mở lại trợ lý linh vật"
-            aria-label="Mở lại trợ lý linh vật"
+            title={activity?.unread ? 'Xem thông báo chưa đọc' : status === 'running' ? 'Trợ lý đang xử lý câu hỏi' : 'Mở lại trợ lý linh vật'}
+            aria-label={activity?.unread ? 'Xem thông báo chưa đọc' : 'Mở lại trợ lý linh vật'}
           >
             <span className="mascot-restore-icon" aria-hidden="true" style={{ backgroundImage: `url(${mascot.directions})` }} />
-            <span className="mascot-status-pulse" />
+            <span className="mascot-status-pulse" aria-hidden="true" />
+            {activity?.unread ? <span className="mascot-unread-badge" aria-hidden="true">{status === 'completed' ? '1' : '!'}</span> : null}
           </button>
         ) : (
           <>
@@ -273,6 +259,15 @@ export function MascotAssistant({
                 className="mascot-interactive-canvas"
               />
             </div>
+
+            <button type="button" className="mascot-task-status" onClick={(event) => {
+              event.stopPropagation()
+              if (activity?.unread || status === 'running') goToChat()
+              else handlePoke()
+            }}>
+              <span className="mascot-task-dot" aria-hidden="true" />
+              {activity?.unread ? copy.title : status === 'running' ? 'Đang xử lý · bạn cứ làm việc khác' : 'Cần mình hỗ trợ?'}
+            </button>
 
             <div className="mascot-badge-row">
               <div className="mascot-badge">
@@ -318,7 +313,7 @@ export function MascotAssistant({
                 title="Mở màn hình Trò chuyện với Agent"
               >
                 <Chat16Regular />
-                <span>Chat</span>
+                <span>Trò chuyện</span>
               </button>
             </div>
             <button
@@ -330,8 +325,8 @@ export function MascotAssistant({
               <span>Năng lực AI</span>
               <strong>
                 {capacity?.local_budget
-                  ? `${capacity.local_budget.daily_remaining}/${capacity.local_budget.daily_limit} lượt local`
-                  : capacity?.configured ? 'Đang đồng bộ' : 'Chưa có key'}
+                  ? `${capacity.local_budget.daily_remaining}/${capacity.local_budget.daily_limit} lượt ứng dụng`
+                  : capacity?.configured ? 'Đang cập nhật' : 'Chưa có khóa'}
               </strong>
               {capacity?.local_budget ? (
                 <span className="mascot-capacity__track" aria-hidden="true">

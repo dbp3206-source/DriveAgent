@@ -20,6 +20,7 @@ import type { User } from '../types'
 import { MascotAssistant } from './MascotAssistant'
 import { VeridraMark } from './VeridraMark'
 import { WorkspaceCanvas } from './WorkspaceCanvas'
+import { chatActivityCopy, type ChatActivity } from '../chatActivity.mjs'
 
 export type PageKey =
   | 'home'
@@ -65,7 +66,8 @@ export function AppShell({
   dark,
   onThemeChange,
   isChatBusy = false,
-  isChatDoneNotice = false,
+  chatActivity = null,
+  onOpenChatActivity,
   children,
 }: {
   user: User
@@ -74,7 +76,8 @@ export function AppShell({
   dark: boolean
   onThemeChange: () => void
   isChatBusy?: boolean
-  isChatDoneNotice?: boolean
+  chatActivity?: ChatActivity | null
+  onOpenChatActivity?: () => void
   children: React.ReactNode
 }) {
   const [mobileOpen, setMobileOpen] = useState(false)
@@ -258,22 +261,22 @@ export function AppShell({
               <button
                 type="button"
                 className="topbar-chat-indicator"
-                onClick={() => onPageChange('chat')}
+                onClick={onOpenChatActivity ?? (() => onPageChange('chat'))}
                 title="Bấm để quay lại xem câu trả lời đang xử lý"
               >
                 <Spinner size="extra-tiny" />
                 <span>Đang xử lý trong Trò chuyện...</span>
               </button>
             )}
-            {!isChatBusy && isChatDoneNotice && page !== 'chat' && (
+            {!isChatBusy && chatActivity?.unread && page !== 'chat' && (
               <button
                 type="button"
-                className="topbar-chat-indicator topbar-chat-indicator--done"
-                onClick={() => onPageChange('chat')}
-                title="Veridra đã hoàn thành câu trả lời. Bấm để xem"
+                className={`topbar-chat-indicator ${chatActivity.phase === 'completed' ? 'topbar-chat-indicator--done' : 'topbar-chat-indicator--attention'}`}
+                onClick={onOpenChatActivity ?? (() => onPageChange('chat'))}
+                title={chatActivityCopy(chatActivity.phase).action}
               >
-                <span className="indicator-check">✓</span>
-                <span>Đã có câu trả lời mới trong Trò chuyện</span>
+                <span className="indicator-check" aria-hidden="true">{chatActivity.phase === 'completed' ? '✓' : '!'}</span>
+                <span>{chatActivityCopy(chatActivity.phase).title}</span>
               </button>
             )}
             <div className="connection-badges">
@@ -313,9 +316,10 @@ export function AppShell({
         </header>
         <main id="main-content" tabIndex={-1} className="page-content">{children}</main>
         <MascotAssistant
-          status={isChatBusy ? 'running' : isChatDoneNotice ? 'completed' : 'idle'}
+          activity={chatActivity}
           currentPage={page}
-          onNavigateToChat={() => onPageChange('chat')}
+          onNavigateToChat={onOpenChatActivity ?? (() => onPageChange('chat'))}
+          onNavigateToPage={onPageChange}
         />
       </section>
     </div>

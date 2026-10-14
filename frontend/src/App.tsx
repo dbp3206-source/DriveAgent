@@ -1,5 +1,5 @@
 import { FluentProvider, Spinner, webDarkTheme, webLightTheme } from '@fluentui/react-components'
-import { lazy, Suspense, useEffect, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { api } from './api'
 import { AppShell, type PageKey } from './components/AppShell'
 import { ErrorState } from './components/AsyncState'
@@ -8,6 +8,8 @@ import { ScreenBoundary } from './components/ScreenBoundary'
 import { hashForPage, pageFromHash } from './pageRoute.mjs'
 import { roleCanCreateDraft, roleCanSendEmail } from './emailWorkflow.mjs'
 import type { AuthStatus, Health } from './types'
+import { useChatActivity } from './hooks/useChatActivity'
+import { CHAT_OPEN_EVENT, CHAT_OPEN_KEY, chatActivityCopy } from './chatActivity.mjs'
 
 const PAGE_KEYS: readonly PageKey[] = [
   'home', 'chat', 'drive', 'gmail', 'local', 'artifacts', 'memory',
@@ -89,8 +91,7 @@ export default function App() {
   const [chatOpened, setChatOpened] = useState(page === 'chat')
   const [error, setError] = useState('')
   const [isChatBusy, setIsChatBusy] = useState(false)
-  const [chatCompletedNotice, setChatCompletedNotice] = useState(false)
-  const prevBusy = useRef(isChatBusy)
+  const {activity: chatActivity, update: updateChatActivity, acknowledge: acknowledgeChat} = useChatActivity(status?.user?.id, page)
 
   const setPage = (next: PageKey) => {
     if (next === 'chat') setChatOpened(true)
@@ -136,17 +137,18 @@ export default function App() {
   }, [page])
 
   useEffect(() => {
-    if (prevBusy.current && !isChatBusy && page !== 'chat') {
-      setChatCompletedNotice(true)
-    }
-    prevBusy.current = isChatBusy
-  }, [isChatBusy, page])
+    if (chatActivity?.phase === 'running' || chatActivity?.phase === 'waiting') setChatOpened(true)
+  }, [chatActivity?.phase])
 
-  useEffect(() => {
-    if (page === 'chat') {
-      setChatCompletedNotice(false)
-    }
-  }, [page])
+  function openChatActivity() {
+    if (chatActivity?.sessionId) {
+      const detail = {ownerId: chatActivity.ownerId, sessionId: chatActivity.sessionId}
+      try { sessionStorage.setItem(CHAT_OPEN_KEY, JSON.stringify(detail)) } catch { /* Event still works. */ }
+      setPage('chat')
+      window.dispatchEvent(new CustomEvent(CHAT_OPEN_EVENT, {detail}))
+    } else setPage('chat')
+    acknowledgeChat()
+  }
 
   useEffect(() => {
     // Each workspace area behaves like a separate screen. Keeping the previous
@@ -157,12 +159,12 @@ export default function App() {
   useEffect(() => {
     if (isChatBusy) {
       document.title = '● Đang xử lý... | Veridra'
-    } else if (chatCompletedNotice) {
-      document.title = '✓ Có kết quả mới! | Veridra'
+    } else if (chatActivity?.unread) {
+      document.title = `${chatActivityCopy(chatActivity.phase).title} | Veridra`
     } else {
       document.title = 'Veridra | Verified intelligence in action'
     }
-  }, [isChatBusy, chatCompletedNotice])
+  }, [isChatBusy, chatActivity])
 
   async function load() {
     setError('')
@@ -226,14 +228,15 @@ export default function App() {
         dark={dark}
         onThemeChange={() => setDark((value) => !value)}
         isChatBusy={isChatBusy}
-        isChatDoneNotice={chatCompletedNotice}
+        chatActivity={chatActivity}
+        onOpenChatActivity={openChatActivity}
       >
         {chatOpened && <div
           className={`chat-tab-container ${page === 'chat' ? '' : 'chat-tab-container--hidden'}`}
           aria-hidden={page !== 'chat'}
         >
           <Suspense fallback={<Spinner label="Đang mở cuộc trò chuyện" />}>
-            <ChatPage ownerId={status.user?.id ?? undefined} onBusyChange={setIsChatBusy} isActive={page === 'chat'} />
+            <ChatPage key={status.user.id} ownerId={status.user.id} onBusyChange={setIsChatBusy} onTaskChange={updateChatActivity} isActive={page === 'chat'} />
           </Suspense>
         </div>}
 

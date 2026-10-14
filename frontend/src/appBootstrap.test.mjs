@@ -40,6 +40,9 @@ function harness() {
       calls.push(path)
       return path === '/api/auth/status' ? auth : Promise.resolve(null)
     } }
+    // This harness tests auth/chunk ordering; activity behavior has its own
+    // reducer/component/browser checks, not a substitute for these assertions.
+    if (path === './hooks/useChatActivity') return {useChatActivity: () => ({activity: null, update() {}, acknowledge() {}})}
     if (path === './pageRoute.mjs') return { pageFromHash: () => 'chat', hashForPage: () => '#/chat' }
     if (path === './emailWorkflow.mjs') return { roleCanCreateDraft: () => false, roleCanSendEmail: () => false }
     return new Proxy({}, { get: (_object, name) => String(name) })

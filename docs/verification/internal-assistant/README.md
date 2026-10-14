@@ -10,4 +10,6 @@ Chín lượt sinh câu trả lời dự kiến, hai lượt dự phòng trong t
 
 Kiểm tính toàn vẹn bộ dữ liệu bằng `backend/.venv/Scripts/python.exe scripts/validate_internal_assistant_dataset.py`. Lệnh này chỉ kiểm tệp, độ phủ và đáp án số học; không chứng minh chất lượng mô hình hoặc sản phẩm.
 
+**Điều chỉnh thực thi 14/10:** sau khi dùng 9 lượt sinh câu trả lời và 6 tạo chỉ mục, chủ sở hữu cho phép chuyển hai lượt tạo chỉ mục chưa dùng sang sinh câu trả lời: trần mới 13+6, vẫn tổng 19. Giữ nguyên bộ đề `.2` và đáp án/cấu hình ban đầu để đối chiếu; thay đổi quyền thực thi và số dùng được ghi tại `RESULTS-20261014.md`, không diễn giải bộ đề là chứng nhận đã đạt.
+
 Ghi kết quả thực vào hồ sơ nghiệm thu có phiên bản, người kiểm, thời gian, lượt thực, đầu ra, tiêu chí và ảnh/dấu vết an toàn. Mẫu trống không phải kết quả đạt. Các ca T09/T10 có bằng chứng riêng về hai người dùng, thu hồi phiên, khôi phục và phát hành; không thay bằng một câu trả lời chat.

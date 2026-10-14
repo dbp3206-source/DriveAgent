@@ -1,0 +1,18 @@
+{
+  "target_output": "Veridra React application mascot completion notices",
+  "source_files": ["frontend/src/App.tsx", "frontend/src/pages/ChatPage.tsx", "frontend/src/components/AppShell.tsx", "frontend/src/components/MascotAssistant.tsx", "frontend/src/chatTaskPolling.mjs"],
+  "primary_skill": null,
+  "visual_direction": "Existing Veridra design system",
+  "specialist_skills": [],
+  "mcp_tools_used": ["mcp__cua_repl.js"],
+  "commands_run": ["npm test", "node --test src/appBootstrap.test.mjs src/chatActivity.test.mjs src/chatTaskPolling.test.mjs", "npm run lint", "npm run build", "python design-work/production-20261013/working/run_local_ui.py --mascot-check", "python -m ruff check --config backend/pyproject.toml design-work/production-20261013/working/run_local_ui.py", "git diff --check", "python scripts/scan_release_secrets.py"],
+  "repository_defined_outputs": ["frontend/dist/index.html", "frontend/src"],
+  "delivered_outputs": ["frontend/src/chatActivity.mjs", "frontend/src/hooks/useChatActivity.ts", "frontend/src/components/MascotAssistant.tsx", "frontend/src/mascot-restore.css", "design-work/mascot-notifications-20261014/qa/qa-report.md"],
+  "verification": {"structural": true, "rendered": true, "visual_review": true, "content_fidelity": true, "target_environment": true},
+  "verification_scope": "Local real application with delayed synthetic queue work. Not cloud/Gemini acceptance.",
+  "tests_passed": 204,
+  "model_calls": 0,
+  "cloud_mutations": 0,
+  "quality_score": 86,
+  "known_limitations": ["Render deployment pending", "No OS reduced-motion emulation", "Mobile checked in real 390x600 same-origin iframe, not a physical device", "No notification delivery when application is closed"]
+}

@@ -1,5 +1,8 @@
 # Design Brief — DriveAgent Study & Work Command Center
 
+## Mascot completion notices — 14/10/2026
+Audience: users switching between Chat and other pages. Message: keep working; the companion reports actual outcomes and opens the right conversation. Existing Veridra tokens, Fluent icons and installed page-mascot assets are the sole visual direction. Scope: persistent unread badge even when minimized; distinct success/incomplete/failure/cancelled/waiting; factual contextual help on request and quick navigation. No answer excerpts, sound, OS notification permission, new AI calls or automatic writes. Deliver real React/CSS plus unit/build/browser evidence. Verify desktop/mobile, keyboard, disabled-mascot fallback and reduced motion; label delayed local fixtures as simulation. Preserve prior work below.
+
 ## Bổ sung 05/10/2026 — phục hồi bản xem trước hết hạn
 Giữ giao diện Fluent và lớp `inline-approval` hiện có; chỉ thêm nút “Tạo lại bản xem trước” khi máy chủ xác nhận thao tác hết hạn. Mỗi lần chuẩn bị lại vẫn phải duyệt riêng, không tự tạo tài liệu. Phạm vi người dùng: quản trị đang nghiệm thu và người dùng có quyền tạo tài liệu. Không đổi màu, bố cục, hình ảnh hoặc quyền Google. Chỉ lưu mã yêu cầu trong bộ nhớ phiên trình duyệt, tách theo tài khoản và câu trả lời; không lưu nội dung hay khóa. Đầu ra là ChatPage và DocumentExportApproval thật; kiểm nhánh hết hạn, chưa rõ kết quả, thành công, tải lại và duyệt lại. Kiểm trình duyệt thật do lượt nghiệm thu chung thực hiện; kiểm máy không thay thế bằng chứng giao diện.
 

@@ -40,7 +40,8 @@ import { FormEvent, isValidElement, useEffect, useMemo, useRef, useState } from 
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { api, ApiError } from '../api'
-import { waitForChatTask } from '../chatTaskPolling.mjs'
+import { ChatTaskError, waitForChatTask } from '../chatTaskPolling.mjs'
+import { CHAT_OPEN_EVENT, CHAT_OPEN_KEY, readChatActivity, type ChatActivityEvent } from '../chatActivity.mjs'
 import { readHistoryWithRecovery } from '../historyRecovery.mjs'
 import { EmptyState, ErrorState } from '../components/AsyncState'
 import { ExecutionTrace } from '../components/ExecutionTrace'
@@ -184,6 +185,7 @@ const prompts = [
 interface ChatPageProps {
   ownerId?: string
   onBusyChange?: (busy: boolean) => void
+  onTaskChange?: (event: ChatActivityEvent) => void
   isActive?: boolean
 }
 
@@ -237,7 +239,7 @@ const controlLabels = {
   workflow: {source_summary: 'Tóm tắt có nguồn', email_digest: 'Tổng hợp hộp thư', meeting_notes: 'Biên bản họp', study_plan: 'Lộ trình học', budget_tracker: 'Theo dõi ngân sách', compare_sources: 'So sánh nguồn'},
 } as const
 
-export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPageProps = {}) {
+export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true }: ChatPageProps = {}) {
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [sessionCursor, setSessionCursor] = useState<string | null>(null)
   const [historyAttempt, setHistoryAttempt] = useState(0)
@@ -296,6 +298,7 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
   const activeTaskRef = useRef<string | null>(null)
   const submissionInFlightRef = useRef(false)
   const stopRequestedRef = useRef(false)
+  const mountedRef = useRef(true)
 
   async function stopGeneration() {
     if (!activeTaskRef.current && submissionInFlightRef.current) {
@@ -330,7 +333,9 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
   }
 
   useEffect(() => {
+    mountedRef.current = true
     return () => {
+      mountedRef.current = false
       if (timerRef.current) clearInterval(timerRef.current)
       if (abortControllerRef.current) abortControllerRef.current.abort()
     }
@@ -341,22 +346,35 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
     // A reload discovers owner-scoped pending tasks from SQL, not localStorage.
     api<{items: Array<{id: string; session_id: string}>}>('/api/chat/tasks', {signal: controller.signal})
       .then(async ({items}) => {
-        const task = items[0]
+        // A task can finish between reload and discovery. Reconcile that exact
+        // owner-bound identifier too; metadata never substitutes for SQL state.
+        const saved = readChatActivity(sessionStorage, ownerId)
+        const task = items[0] ?? (saved?.sessionId && ['running', 'waiting'].includes(saved.phase)
+          ? {id: saved.taskId, session_id: saved.sessionId} : undefined)
         if (!task || controller.signal.aborted || activeTaskRef.current) return
         activeTaskRef.current = task.id
         abortControllerRef.current = controller
         setSessionId(task.session_id)
         setBusy(true)
+        if (ownerId) onTaskChange?.({ownerId, taskId: task.id, sessionId: task.session_id, phase: 'running'})
+        let receivedResult = false
         try {
-          await waitForChatTask<ChatResult>(
+          const result = await waitForChatTask<ChatResult>(
             () => api(`/api/chat/tasks/${task.id}`, {signal: controller.signal}), controller.signal,
           )
+          receivedResult = true
+          if (ownerId && !controller.signal.aborted) onTaskChange?.({ownerId, taskId: task.id,
+            sessionId: task.session_id, phase: result.status === 'incomplete' ? 'incomplete' : 'completed'})
           const page = await api<{items: ChatMessage[]; next_cursor: string | null}>(
             `/api/chat/sessions/${task.session_id}/messages-page`, {signal: controller.signal},
           )
           if (!controller.signal.aborted) { setMessages(page.items); setMessageCursor(page.next_cursor) }
         } catch (caught) {
-          if (!controller.signal.aborted) setError(caught instanceof Error ? caught.message : 'Chưa tải được kết quả.')
+          if (!controller.signal.aborted) {
+            setError(caught instanceof Error ? caught.message : 'Chưa tải được kết quả.')
+            if (ownerId && !receivedResult) onTaskChange?.({ownerId, taskId: task.id, sessionId: task.session_id,
+              phase: caught instanceof ChatTaskError ? caught.phase : 'waiting'})
+          }
         } finally {
           if (activeTaskRef.current === task.id) activeTaskRef.current = null
           if (!controller.signal.aborted) setBusy(false)
@@ -364,7 +382,7 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
       })
       .catch(() => { /* History remains accessible if discovery is unavailable. */ })
     return () => controller.abort()
-  }, [])
+  }, [ownerId, onTaskChange])
 
   const estimatedSessionTokens = useMemo(() => {
     const charCount = messages.reduce((acc, m) => acc + m.content.length, 0)
@@ -465,6 +483,23 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
   }
 
   const [isPickerOpen, setIsPickerOpen] = useState(false)
+
+  useEffect(() => {
+    const open = (detail: {ownerId?: string; sessionId?: string} | null) => {
+      if (!detail?.sessionId || detail.ownerId !== ownerId || activeTaskRef.current) return
+      if (detail.sessionId !== sessionId) {
+        setSessionIdState(detail.sessionId)
+        setMessages([])
+        setError('')
+        try { sessionStorage.setItem('drive_agent_session_id', detail.sessionId) } catch { /* Optional. */ }
+      }
+      try { sessionStorage.removeItem(CHAT_OPEN_KEY) } catch { /* Optional. */ }
+    }
+    const listener = (event: Event) => open((event as CustomEvent).detail)
+    try { open(JSON.parse(sessionStorage.getItem(CHAT_OPEN_KEY) || 'null')) } catch { /* Invalid optional storage. */ }
+    window.addEventListener(CHAT_OPEN_EVENT, listener)
+    return () => window.removeEventListener(CHAT_OPEN_EVENT, listener)
+  }, [ownerId, sessionId])
   const pickerRef = useRef<HTMLDivElement>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
@@ -670,6 +705,8 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
     const controller = new AbortController()
     abortControllerRef.current = controller
     let executionId: string = crypto.randomUUID()
+    let executionSession = sessionId
+    if (ownerId) onTaskChange?.({ownerId, taskId: executionId, sessionId, phase: 'running'})
     setLiveProgress([])
     let progressPending = false
     const progressTimer = window.setInterval(() => {
@@ -705,9 +742,11 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
         }),
       })
       executionId = task.id
+      executionSession = task.session_id
       activeTaskRef.current = task.id
       if (!sessionId) freshlyCreatedSession.current = task.session_id
       setSessionId(task.session_id)
+      if (ownerId) onTaskChange?.({ownerId, taskId: executionId, sessionId: executionSession, phase: 'running'})
       if (stopRequestedRef.current) {
         const stopped = await api<{status: string}>(
           `/api/chat/tasks/${task.id}/cancel`, {method: 'POST'},
@@ -738,6 +777,8 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
           latency_ms: durationMs,
         },
       ])
+      if (ownerId) onTaskChange?.({ownerId, taskId: executionId, sessionId: result.session_id,
+        phase: result.status === 'incomplete' ? 'incomplete' : 'completed'})
       api<{items: ChatSession[]; next_cursor: string | null}>('/api/chat/sessions-page')
         .then((page) => { setSessions(page.items); setSessionCursor(page.next_cursor) })
         .catch(() => setError('Đã nhận câu trả lời, nhưng chưa cập nhật được danh sách lịch sử.'))
@@ -745,6 +786,8 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
       const isAborted = controller.signal.aborted ||
         (caught instanceof Error && caught.name === 'AbortError') ||
         (caught instanceof DOMException && caught.name === 'AbortError')
+      if (ownerId && mountedRef.current) onTaskChange?.({ownerId, taskId: executionId, sessionId: executionSession,
+        phase: caught instanceof ChatTaskError ? caught.phase : isAborted ? 'cancelled' : 'waiting'})
       if (isAborted) {
         setMessages((current) => current.filter(message => message.id !== optimistic.id))
         setInput(content)
@@ -819,6 +862,8 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
   }
 
   async function fetchMorningBriefing() {
+    const taskId = crypto.randomUUID()
+    if (ownerId) onTaskChange?.({ownerId, taskId, sessionId: null, phase: 'running'})
     setBriefingBusy(true)
     setError('')
     try {
@@ -842,9 +887,11 @@ export function ChatPage({ ownerId, onBusyChange, isActive = true }: ChatPagePro
           created_at: new Date().toISOString(),
         },
       ])
+      if (ownerId) onTaskChange?.({ownerId, taskId, sessionId: result.session_id, phase: 'completed'})
       api<{items: ChatSession[]; next_cursor: string | null}>('/api/chat/sessions-page')
         .then((page) => { setSessions(page.items); setSessionCursor(page.next_cursor) }).catch(() => {})
     } catch (e) {
+      if (ownerId && mountedRef.current) onTaskChange?.({ownerId, taskId, sessionId: null, phase: 'waiting'})
       setError(e instanceof Error ? e.message : 'Không thể tạo bản tin sáng.')
     } finally {
       setBriefingBusy(false)

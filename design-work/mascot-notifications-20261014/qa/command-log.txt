@@ -1,0 +1,11 @@
+Actual runs, 14 October 2026:
+npm test: first 202 passed / 2 bootstrap harness failures. Hook mocked for auth-bootstrap tests; full rerun 204 passed / 0 failed, session 95645, exit 0, 12796.6089 ms.
+node --test src/appBootstrap.test.mjs src/chatActivity.test.mjs src/chatTaskPolling.test.mjs: 18 passed, exit 0, 2885.07 ms.
+npm run lint: first callback-order/memoization failure; corrected callback placement/dependencies. Final session 72581 exit 0.
+npm run build: first TS null-narrowing failure; explicit current guard added. Session 40536 exit 0, Vite 112.4 s; session 43613 exit 0, Vite 80.9 s.
+ruff helper: wrong frontend cwd config path failed, repo cwd rerun passed.
+scan_release_secrets.py: session 36619 exit 0, 654 Git-visible files at time of run.
+mcp__cua_repl.js: real local queue/SQL submit, background route changes, success/incomplete/failure, reload persisted metadata, badge/dismiss/Enter/open exact conversation, screenshots. Browser viewport request did not alter DOM viewport; same-origin iframe fallback actually measured 390x600. No Gemini request or external data.
+Local server: existing Vite 96011 reused. Duplicate new startup rejected port occupied. Owned backend 60923/62378 stopped; current synthetic fixture session 88585, PID 5824, Uvicorn startup complete on 8003.
+npm run build after final responsive header CSS: session 41275, exit 0, Vite 11.28 s.
+mcp__cua_repl.js final: mobile notice bounds inside actual 390x600 iframe; Enter opens same conversation, badge clears. Context help Enter works. Error console list empty after final local navigation. No OS motion emulation claim.

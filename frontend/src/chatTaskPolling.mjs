@@ -1,4 +1,7 @@
 /** Poll only persisted task state; disconnecting never cancels server work. */
+export class ChatTaskError extends Error {
+  constructor(message, phase) { super(message); this.name = 'ChatTaskError'; this.phase = phase }
+}
 export async function waitForChatTask(read, signal, onState = () => {}, options = {}) {
   const deadline = Date.now() + (options.timeoutMs ?? 480000)
   const interval = options.intervalMs ?? 1000
@@ -23,13 +26,13 @@ export async function waitForChatTask(read, signal, onState = () => {}, options 
     }
     onState(state)
     if (state.status === 'completed') {
-      if (!state.result) throw new Error('Yêu cầu hoàn tất nhưng chưa tải được kết quả.')
+      if (!state.result) throw new ChatTaskError('Yêu cầu hoàn tất nhưng chưa tải được kết quả.', 'waiting')
       return state.result
     }
     if (state.status === 'failed' || state.status === 'cancelled') {
-      throw new Error(state.error || 'Yêu cầu đã dừng; nội dung vẫn được lưu trong lịch sử.')
+      throw new ChatTaskError(state.error || 'Yêu cầu đã dừng; nội dung vẫn được lưu trong lịch sử.', state.status)
     }
     await sleep(interval)
   }
-  throw new Error('Chưa nhận được kết quả. Yêu cầu vẫn được lưu; mở lại cuộc trò chuyện để kiểm tra.')
+  throw new ChatTaskError('Chưa nhận được kết quả. Yêu cầu vẫn được lưu; mở lại cuộc trò chuyện để kiểm tra.', 'waiting')
 }

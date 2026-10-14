@@ -1,3 +1,4 @@
+export class ChatTaskError extends Error { phase: 'failed' | 'cancelled' | 'waiting'; constructor(message: string, phase: 'failed' | 'cancelled' | 'waiting') }
 export function waitForChatTask<T>(
   read: () => Promise<{status: string; result: T | null; error?: string | null}>,
   signal?: AbortSignal,

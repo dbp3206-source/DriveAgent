@@ -2,7 +2,7 @@
 
 Phạm vi hiện hành: trợ lý công việc nội bộ, năm nhóm việc, ba hành trình A/B/C, đúng 16 gói và 10 ca T01–T10 trong kế hoạch ngày 13/10. Không mở thêm tính năng. Phần trình bày “Cách Agent hoạt động” để cuối và phải trình người dùng góp ý trước khi chốt.
 
-**Trạng thái: đang nghiệm thu bản đã triển khai, chưa nghiệm thu Production.** Ứng viên `410966a` đã qua CI #136 và Live đúng ảnh; ba lỗi phát hiện trong đợt kiểm đang được sửa gộp. Bằng chứng mới và phần chưa đạt ở `verification/internal-assistant/RESULTS-20261014.md`; phiên bản triển khai ở `RELEASE-CANDIDATE-410966a.md`. Kết quả cũ không tự chuyển thành kết quả của bản sửa tiếp theo.
+**Trạng thái: đang nghiệm thu bản đã triển khai, chưa nghiệm thu Production.** Bản sửa gộp `a284b7b` đã qua CI #137 và Live đúng ảnh. Đã kiểm lại web, hộp xem → Chat, một Doc có duyệt/đọc lại, hai lượt họp và 20 lượt mở Home; các giới hạn còn lại được ghi riêng. Bằng chứng mới ở `verification/internal-assistant/RESULTS-20261014.md`; bản triển khai ở `RELEASE-CANDIDATE-a284b7b.md`. Không đổi kết quả lịch sử hoặc tự tính mọi ca đạt.
 
 ## Đã thực hiện và có bằng chứng
 
@@ -35,23 +35,23 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 | 02 | Đã có đặc tả triển khai | Đối chiếu đầu ra thật N1–N5 trong đợt kiểm gộp |
 | 03 | Đạt chuẩn bị bộ dữ liệu | Dùng đúng bộ đã khóa, ghi lượt thực và đáp án khi chạy |
 | 04 | Đạt hồi quy tại máy | Xác nhận dấu vết nguồn/hành động trong T02/T04/T05 trên ứng viên |
-| 05 | Drive thật phản hồi, lọc thư mục/tệp/gắn sao đã quan sát; bốn tệp giả lập có chỉ mục | Đóng phân trang/tìm toàn văn; xác minh bản sửa định tuyến web công khai |
+| 05 | Drive lọc/phân trang 50→100/tìm “Veridra” 3 dòng/bỏ tìm đã xác nhận; bốn tệp có chỉ mục; web công khai chạy đúng | Nội dung tệp riêng/loại tệp chưa kiểm không tự tính đạt; nguồn web còn dư |
 | 06 | Đã cập nhật hợp đồng và chỉ dẫn | Chạy gộp đầu ra N1–N5, chấm đúng/rõ/dùng được; không tối ưu văn phong ngoài tiêu chí |
-| 07 | Nhập tệp và bộ nhớ tạo/sửa/cất/khôi phục trên cloud đã quan sát; mẫu v1/v2 với dữ kiện mới đạt tại máy | Quên/truy xuất hội thoại mới và chuỗi một Doc sau duyệt trên cloud |
+| 07 | Nhập tệp/bộ nhớ quản lý đã quan sát; ghi chú v2 xuất thật; đúng một Doc sau duyệt và đọc lại độc lập thành công | Quên/truy xuất hội thoại mới; đổi bản/đích sau duyệt; tên xuất và mục bản nháp còn chưa đúng mong muốn |
 | 08 | Giao diện bắt đầu đạt kiểm cục bộ; còn phần để cuối | Trình bản nháp giải thích ngắn, nhận góp ý; rà nội dung khi chức năng ổn định |
-| 09 | CI #136, PostgreSQL và ảnh 410966a đạt; đã bắt đầu đợt tích hợp và tìm ba lỗi cụ thể | Một bản sửa gộp qua CI/triển khai, kiểm lại đúng chỗ lỗi trong ngân sách còn lại |
+| 09 | CI #137/PostgreSQL/ảnh a284b7b đạt; web và bàn giao cloud đã kiểm lại, T06 hai lượt thành công | T02/T04/T08 và phần còn lại T07 chưa đủ bằng chứng; không tự tăng ngân sách |
 | 10 | Chưa có số đo giá trị | Năm cặp công việc, gồm công kiểm/sửa; báo riêng quyết định đầu tư |
 | 11 | Thu hồi phiên/cách ly đạt kiểm cục bộ và CI PostgreSQL; nâng cấp cloud thành công | Phiên thật và hai tài khoản; hiện mới một tài khoản hoạt động |
 | 12 | Đích thử riêng đã hoạt động lại, còn trống; chưa khôi phục dữ liệu | Khôi phục DB+tệp bằng kết nối an toàn, đối soát và đo thời gian, không ghi đè nguồn |
-| 13 | Có hồi quy giới hạn chờ/khôi phục tác vụ, chưa đủ vận hành | Đo 20 lượt cloud, gián đoạn và quay lui với bản vẫn giữ thu hồi phiên; không tự nâng gói |
+| 13 | Có hồi quy giới hạn chờ; Home đang chạy 20/20 lượt dưới 3 giây, trong cùng điều kiện thanh bên | Sau ngủ, gián đoạn và quay lui với bản vẫn giữ thu hồi phiên; không tự nâng gói |
 | 14 | Chưa đóng điều kiện dữ liệu | Xác nhận dữ liệu/nhà cung cấp/quyền riêng tư/người phụ trách; không gửi dữ liệu nhạy cảm khi chưa phù hợp |
 | 15 | Chưa có bằng chứng dùng lặp lại | Ba người/10 ngày theo kế hoạch; kết luận đúng hạn, tách khỏi nghiệm thu kỹ thuật |
 | 16 | Hồ sơ đang cập nhật, chưa phát hành | Bản giải thích được duyệt, main/CI/digest/URL khớp, vận hành và biên bản ký duyệt |
 
 ## Thứ tự tiếp theo — không thêm phạm vi
 
-1. Đóng kiểm bản sửa gộp ba nguyên nhân đã xác định; đưa lên cùng nhánh riêng chạy CI PostgreSQL/ảnh, chưa gọi là bản đã nghiệm thu.
-2. Triển khai đúng ảnh CI đạt. Kiểm lại web và Doc trong ngân sách còn lại; các ca thiếu lượt ghi chưa kiểm, không đặt lại bộ đếm hoặc tự cộng ngân sách khi đổi ngày.
+1. Đã đưa bản sửa gộp qua CI và Live đúng ảnh; web/Doc/bàn giao/họp đã có kết quả, xem hồ sơ ngày 14/10.
+2. Chủ sở hữu đổi phân bổ thành 13 sinh câu trả lời + 6 tạo chỉ mục, giữ tổng 19; đã dùng 12+6. Giữ một lượt dự phòng vì không đủ bảo đảm đường tự thử lại; không tự chạy thêm hoặc đổi đáp án.
 3. Đóng khôi phục, đo vận hành, điều kiện dữ liệu và cách ly thật. Phần cần chủ sở hữu/tài khoản bổ sung ghi chờ điều kiện, không đánh dấu đạt giả.
 4. Làm phần giải thích cuối, trình người dùng; sau duyệt mới đóng main/phát hành và biên bản. Giá trị đầu tư ở gói 10/15 báo riêng.
 

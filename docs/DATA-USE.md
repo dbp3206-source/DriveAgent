@@ -8,6 +8,8 @@ Chủ sở hữu xác nhận khóa Gemini chưa bật thanh toán. Đợt nghi�
 
 Google nêu dịch vụ Gemini không trả phí có thể dùng đầu vào/đầu ra để cải thiện sản phẩm và có người đánh giá; không gửi thông tin cá nhân, nhạy cảm hoặc bí mật. Điều kiện xử lý qua dự án API gắn thanh toán khác với không trả phí. **Bộ đếm Veridra không xác minh gói Google.** Cần chủ sở hữu chốt điều kiện phù hợp trước dùng tài liệu nội bộ thật; không tự bật thanh toán. [Điều khoản Gemini](https://ai.google.dev/gemini-api/terms).
 
+Ngày 14/10 chủ sở hữu duyệt đổi phân bổ phần chưa dùng thành tối đa **13 lượt sinh câu trả lời + 6 tạo chỉ mục**, vẫn tổng 19; không đổi loại dữ liệu, bên nhận, quyền ghi hoặc giới hạn trả phí. Đến lần kiểm cuối ghi 12+6; một Doc giả lập đã tạo sau duyệt và đọc lại. Điều này không đóng điều kiện dữ liệu doanh nghiệp thật.
+
 Đọc được dữ liệu Google không đồng nghĩa được chuyển cho mọi bên xử lý. Khi mở ứng dụng cho công chúng, Google yêu cầu công bố rõ cách truy cập, dùng, lưu, chia sẻ dữ liệu và chính sách riêng tư. Chủ sở hữu cần xác nhận loại ứng dụng, quyền và yêu cầu xác minh thực tế; không tự coi bốn tài khoản Gmail là ngoại lệ nội bộ cùng tên miền. [Chính sách dữ liệu Google API](https://developers.google.com/terms/api-services-user-data-policy).
 
 ## Đường đi dữ liệu của sản phẩm
