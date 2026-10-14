@@ -18,3 +18,8 @@ npm test after CSS regression case: session53861 exit0,205passed/0failed/0skippe
 npm run build after CSS reset: session42349 exit0,Vite8.64s.
 npm run lint after CSS reset: session11947 exit0. git diff --check exit0.
 Initial scanner invocation with bare python failed command not found; used existing backend/.venv/Scripts/python.exe scripts/scan_release_secrets.py: 664 Git-visible files passed, exit0. No runtime installation.
+Commit2dbaac5 pushed to staging/internal-assistant-20261013. CI139/run38518200343 verify115701853602 succeeded3m16s, PostgreSQL35s. Public registry manifest full commit tagHTTP200/digestac46a7a22d37ee3c059d3dff560b6d39ec6a6ec2ebb5ec78b7e8be83df13a143.
+GitHub UI link clicks did not navigate; waitForURL timed out, used observed exact href via goto. No workflow rerun.
+Render second image source update Connect once: dep-db7hfhs9v7es73c3g22g Deploy succeeded/Live duration1m51s; logLive12:50:50GMT+7. No env/security/plan changes.
+Final cloud reload; existing test conversation retained. Third deterministic arithmetic submit1.5+2.5, routeHome while processing, completion notice/title visible with clipauto/positionstatic104.49px. Open sameconversation result4.0; errorlogs[], budget4/16unchanged. Screenshotscloud-final-completed/render-final-live/ci-final-success/cloud-context-help.
+Final evidence check: git diff --check passed; backend/.venv/Scripts/python.exe scripts/scan_release_secrets.py passed669Git-visible files; python -m json.tool run-manifest.json exit0. Documentation-only commit does not change deployed code/image.
