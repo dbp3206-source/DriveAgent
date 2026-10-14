@@ -85,3 +85,8 @@ for (const phase of ['completed', 'incomplete', 'failed', 'cancelled', 'waiting'
   })
 }
 test('disabled companion does not re-enable itself to notify', () => assert.equal(mascotHtml('completed', false), ''))
+
+test('full-row mobile notice restores text clipped by legacy icon-only styling', () => {
+  const css = readFileSync(new URL('./mascot-restore.css', import.meta.url), 'utf8')
+  assert.match(css, /\.topbar__actions \.topbar-chat-indicator > span\s*\{[^}]*clip: auto;[^}]*position: static;[^}]*width: auto;[^}]*height: auto;/)
+})

@@ -9,3 +9,12 @@ mcp__cua_repl.js: real local queue/SQL submit, background route changes, success
 Local server: existing Vite 96011 reused. Duplicate new startup rejected port occupied. Owned backend 60923/62378 stopped; current synthetic fixture session 88585, PID 5824, Uvicorn startup complete on 8003.
 npm run build after final responsive header CSS: session 41275, exit 0, Vite 11.28 s.
 mcp__cua_repl.js final: mobile notice bounds inside actual 390x600 iframe; Enter opens same conversation, badge clears. Context help Enter works. Error console list empty after final local navigation. No OS motion emulation claim.
+CI #138 run 38515849608 / verify job 115694507579: Success observed, 4m47s. Step 23 log viewer returned Error:, log archive download timeout 20000ms. Exact test counts not extracted from CI logs.
+Public GHCR anonymous pull manifest read: HTTP 200 for full commit 00def8a3ab44c24730a3bcd2331540ef46d43f37; Docker-Content-Digest sha256:481b0515062f8502386fe6e2e09efded46aa5d03d961e48e7792ede9709b3fb1. First binary Content parsed without UTF8 had null descriptors; corrected decode. Config amd64/linux, revision/source labels absent. No token printed/persisted.
+mcp__cua_repl.js: Render image source update via existing My Workspace UI, Connect once. Deploy dep-db7h8549v7es73c2ol70 Live, duration1m51s. Ambiguous Deploys link click rejected two matches after automatic redirect; read new detail instead, no duplicate deployment.
+mcp__cua_repl.js: two deterministic cloud arithmetic submits; first completed before route change, second observed running at Home then unread notice, dismiss/badge/Enter/reload/open exact conversation 7.0. No Gemini/embeddings, displayed budget4/16 unchanged. Final error logs[].
+Visual cloud finding: legacy mobile rule clips indicator spans to1x1. Scoped CSS reset added; real local390x600 DOM clip auto/position static/title104.48x20px; mobile-header-fixed.jpg. No UI event injection.
+npm test after CSS regression case: session53861 exit0,205passed/0failed/0skipped,15788.4446ms.
+npm run build after CSS reset: session42349 exit0,Vite8.64s.
+npm run lint after CSS reset: session11947 exit0. git diff --check exit0.
+Initial scanner invocation with bare python failed command not found; used existing backend/.venv/Scripts/python.exe scripts/scan_release_secrets.py: 664 Git-visible files passed, exit0. No runtime installation.
