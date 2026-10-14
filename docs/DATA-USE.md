@@ -1,0 +1,41 @@
+# Điều kiện dữ liệu trước vận hành thật
+
+Ngày đối chiếu: 13/10/2026. Thuộc gói 14 của kế hoạch hiện hành, không thêm phạm vi. Đây là hồ sơ chuẩn bị để chủ sản phẩm xác nhận, **chưa phải chính sách quyền riêng tư đã được duyệt hoặc chứng nhận tuân thủ**.
+
+## Quyết định hiện tại
+
+Chủ sở hữu xác nhận khóa Gemini chưa bật thanh toán. Đợt nghiệm thu được phép dùng tối đa 11 yêu cầu sinh câu trả lời (gồm hai dự phòng) và 8 yêu cầu tạo chỉ mục, tổng 19 yêu cầu Gemini thực, chỉ cho bốn tệp giả lập A/B/C, ghi chú giả lập của bộ kiểm và nguồn công khai; được tạo đúng một Google Doc giả lập sau xem trước/duyệt. Tính cả yêu cầu lỗi và thử lại. Không đọc thêm nội dung riêng, gửi thư, sửa lịch, tăng hạn mức hoặc nâng gói.
+
+Google nêu dịch vụ Gemini không trả phí có thể dùng đầu vào/đầu ra để cải thiện sản phẩm và có người đánh giá; không gửi thông tin cá nhân, nhạy cảm hoặc bí mật. Điều kiện xử lý qua dự án API gắn thanh toán khác với không trả phí. **Bộ đếm Veridra không xác minh gói Google.** Cần chủ sở hữu chốt điều kiện phù hợp trước dùng tài liệu nội bộ thật; không tự bật thanh toán. [Điều khoản Gemini](https://ai.google.dev/gemini-api/terms).
+
+Đọc được dữ liệu Google không đồng nghĩa được chuyển cho mọi bên xử lý. Khi mở ứng dụng cho công chúng, Google yêu cầu công bố rõ cách truy cập, dùng, lưu, chia sẻ dữ liệu và chính sách riêng tư. Chủ sở hữu cần xác nhận loại ứng dụng, quyền và yêu cầu xác minh thực tế; không tự coi bốn tài khoản Gmail là ngoại lệ nội bộ cùng tên miền. [Chính sách dữ liệu Google API](https://developers.google.com/terms/api-services-user-data-policy).
+
+## Đường đi dữ liệu của sản phẩm
+
+| Dữ liệu | Nơi dùng/lưu | Điều phải hiểu đúng |
+|---|---|---|
+| Hồ sơ đăng nhập/quyền Google | Máy chủ và DB Veridra | Khóa/OAuth được mã hóa theo cơ chế ứng dụng; không hứa mọi trường nội dung cũng được mã hóa ở cấp ứng dụng |
+| Tệp nhập | Kho riêng tại nơi chạy, DB/chỉ mục theo tài khoản | URL cloud lưu trên máy chủ, không phải chỉ ở thiết bị người dùng |
+| Câu hỏi và đoạn nguồn liên quan | Gửi tới Gemini khi xử lý; hội thoại/kết quả lưu trong Veridra | Chọn nguồn là giới hạn đọc, không phải cam kết AI chạy ngoại tuyến |
+| Thư/Drive/lịch | Đọc theo quyền và yêu cầu; phần dùng trong câu trả lời có thể đi vào ngữ cảnh/lịch sử | Không dùng nội dung riêng trong đợt kiểm mới được duyệt ở trên |
+| Tra cứu web | Nhà cung cấp tìm kiếm và trang công khai | Không đưa thông tin riêng vào truy vấn để tìm cho tiện |
+| Ảnh ngoài trong thư | Máy chủ ảnh của người gửi hoặc đường tải được hỗ trợ | Bật ảnh có thể để bên gửi ghi nhận lượt xem; không gọi đó là hoàn toàn riêng tư |
+| Google Doc | Tạo vào tài khoản được phép sau duyệt và đọc lại | Không tự gửi thư hoặc đổi quyền chia sẻ; duyệt tạo Doc không phải duyệt quyết định nghiệp vụ |
+
+Không đăng thư, lịch, hồ sơ nội bộ, bí mật hoặc ảnh chứa chúng lên GitHub. Bằng chứng công khai chỉ dùng dữ liệu giả lập hoặc đã được phép và loại nội dung riêng. Bản sao khôi phục vẫn là dữ liệu riêng, phải giữ đúng chủ sở hữu/quyền khi chuyển sang đích thử.
+
+## Xóa, ngắt quyền và lưu giữ
+
+- Đăng xuất thu hồi phiên Veridra của tài khoản; không xóa dữ liệu và không thu hồi quyền Google. Ngắt quyền Google thực hiện qua phần kết nối của tài khoản Google; cần xác nhận lại trên ứng dụng khi nghiệm thu.
+- Có đường xóa hội thoại, mục bộ nhớ và khóa riêng theo chủ sở hữu. Cất bộ nhớ/mẫu không phải xóa vĩnh viễn. Xóa một ghi chú không xóa điều đã nằm trong hội thoại/tệp cũ hoặc bản sao bên ngoài.
+- Chưa có bằng chứng một thao tác tự xóa toàn bộ tài khoản, mọi tệp, mọi bản sao và dữ liệu tại nhà cung cấp. Không quảng bá khả năng này trước khi kiểm và công bố quy trình đúng.
+- Thời hạn lưu từng loại, thời hạn bản sao, nơi nhận yêu cầu xóa và người xử lý phải được chủ sở hữu xác nhận. Hướng dẫn giữ bản sao 30 ngày không tự chứng minh toàn hệ thống đang áp dụng thời hạn đó.
+
+## Điều kiện đóng gói 14
+
+1. Chủ sở hữu xác nhận dữ liệu được dùng, bên có quyền cho phép, điều kiện Gemini/Google phù hợp và phạm vi người dùng. Không có quyết định này thì chưa mở xử lý dữ liệu doanh nghiệp thật.
+2. Chốt tên/người vận hành, kênh riêng nhận yêu cầu dữ liệu, thời hạn lưu và cách xóa/ngắt kết nối thực làm được; không đặt thông tin cá nhân trong issue công khai.
+3. Công bố nội dung dễ hiểu tại URL truy cập được trước cấp quyền; cấu hình đúng trong OAuth nếu áp dụng. Không chỉ có tài liệu trong repo mà tuyên bố người dùng đã được thông báo.
+4. Kiểm đúng cơ chế với cùng bản phát hành; ghi điều chưa hỗ trợ. Chủ sở hữu/người có thẩm quyền duyệt phần điều kiện dữ liệu, không lấy kiểm đơn vị hoặc AI tự chấm làm chứng nhận.
+
+Hồ sơ này không đổi mục tiêu trợ lý nội bộ hoặc tự thu hẹp phạm vi phát hành. Nó chỉ ghi điều kiện còn phải đáp ứng để mục tiêu sử dụng thật trở thành đúng, thay vì tuyên bố đã đạt khi mới kiểm dữ liệu giả lập.

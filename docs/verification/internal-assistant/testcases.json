@@ -1,10 +1,12 @@
 {
   "schema_version": 1,
-  "dataset_version": "internal-assistant-20261013.1",
+  "dataset_version": "internal-assistant-20261013.2",
   "language": "vi",
   "scope": "Năm nhóm việc, ba hành trình, mười ca theo kế hoạch 13/10/2026",
   "privacy": "Tất cả tệp đầu vào là giả lập; nguồn thật cần đúng quyền/phạm vi đã duyệt.",
-  "real_model_call_cap": 12,
+  "real_model_call_cap": 11,
+  "embedding_call_cap": 8,
+  "total_provider_request_cap": 19,
   "reserve_calls": 2,
   "fixtures": ["inputs/A-bao-gia.md", "inputs/B-hop-du-an.md", "inputs/C-huong-dan-hieu-luc.md", "inputs/C-ban-nhap-moi.md"],
   "cases": [

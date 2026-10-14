@@ -16,6 +16,8 @@ def validate(root: Path) -> dict:
         file = (root / relative).resolve()
         assert file.is_relative_to(root.resolve())
         assert file.is_file() and "giả lập" in file.read_text(encoding="utf-8")
+        assert "## Đáp án nguồn" not in file.read_text(encoding="utf-8")
+    assert "Ghi chú sau họp" not in (root / "inputs/B-hop-du-an.md").read_text(encoding="utf-8")
     for case in cases:
         assert case["input"] and case["expected"] and case["sources"]
         for calculation in case.get("calculations", []):
@@ -24,9 +26,13 @@ def validate(root: Path) -> dict:
             assert [total, saved, total - saved] == list(map(Decimal, calculation["expected"]))
     calls = sum(case["model_calls_planned"] for case in cases)
     assert calls + data["reserve_calls"] <= data["real_model_call_cap"]
+    assert data["real_model_call_cap"] + data["embedding_call_cap"] == data["total_provider_request_cap"]
     return {"dataset_version": data["dataset_version"], "cases": len(cases),
             "fixtures": len(data["fixtures"]), "planned_model_calls": calls,
             "reserve_calls": data["reserve_calls"], "integrity_passed": True,
+            "generation_cap": data["real_model_call_cap"],
+            "embedding_cap": data["embedding_call_cap"],
+            "total_request_cap": data["total_provider_request_cap"],
             "scope": "local dataset only; product acceptance not executed"}
 
 

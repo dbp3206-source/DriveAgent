@@ -1,12 +1,42 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 
-import {DEFAULT_CHAT_CONTROLS, displaySessionTitle, localChatLaunch, mergeChatControls, normalizeChatControls} from './chatControls.ts'
+import {DEFAULT_CHAT_CONTROLS, displaySessionTitle, localChatLaunch, mergeChatControls, normalizeChatControls, waitForModalAccessibilityRelease} from './chatControls.ts'
 
 test('local-to-chat launch follows the current strict API contract', () => {
   const launch = localChatLaunch('tài liệu.md')
   assert.equal(launch.prompt, '/local tài liệu.md ')
   assert.deepEqual(launch.controls, {source: 'local', agent: 'research', output: 'chat', workflow: 'auto'})
+})
+
+test('local preview waits for the dialog accessibility mask before routing', () => {
+  const queue = []
+  const events = []
+  let checks = 0
+  waitForModalAccessibilityRelease({
+    isReleased: () => ++checks === 3,
+    schedule: callback => queue.push(callback),
+    onReady: () => events.push('ready'),
+    onTimeout: () => events.push('timeout'),
+    attempts: 4,
+  })
+  while (queue.length) queue.shift()()
+  assert.deepEqual(events, ['ready'])
+  assert.equal(checks, 3)
+})
+
+test('local preview uses its reload fallback when the accessibility mask is stuck', () => {
+  const queue = []
+  const events = []
+  waitForModalAccessibilityRelease({
+    isReleased: () => false,
+    schedule: callback => queue.push(callback),
+    onReady: () => events.push('ready'),
+    onTimeout: () => events.push('timeout'),
+    attempts: 3,
+  })
+  while (queue.length) queue.shift()()
+  assert.deepEqual(events, ['timeout'])
 })
 
 test('old stored launch fields cannot leak into a new chat request', () => {

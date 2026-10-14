@@ -1,4 +1,17 @@
-Observed commands and browser actions, 2026-10-13. This is a curated command ledger, not a fabricated raw terminal transcript.
+Observed commands and browser actions, 2026-10-13/14. This is a curated command ledger, not a fabricated raw terminal transcript.
+
+2026-10-14 grouped fixes:
+  npm run test:unit (frontend): 192 passed, 0 failed, 0 skipped (observed in preceding execution).
+  npm run lint (frontend): session 19346 exit 0.
+  npm run build (frontend): session 66000 exit 0; Vite 49.79 s.
+  backend/.venv/Scripts/python.exe -m pytest tests/test_adk.py tests/test_public_freshness.py tests/test_routing.py tests/test_presentation_contract.py -q (cwd backend): 276 passed in 9.26 s; session 20497 exit 0.
+  Ruff changed backend/tests and scripts: passed.
+  evaluate_release_offline.py --output design-work/production-20261013/qa/validation/offline-regression-20261014.json: 200/200, 0 model calls, gate true.
+  scan_release_secrets.py: 632 Git-visible files passed at that point; rerun before commit.
+  Real local UI: restart after no listening ports; initial Vite proxy used default 8000 and returned ECONNREFUSED; stopped only owned Vite session 23449 and restarted with documented DRIVE_AGENT_DEV_API_TARGET=127.0.0.1:8003, session 96011. Backend session 60923. Preview handoff and ordinary close checked; fixed handoff screenshot saved.
+  Render MCP: confirmed service image matches 410966a; exact T02 request logged provider 503; T05 audit blocked web_research with only calculate offered. Six observed embedding calls returned HTTP 200 (4 imports + memory create/edit).
+  Browser cloud: Drive filters, four synthetic imports/readback, T02/T03/T04-first/T05, synthetic memory create/edit/archive/restore. See RESULTS-20261014.md for failures and incomplete cases.
+  GitHub MCP: read actual CI #136 job status/logs (1611 passed, 14 skipped, 95.25 s, displayed 88% coverage); no invented CI counts.
 
 backend/.venv/Scripts/python.exe design-work/production-20261013/working/run_offline_tests.py --cov=app --cov-report=term-missing --cov-fail-under=85
   Earlier candidate step: backend-regression.xml records 1624 tests, 15 skipped, 0 errors, 0 failures. See qa-report.md for wrapper setup failures preserved separately.

@@ -37,6 +37,29 @@ def needs_public_evidence(message: str) -> bool:
         ".",
         text,
     )
+    # A product name in official public documentation is a topic, not a
+    # request to read the user's workspace. Mask only that topic clause;
+    # private references elsewhere still veto transmission to web search.
+    requested_web = re.search(
+        r"\b(?:tìm(?: kiếm)?|tra cứu|đọc|kiểm tra|tìm hiểu)\s+"
+        r"(?:(?:trên|bằng|qua|nguồn|thông tin|từ)\s+){0,2}"
+        r"(?:web|internet|nguồn công khai)\b", text,
+    )
+    if requested_web:
+        clauses = re.split(r"([.!?;\n])", text)
+        for index in range(0, len(clauses), 2):
+            clause = clauses[index]
+            if re.search(
+                r"\b(?:tài liệu|hướng dẫn|documentation)\s+"
+                r"(?:api\s+)?(?:chính thức|công khai|official|public)\b", clause,
+            ) and not re.search(
+                r"\b(?:của tôi|của chúng tôi|nội bộ|khách hàng|đính kèm|"
+                r"đã (?:chọn|tải|gửi)|vừa (?:nhập|tải))\b", clause,
+            ):
+                clauses[index] = re.sub(
+                    r"\b(?:google\s+)?(?:drive|gmail|calendar)\b", "dịch vụ", clause,
+                )
+        text = "".join(clauses)
     if re.search(
         r"\b(?:gmail|email|mail|drive|calendar|lịch của tôi|cuộc họp|local|"
         r"bộ nhớ|ghi nhớ|memory|skill)\b|"
@@ -64,11 +87,6 @@ def needs_public_evidence(message: str) -> bool:
         re.search(r"https://[^\s<>]+", text)
         and re.search(r"\b(?:kiểm nguồn|đọc nguồn|kiểm chứng|xác minh|đọc trang)\b", text)
         and not re.search(r"\b(?:không|đừng)\s+(?:đọc|dùng|truy cập|tìm)\s+web\b", text)
-    )
-    requested_web = re.search(
-        r"\b(?:tìm(?: kiếm)?|tra cứu|đọc|kiểm tra|tìm hiểu)\s+"
-        r"(?:(?:trên|bằng|qua|nguồn|thông tin|từ)\s+){0,2}"
-        r"(?:web|internet|nguồn công khai)\b", text,
     )
     return bool(explicit or unstable or selected_public_source or requested_web)
 

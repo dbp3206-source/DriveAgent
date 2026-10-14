@@ -1033,3 +1033,42 @@ async def test_correct_numeric_comparisons_and_different_scale_are_not_flagged()
         )
         assert result == answer
         assert records == []
+
+
+@pytest.mark.parametrize("answer", [
+    "Trúc | 18 triệu đồng [1] | 20 [1] | PDF có chữ, Drive [1] | "
+    "Vượt ngân sách tối đa 15 triệu đồng (chi phí 18 triệu đồng) [1].",
+    "Nguồn [1] cho biết chi phí 18 triệu đồng vượt ngân sách 15 triệu đồng [1].",
+    "Kho 2.100 [1, 2] vượt ngưỡng 1.650 [3].",
+    "| Số người | Nhận xét |\n| 8 | Chi phí vượt ngưỡng 15 |",
+])
+async def test_citation_labels_and_other_table_cells_are_not_arithmetic_operands(answer):
+    records = []
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=None)),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Kiểm tra phương án.",
+        answer=answer,
+        model_name="gemini-3.5-flash-lite",
+        fallback_model="gemini-3.8-flash",
+        records=records,
+    )
+    assert result == answer
+    assert records == []
+
+
+async def test_real_wrong_comparison_with_citations_still_fails_closed():
+    records = []
+    answer = "Kho 1.650 [1] vượt ngưỡng 2.100 [2]."
+    result = await enforce_presentation_contract(
+        client=SimpleNamespace(aio=SimpleNamespace(models=None)),
+        quota=SimpleNamespace(reserve=lambda *_args: None),
+        user_message="Kiểm tra phương án.",
+        answer=answer,
+        model_name="gemini-3.5-flash-lite",
+        fallback_model="gemini-3.8-flash",
+        records=records,
+    )
+    assert result.startswith(answer)
+    assert records[-1]["violations"] == ["numeric_comparison_inconsistent"]
+    assert records[-1]["repair_calls"] == 0

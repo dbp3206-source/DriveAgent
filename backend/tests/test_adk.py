@@ -646,6 +646,39 @@ def test_adk_auto_router_skips_coordinator_for_clear_specialist_intents():
     assert AdkOrchestrator._auto_agent_for_request("Bạn làm được gì?") == "auto"
 
 
+@pytest.mark.parametrize("service", ["Drive", "Gmail", "Google Calendar"])
+def test_official_public_documentation_topic_keeps_web_route(service):
+    message = (
+        f"Tìm trên web tài liệu chính thức của Google về tìm kiếm trong {service}. "
+        "Giải thích ngắn điều cần lưu ý và đề xuất bước kiểm phù hợp. "
+        "Chỉ dùng nguồn công khai, không đọc Gmail, Drive, lịch, local hoặc bộ nhớ; "
+        "không ghi dữ liệu."
+    )
+    controls = ChatControls().enforce_explicit_source_exclusions(message)
+    route = controls.filter_excluded_route(route_request(message))
+    assert route.tool == "web_research"
+    assert AdkOrchestrator._should_use_compiler(controls, route, message)
+    assert AdkOrchestrator._auto_agent_for_request(
+        message, excluded_sources=controls.excluded_sources,
+    ) == "research"
+
+
+@pytest.mark.parametrize("private_clause", [
+    "Dựa trên email này từ khách hàng, hãy tìm cách giải quyết.",
+    "Dùng tài liệu nội bộ trên Drive của tôi làm truy vấn.",
+    "Đọc https://docs.google.com/document/d/private-id/edit.",
+    "Đọc tệp customer.md đã tải lên.",
+    "Không đọc web.",
+])
+def test_official_documentation_does_not_remove_private_source_veto(private_clause):
+    from app.agent.freshness import needs_public_evidence
+
+    message = (
+        "Tìm trên web tài liệu chính thức về Google Drive. " + private_clause
+    )
+    assert not needs_public_evidence(message)
+
+
 def test_memory_recall_does_not_route_to_excluded_local_sources():
     message = (
         "Chỉ tìm trong bộ nhớ dài hạn đã lưu mục dự án DEMO-V-031026. "

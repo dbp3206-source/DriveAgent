@@ -238,10 +238,10 @@ def _numeric_literals(text: str) -> set[str]:
 _COMPARISON_NUMBER = r"(?<![\w/-])(?:\d{1,3}(?:\.\d{3})+(?:,\d+)?|\d+(?:[.,]\d+)?)(?![\w/-])"
 _EXPLICIT_COMPARISON = re.compile(
     rf"(?P<left>{_COMPARISON_NUMBER})"
-    r"(?P<context>[^\d\n.!?;]{0,48}?)"
+    r"(?P<context>[^\d\n.!?;|]{0,48}?)"
     r"(?P<operator>vượt(?:\s+qua)?|lớn\s+hơn|cao\s+hơn|nhiều\s+hơn|"
     r"nhỏ\s+hơn|thấp\s+hơn|ít\s+hơn)"
-    r"(?P<right_context>[^\d\n.!?;]{0,30}?)"
+    r"(?P<right_context>[^\d\n.!?;|]{0,30}?)"
     rf"(?P<right>{_COMPARISON_NUMBER})",
     re.I,
 )
@@ -263,6 +263,10 @@ def _explicit_numeric_comparison_violations(answer: str) -> list[str]:
     would require unit conversion and domain context.
     """
 
+    # Citation identifiers are labels, never numerical operands. Keep table
+    # cells separate as well: a count in one cell is not the left operand of
+    # a budget comparison in another cell.
+    answer = re.sub(r"\[\d+(?:\s*[,;–-]\s*\d+)*\]", "", answer)
     for match in _EXPLICIT_COMPARISON.finditer(answer):
         context = (match.group("context") + match.group("right_context")).lower()
         # A comma can introduce a different subject ("250 chiếc, phần đệm cao

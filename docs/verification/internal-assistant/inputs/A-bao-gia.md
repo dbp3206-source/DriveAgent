@@ -22,7 +22,3 @@ Dữ liệu hoàn toàn giả lập, không phải báo giá hoặc kết quả 
 ## Bài tính có giả định
 
 Giả định mỗi người mất 3 giờ tìm tài liệu mỗi tháng; nếu giảm 25% thì tính tổng giờ hiện tại, giờ tiết kiệm và giờ còn lại. Đây là kịch bản, không phải bằng chứng hiệu quả. Không quy ra tiền lương hoặc lợi tức đầu tư khi chưa có dữ liệu.
-
-## Đáp án nguồn
-
-Tre là lựa chọn duy nhất đáp ứng đủ số người, nguồn và ngân sách hiện tại, với điều kiện dữ liệu cần duyệt. Các hướng khác phải ghi rõ thay đổi ràng buộc: giảm phạm vi với Sen hoặc xin thêm ngân sách cho Trúc. Không khẳng định Tre có chất lượng tốt hơn. Khi đổi ngân sách xuống 10 triệu và giữ nguyên yêu cầu, không có báo giá nào đáp ứng đầy đủ.

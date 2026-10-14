@@ -2,6 +2,8 @@
 
 ## Kết luận đúng phạm vi
 
+**Cập nhật 14/10:** kết luận chuẩn bị bên dưới được giữ theo thời điểm chạy. 410966a sau đó đã qua CI/Live; kiểm cloud phát hiện lớp ẩn vẫn sót, bộ kiểm số học đọc nhầm số nguồn/ô bảng, và tài liệu công khai bị định tuyến sai. Không dùng lần kiểm tại máy trước để bỏ qua lỗi cloud. Ba lỗi được sửa gộp; kiểm liên quan 276/276, giao diện 192/192, lint/build đạt. Kiểm trình duyệt bản sửa: hộp xem → Chat có `rootHidden=null`, 0 hộp thoại, đúng câu nhập và Tab hoạt động; đóng thường cũng giải phóng lớp ẩn. Bằng chứng đầy đủ/trạng thái T01–T10 ở `docs/verification/internal-assistant/RESULTS-20261014.md`. Các sửa mới chưa được gọi là đã triển khai cho tới khi có CI/digest/Live tương ứng.
+
 Phần sửa cốt lõi và giao diện bắt đầu đã có kiểm tại máy. **Chưa nghiệm thu Production:** chưa có CI PostgreSQL và ảnh triển khai cùng mã, chưa chạy đủ T01–T10/nguồn thật/khôi phục/vận hành. Không dùng số kiểm đơn vị để thay điểm chất lượng đầu ra Gemini hoặc giá trị kinh doanh.
 
 Mã nền: `a026db6`; bản ứng viên là thay đổi đang làm sau mã nền này. Hồ sơ hiện hành: `docs/PRODUCTION-EXECUTION-20261013.md`, `docs/ASSISTANT-CONTRACT.md`, `docs/verification/internal-assistant/testcases.json` và kế hoạch ngày 13/10 ở workspace cha. Các tệp đầu vào A/B/C đều giả lập.

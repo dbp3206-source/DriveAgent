@@ -25,7 +25,7 @@ import {
 } from '@fluentui/react-icons'
 import { DragEvent, useEffect, useRef, useState } from 'react'
 import { api, apiText } from '../api'
-import {localChatLaunch} from '../chatControls'
+import {localChatLaunch, waitForModalAccessibilityRelease} from '../chatControls'
 import { EmptyState, ErrorState } from '../components/AsyncState'
 
 interface Source {
@@ -173,7 +173,7 @@ export function LocalSourcesPage() {
     }
   }
 
-  function handleChatNow(fileName: string) {
+  function handleChatNow(fileName: string, hardReload = false) {
     if (previewSource) {
       // Let the modal finish closing before its page unmounts. Otherwise its
       // accessibility mask can remain on the new chat page.
@@ -198,15 +198,26 @@ export function LocalSourcesPage() {
       /* storage fallback */
     }
     window.location.hash = '#/chat'
+    if (hardReload) window.location.reload()
   }
 
   function finishPreviewClose(_: null, data: { direction: 'enter' | 'exit' }) {
     if (data.direction !== 'exit' || !pendingChat.current) return
     const fileName = pendingChat.current
     pendingChat.current = null
-    // The motion callback runs before the surface is removed. Give modal
-    // cleanup a frame, then hand the selected source to the chat composer.
-    requestAnimationFrame(() => handleChatNow(fileName))
+    // Fluent/Tabster removes the root accessibility mask asynchronously,
+    // after the surface exit callback. Wait for that authoritative state;
+    // if the library never releases it, reload the same route with the draft
+    // kept in sessionStorage rather than exposing an aria-hidden chat page.
+    waitForModalAccessibilityRelease({
+      isReleased: () => (
+        document.querySelector('[role="dialog"]') === null
+        && document.getElementById('root')?.getAttribute('aria-hidden') !== 'true'
+      ),
+      schedule: callback => window.setTimeout(callback, 50),
+      onReady: () => handleChatNow(fileName),
+      onTimeout: () => handleChatNow(fileName, true),
+    })
   }
 
   async function openPreview(source: Source) {

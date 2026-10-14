@@ -36,6 +36,42 @@ export function localChatLaunch(fileName: string) {
   return {prompt: `/local ${fileName} `, controls: {...DEFAULT_CHAT_CONTROLS, source: 'local' as const, agent: 'research' as const}}
 }
 
+type ModalCleanupWait = {
+  isReleased: () => boolean
+  schedule: (callback: () => void) => unknown
+  onReady: () => void
+  onTimeout: () => void
+  attempts?: number
+}
+
+/**
+ * Wait until the dialog library has removed its accessibility mask before
+ * changing routes. Fluent/Tabster updates that mask asynchronously after the
+ * exit animation; navigating earlier can leave the new page aria-hidden.
+ */
+export function waitForModalAccessibilityRelease({
+  isReleased,
+  schedule,
+  onReady,
+  onTimeout,
+  attempts = 24,
+}: ModalCleanupWait) {
+  let remaining = Math.max(1, attempts)
+  const check = () => {
+    if (isReleased()) {
+      onReady()
+      return
+    }
+    remaining -= 1
+    if (remaining <= 0) {
+      onTimeout()
+      return
+    }
+    schedule(check)
+  }
+  schedule(check)
+}
+
 export type SlashOption = {
   id: string
   command: string
