@@ -245,6 +245,8 @@ def test_postgres_operation_ledger_serializes_claim_and_survives_restart():
     owner = f"operation-{uuid4()}"
     row = store.prepare(owner, "approval-one", "docs_create", {"title": "Report"})
     try:
+        assert store.get_by_request_key(owner, "approval-one")["id"] == row["id"]
+        assert store.get_by_request_key("other-" + owner, "approval-one") is None
         def claim(_):
             try:
                 RelationalOperationStore(engine).claim(owner, row["id"], row["digest"])
@@ -264,6 +266,8 @@ def test_postgres_operation_ledger_serializes_claim_and_survives_restart():
     reopened = create_engine(url)
     try:
         restored = RelationalOperationStore(reopened).get(owner, row["id"])
+        by_key = RelationalOperationStore(reopened).get_by_request_key(owner, "approval-one")
+        assert by_key["digest"] == row["digest"]
         assert restored["state"] == "uncertain"
         assert restored["resource_id"] == "doc-id"
     finally:

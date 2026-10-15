@@ -133,6 +133,14 @@ class RelationalOperationStore(OperationStore):
             ))
         return self.get(user_id, operation_id)
 
+    def get_by_request_key(self, user_id: str, request_key: str) -> dict | None:
+        with self.engine.connect() as db:
+            row = db.execute(select(operations).where(
+                operations.c.user_id == user_id,
+                operations.c.request_key == request_key,
+            )).mappings().first()
+        return dict(row) if row is not None else None
+
     def get(self, user_id: str, operation_id: str) -> dict:
         with self.engine.connect() as db:
             row = db.execute(select(operations).where(

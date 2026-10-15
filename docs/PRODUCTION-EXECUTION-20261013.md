@@ -1,5 +1,9 @@
 # Theo dõi triển khai — 13/10/2026
 
+## Cập nhật 15/10 — không thay phạm vi nghiệm thu
+
+Linh vật đã triển khai ở mã `2dbaac5`, CI#139 và Render đã xác nhận, hồ sơ ở `design-work/mascot-notifications-20261014/qa/`. Bản đặt tên Doc trước khóa và phục hồi đúng bản duyệt đang chuẩn bị phát hành:219/219 frontend,34/34 backend liên quan, kiểm trình duyệt local thành công,0Gemini/0Doc thật mới. Hồ sơ ở `design-work/document-export-20261014/qa/`; chưa lấy kết quả local thay Render/PostgreSQL CI hoặc đóng trọn T07. Các bảng dưới giữ lịch sử bản a284b7b; giới hạn khôi phục/tài khoản/dữ liệu/quota/phát hành vẫn còn. Không nâng trạng thái Production hoặc gộp main khi chưa đủ bằng chứng.
+
 Phạm vi hiện hành: trợ lý công việc nội bộ, năm nhóm việc, ba hành trình A/B/C, đúng 16 gói và 10 ca T01–T10 trong kế hoạch ngày 13/10. Không mở thêm tính năng. Phần trình bày “Cách Agent hoạt động” để cuối và phải trình người dùng góp ý trước khi chốt.
 
 **Trạng thái: đang nghiệm thu bản đã triển khai, chưa nghiệm thu Production.** Bản sửa gộp `a284b7b` đã qua CI #137 và Live đúng ảnh. Đã kiểm lại web, hộp xem → Chat, một Doc có duyệt/đọc lại, hai lượt họp và 20 lượt mở Home; các giới hạn còn lại được ghi riêng. Bằng chứng mới ở `verification/internal-assistant/RESULTS-20261014.md`; bản triển khai ở `RELEASE-CANDIDATE-a284b7b.md`. Không đổi kết quả lịch sử hoặc tự tính mọi ca đạt.

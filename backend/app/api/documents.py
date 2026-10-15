@@ -1,8 +1,9 @@
 """Write endpoints require same-origin approval plus current RBAC and Google scopes."""
 
 import asyncio
+from typing import Annotated
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Path, Request
 
 from app.api.dependencies import CurrentUser, DbSession, is_trusted_ui_origin
 from app.core.config import get_settings
@@ -39,6 +40,25 @@ async def prepare(payload: DocumentPrepare, request: Request, user: CurrentUser,
 @router.post("/approve")
 async def approve(payload: DocumentApproval, request: Request, user: CurrentUser, db: DbSession):
     return await invoke("docs_execute", payload, request, user, db)
+
+
+@router.get("/previews/{request_key}")
+async def prepared_preview(
+    request_key: Annotated[str, Path(pattern=r"^[A-Za-z0-9_-]{8,100}$")],
+    user: CurrentUser,
+):
+    """Recover only this owner's locked Doc metadata, without preparing/writing."""
+    row = await asyncio.to_thread(
+        operation_store_for(get_settings()).get_by_request_key, user.id, request_key,
+    )
+    if row is None or row["capability"] != "docs_create":
+        return {"data": None}
+    spec = json_object(row["spec"])
+    document = spec.get("document") or {}
+    return {"data": {
+        "operation_id": row["id"], "digest": row["digest"], "state": row["state"],
+        "title": document.get("title", "Tài liệu Veridra"),
+    }}
 
 
 @router.get("/operations/{operation_id}")

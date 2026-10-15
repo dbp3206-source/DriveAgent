@@ -55,6 +55,8 @@ import { markdownToDocumentBlocks as parseMarkdownDocument } from '../documentMa
 import { normalizeMathNotation } from '../markdownPresentation.mjs'
 import { citationHref } from '../citationLinks.mjs'
 import { documentPreviewKey, renewDocumentPreviewKey } from '../documentPreviewRecovery.mjs'
+import { suggestedDocumentTitle, validatedDocumentTitle } from '../documentTitle.mjs'
+import { DocumentExportTitleDialog } from '../components/DocumentExportTitleDialog'
 import {
   DEFAULT_CHAT_CONTROLS,
   displaySessionTitle,
@@ -271,6 +273,7 @@ export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true 
   const [exportingDoc, setExportingDoc] = useState<string | null>(null)
   const docExportLock = useRef(false)
   const [preparedDocs, setPreparedDocs] = useState<Record<string, PreparedDocumentExport>>({})
+  const [documentTitleTarget, setDocumentTitleTarget] = useState<{message: ChatMessage; title: string} | null>(null)
   const [preparedDrafts, setPreparedDrafts] = useState<Record<string, PreparedGmailDraft>>({})
   const [createdDrafts, setCreatedDrafts] = useState<Record<string, { draft_id: string; url: string }>>({})
   const [draftingMessage, setDraftingMessage] = useState<string | null>(null)
@@ -898,18 +901,35 @@ export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true 
     }
   }
 
-  async function exportToGoogleDoc(message: ChatMessage, expiredOperationId?: string) {
+  async function openDocumentExport(message: ChatMessage) {
     if (docExportLock.current) return
     docExportLock.current = true
     setExportingDoc(message.id)
     setError('')
     try {
+      const key = documentPreviewKey(sessionStorage, ownerId, message.id)
+      const existing = await api<{data: PreparedDocumentExport | null}>(`/api/documents/previews/${key}`)
+      if (existing.data) setPreparedDocs(prev => ({...prev, [message.id]: existing.data!}))
+      else setDocumentTitleTarget({message, title: suggestedDocumentTitle(message.content)})
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : 'Chưa kiểm tra được bản xem trước cũ. Không tạo lại để tránh trùng.')
+    } finally {
+      docExportLock.current = false
+      setExportingDoc(null)
+    }
+  }
+
+  async function exportToGoogleDoc(message: ChatMessage, titleValue: string, expiredOperationId?: string) {
+    if (docExportLock.current) return
+    docExportLock.current = true
+    setExportingDoc(message.id)
+    setError('')
+    try {
+      const title = validatedDocumentTitle(titleValue)
       const requestKey = expiredOperationId
         ? await renewDocumentPreviewKey(sessionStorage, ownerId, message.id, expiredOperationId,
           id => api<{state: string}>(`/api/documents/operations/${id}`))
         : documentPreviewKey(sessionStorage, ownerId, message.id)
-      const firstLine = (message.content.split('\n')[0] ?? '').replace(/^#+\s*/, '').slice(0, 50).trim()
-      const title = firstLine ? `Veridra: ${firstLine}` : `Tài liệu Veridra - ${new Date().toLocaleDateString('vi-VN')}`
       const result = await api<{
         data: { operation_id: string; digest: string; state: string }
       }>(
@@ -941,6 +961,7 @@ export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true 
         ...prev,
         [message.id]: { ...result.data, title },
       }))
+      setDocumentTitleTarget(null)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Không thể xuất Google Doc.')
     } finally {
@@ -1572,7 +1593,7 @@ export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true 
                       size="small"
                       icon={<DocumentBulletList20Regular />}
                       disabled={message.status === 'incomplete' || exportingDoc === message.id || Boolean(preparedDocs[message.id])}
-                      onClick={() => void exportToGoogleDoc(message)}
+                      onClick={() => void openDocumentExport(message)}
                     >
                       {exportingDoc === message.id ? 'Đang chuẩn bị…' : 'Xuất Google Doc'}
                     </Button>
@@ -1625,7 +1646,7 @@ export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true 
                     key={preparedDocs[message.id]!.operation_id}
                     prepared={preparedDocs[message.id]!}
                     preparing={exportingDoc === message.id}
-                    onReprepare={() => exportToGoogleDoc(message, preparedDocs[message.id]!.operation_id)}
+                    onReprepare={() => exportToGoogleDoc(message, preparedDocs[message.id]!.title, preparedDocs[message.id]!.operation_id)}
                   />
                 ) : null}
               </article>
@@ -1887,6 +1908,12 @@ export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true 
           </div>
         </form>
 
+        {documentTitleTarget ? (
+          <DocumentExportTitleDialog title={documentTitleTarget.title} busy={exportingDoc !== null} error={error}
+            onTitleChange={title => setDocumentTitleTarget(current => current ? {...current, title} : null)}
+            onCancel={() => setDocumentTitleTarget(null)}
+            onPrepare={() => void exportToGoogleDoc(documentTitleTarget.message, documentTitleTarget.title)} />
+        ) : null}
         <Dialog open={usageDialogOpen} onOpenChange={(_, data) => setUsageDialogOpen(data.open)}>
           <DialogSurface>
             <DialogBody>

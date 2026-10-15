@@ -1,5 +1,8 @@
 # Design Brief — DriveAgent Study & Work Command Center
 
+## Document naming before approval — 14/10/2026
+Audience: authenticated internal-assistant users exporting a reviewed answer. Core message: choose the document name before locking the preview. Source authority: ChatPage.exportToGoogleDoc and documents.prepare/approve immutable specs. Existing Fluent dialogs/tokens are the only direction; one title field, short explanation, cancel/prepare actions. Preserve approval, owner-scoped request keys, expired-preview recovery and no-duplicate writes. Never rename an already-approved operation silently or infer an authoritative name from model prose. Deliver editable React source with validation/component tests, lint/build and real local browser QA; no extra real Google Doc or Gemini call. Keep historical briefs below.
+
 ## Mascot completion notices — 14/10/2026
 Audience: users switching between Chat and other pages. Message: keep working; the companion reports actual outcomes and opens the right conversation. Existing Veridra tokens, Fluent icons and installed page-mascot assets are the sole visual direction. Scope: persistent unread badge even when minimized; distinct success/incomplete/failure/cancelled/waiting; factual contextual help on request and quick navigation. No answer excerpts, sound, OS notification permission, new AI calls or automatic writes. Deliver real React/CSS plus unit/build/browser evidence. Verify desktop/mobile, keyboard, disabled-mascot fallback and reduced motion; label delayed local fixtures as simulation. Preserve prior work below.
 

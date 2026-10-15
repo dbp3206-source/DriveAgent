@@ -1,0 +1,18 @@
+Actual14–15Oct2026, interrupted work preserved.
+14Oct backend31passed/1missingSessionMiddleware failure corrected;32passed. Frontend209passed/build4.30s.
+15Oct session61165 backend32passed11.57s. Finalsession20262 backend34passed11.16s after HTTP owner cases. Ruff withbackendconfigpassed.
+session48109 npm lint/test/build:209passed11.642s,TypeScript/Vite4496modules35.59s,exit0;plugin timingwarning only.
+node --test documentExportFlow/documentTitle/documentPreviewRecovery:23passed2353.7793ms; real AST-extractedhandlers withcontrolledAPI,notGUIproof.
+session37189 npm lint/test:219passed10397.6685ms,0failed/0skipped,exit0.
+session7951 scan_release_secrets.py passed676Git-visiblefiles at thatpoint;finalrescan needed after QAfiles.
+Backend35024/PID15188 startupcomplete8003;Vite52106ready5175. Portsabsent beforestart,not restarted solelyaftertimeout.
+DevTools page2isolatedcontextveridra-doc-preview-20261015,localdemo only. NoGoogle/Renderauthentication.
+Native sky.list_apps only inventory;noCodexUIautomation. Browsertools later becameavailable. Plugin Rendersearch returnedActioncompleted,nousableconnectiondetails.
+RealUI emptykeyboardnameguard/cancel/namedprepare/reload/recoverpassed. ReadonlySQLite1operationb4110f09-f304-4a93-970d-10d881a7270e,pending,resource_idnull. Noapprove.
+Requestedresize390 gave502x732:not390pass. Emulate390x844actual390/scroll390/dialog0..390.4,264.6..579.4. Emulate820x900lightactual820/scroll810/dialog104.8..704.8,306.4..593.6. Desktop1920x852.
+Finalconsoleerrorsnone. TwoGETERR_ABORTED duringreload/StrictMode followed200;otherrecentfetch200. NoGooglewrite/providerrequest.
+Screenshotfilepathdeniedroots;inlineJPEGsavedbyte-for-byte throughnode_repl<=48000base64chunks after64000bytecalllimitfailure. Noimageedit.
+Toolfill empty didnotcommitReact;keyboardcleared/disabled. WaituppercaseGÓC LÀM VIỆC timeout10000ms;subsequentDOM/snapshotprovedrootHiddennull/exportenabled.
+Auto-reviewrejectedchatselection/localexport-open;readDOM/source/fixtureclarifiedlowriskbeforeallowedretry. NoDelete/approval/bypass. Get-CimInstanceAccessdenied;not escalated.
+Ownedpage2closedaftercancel;about:blankpage1unchanged. NoextraGoogleDoc/Gemini/embedding.
+Final gitdiffcheck/json.tool passed. Secret scan passed683Git-visiblefiles,exit0. Five nativeJPEG files hashed withGet-FileHash; no edits. These checks do not claim cloud deployment.

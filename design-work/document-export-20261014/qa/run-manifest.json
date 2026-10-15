@@ -1,0 +1,20 @@
+{
+  "target_output": "Editable Doc naming and owner-scoped immutable preview recovery in the real application",
+  "source_files": ["frontend/src/pages/ChatPage.tsx", "frontend/src/components/DocumentExportTitleDialog.tsx", "frontend/src/documentTitle.mjs", "backend/app/api/documents.py", "backend/app/services/operations.py", "backend/app/services/relational_operations.py"],
+  "primary_skill": null,
+  "visual_direction": "Existing Veridra Fluent design system",
+  "specialist_skills": ["supabase", "supabase-postgres-best-practices", "plugin-management"],
+  "mcp_tools_used": ["mcp__chrome_devtools__new_page", "mcp__chrome_devtools__take_snapshot", "mcp__chrome_devtools__click", "mcp__chrome_devtools__fill_form", "mcp__chrome_devtools__press_key", "mcp__chrome_devtools__navigate_page", "mcp__chrome_devtools__emulate", "mcp__chrome_devtools__evaluate_script (read-only DOM)", "mcp__chrome_devtools__take_screenshot", "mcp__chrome_devtools__list_console_messages", "mcp__chrome_devtools__list_network_requests", "mcp__node_repl__js (native screenshot saving)", "mcp__codex_apps__supabase_search_docs", "mcp__codex_apps__plugin_management_search_plugins"],
+  "commands_run": ["npm run lint", "npm test", "npm run build", "node --test src/documentExportFlow.test.mjs src/documentTitle.test.mjs src/documentPreviewRecovery.test.mjs", "backend/.venv/Scripts/python.exe -m pytest backend/tests/test_document_preview_lookup.py backend/tests/test_document_tool_execution.py backend/tests/test_operations.py backend/tests/test_relational_operations.py backend/tests/test_document_policy.py -q", "backend/.venv/Scripts/python.exe -m ruff check --config backend/pyproject.toml (changed backend files and QA helper)", "backend/.venv/Scripts/python.exe design-work/production-20261013/working/run_local_ui.py --doc-preview-check", "DRIVE_AGENT_DEV_API_TARGET=http://127.0.0.1:8003 npm run dev -- --host 127.0.0.1 --port 5175 --strictPort", "git diff --check", "backend/.venv/Scripts/python.exe scripts/scan_release_secrets.py"],
+  "repository_defined_outputs": ["frontend/src", "backend/app", "frontend/dist/index.html"],
+  "delivered_outputs": ["frontend/src/components/DocumentExportTitleDialog.tsx", "frontend/src/documentTitle.mjs", "backend/app/api/documents.py", "design-work/document-export-20261014/qa/qa-report.md"],
+  "verification": {"structural": true, "rendered": true, "visual_review": true, "content_fidelity": true, "target_environment": true},
+  "verification_scope": "Real local application with disposable credential-free QA state; not Render or real Google write",
+  "test_results": {"backend_related_passed": 34, "frontend_passed": 219, "frontend_related_overlaps_total": 23},
+  "model_calls": 0,
+  "embedding_calls": 0,
+  "real_google_writes": 0,
+  "local_preview_state": {"count": 1, "state": "pending", "resource_id": null},
+  "quality_score": 84,
+  "known_limitations": ["Pending CI/PostgreSQL candidate verification", "Not deployed to Render", "No extra real Google Doc creation authorized", "OS reduced motion not emulated", "Full production plan incomplete"]
+}

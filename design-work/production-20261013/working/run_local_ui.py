@@ -47,6 +47,22 @@ from app import main  # noqa: E402
 # Retention must not touch the user's existing local backup directory.
 main.PROJECT_ROOT = state / "maintenance"
 
+# Named, disposable UI fixture only: enable preview policy for the synthetic
+# demo identity, without OAuth credentials or an external network. Never approval.
+if "--doc-preview-check" in sys.argv:
+    import json
+    import sqlite3
+
+    from app.tools.documents import DRIVE_FILE_SCOPE
+
+    assert state.resolve().is_relative_to((ROOT / "tmp").resolve())
+    with sqlite3.connect(state / "app.db") as fixture_db:
+        changed = fixture_db.execute(
+            "UPDATE users SET oauth_scopes_json=? WHERE email=? AND role=?",
+            (json.dumps([DRIVE_FILE_SCOPE]), "demo@driveagent.local", "super_admin"),
+        )
+        assert changed.rowcount == 1, "Sign into isolated local demo once before preview QA"
+
 # Explicit, local-only notification QA: real queue/SQL/UI with delayed synthetic
 # execution. Never load credentials or claim these fixtures are Gemini quality.
 if "--mascot-check" in sys.argv:

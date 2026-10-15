@@ -1,5 +1,8 @@
 # Content Outline — Product completion
 
+## Document naming before approval — 14/10/2026
+Export answer → review/change document name → prepare immutable preview → explicit approval → one write/read-back. Cancel does not prepare or write. Expired-preview recovery keeps the chosen name; uncertain/succeeded operations never rotate request keys for renaming.
+
 ## Mascot notices — 14/10/2026
 Working → privacy-safe actual outcome → open correct conversation or leave badge for later. Contextual help and shortcuts on request, existing character choice, minimize/disable respected. Header fallback; no sound, external notifications or new AI calls.
 
