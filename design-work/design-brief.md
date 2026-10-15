@@ -1,5 +1,30 @@
 # Design Brief — DriveAgent Study & Work Command Center
 
+## Approved assistant explanation — 15/10/2026 (current authority)
+
+### Audience and viewing context
+Invited enterprise users learning how Veridra handles an ordinary task, on desktop or mobile.
+### Core message
+Understand the task → choose sources → deliver a useful result → review and hand over.
+### Desired reaction or action
+Know what to provide, what to check, and when approval is required; explore technical detail only when needed.
+### Source authority
+Owner reply “cho phép quay lui và duyệt bản nháp”; docs/AGENT-EXPLANATION-DRAFT-20261015.md; the current source/approval behavior and final production plan. This explanation is not proof of readiness.
+### Content hierarchy
+Four short steps, one selected everyday example, existing illustration, then optional technical details. Analysis offers practical options and a next step; simple questions stay simple.
+### Visual territory
+Clear, practical product help, not a marketing page or an architecture textbook.
+### Brand and system constraints
+Existing Veridra/Fluent components, theme tokens, typography and user-provided illustration. Retain technical diagrams and bookmarked domain/step links; no new dependencies or assets.
+### Anti-goals
+No redesign, new product features, fake metrics, release checklist, hidden model thoughts, or claims that every request runs seven agents. Do not present the older industry examples as the core positioning.
+### Output contract
+Editable React/CSS in the real Harness page, focused tests, production build, browser checks at desktop/intermediate/mobile, light/dark, keyboard and existing reduced-motion rules; QA evidence in design-work/agent-explanation-20261015/qa/. No Gemini or Google write.
+### Reference interpretation
+Implement the approved four-step draft, not the historical student brief or the previous dense casebook. Existing technical content remains available behind a closed-by-default control and loads only when opened.
+
+Historical briefs below remain as a change record, not the current positioning.
+
 ## Document naming before approval — 14/10/2026
 Audience: authenticated internal-assistant users exporting a reviewed answer. Core message: choose the document name before locking the preview. Source authority: ChatPage.exportToGoogleDoc and documents.prepare/approve immutable specs. Existing Fluent dialogs/tokens are the only direction; one title field, short explanation, cancel/prepare actions. Preserve approval, owner-scoped request keys, expired-preview recovery and no-duplicate writes. Never rename an already-approved operation silently or infer an authoritative name from model prose. Deliver editable React source with validation/component tests, lint/build and real local browser QA; no extra real Google Doc or Gemini call. Keep historical briefs below.
 

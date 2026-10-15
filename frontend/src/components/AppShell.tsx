@@ -53,7 +53,7 @@ const navItems: NavItemDef[] = [
   { key: 'artifacts', label: 'Kết quả đã lưu', icon: <DocumentBulletList24Regular /> },
   { key: 'skills', label: 'Mẫu công việc', icon: <Wand24Regular /> },
   { key: 'memory', label: 'Bộ nhớ', icon: <Database24Regular /> },
-  { key: 'harness', label: 'Cách Agent hoạt động', icon: <LearningApp24Regular /> },
+  { key: 'harness', label: 'Cách trợ lý làm việc', icon: <LearningApp24Regular /> },
   { key: 'audit', label: 'Nhật ký', icon: <DocumentBulletList24Regular /> },
   { key: 'access', label: 'Phân quyền', icon: <People24Regular /> },
   { key: 'settings', label: 'Cài đặt', icon: <Settings24Regular /> },

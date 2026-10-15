@@ -1,6 +1,6 @@
-# Bản nháp để góp ý — Cách trợ lý làm việc
+# Bản đã duyệt — Cách trợ lý làm việc
 
-Thuộc phần08/16 được yêu cầu để cuối. **Chưa sửa trang sản phẩm**; chờ chủ sản phẩm góp ý/duyệt. Không bổ sung tính năng hoặc đổi bộ nghiệm thu.
+Thuộc phần08/16 được yêu cầu để cuối. Chủ sản phẩm đã duyệt ngày15/10/2026 bằng câu “cho phép quay lui và duyệt bản nháp”. Cho phép triển khai đúng nội dung bên dưới; trạng thái kiểm và phát hành được ghi riêng trong hồ sơ QA. Không bổ sung tính năng hoặc đổi bộ nghiệm thu.
 
 ## Phần người dùng thấy trước
 
@@ -33,9 +33,9 @@ Mặc định chỉ hiện bốn bước và một ví dụ được chọn. Chi
 
 Nhật ký thật chỉ hiện công cụ/trạng thái/thời gian đã ghi nhận, không hiển thị suy nghĩ nội bộ. Không số giả, N/A hoặc bảng kiểm phát hành trong giao diện. Giữ ảnh người dùng đã chọn và hệ thống thiết kế hiện có; không thiết kế lại toàn bộ.
 
-## Cần góp ý trước khi thực hiện
+## Các điểm đã được duyệt
 
 1. Bốn bước và cách diễn đạt trên đã đủ rõ, đủ ngắn chưa?
 2. Mức chi tiết mặc định như trên đã phù hợp chưa, hay cần để lộ thêm phần nào?
 
-Chỉ thay trang sau khi nhận góp ý. Bản nháp này không đóng các điều kiện dữ liệu, cách ly, khôi phục hoặc nghiệm thu chức năng còn thiếu.
+Hai điểm trên đã được chủ sản phẩm duyệt. Bản duyệt này không đóng các điều kiện dữ liệu, cách ly, khôi phục hoặc nghiệm thu chức năng còn thiếu.

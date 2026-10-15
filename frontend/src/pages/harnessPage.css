@@ -1,5 +1,70 @@
 @import '../components/harness/harnessComponents.css';
 
+/* Approved everyday explanation. Existing theme and Fluent controls only. */
+.assistant-guide { gap: 28px; }
+.assistant-guide__header h1 {
+  margin: 0 0 10px;
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.3;
+  color: var(--harness-ink);
+}
+.assistant-guide__header p,
+.assistant-guide__note,
+.assistant-guide__advice,
+.assistant-guide__technical > p {
+  margin: 0;
+  max-width: 85ch;
+  color: var(--harness-muted);
+  line-height: 1.7;
+}
+.assistant-guide__steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-block: 1px solid var(--harness-line-strong);
+}
+.assistant-guide__steps > li { min-width: 0; padding: 24px 20px; }
+.assistant-guide__steps > li + li { border-left: 1px solid var(--harness-line); }
+.assistant-guide__step-icon { display: flex; align-items: center; justify-content: space-between; color: var(--harness-blue); }
+.assistant-guide__steps > li:nth-child(2) .assistant-guide__step-icon { color: var(--harness-violet); }
+.assistant-guide__steps > li:nth-child(3) .assistant-guide__step-icon { color: var(--harness-amber); }
+.assistant-guide__steps > li:nth-child(4) .assistant-guide__step-icon { color: var(--harness-green); }
+.assistant-guide__step-icon > span { font-size: 13px; font-variant-numeric: tabular-nums; }
+.assistant-guide__steps h2 { margin: 16px 0 10px; font-size: 19px; line-height: 1.4; }
+.assistant-guide__steps p { margin: 0; color: var(--harness-muted); line-height: 1.7; }
+.assistant-guide__note { font-size: 14px; }
+.assistant-guide__advice { border-left: 3px solid var(--harness-blue); padding-left: 18px; color: var(--harness-ink); }
+.assistant-guide__example { padding-block: 8px; min-width: 0; }
+.assistant-guide__example header h2 { margin: 0 0 6px; font-size: 22px; line-height: 1.4; }
+.assistant-guide__example header > span { color: var(--harness-muted); font-size: 13px; }
+.assistant-guide__choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+.assistant-guide__example article { padding: 22px; border: 1px solid var(--harness-line-strong); border-radius: 12px; background: var(--harness-panel); }
+.assistant-guide__example h3 { margin: 0 0 16px; font-size: 19px; line-height: 1.4; }
+.assistant-guide__example dl { margin: 0; display: grid; gap: 16px; }
+.assistant-guide__example dl > div { display: grid; grid-template-columns: 145px minmax(0, 1fr); gap: 16px; }
+.assistant-guide__example dt { color: var(--harness-blue); font-weight: 600; line-height: 1.7; }
+.assistant-guide__example dd { margin: 0; line-height: 1.7; overflow-wrap: anywhere; }
+.assistant-guide__figure figcaption { margin-top: 10px; color: var(--harness-muted); font-size: 13px; line-height: 1.7; }
+.assistant-guide__technical { padding-top: 24px; border-top: 1px solid var(--harness-line-strong); }
+.assistant-guide__technical > p { margin: 12px 0 24px; font-size: 14px; }
+.assistant-guide__technical button:focus-visible { outline: 2px solid var(--harness-blue); outline-offset: 4px; }
+.harness-technical-content { padding-bottom: 0; }
+@media (max-width: 1100px) {
+  .assistant-guide__steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .assistant-guide__steps > li:nth-child(3) { border-left: 0; }
+  .assistant-guide__steps > li:nth-child(n+3) { border-top: 1px solid var(--harness-line); }
+}
+@media (max-width: 600px) {
+  .assistant-guide { gap: 22px; }
+  .assistant-guide__steps { grid-template-columns: minmax(0, 1fr); }
+  .assistant-guide__steps > li { padding: 20px 8px; }
+  .assistant-guide__steps > li + li { border-left: 0; border-top: 1px solid var(--harness-line); }
+  .assistant-guide__example article { padding: 18px; }
+  .assistant-guide__example dl > div { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+}
+
 /* ==========================================================================
    DRIVEAGENT HARNESS FLAGSHIP SHOWCASE
    Enterprise Typography, Multi-chromatic Themes, and Diacritic Clearance

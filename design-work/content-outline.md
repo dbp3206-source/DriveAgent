@@ -1,5 +1,13 @@
 # Content Outline — Product completion
 
+## Approved assistant explanation — 15/10/2026
+
+1. Cách trợ lý làm việc: task/source/result/approval in four concise steps.
+2. Analysis behavior: options, trade-offs, preferred direction and next step; no forced options for a short question.
+3. Choose one illustration: vendor choice / meeting preparation / applying guidance. No claims of a real run.
+4. Preserve the user's full workflow image with the illustrative-number disclaimer.
+5. “Xem chi tiết kỹ thuật”: closed and unmounted initially; opening retains the existing diagrams, roles and industry examples. Valid old domain/step bookmarks open this section.
+
 ## Document naming before approval — 14/10/2026
 Export answer → review/change document name → prepare immutable preview → explicit approval → one write/read-back. Cancel does not prepare or write. Expired-preview recovery keeps the chosen name; uncertain/succeeded operations never rotate request keys for renaming.
 

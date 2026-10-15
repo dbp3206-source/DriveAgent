@@ -1,0 +1,12 @@
+2026-10-15 — commands/actions actually executed (compact execution record)
+
+1. mcp__cua_repl.js: cua.rewriteDocumentation; Render Settings Image Edit; fill exact ac46a7a digest; Connect via AX202. First semantic Connect locator failed with two matches, no mutation; resolved by the observed modal button. Actual deploy dep-db8djto473hc739ddm4g succeeded,1m51s. Product reload /#/memory read3rows.
+2. Render Settings Image Edit; fill7727c538 digest; observed modal ConnectAX190. Actual return deploy dep-db8dlom89jmc73d4o4ig Live,1m51s. Product reload /#/memory read3rows; /api/health returnedok/DBtrue/storage true. Native screenshots saved. No alternate route to bypass review was used.
+3. npm run test:unit, cwd frontend, output design-work/agent-explanation-20261015-test.log: exit0,222passed,0failed,0skipped,16310.8515ms initial run. Includes3new source contracts; not222real browser tests.
+4. backend/.venv/Scripts/python.exe design-work/production-20261013/working/run_local_ui.py: isolated local SQLite/Qdrant state, no credentials, external DNS blocked; startup completed on8003.
+5. DRIVE_AGENT_DEV_API_TARGET=http://127.0.0.1:8003; npm run dev -- --host127.0.0.1 --port5175 --strictPort: ready.
+6. npm run lint; npm run build -- --outDir ../tmp/assistant-explanation-build-20261015: exit0,4496modules,Vite57.30s. Expected outside-root non-emptying warning. No frontend/dist replacement during serving.
+7. CUA real local browser:1440x1000dark,820x900light,390x844light; semantic Enter example selection/disclosure, old education step3/ArrowRight/step4 then ecommerce7. Read-only DOM layout/image/focus checks; native screenshots. Console errors[] at check. Viewport override reset.
+8. Latest source recheck after bookmark fix: npm run test:unit and npm run lint exit0;222passed/0failed/0skipped,9184.9542ms. Release secret scan passed714Git-visible files; git diff --check exit0.
+
+Discovery warnings retained: over-broad initial Get-ChildItem recursion entered ignored/private QA directories and returned access-denied; interrupted, switched to scoped rg/source paths. A read of nonexistent .github/workflows/publish-image.yml failed; actual workflow is .github/workflows/ci.yml. Local tab creation observed a navigation timeout; the existing tab4 completed, was rebound, and no duplicate tab/request was created. A stale variable assignment lacked a binding; rebound tab4 into reviewGuide1015. These are tool/discovery errors, not product defects.

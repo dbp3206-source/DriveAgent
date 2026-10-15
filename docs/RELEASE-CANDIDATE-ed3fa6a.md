@@ -60,3 +60,7 @@ Nếu có lỗi mới, giữ nguyên mã yêu cầu/trạng thái và chẩn đo
 Kiểm vận hành bổ sung ngày15/10:16/16ca hàng đợi/tình trạng dịch vụ tại máy đạt, gồm tiến trình thử bị dừng rồi tiến trình mới tiếp tục. Chưa diễn tập quay lui cloud: thao tác Connect đổi sang ảnhac46a7a bị lớp xét duyệt quyền từ chối vì thiếu xác nhận riêng. Đã hủy hộp nguồn chưa lưu; bản chạy vẫn7727c538. Không gọi thêm Gemini hoặc thay dữ liệu/Environment. [Giới hạn và phép chuyển cần xác nhận](verification/internal-assistant/RESULTS-20261015.md#t10-xử-lý-gián-đoạn-và-giới-hạn-quay-lui).
 
 Gói10/15 đo lợi ích và dùng lặp lại để quyết định đầu tư, báo riêng; không lấy thiếu bằng chứng thị trường làm lý do sửa kỹ thuật không có điểm dừng. Đây là phân nhóm các việc đã có trong16gói, không tạo checklist hoặc phạm vi mới.
+
+## Bổ sung sau xác nhận — vòng quay lui đã kiểm thật
+
+Chủ sở hữu đã cho phép và đã hoàn thành đúng7727c538→ac46a7a→7727c538. Hai deploy `dep-db8djto473hc739ddm4g`/`dep-db8dlom89jmc73d4o4ig` đều thành công, mỗi lần1m51s; bản7727c538 cuốiLive. Đọc lại Bộ nhớ3mục và kiểm sức khỏe DB/kho tệp tốt. Không đổi Environment/quyền/gói/DB,0Gemini/embedding/Doc. Các ghi chú chặn ở trên là lịch sử trước xác nhận, không còn là blocker của phép quay lui. Bản nháp giải thích cũng đã được duyệt; UI mới được kiểm/phát hành riêng, không đổi bằng chứng của ứng viêned3fa6a. Xem `design-work/agent-explanation-20261015/qa/qa-report.md` và bổ sung trong RESULTS-20261015.

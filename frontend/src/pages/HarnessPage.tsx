@@ -291,14 +291,13 @@ function HarnessStepPanel({
   )
 }
 
-export function HarnessPage() {
+function HarnessTechnicalDetails() {
   const initialParams = parseHarnessUrl()
   const [selectedId, setSelectedId] = useState<HarnessScenarioId>(initialParams.domain ?? 'banking')
   const [activeStep, setActiveStep] = useState(initialParams.stepIndex ?? 0)
   const [diagramViewMode, setDiagramViewMode] = useState<DiagramViewMode>('business')
   const [isTechDrawerOpen, setIsTechDrawerOpen] = useState(false)
   const [selectedTechId, setSelectedTechId] = useState<string | null>(null)
-  const isInternalUpdate = useRef(false)
 
   const scenario = useMemo(
     () => HARNESS_SCENARIOS.find((item) => item.id === selectedId) ?? HARNESS_SCENARIOS[0]!,
@@ -317,7 +316,6 @@ export function HarnessPage() {
     if (!currentHash || currentHash.startsWith('#/harness') || currentHash.startsWith('#harness')) {
       const targetHash = `#/harness?domain=${selectedId}&step=${activeStep + 1}`
       if (currentHash !== targetHash) {
-        isInternalUpdate.current = true
         window.history.replaceState(null, '', targetHash)
       }
     }
@@ -326,10 +324,7 @@ export function HarnessPage() {
   // Bidirectional URL deep-linking: listen for hashchange and popstate
   useEffect(() => {
     const handleLocationChange = () => {
-      if (isInternalUpdate.current) {
-        isInternalUpdate.current = false
-        return
-      }
+      // replaceState does not emit hashchange; do not discard the next real bookmark navigation.
       const currentHash = window.location.hash || ''
       if (!currentHash.startsWith('#/harness') && !currentHash.startsWith('#harness')) {
         return
@@ -357,46 +352,7 @@ export function HarnessPage() {
   }
 
   return (
-    <section className="stack-page harness-flagship" data-domain={selectedId}>
-      {/* Enterprise Editorial Header without badge or noisy eyebrows */}
-      <header className="harness-flagship__header">
-        <div className="harness-flagship__header-content">
-          <h1 className="harness-flagship__title">
-            Kiến trúc Veridra: từ yêu cầu đến kết quả có thể kiểm tra
-          </h1>
-          <p className="harness-flagship__subtitle">
-            Minh bạch hóa mọi quyết định, luồng dữ liệu và rào cản an toàn trước khi bất kỳ tác vụ nào được ghi nhận.
-          </p>
-        </div>
-      </header>
-
-      <section className="harness-story" aria-labelledby="harness-story-title">
-        <div className="harness-story__copy">
-          <span className="harness-story__label">Bối cảnh sử dụng</span>
-          <h2 id="harness-story-title">Một yêu cầu ngắn thường che giấu cả một chuỗi rủi ro.</h2>
-          <p>
-            Người dùng bắt đầu bằng một email, tài liệu hoặc câu hỏi. Phần khó không phải tạo thêm văn bản,
-            mà là tìm đúng nguồn, phối hợp đúng công cụ, xin duyệt đúng lúc và để lại bằng chứng đủ rõ để kiểm tra lại.
-          </p>
-          <ol className="harness-story__sequence">
-            <li><strong>Nỗi đau:</strong><span>Dữ liệu nằm rải rác; kết quả nhanh nhưng khó biết nhận định nào dựa trên nguồn nào.</span></li>
-            <li><strong>Lý do có Veridra:</strong><span>Nối nguồn, trợ lý, công cụ và bước duyệt thành một hành trình có phạm vi.</span></li>
-            <li><strong>Cách giải quyết:</strong><span>Đọc và phân tích trước; mọi thao tác ghi được hỗ trợ đều qua xem trước, duyệt và đọc lại.</span></li>
-            <li><strong>Khác biệt cần kiểm chứng:</strong><span>Nhật ký, nguồn trích dẫn và số liệu cho biết điều đã được kiểm tra.</span></li>
-          </ol>
-        </div>
-        <figure className="harness-story__figure">
-          <img
-            className="harness-story__image"
-            src="/harness/veridra-verified-workflow.png"
-            alt="Hành trình Veridra: dữ liệu rải rác → nối nguồn và công cụ → đọc, xem trước, duyệt, thực thi, đọc lại → kết quả có nguồn và nhật ký"
-            width={1672}
-            height={941}
-            loading="lazy"
-          />
-          <figcaption>Minh họa hành trình xử lý của Veridra. Các số 12 nguồn, 5 hành động, 100%, +24% và −18% trong ảnh là ví dụ minh họa, không phải số đo hoặc cam kết của sản phẩm.</figcaption>
-        </figure>
-      </section>
+    <section className="stack-page harness-flagship harness-technical-content" data-domain={selectedId} aria-label="Chi tiết kỹ thuật và ví dụ minh họa">
 
       <div className="harness-telemetry-disclosure" role="note">
         Các tình huống và bản xem trước bên dưới là minh họa luồng nghiệp vụ. Số liệu trong ví dụ không phải kết quả kiểm thử hoặc điểm đánh giá thực tế của hệ thống.
@@ -483,7 +439,7 @@ export function HarnessPage() {
           <div className="harness-flow-heading">
             <div>
               <span className="harness-flow-heading__eyebrow">ĐƯỜNG ĐI CÓ THỂ KIỂM TRA</span>
-              <h3>Nhấn vào từng bước để xem việc thật đã xảy ra.</h3>
+              <h3>Chọn một bước để xem cách xử lý trong ví dụ.</h3>
             </div>
             <span className="harness-flow-heading__hint">
               <Flowchart20Regular /> Không hiển thị suy nghĩ riêng của mô hình
@@ -633,6 +589,123 @@ export function HarnessPage() {
         onClose={() => setIsTechDrawerOpen(false)}
         onSelectTech={(techId) => setSelectedTechId(techId)}
       />
+    </section>
+  )
+}
+
+const ASSISTANT_EXAMPLES = [
+  {
+    id: 'vendor', title: 'Chọn nhà cung cấp',
+    request: 'So sánh các báo giá trong tệp tôi chọn và đề xuất phương án phù hợp ngân sách.',
+    result: 'Bảng so sánh, điều còn thiếu, hướng nên chọn và lý do. Khi bạn đổi ngân sách, trợ lý cập nhật đề xuất.',
+    next: 'Nếu cần bản trình duyệt, kiểm nội dung và tên tài liệu trước khi cho phép tạo.',
+  },
+  {
+    id: 'meeting', title: 'Chuẩn bị cuộc họp',
+    request: 'Từ ghi chú và tài liệu tôi chọn, tóm tắt việc đã chốt và các câu hỏi cần trao đổi.',
+    result: 'Nội dung họp ngắn gọn: đã chốt, còn chờ và việc tiếp theo. Nêu rõ chỗ chưa có thông tin.',
+    next: 'Sau họp, bạn cung cấp ghi chú để cập nhật tổng kết; trợ lý không tự nhận đã nghe cuộc họp.',
+  },
+  {
+    id: 'guidance', title: 'Áp dụng hướng dẫn',
+    request: 'Đối chiếu tình huống tôi nêu với hướng dẫn đã chọn. Chỉ rõ điều được làm và điều cần xác nhận.',
+    result: 'Phân biệt bản đang có hiệu lực với bản nháp; chỉ ra mâu thuẫn và phần cần kiểm tra.',
+    next: 'Bạn xác nhận điểm còn thiếu trước khi dùng kết luận cho công việc thực tế.',
+  },
+] as const
+
+export function HarnessPage() {
+  const [exampleIndex, setExampleIndex] = useState(0)
+  const [showTechnical, setShowTechnical] = useState(() => {
+    const params = parseHarnessUrl()
+    return params.domain !== undefined || params.stepIndex !== undefined
+  })
+  const example = ASSISTANT_EXAMPLES[exampleIndex]!
+
+  useEffect(() => {
+    const openBookmarkedDetail = () => {
+      if (!window.location.hash.startsWith('#/harness') && !window.location.hash.startsWith('#harness')) return
+      const params = parseHarnessUrl()
+      if (params.domain !== undefined || params.stepIndex !== undefined) setShowTechnical(true)
+    }
+    window.addEventListener('hashchange', openBookmarkedDetail)
+    window.addEventListener('popstate', openBookmarkedDetail)
+    return () => {
+      window.removeEventListener('hashchange', openBookmarkedDetail)
+      window.removeEventListener('popstate', openBookmarkedDetail)
+    }
+  }, [])
+
+  return (
+    <section className="stack-page harness-flagship assistant-guide">
+      <header className="assistant-guide__header">
+        <h1>Cách trợ lý làm việc</h1>
+        <p>Nêu công việc, chọn nguồn, kiểm kết quả. Bạn duyệt trước khi tạo tài liệu bên ngoài.</p>
+      </header>
+
+      <ol className="assistant-guide__steps" aria-label="Bốn bước hỗ trợ công việc">
+        <li>
+          <span className="assistant-guide__step-icon"><Sparkle20Regular aria-hidden="true" /><span>01</span></span>
+          <h2>Hiểu việc</h2>
+          <p>Xác định kết quả bạn cần. Chỉ hỏi thêm khi thiếu thông tin làm thay đổi cách làm.</p>
+        </li>
+        <li>
+          <span className="assistant-guide__step-icon"><DocumentText20Regular aria-hidden="true" /><span>02</span></span>
+          <h2>Chọn nguồn</h2>
+          <p>Dùng nguồn bạn chỉ định và đã được cấp quyền. Không tự mở nguồn riêng khác để lấp chỗ trống.</p>
+        </li>
+        <li>
+          <span className="assistant-guide__step-icon"><Table20Regular aria-hidden="true" /><span>03</span></span>
+          <h2>Đưa kết quả</h2>
+          <p>Trả lời, so sánh hoặc soạn nháp; chỉ rõ nguồn đã dùng và điều còn cần kiểm tra.</p>
+        </li>
+        <li>
+          <span className="assistant-guide__step-icon"><CheckmarkCircle20Regular aria-hidden="true" /><span>04</span></span>
+          <h2>Duyệt và bàn giao</h2>
+          <p>Nếu tạo Google Doc: kiểm nội dung và tên → bạn duyệt → tạo → đọc lại. Chưa xác nhận kết quả thì không tự ghi lại.</p>
+        </li>
+      </ol>
+      <p className="assistant-guide__note">Mỗi yêu cầu chỉ dùng những bước cần thiết; câu hỏi đơn giản không phải chạy mọi trợ lý.</p>
+      <p className="assistant-guide__advice">Khi phân tích, trợ lý đưa ra các phương án, điều được và mất, hướng nên ưu tiên cùng bước tiếp theo. Câu hỏi ngắn được trả lời gọn, không ép thêm nhiều lựa chọn.</p>
+
+      <section className="assistant-guide__example" aria-labelledby="assistant-example-heading">
+        <header>
+          <h2 id="assistant-example-heading">Bắt đầu từ một công việc</h2>
+          <span>Ví dụ minh họa, không phải kết quả chạy thật</span>
+        </header>
+        <div className="assistant-guide__choices" role="group" aria-label="Chọn ví dụ công việc">
+          {ASSISTANT_EXAMPLES.map((item, index) => (
+            <Button key={item.id} appearance={index === exampleIndex ? 'primary' : 'secondary'}
+              aria-pressed={index === exampleIndex} onClick={() => setExampleIndex(index)}>
+              {item.title}
+            </Button>
+          ))}
+        </div>
+        <article aria-label={example.title}>
+          <h3>{example.title}</h3>
+          <dl>
+            <div><dt>Bạn yêu cầu</dt><dd>“{example.request}”</dd></div>
+            <div><dt>Bạn nhận được</dt><dd>{example.result}</dd></div>
+            <div><dt>Bước tiếp theo</dt><dd>{example.next}</dd></div>
+          </dl>
+        </article>
+      </section>
+
+      <figure className="harness-story__figure assistant-guide__figure">
+        <img className="harness-story__image" src="/harness/veridra-verified-workflow.png"
+          alt="Hành trình Veridra: dữ liệu rải rác → nối nguồn và công cụ → đọc, xem trước, duyệt, thực thi, đọc lại → kết quả có nguồn và nhật ký"
+          width={1672} height={941} loading="lazy" />
+        <figcaption>Minh họa hành trình xử lý của Veridra. Các số 12 nguồn, 5 hành động, 100%, +24% và −18% trong ảnh là ví dụ minh họa, không phải số đo hoặc cam kết của sản phẩm.</figcaption>
+      </figure>
+
+      <section className="assistant-guide__technical">
+        <Button appearance="secondary" aria-expanded={showTechnical} aria-controls="assistant-technical-details"
+          icon={<Flowchart20Regular aria-hidden="true" />} onClick={() => setShowTechnical((open) => !open)}>
+          {showTechnical ? 'Ẩn chi tiết kỹ thuật' : 'Xem chi tiết kỹ thuật'}
+        </Button>
+        <p>Sơ đồ, vai trò trợ lý và các tình huống minh họa đa ngành. Nhật ký ghi sự kiện thao tác, không hiển thị suy nghĩ nội bộ.</p>
+        {showTechnical && <div id="assistant-technical-details"><HarnessTechnicalDetails /></div>}
+      </section>
     </section>
   )
 }
