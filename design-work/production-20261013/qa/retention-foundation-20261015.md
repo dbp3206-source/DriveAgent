@@ -19,6 +19,16 @@ Thuộc gói 14. Lượt trước là tiến bộ: đã ghi quyết định ch�
 
 XML riêng: `tmp/retention-clocks-a68dc174295048eaa3d526a23b1ec5d5/results.xml`, `tmp/retention-regression-b1a6975a381a400cb7a10c4dbaeab9b6/results.xml`. Tệp thô trong vùng bị Git bỏ qua; chỉ bản tổng hợp giả lập được đưa vào hồ sơ công khai. Không đưa XML, DB, khóa hoặc nội dung riêng lên GitHub.
 
+## CI #143 đã hoàn tất
+
+[Lần kiểm 38763155806](https://github.com/dbp3206-source/DriveAgent/actions/runs/38763155806), mã **f46d3d02a7290e62adb3a4a92a78ac39d71a4973**, nhánh `work/data-retention-20261015`. Đã đọc trạng thái bước và nhật ký qua kết nối GitHub, không chỉ lấy việc đẩy mã làm bằng chứng. Cả hai công việc hoàn tất/thành công:
+
+- `postgres-state`, job `116519416636`: **14 đạt**, 0 bỏ qua, 3,69 giây; tệp gồm ca nâng cấp ngày nội dung mới. DB riêng `veridra_ci`, không phải Supabase đang chạy.
+- `verify`, job `116519800337`: máy chủ **1.662 đạt/15 bỏ qua**, 165,67 giây, độ phủ **88,19%**; hai tệp kiểm mới hiện rõ sáu và 23 ca đạt. Giao diện **222 đạt/0 lỗi/0 bỏ qua**. Kiểm ngoại tuyến, toàn vẹn bộ chuẩn, quét bí mật, dựng frontend, dựng/khởi động gói và xuất PDF tiếng Việt thành công.
+- **Publish the verified image** và **Deploy the exact verified image to Render** đều `skipped`. Không có ảnh mới được đẩy GHCR hoặc triển khai; không gọi hook Render, đổi Environment/gói hoặc áp dụng migration lên Supabase. Gói Docker kiểm chỉ là artifact CI, không lấy nó làm bằng chứng Live.
+
+Kết quả CI và tại máy có phần chồng lặp, không cộng thành số ca/điểm sản phẩm. Không thay kết quả bỏ qua thành đạt; số tại máy và CI được ghi tách biệt. CI này chỉ chứng minh mã nền tảng và hồi quy đúng mã, chưa chứng minh chuỗi xóa hay giao diện chưa được viết.
+
 ## Giới hạn và bước kế tiếp đúng phạm vi
 
 Lõi không chứng minh đã xác nhận người dùng, chống phát lại trong sổ bền vững, khóa thao tác đồng thời hoặc xóa mọi bản dẫn xuất. Bộ thực thi phải tự kiểm nguồn yêu cầu, nhận đúng một lần, đọc lại dưới khóa trước tác động đầu tiên và tiếp tục an toàn sau lỗi; không được lấy `validate()` làm phép xóa đã được duyệt.
