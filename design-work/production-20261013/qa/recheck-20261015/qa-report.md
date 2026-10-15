@@ -11,9 +11,9 @@
 
 ## Kết quả
 
-T02 đúng hai kết luận chính/có đúng hai nguồn nhưng thiếu nhắc điều kiện dữ liệu. T04 đổi số và đổi hồ sơ chạy xong;60/42giờ đúng, chưa nêu riêng18giờ tiết kiệm; không lẫn hồ sơ và không đọc nguồn cấm ở lượt chuyển. T04tính lại gặp504 ở Gemini3.5, kết quả cuối từ3.8dự phòng; không dùng nó chấm riêng3.5. Linh vật báo xong ngoài trang Chat, bấm về đúng cuộc trò chuyện. T08tìm thực chỉ trả đúng một ghi chú v2; chưa xóa/quên hoặc kiểm dùng lại trong hội thoại mới.
+T02 đúng hai kết luận chính/có đúng hai nguồn nhưng thiếu nhắc điều kiện dữ liệu. T04 đổi số và đổi hồ sơ chạy xong;60/42giờ đúng, chưa nêu riêng18giờ tiết kiệm; không lẫn hồ sơ và không đọc nguồn cấm ở lượt chuyển. T04tính lại gặp504 ở Gemini3.5, kết quả cuối từ3.8dự phòng; không dùng nó chấm riêng3.5. Linh vật báo xong ngoài trang Chat, bấm về đúng cuộc trò chuyện. T08tìm thực chỉ trả đúng một ghi chú v2; sau xác nhận riêng của chủ sở hữu đã xóa mục này, ba mục khác giữ nguyên, mở lại trang và tìm mới trả0. Chưa kiểm câu trả lời bộ nhớ trong hội thoại mới.
 
-Mới dùng5sinh câu trả lời+1tạo chỉ mục=6yêu cầu. Tổng đợt17+7=24/26. Tạo Google Doc mới0. Không đặt lại bộ đếm. Không chấm điểm tổng hợp hoặc chứng nhận Production từ các phép kiểm riêng.
+Mới dùng5sinh câu trả lời+2tạo chỉ mục=7yêu cầu. Tổng đợt17+8=25/26. Tạo Google Doc mới0. Không đặt lại bộ đếm. Không chấm điểm tổng hợp hoặc chứng nhận Production từ các phép kiểm riêng.
 
 ## Ảnh và kiểm hình
 
@@ -23,6 +23,8 @@ Mới dùng5sinh câu trả lời+1tạo chỉ mục=6yêu cầu. Tổng đợt1
 - `t04-reset-ed3fa6a-20261015.jpg`: Mộc An8người và câu hỏi làm rõ, không lẫn báo giá trước.
 - `mascot-response-ed3fa6a-20261015.jpg`: đang ở Bộ nhớ, thông báo có câu trả lời/badge1 và nút mở lại.
 - `t08-memory-match-ed3fa6a-20261015.jpg`: truy vấn mã thử, một kết quả, đầy đủ bản sửa/phạm vi ghi chú.
+- `t08-deleted-ed3fa6a-20261015.jpg`: thông báo xóa thành công sau xác nhận của chủ sở hữu.
+- `t08-forgotten-ed3fa6a-20261015.jpg`: cùng mã thử,0kết quả và thông báo không tìm thấy sau lần truy xuất mới.
 
 Đã mở và xem từng ảnh từ công cụ chụp. Khung566×676; không thay bằng chứng390mobile hoặc toàn bộ luồng vận hành. Không có ảnh giả, không sửa ảnh, không chụp khóa/thư riêng. Ảnh minh chứng sản phẩm của chủ sở hữu, không dùng tài sản bên thứ ba mới.
 
@@ -31,7 +33,7 @@ Mới dùng5sinh câu trả lời+1tạo chỉ mục=6yêu cầu. Tổng đợt1
 - Locator chờ nút đầu ra T02 hết thời gian trước khi tác vụ xong; đọc lại trạng thái rồi nhận đầu ra17,7giây, không gửi lại câu hỏi.
 - Locator role=button không khớp phần mở nhật ký HTMLsummary; dùng nhãn chữ đang có để mở. Không coi đây là lỗi nút sản phẩm.
 - Trạng thái sau chọn hội thoại/tìm bộ nhớ ban đầu còn đang tải; chờ kết quả rồi mới kết luận, không dùng danh sách trước làm chứng cứ.
-- Ghi chú thử chưa xóa, cần xác nhận xóa vĩnh viễn tại thời điểm thực hiện. Không xin/chạm mật khẩu database; chủ sở hữu loại khôi phục khỏi đợt ngày15/10, ghi chưa kiểm chứng.
+- Ghi chú thử đã xóa sau xác nhận riêng “xác nhận xóa”. Click tọa độ nằm gần linh vật mở linh vật thay vì xóa; đọc lại trạng thái, thu nhỏ rồi dùng Enter trên đúng nút Xóa. Lệnh phím báo hết thời gian điều khiển; không gửi lại: trạng thái kế tiếp đã xóa thành công, không còn hộp xác nhận. Đối chiếu kết quả và nhật ký, không coi lỗi quan sát là thất bại xóa. Không xin/chạm mật khẩu database; chủ sở hữu loại khôi phục khỏi đợt ngày15/10, ghi chưa kiểm chứng.
 - Phần giải thích cuối vẫn chờ góp ý bản nháp, chưa sửa UI; hai tài khoản thật và điều kiện dữ liệu còn thiếu. Không mở dữ liệu doanh nghiệp nhạy cảm hoặc gộp main dựa trên các ca này.
 
 Không áp thang điểm thiết kế100điểm cho lượt kiểm không tạo/sửa thiết kế; báo từng bằng chứng và mức thiếu thay vì tự cấp điểm để qua cổng.
@@ -39,3 +41,5 @@ Không áp thang điểm thiết kế100điểm cho lượt kiểm không tạo/
 ## Kiểm hồ sơ trước lưu Git
 
 `git diff --check` đạt; hai manifest JSON đọc được. Chạy thật `scripts/scan_release_secrets.py`:701tệp Git-visible, không phát hiện theo mẫu của bộ quét. Bộ quét không chứng minh loại hết mọi dữ liệu riêng; từng ảnh được xem riêng. `scripts/validate_internal_assistant_dataset.py`:10ca/4tệp, integrity_passed=true; trần11+8/19 trong bộ đề là cấu hình lịch sử, quyền thực thi bổ sung được ghi riêng trong sổ, không sửa oracle.
+
+Sau xóa/truy xuất mới: Render có đúng một DELETE204 lúc20:25:30, mã9195552e; yêu cầu tạo chỉ mục20:27:53 trả200. `git diff --check`/parse JSON đạt, quét bí mật lại704tệp Git-visible đạt. Hai ảnh sau xóa được mở/xem và bămSHA256, không sửa ảnh. Không chạy các kiểm vận hành chỉ mới đọc mã; không lấy việc đọc bài kiểm làm bằng chứng đã thực thi.

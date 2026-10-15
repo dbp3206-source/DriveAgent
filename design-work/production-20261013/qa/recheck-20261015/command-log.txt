@@ -21,3 +21,11 @@ t08-memory-match-ed3fa6a-20261015.jpg: d17ea093b62c4440c2c54c3f398fb11f6e03cdfee
 
 Actual browser actions are recorded in the mcp__cua_repl.js execution history, not shell commands: submit T02, submit T04 follow-up twice, inspect execution details, navigate to Memory during running chat, observe mascot notification, open the completed answer, search only IA-QA-20261013, read Render logs for the embedding/search result, capture and inspect four JPEGs.
 No full code test suite, image rebuild, extra Google Doc creation, permanent memory deletion, database password entry, restore or paid operation ran in this subrun.
+
+Follow-up after owner explicitly confirmed permanent deletion (same day):
+Native CUA: inspected single IA-QA-20261013 result; first click hit overlapping mascot, re-read state then minimized mascot. Enter on exact Delete button timed out in input dispatch; no repeat. Next state showed deletion success, three other memories unchanged, no active JS dialog. Render logs filtered DELETE confirmed one DELETE 204 at20:25:30GMT+7, item prefix9195552e.
+Opened fresh chat UI without submitting, then returned to Memory and searched the exact identifier once. Empty result verified after async return; Render batchEmbedContents 200 at20:27:53GMT+7. No new generation call or Doc. Final cumulative17generation+8embedding=25/26; new allocation5+2=7 fully used. No claim of model recall in a new chat.
+git diff --check passed; manifest ConvertFrom-Json parsed; scan_release_secrets.py passed704Git-visiblefiles.
+Get-FileHash SHA256:
+t08-deleted-ed3fa6a-20261015.jpg: 83f17daeb7ab6a1c50bae1e06efabab83b5d54c8bda75853bd8cd8e2044a6d0c
+t08-forgotten-ed3fa6a-20261015.jpg: a4ae7a6855c8db42b757482e4b1278a242633d67538b927c8d4a1f8edbcdfc8a

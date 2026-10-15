@@ -14,6 +14,8 @@ Ngày 15/10 chủ sở hữu duyệt **tối đa 7 yêu cầu bổ sung: 5 sinh 
 
 Chủ sở hữu đồng thời yêu cầu **bỏ qua kiểm khôi phục DB/tệp vì không còn nhớ mật khẩu database**. Không yêu cầu đổi mật khẩu hoặc thao tác kết nối tiếp. Mục này được loại khỏi đợt nghiệm thu theo quyết định chủ sở hữu, ghi **chưa kiểm chứng**, không ghi đạt hoặc bảo đảm khôi phục dữ liệu. Đây vẫn là giới hạn vận hành phải công bố khi bàn giao.
 
+Sau đó chủ sở hữu xác nhận riêng xóa vĩnh viễn ghi chú thử IA-QA-20261013. Đã xóa đúng mục, giữ ba ghi chú còn lại và kiểm truy xuất mới trả0kết quả; không xóa hội thoại/tệp/bản sao khác. Phần bổ sung đã dùng đủ5+2=7yêu cầu; tổng đợt17+8=25/26, giữ một dự phòng sinh câu trả lời cũ. Chưa chạy kiểm câu trả lời bộ nhớ trong hội thoại mới; không tự dùng nhiều lời gọi để vượt phần dự phòng.
+
 Đọc được dữ liệu Google không đồng nghĩa được chuyển cho mọi bên xử lý. Khi mở ứng dụng cho công chúng, Google yêu cầu công bố rõ cách truy cập, dùng, lưu, chia sẻ dữ liệu và chính sách riêng tư. Chủ sở hữu cần xác nhận loại ứng dụng, quyền và yêu cầu xác minh thực tế; không tự coi bốn tài khoản Gmail là ngoại lệ nội bộ cùng tên miền. [Chính sách dữ liệu Google API](https://developers.google.com/terms/api-services-user-data-policy).
 
 ## Đường đi dữ liệu của sản phẩm

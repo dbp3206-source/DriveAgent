@@ -12,7 +12,7 @@
 
 Các quan sát công khai buổi chiều ở mục3 dưới đây giữ lịch sử trước triển khai, không còn là trạng thái bản đang chạy sau mốc Live trên. Hướng dẫn mục4 đã thực hiện, **không triển khai lại cùng ảnh chỉ vì đọc tài liệu này**.
 
-Đợt bổ sung cùng ngày đã chạy T02 và hai câu hỏi tiếp T04 còn thiếu; đúng kết luận chính và không lẫn hồ sơ, giữ riêng các thiếu sót về mức đầy đủ. Linh vật báo xong ở trang Bộ nhớ và mở lại đúng hội thoại; T08 tìm được đúng ghi chú v2, chưa xóa hoặc kiểm truy xuất trong hội thoại mới. Mới dùng5sinh câu trả lời+1tạo chỉ mục; cả đợt24/26. [Kết quả gộp](verification/internal-assistant/RESULTS-20261015.md). Chưa đổi mã hoặc ảnh ứng dụng.
+Đợt bổ sung cùng ngày đã chạy T02 và hai câu hỏi tiếp T04 còn thiếu; đúng kết luận chính và không lẫn hồ sơ, giữ riêng các thiếu sót về mức đầy đủ. Linh vật báo xong ở trang Bộ nhớ và mở lại đúng hội thoại; T08 tìm được đúng ghi chú v2, sau xác nhận riêng đã xóa đúng mục và tìm mới trả0, ba ghi chú khác giữ nguyên. Chưa kiểm câu trả lời bộ nhớ trong hội thoại mới. Dùng5sinh câu trả lời+2tạo chỉ mục, hết phần bổ sung; cả đợt25/26. [Kết quả gộp](verification/internal-assistant/RESULTS-20261015.md). Chưa đổi mã hoặc ảnh ứng dụng.
 
 ## 1. Đúng bản cần triển khai
 
