@@ -4,11 +4,11 @@
   "source_files": ["docs/AGENT-EXPLANATION-DRAFT-20261015.md", "frontend/src/pages/HarnessPage.tsx", "frontend/src/pages/harnessPage.css", "frontend/src/components/AppShell.tsx"],
   "primary_skill": "existing Veridra/Fluent design system",
   "specialist_skills": ["render-deploy: existing-image Dashboard workflow", "render-docker: immutable image pin guidance"],
-  "mcp_tools_used": ["mcp__cua_repl.js"],
+  "mcp_tools_used": ["mcp__cua_repl.js", "github.fetch_workflow_run_jobs", "github.fetch_workflow_job_logs", "render.list_workspaces", "render.get_deploy"],
   "commands_run": ["npm run test:unit", "npm run lint", "npm run build -- --outDir ../tmp/assistant-explanation-build-20261015", "backend/.venv/Scripts/python.exe design-work/production-20261013/working/run_local_ui.py", "npm run dev -- --host 127.0.0.1 --port 5175 --strictPort"],
   "repository_defined_outputs": ["frontend/src/pages/HarnessPage.tsx", "frontend/src/pages/harnessPage.css", "frontend/src/components/AppShell.tsx"],
   "delivered_outputs": ["frontend/src/pages/HarnessPage.tsx", "frontend/src/pages/harnessPage.css", "frontend/src/components/AppShell.tsx", "design-work/agent-explanation-20261015/qa/qa-report.md"],
-  "verification": {"structural": true, "rendered": true, "visual_review": true, "content_fidelity": true, "target_environment": true, "target_environment_scope": "real local application; cloud UI release pending"},
+  "verification": {"structural": true, "rendered": true, "visual_review": true, "content_fidelity": true, "target_environment": true, "target_environment_scope": "real local application at three viewports and deployed cloud application at actual 566x676 sidebar"},
   "quality_score": 86,
   "frontend_tests": {"passed": 222, "failed": 0, "skipped": 0},
   "viewports": [{"width": 1440, "height": 1000, "theme": "dark"}, {"width": 820, "height": 900, "theme": "light"}, {"width": 390, "height": 844, "theme": "light"}],
@@ -16,5 +16,6 @@
   "render_roundtrip": {"service": "srv-dav5v560tbcc73dpjlc0", "owner_approval": "cho phép quay lui và duyệt bản nháp", "rollback_deploy": "dep-db8djto473hc739ddm4g", "return_deploy": "dep-db8dlom89jmc73d4o4ig", "rollback_duration_seconds": 111, "return_duration_seconds": 111, "final_digest": "sha256:7727c538cbcb97700f7d922fddb4aea56e0839d9edaf85754dafda771cacb0bd", "final_live": true, "health": {"status": "ok", "database": true, "object_storage": true}, "memory_rows_after_each_leg": 3, "environment_changes": false, "database_restore": false},
   "provider_calls_this_turn": {"generation": 0, "embedding": 0},
   "google_docs_created_this_turn": 0,
-  "known_limitations": ["UI candidate not yet verified on cloud at initial report creation", "No multi-user real-account acceptance", "No database/files restore; excluded by owner", "Existing technical section not redesigned or comprehensively re-evaluated", "Full production acceptance remains open"]
+  "ui_release": {"code_commit":"13938d158b6f1df13df01186a31b541d85ff13c1", "ci_run_id":38748183372, "ci_success":true, "automatic_deploy":"skipped", "deploy_id":"dep-db8dvrqj9qps73cj7d5g", "image_ref":"ghcr.io/dbp3206-source/veridra@sha256:0169c264a134bba62381d207785a3a7b4aaac611acdb1768b2e9208d377c1712", "live":true, "finished_at":"2026-10-15T14:17:07.150016Z", "created_to_finished_seconds":115.343, "started_to_finished_seconds":110.214, "url":"https://veridra-closed-beta.onrender.com/?verify=13938d1#/harness", "cloud_ui_verified":true, "actual_cloud_viewport":{"width":566,"height":676}, "attempted_cloud_viewport_override_not_applied":true, "console_error_logs":[], "health":{"status":"ok","database":true,"object_storage":true,"gemini_connectivity":"not_probed"}, "screenshot":"screenshots/cloud-13938d1-sidebar.jpg", "main_merged":false},
+  "known_limitations": ["No multi-user real-account acceptance", "No database/files restore; excluded by owner", "Existing technical section not redesigned or comprehensively re-evaluated", "Full production acceptance remains open", "No full network capture or provider probe in this UI-only check"]
 }

@@ -1,0 +1,14 @@
+{
+  "repository": "dbp3206-source/DriveAgent",
+  "commit": "13938d158b6f1df13df01186a31b541d85ff13c1",
+  "run_id": 38748183372,
+  "run_number": 141,
+  "source": "GitHub connector fetch_workflow_run_jobs and fetch_workflow_job_logs",
+  "jobs": [{"id":116467260787,"name":"postgres-state","conclusion":"success"},{"id":116467575129,"name":"verify","conclusion":"success"}],
+  "backend": {"passed":1631,"skipped":14,"seconds":92.91,"coverage_percent":88.07},
+  "frontend": {"passed":222,"failed":0,"skipped":0},
+  "publish_image": "success",
+  "automatic_deploy": "skipped",
+  "image_ref": "ghcr.io/dbp3206-source/veridra@sha256:0169c264a134bba62381d207785a3a7b4aaac611acdb1768b2e9208d377c1712",
+  "private_logs_published": false
+}

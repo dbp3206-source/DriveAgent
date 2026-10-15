@@ -56,6 +56,14 @@ Bốn bước ngắn; một trong ba ví dụ được chọn; giữ ảnh cũ; 
 
 Điểm là nhận xét thủ công cho phạm vi giao diện mới, không phải điểm benchmark toàn sản phẩm. Trừ điểm vì nội dung kỹ thuật cũ vẫn dài và chưa kiểm toàn bộ tổ hợp; không mở rộng sửa ngoài bản duyệt.
 
-## Giới hạn và phát hành
+## Phát hành và kiểm URL thật — đã hoàn tất
 
-Tại thời điểm hồ sơ này được tạo, UI mới mới kiểm cục bộ; cần CI/ảnh đúng mã và kiểm URL sau triển khai, không gọi đã lên cloud. 0Gemini,0embedding,0DocGoogle trong lượt. Sổ đợt vẫn25/26, không đặt lại ngân sách. Khôi phụcDB/tệp bị chủ sở hữu loại khỏi đợt và chưa kiểm chứng. Tài khoản thứ hai, điều kiện dùng dữ liệu thật và các ca chưa có bằng chứng vẫn theo sổ16gói; không tự ký Production hoặc gộp main.
+Mã `13938d158b6f1df13df01186a31b541d85ff13c1` đã đẩy lên nhánhstaging và qua[CI#141](https://github.com/dbp3206-source/DriveAgent/actions/runs/38748183372). ConnectorGitHub đọc cả hai job thành công; nhật kýverify:1631đạt/14bỏ qua/92,91giây,độ phủ88,07%;frontend222đạt/0lỗi/0bỏ qua. Kiểm ngoại tuyến/bộ chuẩn/bí mật/lint/gói chạy/PDF thành công. Publish cho mã và kênhstaging cùng ảnh `sha256:0169c264a134bba62381d207785a3a7b4aaac611acdb1768b2e9208d377c1712`; bước tự triển khai skipped nên đã cập nhật nguồn đúng một lần quaDashboard.
+
+Render `dep-db8dvrqj9qps73cj7d5g` đãLive. ConnectorRender vừa xuất hiện trong phiên, đã liệt kêMy Workspaceđúngid `tea-d9v8f5ugekts73f1uglg` (tên đã được chủ sở hữu xác nhận trước đó) và đọc deploy:created14:15:11.807UTC,started14:15:16.936,finished14:17:07.150.115,343giây từ tạo đến hoàn tất,110,214giây từ bắt đầu; không nhầm với thời gian gián đoạn người dùng. Ảnh khớpCI. Không gửi triggerlặp; MCPkhông có thao tác đổi nguồnảnh nên bước đó vẫn quaUI.
+
+URL `/?verify=13938d1#/harness` đã mở bằng phiên quản trị trên thanh bên:4bước,1ví dụ,chi tiết chưa dựng mặc định,PNGtải thật1672px;Enterđổi ví dụ họp, mở/đóng kỹ thuật đúngaria-expanded và ôbankingbước1. Tải lại đường dẫn khôngquerydomain/step vẫn đóng ban đầu. Khung thực566×676,không tràn ngang,consoleerrors[]. Có yêu cầu override1440nhưngDOMởtabcloudvẫn566, nên **không tính đây là kiểm desktopcloud**; ba kích thước đã kiểm ở ứng dụng thật cục bộ. Ảnh `screenshots/cloud-13938d1-sidebar.jpg` là khung thanh bên thật, không chỉnh ảnh. Đã resetoverride. Endpointhealthsau phát hành:ok/DBtrue/storage true,khởi động14:16:59UTC;Google/Gemini not_probed. Không coi kiểm sức khỏe là một lượt mô hình thành công.
+
+## Giới hạn còn lại
+
+Đã đóng riêng phần giải thích đã duyệt và vòng quay lui.0Gemini,0embedding,0DocGoogle trong lượt. Sổ đợt vẫn25/26, không đặt lại ngân sách. Khôi phụcDB/tệp bị chủ sở hữu loại khỏi đợt và chưa kiểm chứng. Tài khoản thứ hai, điều kiện dùng dữ liệu thật và các ca chưa có bằng chứng vẫn theo sổ16gói; không tự ký Production hoặc gộp main. Ảnh cuối `screenshots/render-13938d1-live.jpg` xác nhận trạng tháiLive;Dashboardhiển thị1m50s,tương ứng thời gianstarted→finishedcủaAPI,là số khác vớicreated→finishedđãghi. Đã đóng tabkiểm tạm và dừng hai tiến trình QA do chính lượt này khởi tạo bằngCtrl+C,không dừng tiến trình người dùng/không xóa dữ liệu. Tab sản phẩm mới được giữ lại để người dùng xem.
