@@ -4,6 +4,12 @@ Ngày đối chiếu: 13/10/2026. Thuộc gói 14 của kế hoạch hiện hàn
 
 ## Quyết định hiện tại
 
+Ngày 15/10/2026, chủ sở hữu xác nhận **quản trị viên** chịu trách nhiệm vận hành, kênh riêng nhận hỗ trợ/yêu cầu xóa là **dbp3206@gmail.com**. Đây là thông tin liên hệ đã được cung cấp, không phải bằng chứng đã gửi/nhận thư hoặc hoàn thành một yêu cầu xóa. Loại tài liệu dự kiến và thời hạn lưu/xóa chưa được xác nhận; chưa mở thêm quyền xử lý dữ liệu.
+
+Cùng ngày, chủ sở hữu yêu cầu bỏ T09 khỏi đợt nghiệm thu hiện tại. Ghi chưa kiểm chứng phần hai tài khoản/phiên cloud, không tính đạt; giữ mã và bộ kiểm bảo vệ. Không dùng việc miễn kiểm T09 để miễn các điều kiện dữ liệu hoặc cho phép truy cập chéo.
+
+Đã đối chiếu lại [điều khoản Gemini](https://ai.google.dev/gemini-api/terms) và [chính sách dữ liệu Google API](https://developers.google.com/terms/api-services-user-data-policy) ngày 15/10. Điều kiện dịch vụ không trả phí vẫn yêu cầu không gửi thông tin cá nhân, nhạy cảm hoặc bí mật; chính sách Google yêu cầu công bố rõ cách dùng/lưu/chia sẻ dữ liệu và đồng ý cho việc chuyển dữ liệu phù hợp. Không suy ra điều kiện dịch vụ từ bộ đếm của Veridra, hoặc việc được đọc Google đồng nghĩa được gửi sang mô hình.
+
 Chủ sở hữu xác nhận khóa Gemini chưa bật thanh toán. Đợt nghiệm thu được phép dùng tối đa 11 yêu cầu sinh câu trả lời (gồm hai dự phòng) và 8 yêu cầu tạo chỉ mục, tổng 19 yêu cầu Gemini thực, chỉ cho bốn tệp giả lập A/B/C, ghi chú giả lập của bộ kiểm và nguồn công khai; được tạo đúng một Google Doc giả lập sau xem trước/duyệt. Tính cả yêu cầu lỗi và thử lại. Không đọc thêm nội dung riêng, gửi thư, sửa lịch, tăng hạn mức hoặc nâng gói.
 
 Google nêu dịch vụ Gemini không trả phí có thể dùng đầu vào/đầu ra để cải thiện sản phẩm và có người đánh giá; không gửi thông tin cá nhân, nhạy cảm hoặc bí mật. Điều kiện xử lý qua dự án API gắn thanh toán khác với không trả phí. **Bộ đếm Veridra không xác minh gói Google.** Cần chủ sở hữu chốt điều kiện phù hợp trước dùng tài liệu nội bộ thật; không tự bật thanh toán. [Điều khoản Gemini](https://ai.google.dev/gemini-api/terms).

@@ -1,6 +1,12 @@
 # Theo dõi triển khai — 13/10/2026
 
-## Cập nhật 15/10 — không thay phạm vi nghiệm thu
+## Cập nhật 15/10 — quyết định và bằng chứng hiện hành
+
+### Quyết định mới nhất của chủ sản phẩm
+
+- Tiếp tục sau tạm dừng và **bỏ T09 khỏi đợt nghiệm thu hiện tại**. Phần kiểm hai tài khoản/phiên cloud tương ứng trong gói 11 không còn chặn đợt này; ghi chưa kiểm chứng, không tính đạt. Không bỏ mã bảo vệ, không xóa các bộ kiểm an toàn và không quảng bá đã kiểm bốn người. Mục khôi phục DB/tệp vẫn giữ quyết định bỏ qua trước đó.
+- Quản trị viên phụ trách vận hành; kênh riêng hỗ trợ/yêu cầu xóa: `dbp3206@gmail.com`. Chưa có quyết định về loại tài liệu, thời hạn lưu/xóa hoặc mở xử lý tài liệu nhạy cảm; gói 14 chưa đóng.
+- Kiểm nối chuỗi T07 tại máy đã hoàn tất: HTTP → kiểm cấu trúc/quyền/nguồn yêu cầu → bộ điều phối công cụ → sổ thao tác thật; Google và đăng nhập được giả lập. Hai biến thể lưu trữ cùng các hồi quy liên quan: **22 đạt, 0 lỗi, 0 bỏ qua**; không có Google Doc thật hoặc lượt AI mới. Không dùng nó thay toàn bộ bằng chứng cloud. [Hồ sơ T07](../design-work/production-20261013/qa/approval-chain-20261015.md).
 
 **Phần giải thích đã đóng trên URL:** mã13938d1,CI#141/PostgreSQL/verifythành công,ảnh0169c264…377c1712,Render `dep-db8dvrqj9qps73cj7d5g` đãLive14:17:07UTC. Kiểm thật4bước/1vídụ/ảnh1672px/chi tiết đóng mặc định/đổi ví dụ và đóng mở bằng bàn phím,không tràn ngang tại566×676,consoleerrors[];healthDB/kho tốt.0Gemini/embedding/Docmới. [Ứng viên và bằng chứng](RELEASE-CANDIDATE-13938d1.md). Không còn chờ duyệt hoặc triển khai phầngiải thích; các điều kiện khác vẫn theo sổ16gói, chưa gộpmain hoặc kýProduction.
 
@@ -53,10 +59,10 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 | 08 | Phần giải thích đã duyệt, làm và kiểm thật cục bộ ba kích thước/bàn phím;222/222kiểm nguồn+lint,CI#141đạt;đúngảnhRenderLive/URLkiểmđạt | Đóng riêng phần trình bày đã duyệt, không tự đóng nghiệm thu chức năng hoặc điều kiện dữ liệu |
 | 09 | CI #140/PostgreSQL của ed3fa6a đạt; T02 và hai lượt T04 còn thiếu đã có đầu ra, T08 truy xuất v2/xóa đúng mục/tìm mới không có; web/bàn giao/T06 có bằng chứng cloud lịch sử a284b7b | Giữ thiếu sót mức đầy đủ T02/T04; câu trả lời bộ nhớ trong hội thoại mới và phần còn lại T07 chưa đóng. Không dùng CI thay đầu ra thật |
 | 10 | Chưa có số đo giá trị | Năm cặp công việc, gồm công kiểm/sửa; báo riêng quyết định đầu tư |
-| 11 | Thu hồi phiên/cách ly đạt kiểm cục bộ và CI PostgreSQL; nâng cấp cloud thành công | Phiên thật và hai tài khoản; hiện mới một tài khoản hoạt động |
+| 11 | Thu hồi phiên/cách ly đạt kiểm cục bộ và CI PostgreSQL; nâng cấp cloud thành công; T09 được chủ sở hữu loại khỏi đợt ngày 15/10 | Không còn chặn đợt này bằng yêu cầu hai tài khoản/phiên cloud; chưa kiểm chứng, không tính đạt hoặc hứa đã kiểm bốn người |
 | 12 | Chưa khôi phục dữ liệu; chủ sở hữu yêu cầu bỏ qua ngày15/10 | Loại khỏi đợt theo quyết định chủ sở hữu; không tính đạt, công bố giới hạn chưa kiểm khôi phục khi bàn giao |
 | 13 | Home đang chạy20/20lượt dưới3giây trong điều kiện đã ghi;16/16kiểm vận hành tại máy. Sau duyệt15/10 đã quay lui Render thật vềac46a7a rồi trở lại7727c538, cả haiLive; dữ liệu Bộ nhớ đọc lại và kiểm sức khỏe tốt | Đã đóng riêng diễn tập đổi phiên bản; sau ngủ/gián đoạn cloud và khôi phụcDB/tệp không được suy thành đạt. Không tự nâng gói |
-| 14 | Chưa đóng điều kiện dữ liệu | Xác nhận dữ liệu/nhà cung cấp/quyền riêng tư/người phụ trách; không gửi dữ liệu nhạy cảm khi chưa phù hợp |
+| 14 | Đã chốt quản trị viên vận hành, email hỗ trợ/xóa dbp3206@gmail.com; chưa đóng toàn bộ điều kiện dữ liệu | Chốt loại tài liệu, điều kiện nhà cung cấp, thời hạn lưu/xóa và thông báo người dùng; không gửi dữ liệu nhạy cảm khi chưa phù hợp |
 | 15 | Chưa có bằng chứng dùng lặp lại | Ba người/10 ngày theo kế hoạch; kết luận đúng hạn, tách khỏi nghiệm thu kỹ thuật |
 | 16 | Hồ sơ đang cập nhật, chưa phát hành | Bản giải thích được duyệt, main/CI/digest/URL khớp, vận hành và biên bản ký duyệt |
 
