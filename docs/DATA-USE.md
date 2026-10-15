@@ -10,6 +10,10 @@ Google nêu dịch vụ Gemini không trả phí có thể dùng đầu vào/đ�
 
 Ngày 14/10 chủ sở hữu duyệt đổi phân bổ phần chưa dùng thành tối đa **13 lượt sinh câu trả lời + 6 tạo chỉ mục**, vẫn tổng 19; không đổi loại dữ liệu, bên nhận, quyền ghi hoặc giới hạn trả phí. Đến lần kiểm cuối ghi 12+6; một Doc giả lập đã tạo sau duyệt và đọc lại. Điều này không đóng điều kiện dữ liệu doanh nghiệp thật.
 
+Ngày 15/10 chủ sở hữu duyệt **tối đa 7 yêu cầu bổ sung: 5 sinh câu trả lời + 2 tạo chỉ mục**, nâng trần cả đợt từ 19 lên 26. Chỉ bốn tệp giả lập A/B/C, ghi chú thử IA-QA-20261013 và nguồn công khai; tính cả lỗi/thử lại. Trước phần bổ sung đã dùng 12+6=18; phần kiểm đặt tên/phục hồi bản xem trước trên cloud dùng 0 yêu cầu Gemini và không tạo Doc mới. Không đặt lại bộ đếm, nâng gói hoặc tạo thêm Google Doc. Ghi riêng số dùng mới; một lượt dự phòng cũ không tự biến thành quyền chạy vượt bảy yêu cầu mới.
+
+Chủ sở hữu đồng thời yêu cầu **bỏ qua kiểm khôi phục DB/tệp vì không còn nhớ mật khẩu database**. Không yêu cầu đổi mật khẩu hoặc thao tác kết nối tiếp. Mục này được loại khỏi đợt nghiệm thu theo quyết định chủ sở hữu, ghi **chưa kiểm chứng**, không ghi đạt hoặc bảo đảm khôi phục dữ liệu. Đây vẫn là giới hạn vận hành phải công bố khi bàn giao.
+
 Đọc được dữ liệu Google không đồng nghĩa được chuyển cho mọi bên xử lý. Khi mở ứng dụng cho công chúng, Google yêu cầu công bố rõ cách truy cập, dùng, lưu, chia sẻ dữ liệu và chính sách riêng tư. Chủ sở hữu cần xác nhận loại ứng dụng, quyền và yêu cầu xác minh thực tế; không tự coi bốn tài khoản Gmail là ngoại lệ nội bộ cùng tên miền. [Chính sách dữ liệu Google API](https://developers.google.com/terms/api-services-user-data-policy).
 
 ## Đường đi dữ liệu của sản phẩm

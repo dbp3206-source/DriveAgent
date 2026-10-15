@@ -4,11 +4,12 @@
 
 Giúp người thường xuyên xử lý tài liệu, thư và họp: hiểu tài liệu, nắm tình hình, phân tích phương án, chuẩn bị cuộc họp và hoàn thiện nội dung. Trợ lý cần đề xuất hướng làm và bước tiếp hữu ích khi tham vấn, không chỉ tóm tắt hoặc hỏi gì đáp nấy. Nguồn dùng theo quyền và yêu cầu; không tự thực hiện đề xuất. Bản đầu giới hạn tối đa bốn tài khoản được mời, dữ liệu riêng; chưa phải không gian cộng tác toàn doanh nghiệp.
 
-Định hướng hiện hành ngày 13/10: [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md), [hợp đồng trợ lý](docs/ASSISTANT-CONTRACT.md), [ba bộ giả lập và mười ca nghiệm thu](docs/verification/internal-assistant/README.md), [sổ triển khai](docs/PRODUCTION-EXECUTION-20261013.md). Cập nhật15/10: linh vật đã có bằng chứng triển khai; bản sửa tên tài liệu `ed3fa6a` đã qua CI/PostgreSQL, còn chờ triển khai và nghiệm thu URL. Đọc [bản ứng viên hiện tại](docs/RELEASE-CANDIDATE-ed3fa6a.md); **chưa đủ điều kiện ký Production**. Báo cáo bên dưới giữ nguyên phạm vi lịch sử, không tự chuyển thành đạt theo định hướng mới.
+Định hướng hiện hành ngày 13/10: [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md), [hợp đồng trợ lý](docs/ASSISTANT-CONTRACT.md), [ba bộ giả lập và mười ca nghiệm thu](docs/verification/internal-assistant/README.md), [sổ triển khai](docs/PRODUCTION-EXECUTION-20261013.md). Cập nhật15/10: linh vật đã có bằng chứng triển khai; bản sửa tên tài liệu `ed3fa6a` đã qua CI/PostgreSQL, Live đúng ảnh và kiểm tên/phục hồi trên URL. Đọc [bản đang nghiệm thu](docs/RELEASE-CANDIDATE-ed3fa6a.md); **chưa đủ điều kiện ký Production**. Báo cáo bên dưới giữ nguyên phạm vi lịch sử, không tự chuyển thành đạt theo định hướng mới.
 
 ## Xem và kiểm chứng nhanh
 
 - [Mở sản phẩm](https://veridra-closed-beta.onrender.com/) — bản thử giới hạn người được mời; không có tài khoản hoặc khóa API dùng chung. Dịch vụ miễn phí có thể cần thời gian khởi động sau khi ngủ.
+- [Kiểm bổ sung ngày15/10](docs/verification/internal-assistant/RESULTS-20261015.md): đọc hai bản hướng dẫn, hỏi tiếp/đổi hồ sơ, thông báo linh vật và truy xuất ghi chú. Công bố cả kết quả còn thiếu; khôi phục được chủ sở hữu loại khỏi đợt, không tính đạt.
 - [Kịch bản demo 10 phút](docs/DEMO-10-PHUT.md) và [bộ dữ liệu giả lập, 10 ca kiểm, đáp án độc lập](docs/verification/golden/README.md).
 - [Báo cáo chạy thật ngày 11/10/2026](docs/verification/DEMO-REPORT-20261011.md), không chỉ kiểm phần trò chuyện: có Drive, nhập tệp, bộ nhớ, quy trình, Gmail, lịch, kết quả đã lưu và nhật ký.
 - [Các bộ kiểm chất lượng, bảo mật và kiểm soát hành động](docs/verification/README.md), kèm kết quả có ngày đo và phạm vi cụ thể.

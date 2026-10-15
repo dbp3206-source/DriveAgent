@@ -1,6 +1,18 @@
 # Bản ứng viên ed3fa6a — 15/10/2026
 
-**Trạng thái: CI đạt, ảnh đã xuất bản; chưa triển khai bản sửa tên tài liệu và chưa ký nghiệm thu Production.** Đây là bản thuộc gói07/T07 của kế hoạch 13/10, không thêm tính năng hoặc đổi bộ nghiệm thu. Nhánh hiện hành là `staging/internal-assistant-20261013`.
+**Trạng thái cập nhật 15/10: Live đúng ảnh, phần đặt tên/phục hồi đã kiểm trên URL; chưa ký nghiệm thu Production.** Đây là bản thuộc gói07/T07 của kế hoạch 13/10, không thêm tính năng hoặc đổi bộ nghiệm thu. Nhánh hiện hành là `staging/internal-assistant-20261013`.
+
+## Kết quả triển khai và kiểm URL mới nhất
+
+- Đã cập nhật đúng nguồn ảnh của dịch vụ hiện có qua thanh bên Render, trong **My Workspace**. Lần chạy [dep-db8cmkjncjis73fe9m2g](https://dashboard.render.com/web/srv-dav5v560tbcc73dpjlc0/deploys/dep-db8cmkjncjis73fe9m2g) hiển thị **Deploy succeeded | Live**, thời gian1m50s. Mốc bắt đầu giao diện19:47:14, nhật ký Live19:49:09 ngày15/10/2026 GMT+7; tiêu đề/source đúng digest7727c538…cacb0bd.
+- Không tạo dịch vụ, đổi Environment, quyền hoặc gói. Lần bấm Connect đầu hết thời gian chờ điều khiển trước dispatch; đọc lại vẫn còn hộp cập nhật rồi mới bấm lại. Sau khi có mã deploy chỉ theo dõi đúng lần chạy đó, không phát lệnh triển khai thứ hai.
+- Kiểm bằng cuộc trò chuyện phép tính giả lập đã có4.0: xuất mở hộp tên mới; xóa hết tên thì nút chuẩn bị bị khóa; nhập tên Việt và Hủy thì hộp đóng, root không còn aria-hidden. Chuẩn bị đúng tên **Kiểm đặt tên - dữ liệu giả lập 15-10-2026** hiện bản khóa và nút xác nhận riêng.
+- Tải lại rồi mở xuất: phục hồi đúng tên/bản xem trước, không mở hộp tên mới. Nhật ký100sự kiện đã tải trước và sau phục hồi chỉ có một `docs_prepare` mới ngày15/10,0.63s,mã rút gọnfa78c383; không có `docs_execute` ngày đó trong tập đã tải. Không bấm xác nhận tạo, không gửi câu hỏi mới/đọc nguồn riêng.0Gemini/0chỉ mục/0Doc Google mới.
+- DOM màn thanh bên cuối:566×676,scrollWidth556; console error cuối `[]`. Không lấy kích thước này thay kiểm390tại máy hoặc kết quả vận hành tổng thể. Bằng chứng nằm trong [QA đặt tên tài liệu](../design-work/document-export-20261014/qa/qa-report.md), gồm ảnh Render, hộp tên, bản xem trước và bản phục hồi.
+
+Các quan sát công khai buổi chiều ở mục3 dưới đây giữ lịch sử trước triển khai, không còn là trạng thái bản đang chạy sau mốc Live trên. Hướng dẫn mục4 đã thực hiện, **không triển khai lại cùng ảnh chỉ vì đọc tài liệu này**.
+
+Đợt bổ sung cùng ngày đã chạy T02 và hai câu hỏi tiếp T04 còn thiếu; đúng kết luận chính và không lẫn hồ sơ, giữ riêng các thiếu sót về mức đầy đủ. Linh vật báo xong ở trang Bộ nhớ và mở lại đúng hội thoại; T08 tìm được đúng ghi chú v2, chưa xóa hoặc kiểm truy xuất trong hội thoại mới. Mới dùng5sinh câu trả lời+1tạo chỉ mục; cả đợt24/26. [Kết quả gộp](verification/internal-assistant/RESULTS-20261015.md). Chưa đổi mã hoặc ảnh ứng dụng.
 
 ## 1. Đúng bản cần triển khai
 
@@ -40,9 +52,9 @@ Nếu có lỗi mới, giữ nguyên mã yêu cầu/trạng thái và chẩn đo
 
 | Nhóm hiện có | Cần đúng bằng chứng gì để đóng |
 |---|---|
-| T02/T04/T08, phần còn lại T07 | Kiểm phần thiếu của nguồn có hiệu lực, đổi số/đổi hồ sơ, nhớ/quên và bản duyệt; ngân sách hiện duyệt19đã dùng18, chưa được dùng ngân sách bổ sung đang hỏi |
-| Gói11–13/T09–T10 | Tài khoản thứ hai/thu hồi phiên thật; kết nối nguồn–đích an toàn rồi khôi phục DB+tệp, đối soát; gián đoạn/quay lui/điều kiện mở trang sau ngủ. Tạo project hoặc kiểm đơn vị không thay bằng chứng thực |
+| T02/T04/T08, phần còn lại T07 | Kiểm phần thiếu của nguồn có hiệu lực, đổi số/đổi hồ sơ, nhớ/quên và bản duyệt. Ngày15/10 đã duyệt thêm tối đa5 sinh câu trả lời+2 tạo chỉ mục, trần đợt26; trước bổ sung dùng18. Không tạo thêm Doc, không tính lại ngân sách theo ngày |
+| Gói11–13/T09–T10 | Tài khoản thứ hai/thu hồi phiên thật; gián đoạn/quay lui/điều kiện mở trang sau ngủ. Chủ sở hữu ngày15/10 yêu cầu bỏ qua khôi phục DB+tệp vì không nhớ mật khẩu: loại khỏi đợt, ghi chưa kiểm chứng, không tính đạt và không tiếp tục yêu cầu đổi mật khẩu. Tạo project hoặc kiểm đơn vị không thay bằng chứng thực |
 | Gói14 | Chủ sở hữu xác nhận dữ liệu/nhà cung cấp, người vận hành, lưu/xóa và quyền tích hợp; hiện chỉ giả lập/công khai, chưa mở dữ liệu doanh nghiệp nhạy cảm |
-| Gói08/16 | Góp ý [bản nháp giải thích](AGENT-EXPLANATION-DRAFT-20261015.md) trước sửa UI; sau các điều kiện mới gộp main/thẻ/CI/ảnh/URL và ký biên bản |
+| Gói08/16 | Góp ý [bản nháp giải thích](AGENT-EXPLANATION-DRAFT-20261015.md) trước sửa UI; sau các điều kiện mới gộp main/thẻ/CI/ảnh/URL và ký biên bản. Bản đặt tên đã Live và kiểm URL, không còn chờ kết nối Render để triển khai |
 
 Gói10/15 đo lợi ích và dùng lặp lại để quyết định đầu tư, báo riêng; không lấy thiếu bằng chứng thị trường làm lý do sửa kỹ thuật không có điểm dừng. Đây là phân nhóm các việc đã có trong16gói, không tạo checklist hoặc phạm vi mới.

@@ -1,0 +1,23 @@
+2026-10-15, PowerShell, repository C:/Users/Bao Phuc/Documents/DriveAgent/drive-agent
+
+Executed:
+git -c safe.directory=C:/Users/Bao Phuc/Documents/DriveAgent/drive-agent diff --check
+Result: exit 0, no whitespace errors.
+
+Get-Content -LiteralPath design-work/production-20261013/qa/recheck-20261015/run-manifest.json -Raw | ConvertFrom-Json
+Result: valid JSON; cumulative generation=17, embedding=7, total=24.
+
+backend/.venv/Scripts/python.exe scripts/scan_release_secrets.py
+Result: Release secret scan passed for 701 Git-visible files (before this command log was added).
+
+backend/.venv/Scripts/python.exe scripts/validate_internal_assistant_dataset.py
+Result: internal-assistant-20261013.2, 10 cases, 4 fixtures, integrity_passed=true. Local dataset only; not product acceptance.
+
+Get-FileHash -Algorithm SHA256 (four native cloud screenshots)
+t02-policy-ed3fa6a-20261015.jpg: 6ebceb4cede9871e3087d8711f27d90d3241a88a46a7d107c2c41c8b2ee8ec58
+t04-reset-ed3fa6a-20261015.jpg: 5468a8d95846c034f32e2cda886de853264d907e8046b1a89cb5272b4769a9c8
+mascot-response-ed3fa6a-20261015.jpg: ce1c443d57ba23b5ecaeea4e232a4f28d9783d4724b4504cfae8552d6e7a3eda
+t08-memory-match-ed3fa6a-20261015.jpg: d17ea093b62c4440c2c54c3f398fb11f6e03cdfee2d21c16e70897c5a0fc3335
+
+Actual browser actions are recorded in the mcp__cua_repl.js execution history, not shell commands: submit T02, submit T04 follow-up twice, inspect execution details, navigate to Memory during running chat, observe mascot notification, open the completed answer, search only IA-QA-20261013, read Render logs for the embedding/search result, capture and inspect four JPEGs.
+No full code test suite, image rebuild, extra Google Doc creation, permanent memory deletion, database password entry, restore or paid operation ran in this subrun.

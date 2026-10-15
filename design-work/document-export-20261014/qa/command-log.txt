@@ -22,3 +22,10 @@ Public health first timeout35s, second sameendpoint200:statusok,database/object_
 Public UI index-5fNVRRAp.js / ChatPage-UvdgUJLy.js includes mascot notice, lacks owner preview lookup and title dialog. Codepresencecheckonly,notruntime-digest/authenticatedUIproof.
 GitHub branches:maina026db6716cab24c5431833644c8976312902dc8,staginged3fa6a38b093d7aeda517df03c88cbd16880cd7 atobservation. No merge.
 Plugin search now returned exact Render listing installedfalse; eligible suggestion offered, not installation/connection. Codex panel open requests queued, not proof page was read or controlled.
+15Oct evening: cua.getTab bound existing IAB Render Settings, authenticated My Workspace and service srv-dav5v560tbcc73dpjlc0. Old source ac46a7a observed. Set only Image URL to7727c538...cacb0bd. First Connect timeout beforedispatch; modal stillopen verified, then oneacceptedConnect. No extra deploytrigger.
+Render deploydep-db8cmkjncjis73fe9m2g inprogress17s/1m17s/1m43s; waited20s on samehandle; terminalDeploysucceeded|Live1m50s,log19:49:09GMT+7. No restart based on observation timeout.
+Authenticated product via IAB. Existing deterministic answer4.0. Emptyname keyboardguard, selectedVietnamesename,Cancel/rootHiddennull, prepareonce,readonlystatus, reload and same chosen title recovered without a newnamedialog.
+AX click exporttimedout but openedmodal; inspectedbeforeretry. AXCancel didnotclose,waithiddenfailed; semanticlocatorCancelclosedproperly. Product tab changedAuditwhilechecking; inspectedcurrentURL beforecontinuing. No productcodefix based on these tool failures.
+Read DOM of loaded100Auditrows:one newdocs_prepare on15Oct,fa78c383,0.63s,success,before/afterreload;no docs_execute on15Oct inthissample. No savedprivateAudit screenshot/rowemail. Not a fullSQLtablecount.
+Cloud DOMlast566x676,scrollWidth556,0namedialogs,recoveredlockedpreview. Consoleerrorlist[]. Model/embedding/newGooglewrites0. App UI16/16 not treated as reset of approved19batchcap.
+Native CUA screenshots saved directly with node:fs/promises and byte arrays, no imageediting. FourSHA256checked withGet-FileHash; values inmanifest. Producttab3markedhandoff; userRender1retained.

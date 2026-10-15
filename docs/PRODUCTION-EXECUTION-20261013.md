@@ -2,11 +2,13 @@
 
 ## Cập nhật 15/10 — không thay phạm vi nghiệm thu
 
-Linh vật đã triển khai ở mã `2dbaac5`, CI#139 và Render đã xác nhận, hồ sơ ở `design-work/mascot-notifications-20261014/qa/`. Bản đặt tên Doc trước khóa/phục hồi bản duyệt `ed3fa6a` đã qua CI#140, gồm PostgreSQL thật; ảnh khóa `7727c538…cacb0bd` đã xuất bản, bước tự triển khai bị bỏ qua.219/219 frontend,34/34 backend liên quan và trình duyệt local đạt,0Gemini/0Doc thật mới. URL công khai còn gói Chat chưa có hộp đặt tên, nên chưa coi bản sửa đã triển khai. [Bản ứng viên và thao tác duy nhất](RELEASE-CANDIDATE-ed3fa6a.md). Không lấy CI thay nghiệm thu Render hoặc đóng trọn T07. Các bảng dưới giữ lịch sử bản a284b7b; giới hạn khôi phục/tài khoản/dữ liệu/quota/phát hành vẫn còn. Không nâng trạng thái Production hoặc gộp main khi chưa đủ bằng chứng.
+Linh vật đã triển khai ở mã `2dbaac5`, CI#139 và Render đã xác nhận, hồ sơ ở `design-work/mascot-notifications-20261014/qa/`. Bản đặt tên Doc trước khóa/phục hồi bản duyệt `ed3fa6a` đã qua CI#140, gồm PostgreSQL thật; ảnh `7727c538…cacb0bd` đã **Live** qua thanh bên Render ngày15/10,deploy `dep-db8cmkjncjis73fe9m2g`,1m50s,nhật ký19:49:09 GMT+7.219/219 frontend,34/34 backend liên quan đã đạt tại máy. Kiểm URL thật: tên rỗng bị khóa,Hủy không kẹt,đúng tên chọn, tải lại phục hồi bản cũ; nhật ký tập đã tải có đúng1lượt chuẩn bị mới,không có lượt thực hiện Google mới.0Gemini/0chỉ mục/0Doc Google mới. [Bản đang chạy và bằng chứng](RELEASE-CANDIDATE-ed3fa6a.md). Đóng phần tên/phục hồi, không đóng trọn T07 hoặc Production. Các giới hạn khôi phục/tài khoản/dữ liệu/quota/phát hành vẫn còn; không gộp main khi chưa đủ bằng chứng.
 
-Ngày15/10 đã trình [bản nháp giải thích ngắn](AGENT-EXPLANATION-DRAFT-20261015.md), chưa nhận góp ý/duyệt và chưa sửa trang đó. Ngân sách bổ sung đang xin không được tính là đã duyệt. Lần kiểm sức khỏe công khai sau một lần hết giờ nhận HTTP200/DB/kho tệp tốt; không dùng nó chứng minh gói không ngủ hoặc AI/Google của người dùng hoạt động.
+Ngày15/10 đã trình [bản nháp giải thích ngắn](AGENT-EXPLANATION-DRAFT-20261015.md), chưa nhận góp ý/duyệt và chưa sửa trang đó. Chủ sở hữu đã duyệt tối đa 7 yêu cầu bổ sung (5 sinh câu trả lời + 2 tạo chỉ mục), nâng trần đợt lên 26, chỉ đúng dữ liệu giả lập/công khai đã duyệt và không thêm Doc. Trước bổ sung dùng 18; ghi riêng các lượt mới, tính cả lỗi/thử lại. Đồng thời chủ sở hữu yêu cầu bỏ qua khôi phục vì không nhớ mật khẩu: loại mục này khỏi đợt, ghi chưa kiểm chứng, không yêu cầu đổi mật khẩu và không tính đạt. [Điều kiện và sổ quyền dùng dữ liệu](DATA-USE.md). Lần kiểm sức khỏe công khai sau một lần hết giờ nhận HTTP200/DB/kho tệp tốt; không dùng nó chứng minh gói không ngủ hoặc AI/Google của người dùng hoạt động.
 
 Phạm vi hiện hành: trợ lý công việc nội bộ, năm nhóm việc, ba hành trình A/B/C, đúng 16 gói và 10 ca T01–T10 trong kế hoạch ngày 13/10. Không mở thêm tính năng. Phần trình bày “Cách Agent hoạt động” để cuối và phải trình người dùng góp ý trước khi chốt.
+
+Kiểm bổ sung ngày15/10: T02 trả lời đúng người duyệt18triệu/bản nháp chưa thay bản hiệu lực, thiếu nhắc duyệt dữ liệu; T04 hai lượt còn lại đã chạy, đúng60/42giờ và chuyển Mộc An không lẫn hồ sơ, thiếu dòng18giờ tiết kiệm. Linh vật báo xong khi đang xem Bộ nhớ và mở lại đúng hội thoại. T08 tìm thật đúng ghi chú v2, chưa xóa/chưa chứng minh truy xuất trong hội thoại mới. Mới dùng5+1=6yêu cầu; cả đợt17+7=24/26. [Kết quả và giới hạn cụ thể](verification/internal-assistant/RESULTS-20261015.md). Chưa ký Production, không mở đợt sửa văn phong lẻ tẻ hoặc gọi thêm ngoài ngân sách.
 
 **Trạng thái: đang nghiệm thu bản đã triển khai, chưa nghiệm thu Production.** Bản sửa gộp `a284b7b` đã qua CI #137 và Live đúng ảnh. Đã kiểm lại web, hộp xem → Chat, một Doc có duyệt/đọc lại, hai lượt họp và 20 lượt mở Home; các giới hạn còn lại được ghi riêng. Bằng chứng mới ở `verification/internal-assistant/RESULTS-20261014.md`; bản triển khai ở `RELEASE-CANDIDATE-a284b7b.md`. Không đổi kết quả lịch sử hoặc tự tính mọi ca đạt.
 
@@ -43,12 +45,12 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 | 04 | Đạt hồi quy tại máy | Xác nhận dấu vết nguồn/hành động trong T02/T04/T05 trên ứng viên |
 | 05 | Drive lọc/phân trang 50→100/tìm “Veridra” 3 dòng/bỏ tìm đã xác nhận; bốn tệp có chỉ mục; web công khai chạy đúng | Nội dung tệp riêng/loại tệp chưa kiểm không tự tính đạt; nguồn web còn dư |
 | 06 | Đã cập nhật hợp đồng và chỉ dẫn | Chạy gộp đầu ra N1–N5, chấm đúng/rõ/dùng được; không tối ưu văn phong ngoài tiêu chí |
-| 07 | Nhập tệp/bộ nhớ quản lý đã quan sát; ghi chú v2 xuất thật; đúng một Doc sau duyệt/đọc lại. Tên xuất đã sửa tại máy và CI#140 đạt | Bản đặt tên cần lên URL; quên/truy xuất hội thoại mới, đổi bản/đích sau duyệt và mục bản nháp vẫn cần bằng chứng tương ứng |
+| 07 | Nhập tệp/bộ nhớ quản lý đã quan sát; ghi chú v2 xuất thật; đúng một Doc sau duyệt/đọc lại. Tên xuất/phục hồi đã sửa,CI#140/Render/kiểm URL đạt | Quên/truy xuất hội thoại mới, đổi bản/đích sau duyệt và mục bản nháp vẫn cần bằng chứng tương ứng |
 | 08 | Giao diện bắt đầu đạt kiểm cục bộ; bản nháp giải thích đã trình, chưa sửa UI | Chờ góp ý/duyệt bản nháp rồi hoàn thiện đúng phần đó |
-| 09 | CI #140/PostgreSQL của ed3fa6a đạt; web/bàn giao/T06 có bằng chứng cloud lịch sử a284b7b | T02/T04/T08 và phần còn lại T07 chưa đủ bằng chứng; không tự tăng ngân sách hoặc dùng CI thay đầu ra thật |
+| 09 | CI #140/PostgreSQL của ed3fa6a đạt; T02 và hai lượt T04 còn thiếu đã có đầu ra, T08 truy xuất UI đúng v2; web/bàn giao/T06 có bằng chứng cloud lịch sử a284b7b | Giữ thiếu sót mức đầy đủ T02/T04; T08 quên/hội thoại mới và phần còn lại T07 chưa đóng. Không dùng CI thay đầu ra thật |
 | 10 | Chưa có số đo giá trị | Năm cặp công việc, gồm công kiểm/sửa; báo riêng quyết định đầu tư |
 | 11 | Thu hồi phiên/cách ly đạt kiểm cục bộ và CI PostgreSQL; nâng cấp cloud thành công | Phiên thật và hai tài khoản; hiện mới một tài khoản hoạt động |
-| 12 | Đích thử riêng đã hoạt động lại, còn trống; chưa khôi phục dữ liệu | Khôi phục DB+tệp bằng kết nối an toàn, đối soát và đo thời gian, không ghi đè nguồn |
+| 12 | Chưa khôi phục dữ liệu; chủ sở hữu yêu cầu bỏ qua ngày15/10 | Loại khỏi đợt theo quyết định chủ sở hữu; không tính đạt, công bố giới hạn chưa kiểm khôi phục khi bàn giao |
 | 13 | Có hồi quy giới hạn chờ; Home đang chạy 20/20 lượt dưới 3 giây, trong cùng điều kiện thanh bên | Sau ngủ, gián đoạn và quay lui với bản vẫn giữ thu hồi phiên; không tự nâng gói |
 | 14 | Chưa đóng điều kiện dữ liệu | Xác nhận dữ liệu/nhà cung cấp/quyền riêng tư/người phụ trách; không gửi dữ liệu nhạy cảm khi chưa phù hợp |
 | 15 | Chưa có bằng chứng dùng lặp lại | Ba người/10 ngày theo kế hoạch; kết luận đúng hạn, tách khỏi nghiệm thu kỹ thuật |
@@ -57,8 +59,8 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 ## Thứ tự tiếp theo — không thêm phạm vi
 
 1. Đã đưa bản sửa gộp qua CI và Live đúng ảnh; web/Doc/bàn giao/họp đã có kết quả, xem hồ sơ ngày 14/10.
-2. Chủ sở hữu đổi phân bổ thành 13 sinh câu trả lời + 6 tạo chỉ mục, giữ tổng 19; đã dùng 12+6. Giữ một lượt dự phòng vì không đủ bảo đảm đường tự thử lại; không tự chạy thêm hoặc đổi đáp án.
-3. Đóng khôi phục, đo vận hành, điều kiện dữ liệu và cách ly thật. Phần cần chủ sở hữu/tài khoản bổ sung ghi chờ điều kiện, không đánh dấu đạt giả.
+2. Trước bổ sung đã dùng 12 sinh câu trả lời + 6 tạo chỉ mục. Chủ sở hữu ngày15/10 duyệt thêm tối đa 5+2, tổng bảy yêu cầu mới, trần đợt26; kiểm gộp T02/T04/T08, giữ nguyên đáp án và tính cả lỗi/thử lại.
+3. Đo vận hành, điều kiện dữ liệu và cách ly thật. Khôi phục được chủ sở hữu loại khỏi đợt ngày15/10: không tiếp tục yêu cầu kết nối/mật khẩu, không đánh dấu đạt. Phần cần chủ sở hữu/tài khoản bổ sung khác ghi chờ điều kiện.
 4. Làm phần giải thích cuối, trình người dùng; sau duyệt mới đóng main/phát hành và biên bản. Giá trị đầu tư ở gói 10/15 báo riêng.
 
 Không quay về ảnh trước thu hồi phiên rồi tuyên bố vẫn có bảo đảm thu hồi. Không dùng một quản trị viên chứng minh bốn người dùng riêng. Không biến giả lập hoặc kiểm mô phỏng thành thành tích sử dụng thật.
