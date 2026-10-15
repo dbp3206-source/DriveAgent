@@ -57,4 +57,6 @@ Nếu có lỗi mới, giữ nguyên mã yêu cầu/trạng thái và chẩn đo
 | Gói14 | Chủ sở hữu xác nhận dữ liệu/nhà cung cấp, người vận hành, lưu/xóa và quyền tích hợp; hiện chỉ giả lập/công khai, chưa mở dữ liệu doanh nghiệp nhạy cảm |
 | Gói08/16 | Góp ý [bản nháp giải thích](AGENT-EXPLANATION-DRAFT-20261015.md) trước sửa UI; sau các điều kiện mới gộp main/thẻ/CI/ảnh/URL và ký biên bản. Bản đặt tên đã Live và kiểm URL, không còn chờ kết nối Render để triển khai |
 
+Kiểm vận hành bổ sung ngày15/10:16/16ca hàng đợi/tình trạng dịch vụ tại máy đạt, gồm tiến trình thử bị dừng rồi tiến trình mới tiếp tục. Chưa diễn tập quay lui cloud: thao tác Connect đổi sang ảnhac46a7a bị lớp xét duyệt quyền từ chối vì thiếu xác nhận riêng. Đã hủy hộp nguồn chưa lưu; bản chạy vẫn7727c538. Không gọi thêm Gemini hoặc thay dữ liệu/Environment. [Giới hạn và phép chuyển cần xác nhận](verification/internal-assistant/RESULTS-20261015.md#t10-xử-lý-gián-đoạn-và-giới-hạn-quay-lui).
+
 Gói10/15 đo lợi ích và dùng lặp lại để quyết định đầu tư, báo riêng; không lấy thiếu bằng chứng thị trường làm lý do sửa kỹ thuật không có điểm dừng. Đây là phân nhóm các việc đã có trong16gói, không tạo checklist hoặc phạm vi mới.

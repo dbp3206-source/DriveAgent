@@ -1,5 +1,7 @@
 # Khôi phục dữ liệu cloud sang môi trường mới
 
+**Quyết định mới ngày15/10/2026:** chủ sở hữu yêu cầu bỏ kiểm khôi phục DB/tệp vì không nhớ mật khẩu. Hướng dẫn bên dưới giữ tham chiếu lịch sử, không phải lệnh tiếp tục. Không yêu cầu đặt lại/nhập mật khẩu hoặc tạo lại project chỉ để đóng mục này. Đợt hiện hành ghi loại khỏi phạm vi theo quyết định chủ sở hữu và chưa kiểm chứng, không PASS; xem [sổ thực thi](PRODUCTION-EXECUTION-20261013.md). Điều này không đồng nghĩa đã bảo đảm khôi phục hoặc cho phép thay dữ liệu hệ thống thật.
+
 Phạm vi: điều kiện D2 / H09. Đây là hướng dẫn thao tác, **không phải bằng chứng đã khôi phục Supabase thành công**. Không thử trên project đang phục vụ người dùng. Không dùng bản sao thư mục `data/` để thay cho bản sao cloud.
 
 Kiểm tra công cụ ngày 05/10/2026: chạy `python -m pytest backend/tests/test_state_archive.py -q` bằng môi trường Python của dự án, **5 phép thử đạt trong 5,26 giây**. Phạm vi là mã hóa/giải mã, chống ghi đè, bản hỏng và đường dẫn không an toàn trên dữ liệu thử local; chưa kiểm việc xuất PostgreSQL, tải Storage hoặc khôi phục Supabase. Các công cụ PostgreSQL chưa được tìm thấy trên PATH trong lượt kiểm này.

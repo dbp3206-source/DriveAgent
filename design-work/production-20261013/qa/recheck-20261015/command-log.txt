@@ -29,3 +29,12 @@ git diff --check passed; manifest ConvertFrom-Json parsed; scan_release_secrets.
 Get-FileHash SHA256:
 t08-deleted-ed3fa6a-20261015.jpg: 83f17daeb7ab6a1c50bae1e06efabab83b5d54c8bda75853bd8cd8e2044a6d0c
 t08-forgotten-ed3fa6a-20261015.jpg: a4ae7a6855c8db42b757482e4b1278a242633d67538b927c8d4a1f8edbcdfc8a
+
+Operational recheck:
+PowerShell created unique workspace QA dir runtime-e672cfb892b14a57908a0ec24579cc46 (asserted absent). Child process env pinned SQLite bootstrap.db, STATE_DIR there and blank Gemini/Google/Tavily keys. Parent Python disabled Settings dotenv before importing app and ran pytest.main with backend config, exact test files, unique --basetemp and --junitxml.
+pytest -c backend/pyproject.toml backend/tests/test_chat_tasks.py backend/tests/test_readiness_recovery.py -q --basetemp <unique-run>/pytest --junitxml <unique-run>/runtime.xml
+Exec session77201 completed:16passed in26.77s,exit0. XML parsed/read:16tests,0failures,0errors,0skipped,time26.719s; real fixture crash/recovery testcase10.216s. This is SQLite/fake-model queue execution, not cloud/PostgreSQL/provider interruption.
+render --version: command not recognized (no CLI installed). No Render MCP tool in current ALL_TOOLS. Used IAB Dashboard as prebuilt-image fallback, not a CLI or MCP success.
+git diff --name-only 2dbaac5d4d3320d6997a03ce1fac6a7402e3b3bf ed3fa6a38b093d7aeda517df03c88cbd16880cd7 -- backend/app/db backend/app/core backend/pyproject.toml backend/uv.lock
+Result:empty; no schema/core/dependency diff for proposed rollback pair.
+CUA inspected idle product UI; Render Settings exact service/My Workspace/source7727c538. Opened Image Edit; filled ac46a7a. Connect rejected by auto-review: no explicit owner authorization for this exact rollback digest on Live service. No workaround/retry. Re-read unchanged modal; clicked Close modal; read two source/header links still7727c538. Saved native source screenshot. No deploy triggered; no Env/plan/secret/DB change, no model call.

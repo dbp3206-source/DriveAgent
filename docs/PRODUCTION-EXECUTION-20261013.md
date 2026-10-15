@@ -51,7 +51,7 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 | 10 | Chưa có số đo giá trị | Năm cặp công việc, gồm công kiểm/sửa; báo riêng quyết định đầu tư |
 | 11 | Thu hồi phiên/cách ly đạt kiểm cục bộ và CI PostgreSQL; nâng cấp cloud thành công | Phiên thật và hai tài khoản; hiện mới một tài khoản hoạt động |
 | 12 | Chưa khôi phục dữ liệu; chủ sở hữu yêu cầu bỏ qua ngày15/10 | Loại khỏi đợt theo quyết định chủ sở hữu; không tính đạt, công bố giới hạn chưa kiểm khôi phục khi bàn giao |
-| 13 | Có hồi quy giới hạn chờ; Home đang chạy 20/20 lượt dưới 3 giây, trong cùng điều kiện thanh bên | Sau ngủ, gián đoạn và quay lui với bản vẫn giữ thu hồi phiên; không tự nâng gói |
+| 13 | Home đang chạy20/20lượt dưới3giây trong điều kiện đã ghi. Ngày15/10kiểm16/16hàng đợi/tình trạng dịch vụ tại máy đạt, có tiến trình thử thoát thật rồi mở lại | Quay lui Render chưa thực hiện: lớp xét duyệt quyền từ chối Connect, đã hủy giá trị chưa lưu và giữ ảnh7727c538. Cần xác nhận riêng trước khi kiểm chuyển vềac46a7a rồi trở lại; sau ngủ/cloud gián đoạn vẫn chưa đủ bằng chứng. Không tự nâng gói |
 | 14 | Chưa đóng điều kiện dữ liệu | Xác nhận dữ liệu/nhà cung cấp/quyền riêng tư/người phụ trách; không gửi dữ liệu nhạy cảm khi chưa phù hợp |
 | 15 | Chưa có bằng chứng dùng lặp lại | Ba người/10 ngày theo kế hoạch; kết luận đúng hạn, tách khỏi nghiệm thu kỹ thuật |
 | 16 | Hồ sơ đang cập nhật, chưa phát hành | Bản giải thích được duyệt, main/CI/digest/URL khớp, vận hành và biên bản ký duyệt |
