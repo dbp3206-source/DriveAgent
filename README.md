@@ -4,12 +4,13 @@
 
 Giúp người thường xuyên xử lý tài liệu, thư và họp: hiểu tài liệu, nắm tình hình, phân tích phương án, chuẩn bị cuộc họp và hoàn thiện nội dung. Trợ lý cần đề xuất hướng làm và bước tiếp hữu ích khi tham vấn, không chỉ tóm tắt hoặc hỏi gì đáp nấy. Nguồn dùng theo quyền và yêu cầu; không tự thực hiện đề xuất. Bản đầu giới hạn tối đa bốn tài khoản được mời, dữ liệu riêng; chưa phải không gian cộng tác toàn doanh nghiệp.
 
-Định hướng hiện hành ngày 13/10: [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md), [hợp đồng trợ lý](docs/ASSISTANT-CONTRACT.md), [ba bộ giả lập và mười ca nghiệm thu](docs/verification/internal-assistant/README.md), [sổ triển khai](docs/PRODUCTION-EXECUTION-20261013.md). Cập nhật15/10: linh vật đã có bằng chứng triển khai; bản sửa tên tài liệu `ed3fa6a` đã qua CI/PostgreSQL, Live đúng ảnh và kiểm tên/phục hồi trên URL. Đọc [bản đang nghiệm thu](docs/RELEASE-CANDIDATE-ed3fa6a.md); **chưa đủ điều kiện ký Production**. Báo cáo bên dưới giữ nguyên phạm vi lịch sử, không tự chuyển thành đạt theo định hướng mới.
+Định hướng hiện hành ngày 13/10: [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md), [hợp đồng trợ lý](docs/ASSISTANT-CONTRACT.md), [ba bộ giả lập và mười ca nghiệm thu](docs/verification/internal-assistant/README.md), [sổ triển khai](docs/PRODUCTION-EXECUTION-20261013.md). Cập nhật 15/10: bản `13938d1` đã Live, gồm phần giải thích bốn bước đã duyệt, linh vật và sửa tên/phục hồi bản xem trước. Đọc [bản đang chạy và bằng chứng](docs/RELEASE-CANDIDATE-13938d1.md); **chưa đủ điều kiện ký Production**. CI #142 bổ sung kiểm chuỗi duyệt, không đổi mã chạy và không triển khai lại. Báo cáo bên dưới giữ nguyên phạm vi lịch sử, không tự chuyển thành đạt theo định hướng mới.
 
 ## Xem và kiểm chứng nhanh
 
 - [Mở sản phẩm](https://veridra-closed-beta.onrender.com/) — bản thử giới hạn người được mời; không có tài khoản hoặc khóa API dùng chung. Dịch vụ miễn phí có thể cần thời gian khởi động sau khi ngủ.
 - [Kiểm bổ sung ngày15/10](docs/verification/internal-assistant/RESULTS-20261015.md): đọc hai bản hướng dẫn, hỏi tiếp/đổi hồ sơ, thông báo linh vật và truy xuất ghi chú. Công bố cả kết quả còn thiếu; khôi phục được chủ sở hữu loại khỏi đợt, không tính đạt.
+- [Điều kiện dữ liệu](docs/DATA-USE.md): phân biệt dữ liệu dùng được, bên nhận và yêu cầu nhắc/xác nhận xóa sau 30 ngày chưa triển khai. T09 và kiểm khôi phục được miễn khỏi đợt hiện tại, không đổi thành đạt.
 - [Kịch bản demo 10 phút](docs/DEMO-10-PHUT.md) và [bộ dữ liệu giả lập, 10 ca kiểm, đáp án độc lập](docs/verification/golden/README.md).
 - [Báo cáo chạy thật ngày 11/10/2026](docs/verification/DEMO-REPORT-20261011.md), không chỉ kiểm phần trò chuyện: có Drive, nhập tệp, bộ nhớ, quy trình, Gmail, lịch, kết quả đã lưu và nhật ký.
 - [Các bộ kiểm chất lượng, bảo mật và kiểm soát hành động](docs/verification/README.md), kèm kết quả có ngày đo và phạm vi cụ thể.
@@ -30,7 +31,7 @@ tìm, ghép và kiểm lại thông tin; chưa công bố số giờ tiết ki�
 
 Định vị và phương pháp ở [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md) không thay thế bằng chứng thực thi. [Bốn nhóm nghiệm thu A, B, E, F](docs/RELEASE-CLOSURE.md) và [bộ kiểm đầy đủ trước đó](docs/ACCEPTANCE-CHECKLIST.md) giữ để tham chiếu lịch sử; đợt triển khai hiện hành dùng mười ca T01–T10 trong bộ chuẩn mới.
 
-**Trạng thái bàn giao: người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026.**
+**Mốc lịch sử: người dùng đã chấp nhận bản demo có giới hạn ngày 10/10/2026. Không thay thế đợt nghiệm thu hiện hành bắt đầu ngày 13/10.**
 Mở [Veridra trên Render](https://veridra-closed-beta.onrender.com).
 Đợt cuối đã đóng lỗi mất liên kết nguồn và thống nhất tỷ lệ Nhật ký.
 Bản f1c91ea đã qua kiểm GitHub, chạy đúng ảnh trên Render và được kiểm gộp
@@ -51,7 +52,9 @@ và theo dõi theo trang; OCR đã bị loại khỏi phạm vi vì chất lư�
 Bộ model mặc định: `gemini-3.5-flash-lite` cho chat/planning, fallback cấu hình riêng;
 `gemini-embedding-2` với vector 768 chiều cho RAG/Memory.
 
-## Có gì trong project
+## Khả năng trong mã nguồn
+
+Danh sách này mô tả khả năng kỹ thuật, không chứng minh mọi thao tác đã bật hoặc được nghiệm thu trên URL. Phạm vi bản đầu chỉ cho hành động/quyền đã ghi trong hợp đồng trợ lý và bản phát hành; gửi thư, sửa lịch, sửa tài liệu thật hoặc đổi chia sẻ không phải lời hứa sử dụng hiện tại.
 
 - Liệt kê và tìm kiếm Google Drive theo tên hoặc nội dung.
 - Đọc Google Docs, Sheets, Slides, PDF, DOCX, XLSX, PPTX, CSV, Markdown, HTML và text.
@@ -146,6 +149,8 @@ scripts/       Setup, run và verify trên Windows
 - Dữ liệu riêng luôn có `user_id`. Query RAG, memory, chat và audit đều filter theo user.
 - OAuth credentials được mã hóa bằng `DRIVE_AGENT_APP_SECRET` trước khi ghi database.
 - Không commit `.env`, OAuth JSON, database hoặc Qdrant data.
+- Đầu vào mong muốn gồm ghi chú, báo cáo, văn bản, tài liệu tham khảo, ảnh và liên kết. Định dạng nhập thực đã hỗ trợ phải đọc riêng; không suy ra có OCR hoặc hiểu mọi ảnh.
+- Mục tiêu lưu nội dung là 30 ngày và xóa sau xác nhận. Cơ chế này chưa triển khai; chưa xác nhận thì không xóa, không cam kết thời hạn tối đa tuyệt đối hoặc xóa bản gốc Google. Xem [điều kiện dữ liệu](docs/DATA-USE.md).
 
 ## Kiểm thử
 

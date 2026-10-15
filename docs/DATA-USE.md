@@ -4,7 +4,15 @@ Ngày đối chiếu: 13/10/2026. Thuộc gói 14 của kế hoạch hiện hàn
 
 ## Quyết định hiện tại
 
-Ngày 15/10/2026, chủ sở hữu xác nhận **quản trị viên** chịu trách nhiệm vận hành, kênh riêng nhận hỗ trợ/yêu cầu xóa là **dbp3206@gmail.com**. Đây là thông tin liên hệ đã được cung cấp, không phải bằng chứng đã gửi/nhận thư hoặc hoàn thành một yêu cầu xóa. Loại tài liệu dự kiến và thời hạn lưu/xóa chưa được xác nhận; chưa mở thêm quyền xử lý dữ liệu.
+Ngày 15/10/2026, chủ sở hữu xác nhận **quản trị viên** chịu trách nhiệm vận hành, kênh riêng nhận hỗ trợ/yêu cầu xóa là **dbp3206@gmail.com**. Đây là thông tin liên hệ đã được cung cấp, không phải bằng chứng đã gửi/nhận thư hoặc hoàn thành một yêu cầu xóa.
+
+Chủ sở hữu sau đó xác nhận đầu vào dự kiến gồm **ghi chú thường ngày, báo cáo, văn bản thô, tài liệu tham khảo, ảnh và liên kết web**, không chứa bí mật công ty. Đây là nhu cầu đầu vào, không phải bằng chứng mọi định dạng/khả năng đọc ảnh đã được hỗ trợ hoặc nghiệm thu. Việc không có bí mật công ty **chưa xác nhận** rằng các tài liệu không chứa thông tin cá nhân, dữ liệu nhạy cảm hoặc nội dung riêng của người khác; chưa mở thêm quyền gửi những nội dung đó tới Gemini.
+
+Khi hỏi rõ về thông tin cá nhân, chủ sở hữu trả lời “mọi dữ liệu cơ bản được đảm bảo nên không cần quá lo” và cho phép áp dụng kỹ thuật/nghiệp vụ bảo mật nếu cần. Ghi nhận trách nhiệm/chủ trương bảo vệ dữ liệu này, không yêu cầu gửi mẫu riêng để chứng minh. **Không diễn giải thành dữ liệu đã ẩn danh, chấp thuận bật thanh toán, quyền gửi mọi nội dung riêng hoặc chứng nhận bảo mật.** Thiết kế phải mặc định đầu vào có thể chứa thông tin cá nhân; mã hóa khóa và cách ly tài khoản không thay thế điều kiện của bên xử lý. Đối chiếu điều khoản Gemini ngày 15/10 vẫn yêu cầu không gửi thông tin cá nhân, nhạy cảm hoặc bí mật qua dịch vụ không trả phí. Không dùng một biểu thức tìm email/số điện thoại để tuyên bố đã ẩn danh đầy đủ.
+
+Yêu cầu lưu giữ mới: **khoảng 20–30 ngày, thông báo bằng hộp thoại trước khi xóa và yêu cầu người dùng xác nhận**. Mốc triển khai chọn 30 ngày để nằm trong khoảng đã yêu cầu; đây là yêu cầu cần thực hiện/kiểm chứng, **chưa phải tính năng đã có trên URL**. Ưu tiên yêu cầu xác nhận: chưa xác nhận thì không xóa, vì vậy không được quảng bá là mọi dữ liệu chắc chắn biến mất sau tối đa 30 ngày. Chỉ xử lý bản nội dung được Veridra lưu; không xóa thư, lịch, tài liệu gốc hoặc Google Doc trong tài khoản Google. Không diễn giải quyết định này thành cho phép xóa ngay dữ liệu hiện có hoặc xóa tất cả tài khoản.
+
+Đã đối chiếu mã và cấu trúc bảng cloud bằng truy vấn chỉ đọc: nội dung còn có ở hàng đợi, chỉ mục, bộ máy hội thoại hiện tại/cũ và sổ hành động. [Phạm vi triển khai/kiểm xóa](DATA-RETENTION-20261015.md). Chưa sửa mã chạy, tạo cơ chế xóa hoặc thay dữ liệu trên máy chủ trong lần đối chiếu này.
 
 Cùng ngày, chủ sở hữu yêu cầu bỏ T09 khỏi đợt nghiệm thu hiện tại. Ghi chưa kiểm chứng phần hai tài khoản/phiên cloud, không tính đạt; giữ mã và bộ kiểm bảo vệ. Không dùng việc miễn kiểm T09 để miễn các điều kiện dữ liệu hoặc cho phép truy cập chéo.
 
@@ -43,7 +51,7 @@ Không đăng thư, lịch, hồ sơ nội bộ, bí mật hoặc ảnh chứa c
 - Đăng xuất thu hồi phiên Veridra của tài khoản; không xóa dữ liệu và không thu hồi quyền Google. Ngắt quyền Google thực hiện qua phần kết nối của tài khoản Google; cần xác nhận lại trên ứng dụng khi nghiệm thu.
 - Có đường xóa hội thoại, mục bộ nhớ và khóa riêng theo chủ sở hữu. Cất bộ nhớ/mẫu không phải xóa vĩnh viễn. Xóa một ghi chú không xóa điều đã nằm trong hội thoại/tệp cũ hoặc bản sao bên ngoài.
 - Chưa có bằng chứng một thao tác tự xóa toàn bộ tài khoản, mọi tệp, mọi bản sao và dữ liệu tại nhà cung cấp. Không quảng bá khả năng này trước khi kiểm và công bố quy trình đúng.
-- Thời hạn lưu từng loại, thời hạn bản sao, nơi nhận yêu cầu xóa và người xử lý phải được chủ sở hữu xác nhận. Hướng dẫn giữ bản sao 30 ngày không tự chứng minh toàn hệ thống đang áp dụng thời hạn đó.
+- Chủ sở hữu đã chọn khoảng 20–30 ngày và xác nhận trước xóa; mục tiêu triển khai là nhắc/xử lý dữ liệu đủ 30 ngày theo cơ chế có xác nhận nêu trên. Chưa có cơ chế nhắc/xóa theo tuổi cho toàn bộ nội dung người dùng trong bản đang chạy. Cần chốt và kiểm phạm vi từng loại, bản sao và dữ liệu dẫn xuất trước khi công bố đã áp dụng; hướng dẫn giữ bản sao 30 ngày không tự chứng minh điều đó.
 
 ## Điều kiện đóng gói 14
 

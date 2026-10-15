@@ -11,7 +11,7 @@
 ## Dành cho người xem demo
 
 - [Hợp đồng trợ lý và phạm vi hiện hành](ASSISTANT-CONTRACT.md), [sổ triển khai](PRODUCTION-EXECUTION-20261013.md).
-- [Bản ứng viên hiện tại, CI/ảnh đã khóa và bước triển khai](RELEASE-CANDIDATE-ed3fa6a.md); [bản nháp giải thích chờ góp ý](AGENT-EXPLANATION-DRAFT-20261015.md).
+- [Bản đang chạy, CI/ảnh đã khóa và bằng chứng triển khai](RELEASE-CANDIDATE-13938d1.md); [phần giải thích đã được duyệt](AGENT-EXPLANATION-DRAFT-20261015.md).
 - [Bộ dữ liệu chuẩn trước đây](verification/golden/README.md), giữ làm lịch sử.
 - [Kịch bản 10 phút](DEMO-10-PHUT.md).
 - [Báo cáo kiểm tổng thể ngày 11/10/2026](verification/DEMO-REPORT-20261011.md).
@@ -27,6 +27,7 @@ ngày 11/10. Những bước chưa chạy hoặc chỉ đạt một phần vẫn
 - [Tra cứu tài liệu và bộ nhớ](RAG_AND_MEMORY.md).
 - [Bảo mật](SECURITY.md).
 - [Ranh giới khóa do người dùng cung cấp](BYOK-BOUNDARIES.md).
+- [Điều kiện dữ liệu và quyết định lưu/xóa](DATA-USE.md); [đối chiếu kỹ thuật cho yêu cầu 30 ngày](DATA-RETENTION-20261015.md), chưa phải tính năng đã phát hành.
 - [Triển khai bản thử](DEPLOY_CLOSED_BETA.md).
 - [Thư viện và giấy phép](THIRD_PARTY_LICENSES.md).
 
