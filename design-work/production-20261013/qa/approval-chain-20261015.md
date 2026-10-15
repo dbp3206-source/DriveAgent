@@ -29,4 +29,12 @@ Lệnh: `backend/.venv/Scripts/python.exe -m ruff check backend/tests/test_docum
 
 ## Kết luận đúng phạm vi
 
+### Xác nhận kiểm tự động trên GitHub
+
+[CI #142](https://github.com/dbp3206-source/DriveAgent/actions/runs/38754753285) của mã `d90a507cb49618281d1ced432588373141df7186` đã thành công ở cả `postgres-state` và `verify`. Đọc trạng thái qua kết nối GitHub rồi đọc nhật ký job `116490434642`: tệp kiểm mới có hai ca đạt; toàn bộ máy chủ **1.633 đạt, 14 bỏ qua**, 86,62 giây, độ phủ **88,12%**; giao diện **222 đạt, 0 lỗi**. Không cộng các nhóm chồng lặp thành điểm chất lượng sản phẩm.
+
+Ảnh dựng từ mã kiểm này là `sha256:69e31a35eb33d18885af27798d6d45db4df6215860ed54ad0cb4787067e2a908`. Bước triển khai tự động bị bỏ qua. Đối chiếu Git không có thay đổi trong `backend/app`, `frontend/src`, Dockerfile hoặc các tệp phụ thuộc/khóa từ mã đang chạy `13938d1`; chỉ bổ sung bộ kiểm và hồ sơ, nên không triển khai lại ứng dụng chỉ để đổi mã ảnh. Kết nối Render xác nhận lần `dep-db8dvrqj9qps73cj7d5g` vẫn Live với ảnh `0169c264…377c1712`. Không gọi ảnh mới là đã triển khai.
+
+Lượt xác nhận này chỉ đọc Git/GitHub/Render và lưu bằng chứng; 0 Gemini, 0 tạo chỉ mục, 0 Google Doc, không đổi quyền/cấu hình hoặc gộp main. Các quyết định loại tài liệu và thời hạn lưu/xóa vẫn chờ chủ sở hữu; T08 chưa được chạy thêm.
+
 Đạt kiểm nối chuỗi API/sổ thao tác cho đổi bản, duyệt đúng bản và chống ghi lặp tại máy. Không phát hiện lỗi cần sửa mã sản phẩm. Không thay bằng chứng xác thực thật, môi trường Google thật hoặc toàn bộ T07/T08. Trần đợt AI vẫn 25/26; phần dùng bổ sung 7/7 đã hết, không tự dùng thêm lượt tạo chỉ mục.

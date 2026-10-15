@@ -4,6 +4,7 @@
 
 ### Quyết định mới nhất của chủ sản phẩm
 
+- Bộ kiểm T07 đã được xác nhận tiếp trên [CI #142](https://github.com/dbp3206-source/DriveAgent/actions/runs/38754753285), mã d90a507: cả PostgreSQL và nhóm kiểm chính thành công; máy chủ 1.633 đạt/14 bỏ qua, độ phủ 88,12%, giao diện 222 đạt/0 lỗi. Không đổi mã chạy từ 13938d1 nên không triển khai lại; Render giữ nguyên ảnh đã Live. Bằng chứng này không đóng T08 hoặc các quyết định dữ liệu đang chờ.
 - Tiếp tục sau tạm dừng và **bỏ T09 khỏi đợt nghiệm thu hiện tại**. Phần kiểm hai tài khoản/phiên cloud tương ứng trong gói 11 không còn chặn đợt này; ghi chưa kiểm chứng, không tính đạt. Không bỏ mã bảo vệ, không xóa các bộ kiểm an toàn và không quảng bá đã kiểm bốn người. Mục khôi phục DB/tệp vẫn giữ quyết định bỏ qua trước đó.
 - Quản trị viên phụ trách vận hành; kênh riêng hỗ trợ/yêu cầu xóa: `dbp3206@gmail.com`. Chưa có quyết định về loại tài liệu, thời hạn lưu/xóa hoặc mở xử lý tài liệu nhạy cảm; gói 14 chưa đóng.
 - Kiểm nối chuỗi T07 tại máy đã hoàn tất: HTTP → kiểm cấu trúc/quyền/nguồn yêu cầu → bộ điều phối công cụ → sổ thao tác thật; Google và đăng nhập được giả lập. Hai biến thể lưu trữ cùng các hồi quy liên quan: **22 đạt, 0 lỗi, 0 bỏ qua**; không có Google Doc thật hoặc lượt AI mới. Không dùng nó thay toàn bộ bằng chứng cloud. [Hồ sơ T07](../design-work/production-20261013/qa/approval-chain-20261015.md).
