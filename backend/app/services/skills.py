@@ -1,9 +1,12 @@
 """User-owned reusable procedures stored locally; they are plans, never executable code."""
 
+import hashlib
 import json
+import math
 import re
 import sqlite3
 import time
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Literal
 from uuid import uuid4
@@ -11,6 +14,44 @@ from uuid import uuid4
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from app.tools.contracts import ToolError
+
+
+def skill_content_hash(spec: str) -> str:
+    return hashlib.sha256(spec.encode()).hexdigest()
+
+
+def skill_content_age(row, clock) -> float:
+    """Old app versions can edit a skill without writing the companion clock."""
+    if clock is not None and clock["user_id"] != row["user_id"]:
+        raise ToolError("Chưa đối chiếu được thời hạn lưu mẫu.", code="retention_clock_mismatch")
+    value = (clock["content_changed"] if clock is not None
+             and clock["content_hash"] == skill_content_hash(row["spec"])
+             else row["updated"])
+    if not isinstance(value, (float, int)) or not math.isfinite(value) or value < 0:
+        raise ToolError("Chưa đối chiếu được thời hạn lưu mẫu.", code="retention_clock_invalid")
+    return float(value)
+
+
+def skill_retention_candidate(row, clock):
+    from app.services.retention_policy import (
+        RetentionCandidate,
+        RetentionKind,
+        content_fingerprint,
+    )
+
+    try:
+        stamp = datetime.fromtimestamp(skill_content_age(row, clock), UTC)
+    except (ValueError, OverflowError, OSError):
+        raise ToolError("Chưa đối chiếu được thời hạn lưu mẫu.",
+                        code="retention_clock_invalid") from None
+    record_id = f"skills:{row['id']}"
+    return RetentionCandidate(
+        owner_id=row["user_id"], kind=RetentionKind.SKILL, record_id=record_id,
+        changed_at=stamp, fingerprint=content_fingerprint(
+            owner_id=row["user_id"], kind=RetentionKind.SKILL, record_id=record_id,
+            changed_at=stamp, values=dict(row),
+        ),
+    )
 
 
 class SkillSpec(BaseModel):
@@ -45,11 +86,32 @@ class SkillStore:
                 id TEXT PRIMARY KEY, user_id TEXT NOT NULL, name TEXT NOT NULL,
                 spec TEXT NOT NULL, revision INTEGER NOT NULL, active INTEGER NOT NULL,
                 created REAL NOT NULL, updated REAL NOT NULL, UNIQUE(user_id,name))""")
+            # A companion keeps the original eight-column table compatible with
+            # older local versions using positional INSERTs during rollback.
+            db.execute("""CREATE TABLE IF NOT EXISTS skill_content_clocks (
+                skill_id TEXT PRIMARY KEY, user_id TEXT NOT NULL,
+                content_hash TEXT NOT NULL, content_changed REAL NOT NULL,
+                FOREIGN KEY(skill_id) REFERENCES skills(id) ON DELETE CASCADE)""")
 
     def connect(self):
         db = sqlite3.connect(self.path, timeout=10)
         db.row_factory = sqlite3.Row
+        db.execute("PRAGMA foreign_keys=ON")
         return db
+
+    @staticmethod
+    def _clock(db, row, *, spec: str, now: float) -> None:
+        clock = db.execute(
+            "SELECT * FROM skill_content_clocks WHERE skill_id=?", (row["id"],)
+        ).fetchone()
+        prior_age = skill_content_age(row, clock)
+        age = now if spec != row["spec"] else prior_age
+        db.execute(
+            "INSERT INTO skill_content_clocks VALUES (?, ?, ?, ?) "
+            "ON CONFLICT(skill_id) DO UPDATE SET content_hash=excluded.content_hash, "
+            "content_changed=excluded.content_changed",
+            (row["id"], row["user_id"], skill_content_hash(spec), age),
+        )
 
     def save(self, user_id: str, spec: SkillSpec, expected_revision: int | None = None) -> dict:
         now = time.time()
@@ -63,6 +125,7 @@ class SkillStore:
                     raise ToolError(
                         "Skill đã thay đổi; tải lại trước khi lưu.", code="revision_conflict"
                     )
+                self._clock(db, row, spec=spec.model_dump_json(), now=now)
                 db.execute(
                     "UPDATE skills SET spec=?,revision=revision+1,active=1,updated=? WHERE id=?",
                     (spec.model_dump_json(), now, row["id"]),
@@ -76,6 +139,9 @@ class SkillStore:
                     "INSERT INTO skills VALUES (?,?,?,?,?,?,?,?)",
                     (skill_id, user_id, spec.name, spec.model_dump_json(), 1, 1, now, now),
                 )
+                self._clock(db, {"id": skill_id, "user_id": user_id,
+                                 "spec": spec.model_dump_json(), "updated": now},
+                            spec=spec.model_dump_json(), now=now)
         return self.get(user_id, skill_id)
 
     def list(self, user_id: str, include_archived: bool = False) -> list[dict]:
@@ -100,6 +166,12 @@ class SkillStore:
 
     def archive(self, user_id: str, skill_id: str) -> dict:
         with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            row = db.execute("SELECT * FROM skills WHERE id=? AND user_id=?",
+                             (skill_id, user_id)).fetchone()
+            if row is None:
+                raise ToolError("Không tìm thấy skill.", code="skill_not_found")
+            self._clock(db, row, spec=row["spec"], now=time.time())
             changed = db.execute(
                 "UPDATE skills SET active=0,updated=? WHERE id=? AND user_id=?",
                 (time.time(), skill_id, user_id),
@@ -107,6 +179,14 @@ class SkillStore:
         if changed != 1:
             raise ToolError("Không tìm thấy skill.", code="skill_not_found")
         return self.get(user_id, skill_id)
+
+    def retention_candidates(self, user_id: str):
+        """Read all owned skills, including archived; never return their text."""
+        with self.connect() as db:
+            rows = db.execute("SELECT * FROM skills WHERE user_id=?", (user_id,)).fetchall()
+            return [skill_retention_candidate(row, db.execute(
+                "SELECT * FROM skill_content_clocks WHERE skill_id=?", (row["id"],)
+            ).fetchone()) for row in rows]
 
     @staticmethod
     def _decode(row) -> dict:

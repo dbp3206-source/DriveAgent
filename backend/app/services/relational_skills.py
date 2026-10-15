@@ -11,6 +11,7 @@ from uuid import uuid4
 from sqlalchemy import (
     Column,
     Float,
+    ForeignKey,
     Integer,
     MetaData,
     String,
@@ -26,8 +27,14 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.config import Settings
 from app.services.relational_state import close_state_engines as close_state_engines
-from app.services.relational_state import state_engine
-from app.services.skills import SkillSpec, SkillStore
+from app.services.relational_state import state_engine, state_transaction
+from app.services.skills import (
+    SkillSpec,
+    SkillStore,
+    skill_content_age,
+    skill_content_hash,
+    skill_retention_candidate,
+)
 from app.tools.contracts import ToolError
 
 metadata = MetaData()
@@ -43,6 +50,13 @@ skills = Table(
     Column("created", Float, nullable=False),
     Column("updated", Float, nullable=False),
     UniqueConstraint("user_id", "name", name="uq_skills_user_name"),
+)
+skill_content_clocks = Table(
+    "skill_content_clocks", metadata,
+    Column("skill_id", String(36), ForeignKey("skills.id", ondelete="CASCADE"), primary_key=True),
+    Column("user_id", Text, nullable=False),
+    Column("content_hash", String(64), nullable=False),
+    Column("content_changed", Float, nullable=False),
 )
 
 
@@ -72,21 +86,40 @@ class RelationalSkillStore(SkillStore):
         """Explicit migration/bootstrap step; normal requests never create DDL."""
         metadata.create_all(engine)
 
+    @staticmethod
+    def _clock(db, row, *, spec: str, now: float) -> None:
+        clock = db.execute(select(skill_content_clocks).where(
+            skill_content_clocks.c.skill_id == row["id"],
+        ).with_for_update()).mappings().first()
+        prior_age = skill_content_age(row, clock)
+        values = {"content_hash": skill_content_hash(spec),
+                  "content_changed": now if spec != row["spec"] else prior_age}
+        if clock is None:
+            db.execute(insert(skill_content_clocks).values(
+                skill_id=row["id"], user_id=row["user_id"], **values,
+            ))
+        else:
+            db.execute(update(skill_content_clocks).where(
+                skill_content_clocks.c.skill_id == row["id"],
+                skill_content_clocks.c.user_id == row["user_id"],
+            ).values(**values))
+
     def save(self, user_id: str, spec: SkillSpec, expected_revision: int | None = None) -> dict:
         now = time.time()
         skill_id = str(uuid4())
         try:
-            with self.engine.begin() as db:
+            with state_transaction(self.engine) as db:
                 old = db.execute(
-                    select(skills.c.id, skills.c.revision).where(
+                    select(skills).where(
                         skills.c.user_id == user_id, skills.c.name == spec.name
-                    )
+                    ).with_for_update()
                 ).mappings().first()
                 if old:
                     if expected_revision is None or old["revision"] != expected_revision:
                         raise ToolError("Skill đã thay đổi; tải lại trước khi lưu.",
                                         code="revision_conflict")
                     skill_id = old["id"]
+                    self._clock(db, old, spec=spec.model_dump_json(), now=now)
                     changed = db.execute(
                         update(skills).where(
                             skills.c.id == skill_id,
@@ -106,6 +139,9 @@ class RelationalSkillStore(SkillStore):
                         spec=spec.model_dump_json(), revision=1, active=1,
                         created=now, updated=now,
                     ))
+                    self._clock(db, {"id": skill_id, "user_id": user_id,
+                                     "spec": spec.model_dump_json(), "updated": now},
+                                spec=spec.model_dump_json(), now=now)
         except IntegrityError as exc:
             # Two simultaneous creates of the same owner/name: no overwrite.
             raise ToolError("Skill đã thay đổi; tải lại trước khi lưu.",
@@ -131,10 +167,28 @@ class RelationalSkillStore(SkillStore):
         return self._decode(row)
 
     def archive(self, user_id: str, skill_id: str) -> dict:
-        with self.engine.begin() as db:
+        with state_transaction(self.engine) as db:
+            row = db.execute(select(skills).where(
+                skills.c.id == skill_id, skills.c.user_id == user_id,
+            ).with_for_update()).mappings().first()
+            if row is None:
+                raise ToolError("Không tìm thấy skill.", code="skill_not_found")
+            self._clock(db, row, spec=row["spec"], now=time.time())
             changed = db.execute(update(skills).where(
                 skills.c.id == skill_id, skills.c.user_id == user_id,
             ).values(active=0, updated=time.time())).rowcount
             if changed != 1:
                 raise ToolError("Không tìm thấy skill.", code="skill_not_found")
         return self.get(user_id, skill_id)
+
+    def retention_candidates(self, user_id: str):
+        with self.engine.connect() as db:
+            # Both statements use the same read transaction. Execution later
+            # needs its own write fence and complete cross-store inventory.
+            rows = db.execute(select(skills).where(skills.c.user_id == user_id)).mappings().all()
+            clocks = {row["skill_id"]: row for row in db.execute(
+                select(skill_content_clocks).where(skill_content_clocks.c.skill_id.in_(
+                    [row["id"] for row in rows]
+                ))
+            ).mappings().all()}
+            return [skill_retention_candidate(row, clocks.get(row["id"])) for row in rows]

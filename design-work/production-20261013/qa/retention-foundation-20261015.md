@@ -31,6 +31,14 @@ Kết quả CI và tại máy có phần chồng lặp, không cộng thành s�
 
 ## Giới hạn và bước kế tiếp đúng phạm vi
 
+### Phần nối kiểm kê tại máy sau CI #143
+
+- `retention_inventory.py` đọc đủ 15 bảng nội dung của ứng dụng, gắn chủ sở hữu ở từng truy vấn, chỉ trả ID/dấu nội dung/ngày/trạng thái. Kiểm phân loại không bỏ sót bảng ORM mới; không đọc bảng tài khoản hoặc khóa. Đọc bằng luồng nhỏ, không cắt theo giới hạn UI; thử dữ liệu ở mọi bảng và 205 nguồn thêm. Hội thoại có lượt mới không được chọn theo ngày tạo cũ. Tác vụ đang chạy khiến kiểm điều kiện ứng dụng chưa sẵn sàng; không tự nâng các kiểm kho khác thành đúng.
+- Adapter Skills có bảng phụ `skill_content_clocks`, không thêm cột vào bảng tám cột cũ vì bản local cũ dùng `INSERT` theo vị trí. Hai cách lưu giữ ngày khi đọc/cất/lưu nguyên nội dung, đổi ngày khi sửa; phát hiện nội dung do bản cũ sửa mà chưa cập nhật bảng phụ, dùng ngày cập nhật đã biết theo hướng thận trọng. Không tự ghi sửa bảng ngày trong một lần đọc kiểm kê. Khóa thuộc tài khoản khác/ngày hỏng chặn thao tác, không biến thành phép xóa.
+- Kiểm đầu Skills: 14 đạt/0 lỗi/0 bỏ qua, 1,62 giây. Kiểm gộp đầu sau thêm kiểm kê: 50 đạt, 7,97 giây. Sau thêm ca mọi bảng/vượt 200 mục: **51 đạt/0 lỗi/0 bỏ qua**, 8,58 giây. Có lỗi định dạng import/dòng dài trong lượt viết kiểm đã sửa; Ruff toàn backend và `git diff --check` sau sửa đạt. Các nhóm chồng lặp không cộng số.
+- XML sau cùng ở `tmp/retention-inventory-f0ff3aaa9926497a8ad676aa04aabbd7/results.xml`, chỉ dữ liệu giả lập và không gọi mô hình/dịch vụ ngoài. Quét bí mật 728 tệp Git-visible đạt trước khi ghi cập nhật hồ sơ này.
+- Thêm hai ca PostgreSQL riêng về ngày mẫu/bảng phụ và kiểm kê hội thoại có dữ liệu mới. Chưa ghi hai ca này đạt trước khi CI tương ứng chạy xong. CI #143 chỉ bao phủ mã f46d3d0, không được dùng thay kết quả của những chỉnh sửa mới.
+
 Lõi không chứng minh đã xác nhận người dùng, chống phát lại trong sổ bền vững, khóa thao tác đồng thời hoặc xóa mọi bản dẫn xuất. Bộ thực thi phải tự kiểm nguồn yêu cầu, nhận đúng một lần, đọc lại dưới khóa trước tác động đầu tiên và tiếp tục an toàn sau lỗi; không được lấy `validate()` làm phép xóa đã được duyệt.
 
-Còn nối kiểm kê/bộ thực thi với mọi kho trong `docs/DATA-RETENTION-20261015.md`, kiểm lỗi và tiếp tục, hộp thoại theo giao diện hiện có, kiểm thật bằng dữ liệu giả lập và triển khai có kiểm soát. Mẫu đã lưu riêng trong adapter Skills cũng cần ngày nội dung; chưa thay ở lượt nền tảng này. Chưa gộp staging/main, chưa tạo thẻ hoặc đổi ảnh Render chỉ để trình diễn một lớp chưa hoàn chỉnh. Nhánh công việc riêng không khớp điều kiện xuất ảnh/triển khai của CI; không thay workflow hoặc bí mật.
+Còn nối kiểm kê/bộ thực thi với các kho khác trong `docs/DATA-RETENTION-20261015.md`, kiểm lỗi và tiếp tục, hộp thoại theo giao diện hiện có, kiểm thật bằng dữ liệu giả lập và triển khai có kiểm soát. Phần ngày mẫu đã thêm sau lượt nền tảng; chưa có bộ thực thi xóa hoặc API duyệt. Chưa gộp staging/main, chưa tạo thẻ hoặc đổi ảnh Render chỉ để trình diễn một lớp chưa hoàn chỉnh. Nhánh công việc riêng không khớp điều kiện xuất ảnh/triển khai của CI; không thay workflow hoặc bí mật.

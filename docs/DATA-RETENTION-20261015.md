@@ -6,6 +6,8 @@ Ngày 15/10/2026. Thuộc gói 14 hiện hành, không thêm gói hoặc điểm
 
 ## Quyết định và cách hiểu
 
+**Đang nối kiểm kê:** đã thêm đọc riêng theo tài khoản cho đủ 15 bảng nội dung của ORM, không dùng giới hạn trang của giao diện và không đọc bảng tài khoản/khóa. Hội thoại cũ có lượt mới lấy mốc lượt mới; tác vụ đang chạy chặn khả năng chuẩn bị xóa. Các kho còn lại vẫn chưa được coi là đã kiểm kê chỉ vì đọc được DB chính. Mẫu công việc có bảng ngày nội dung đi kèm, giữ nguyên bảng tám cột để tương thích mã cũ; đọc/cất/lưu lại nguyên nội dung không gia hạn. Cả hai cách lưu tại máy đã kiểm, PostgreSQL cho phần nối này cần kết quả CI tiếp theo. Đây vẫn chưa phải API hoặc bộ thực thi xóa.
+
 Chủ sản phẩm chọn đầu vào đa dạng, không chứa bí mật công ty, lưu khoảng 20–30 ngày và phải thông báo/xác nhận trước xóa. Chọn mốc 30 ngày. Không tự xóa khi chưa xác nhận; vì vậy đây là nhắc dọn dữ liệu có duyệt, **không phải giới hạn lưu tối đa 30 ngày tuyệt đối**. Không gọi Gemini để quyết định mục nào được xóa. Không dùng quyết định này để xóa ngay dữ liệu hiện hữu.
 
 Đầu vào có thể chứa thông tin cá nhân: chủ sở hữu cho phép biện pháp bảo mật nhưng không xác nhận mọi tài liệu đã ẩn danh. Không tự nâng gói, thêm mô hình hoặc coi sự đồng ý này thay điều kiện Gemini. Giữ nguyên ngân sách kiểm đã duyệt.

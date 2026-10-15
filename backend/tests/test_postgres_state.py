@@ -689,3 +689,113 @@ async def test_adk_sessions_persist_in_private_postgres_schema():
             assert table_result.scalar_one() is True
     finally:
         await reopened.close()
+
+
+def test_postgres_skill_retention_clock_and_legacy_insert(monkeypatch):
+    from datetime import UTC, datetime, timedelta
+    from types import SimpleNamespace
+
+    from sqlalchemy import text
+
+    from app.services import relational_skills
+    from app.services.relational_state import prepare_state_schema
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; skill retention not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Retention only permits the isolated veridra_ci database")
+    engine = create_engine(url).execution_options(
+        schema_translate_map={None: "veridra_private"}
+    )
+    try:
+        prepare_state_schema(engine)
+        RelationalSkillStore.create_schema(engine)
+        store = RelationalSkillStore(engine)
+        old = datetime(2026, 9, 1, 12, tzinfo=UTC)
+        now = old + timedelta(days=40)
+        owner = f"retention-{uuid4()}"
+        row_id = str(uuid4())
+        spec = SkillSpec(name="synthetic_retention", title="Synthetic report",
+                         description="Synthetic notes", goal="Summarize selected sources",
+                         procedure=["Check selected sources"], output_format="Short report")
+        with engine.begin() as db:
+            db.exec_driver_sql(
+                "INSERT INTO veridra_private.skills VALUES (%s,%s,%s,%s,%s,%s,%s,%s)",
+                (row_id, owner, spec.name, spec.model_dump_json(), 1, 1,
+                 old.timestamp(), old.timestamp()),
+            )
+        assert store.retention_candidates(owner)[0].changed_at == old
+        monkeypatch.setattr(relational_skills, "time",
+                            SimpleNamespace(time=lambda: now.timestamp()))
+        store.archive(owner, row_id)
+        assert store.retention_candidates(owner)[0].changed_at == old
+        assert store.retention_candidates("another-synthetic-owner") == []
+        store.save(owner, spec.model_copy(update={"goal": "Compare selected sources"}),
+                   expected_revision=1)
+        assert store.retention_candidates(owner)[0].changed_at == now
+        with engine.connect() as db:
+            assert db.execute(text(
+                "SELECT to_regclass('veridra_private.skill_content_clocks')"
+            )).scalar_one() == "veridra_private.skill_content_clocks"
+            assert db.execute(text(
+                "SELECT has_schema_privilege('public', 'veridra_private', 'USAGE')"
+            )).scalar_one() is False
+    finally:
+        engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_postgres_application_retention_inventory_keeps_new_chat_content():
+    from datetime import UTC, datetime, timedelta
+
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+    from app.db.models import Base, ChatSession, LongTermMemory, Message, User
+    from app.services.relational_state import prepare_state_schema
+    from app.services.retention_inventory import application_inventory
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; application inventory not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Retention only permits the isolated veridra_ci database")
+    bootstrap = create_engine(url).execution_options(
+        schema_translate_map={None: "veridra_private"}
+    )
+    try:
+        prepare_state_schema(bootstrap)
+        Base.metadata.create_all(bootstrap)
+    finally:
+        bootstrap.dispose()
+    engine = create_async_engine(url, execution_options={
+        "schema_translate_map": {None: "veridra_private"},
+    })
+    try:
+        async with async_sessionmaker(engine, expire_on_commit=False)() as db:
+            old = datetime(2026, 9, 1, 12, tzinfo=UTC)
+            now = old + timedelta(days=40)
+            user = User(email=f"{uuid4()}@example.invalid", display_name="Synthetic")
+            db.add(user)
+            await db.flush()
+            chat = ChatSession(user_id=user.id, title="Synthetic", created_at=old, updated_at=old)
+            memory = LongTermMemory(user_id=user.id, kind="fact", content="Synthetic",
+                                    normalized_hash="synthetic", is_archived=True,
+                                    created_at=old, updated_at=now, content_updated_at=old)
+            db.add_all([chat, memory])
+            await db.flush()
+            db.add(Message(user_id=user.id, session_id=chat.id, role="user",
+                           content="Synthetic fresh turn", created_at=now))
+            await db.flush()
+            result = await application_inventory(db, user.id)
+            rows = {item.record_id: item for item in result.candidates}
+            assert len(rows) == 3 and not result.owner_busy
+            assert rows[f"chat_sessions:{chat.id}"].changed_at == now
+            assert rows[f"long_term_memories:{memory.id}"].changed_at == old
+            assert result.policy_checks()["application"] is True
+            assert any(ready is False for ready in result.policy_checks().values())
+            await db.rollback()
+    finally:
+        await engine.dispose()
