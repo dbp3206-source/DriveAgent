@@ -19,3 +19,5 @@ Thông báo không gọi Gemini, tự đọc nguồn hoặc tự thực hiện h
 Mã `2dbaac5`, CI #139 thành công, đã triển khai lên Render ngày14/10/2026. Kiểm giao diện205/205 đạt, lint/build đạt, kiểm trình duyệt thật tại máy và URL Render. Đây là nghiệm thu tính năng linh vật, không phải xác nhận toàn bộ sản phẩm đã đạt Production.
 
 [Báo cáo và giới hạn kiểm](../design-work/mascot-notifications-20261014/qa/qa-report.md) · [Bằng chứng URL thật](../design-work/mascot-notifications-20261014/qa/screenshots/cloud-final-completed.jpg)
+
+Kiểm lại tại máy ngày 15/10 trên mã `ed3fa6a`: 219/219 phép kiểm frontend đạt, lint đạt; trình duyệt thật xác nhận thông báo khi đổi trang, giữ dấu khi đóng, khôi phục sau tải lại, mở đúng hội thoại và bố cục 390×844. Không sửa mã sản phẩm hoặc dùng lượt Gemini. [Báo cáo kiểm lại và ảnh](../design-work/mascot-notifications-20261014/qa/recheck-20261015/qa-report.md).

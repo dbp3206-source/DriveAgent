@@ -16,3 +16,9 @@ Toolfill empty didnotcommitReact;keyboardcleared/disabled. WaituppercaseGÓC LÀ
 Auto-reviewrejectedchatselection/localexport-open;readDOM/source/fixtureclarifiedlowriskbeforeallowedretry. NoDelete/approval/bypass. Get-CimInstanceAccessdenied;not escalated.
 Ownedpage2closedaftercancel;about:blankpage1unchanged. NoextraGoogleDoc/Gemini/embedding.
 Final gitdiffcheck/json.tool passed. Secret scan passed683Git-visiblefiles,exit0. Five nativeJPEG files hashed withGet-FileHash; no edits. These checks do not claim cloud deployment.
+15Oct release audit: GitHub public API run38694316034 completed/success at2026-10-15T06:51:02Z,head ed3fa6a38b093d7aeda517df03c88cbd16880cd7. PostgreSQL job116287209476 and verify116287414181 successful. Exact deploy step skipped, publish/upload successful.
+Public GHCR tag fullcommit HTTP200,Docker-Content-Digest7727c538cbcb97700f7d922fddb4aea56e0839d9edaf85754dafda771cacb0bd. Anonymous pull token used only in memory, not printed/saved. No image download.
+Public health first timeout35s, second sameendpoint200:statusok,database/object_storagetrue,vectorpostgres-pgvector,connectivitynotprobed. No restart. Initial PowerShell error emitted wrapperstatus0/null, not an HTTP response or pass.
+Public UI index-5fNVRRAp.js / ChatPage-UvdgUJLy.js includes mascot notice, lacks owner preview lookup and title dialog. Codepresencecheckonly,notruntime-digest/authenticatedUIproof.
+GitHub branches:maina026db6716cab24c5431833644c8976312902dc8,staginged3fa6a38b093d7aeda517df03c88cbd16880cd7 atobservation. No merge.
+Plugin search now returned exact Render listing installedfalse; eligible suggestion offered, not installation/connection. Codex panel open requests queued, not proof page was read or controlled.

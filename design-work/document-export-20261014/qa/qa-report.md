@@ -26,7 +26,7 @@ Chrome DevTools MCP chạy localhost5175/FastAPI8003 trong context riêng. Helpe
 | ESLint/TypeScript/Vite |Đạt,build35.59s,session48109|4496modules; cảnh báo thời gian plugin, không lỗi|
 | Ruff |Đạt với backend/pyproject.toml|Gồm helper QA|
 
-Đã thêm assertion PostgreSQL thật vào CI hiện có; chưa lấy SQLite thay kết quả PostgreSQL.
+Đã thêm assertion PostgreSQL thật vào CI hiện có. Ngày15/10 API GitHub xác nhận CI#140/run38694316034 đúng commit ed3fa6a38b093d7aeda517df03c88cbd16880cd7 completed/success: postgres-state116287209476 và verify116287414181 đều thành công. Không lấy SQLite thay PostgreSQL hoặc suy số ca CI từ số local. Registry HTTP200 xác nhận tag full commit và digest7727c538cbcb97700f7d922fddb4aea56e0839d9edaf85754dafda771cacb0bd. Bước tự triển khai Render skipped; chưa coi CI đạt là bản đã lên URL.
 
 Kiểm trình duyệt thật:
 
@@ -53,4 +53,4 @@ Kiểm trình duyệt thật:
 
 Riêng thay đổi local: đúng19/20,cụ thể16/20,tổ chức13/15,chữ12/15,bố cục12/15,kỹ thuật12/15 = **84/100**,không phải điểm sản phẩm/AI.
 
-Chưa triển khai bản đặt tên lên Render hoặc tạo thêm Doc thật. Trần13sinh+6chỉ mục/tổng19 đã18 vẫn giữ. Cách ly thật,khôi phục DB+tệp,điều kiện dữ liệu,các ca thiếu lượt và trình bày Agent cần góp ý vẫn chưa đóng. Chưa main/Production. Không thêm tài sản/giấy phép bên ngoài.
+Chưa triển khai bản đặt tên lên Render hoặc tạo thêm Doc thật. Trần13sinh+6chỉ mục/tổng19 đã18 vẫn giữ. Cách ly thật,khôi phục DB+tệp,điều kiện dữ liệu,các ca thiếu lượt và trình bày Agent cần góp ý vẫn chưa đóng. Chưa main/Production. Không thêm tài sản/giấy phép bên ngoài. Bằng chứng phát hành và bước thủ công ở docs/RELEASE-CANDIDATE-ed3fa6a.md; không tuyên bố kiểm cloud từ ảnh local.

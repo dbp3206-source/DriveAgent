@@ -1,0 +1,28 @@
+{
+  "target_output": "Existing Veridra mascot notifications, read-only product-code recheck",
+  "source_files": ["frontend/src/components/MascotAssistant.tsx", "frontend/src/hooks/useChatActivity.ts", "frontend/src/chatActivity.mjs", "frontend/src/App.tsx", "frontend/src/pages/ChatPage.tsx"],
+  "code_commit": "ed3fa6a38b093d7aeda517df03c88cbd16880cd7",
+  "primary_skill": null,
+  "visual_direction": "Existing Veridra design system, no visual generation",
+  "specialist_skills": [],
+  "mcp_tools_used": ["mcp__chrome_devtools__list_pages", "mcp__chrome_devtools__new_page", "mcp__chrome_devtools__take_snapshot", "mcp__chrome_devtools__click", "mcp__chrome_devtools__fill_form", "mcp__chrome_devtools__wait_for", "mcp__chrome_devtools__evaluate_script", "mcp__chrome_devtools__take_screenshot", "mcp__chrome_devtools__emulate", "mcp__chrome_devtools__list_console_messages", "mcp__node_repl__js"],
+  "commands_run": ["npm test", "npm run lint", "netstat -ano -p tcp", "backend/.venv/Scripts/python.exe design-work/production-20261013/working/run_local_ui.py --mascot-check"],
+  "repository_defined_outputs": ["frontend/src"],
+  "delivered_outputs": ["qa-report.md", "screenshots/desktop-completed.jpg", "screenshots/mobile-completed.jpg"],
+  "verification": {"structural": true, "rendered": true, "visual_review": true, "content_fidelity": true, "target_environment": true},
+  "verification_scope": "Real local application with isolated demo auth and delayed synthetic work; not a fresh cloud or AI quality test",
+  "tests_passed": 219,
+  "tests_skipped": 0,
+  "lint_exit_code": 0,
+  "product_code_changed": false,
+  "model_calls": 0,
+  "embedding_calls": 0,
+  "google_writes": 0,
+  "quality_score": 86,
+  "quality_score_basis": "Retained feature-specific assessment from parent QA report, not a full-product score",
+  "screenshots": [
+    {"file": "screenshots/desktop-completed.jpg", "bytes": 117731, "sha256": "fe95a2bc8dbd0b1b0518c723baaf4fc391bf55df059550167c3899c61932c81f"},
+    {"file": "screenshots/mobile-completed.jpg", "bytes": 39877, "sha256": "3dc50c9334a40fe59f082c28e770860b1bd373c37b6adbd6eccee44953f2ce2f"}
+  ],
+  "known_limitations": ["No fresh Render verification or deployment this run", "No OS reduced-motion emulation", "No delivery while browser is closed", "Single active task", "Local delayed fixture does not evaluate Gemini quality"]
+}

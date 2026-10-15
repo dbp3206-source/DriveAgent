@@ -11,6 +11,7 @@
 ## Dành cho người xem demo
 
 - [Hợp đồng trợ lý và phạm vi hiện hành](ASSISTANT-CONTRACT.md), [sổ triển khai](PRODUCTION-EXECUTION-20261013.md).
+- [Bản ứng viên hiện tại, CI/ảnh đã khóa và bước triển khai](RELEASE-CANDIDATE-ed3fa6a.md); [bản nháp giải thích chờ góp ý](AGENT-EXPLANATION-DRAFT-20261015.md).
 - [Bộ dữ liệu chuẩn trước đây](verification/golden/README.md), giữ làm lịch sử.
 - [Kịch bản 10 phút](DEMO-10-PHUT.md).
 - [Báo cáo kiểm tổng thể ngày 11/10/2026](verification/DEMO-REPORT-20261011.md).

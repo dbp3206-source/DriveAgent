@@ -2,7 +2,9 @@
 
 ## Cập nhật 15/10 — không thay phạm vi nghiệm thu
 
-Linh vật đã triển khai ở mã `2dbaac5`, CI#139 và Render đã xác nhận, hồ sơ ở `design-work/mascot-notifications-20261014/qa/`. Bản đặt tên Doc trước khóa và phục hồi đúng bản duyệt đang chuẩn bị phát hành:219/219 frontend,34/34 backend liên quan, kiểm trình duyệt local thành công,0Gemini/0Doc thật mới. Hồ sơ ở `design-work/document-export-20261014/qa/`; chưa lấy kết quả local thay Render/PostgreSQL CI hoặc đóng trọn T07. Các bảng dưới giữ lịch sử bản a284b7b; giới hạn khôi phục/tài khoản/dữ liệu/quota/phát hành vẫn còn. Không nâng trạng thái Production hoặc gộp main khi chưa đủ bằng chứng.
+Linh vật đã triển khai ở mã `2dbaac5`, CI#139 và Render đã xác nhận, hồ sơ ở `design-work/mascot-notifications-20261014/qa/`. Bản đặt tên Doc trước khóa/phục hồi bản duyệt `ed3fa6a` đã qua CI#140, gồm PostgreSQL thật; ảnh khóa `7727c538…cacb0bd` đã xuất bản, bước tự triển khai bị bỏ qua.219/219 frontend,34/34 backend liên quan và trình duyệt local đạt,0Gemini/0Doc thật mới. URL công khai còn gói Chat chưa có hộp đặt tên, nên chưa coi bản sửa đã triển khai. [Bản ứng viên và thao tác duy nhất](RELEASE-CANDIDATE-ed3fa6a.md). Không lấy CI thay nghiệm thu Render hoặc đóng trọn T07. Các bảng dưới giữ lịch sử bản a284b7b; giới hạn khôi phục/tài khoản/dữ liệu/quota/phát hành vẫn còn. Không nâng trạng thái Production hoặc gộp main khi chưa đủ bằng chứng.
+
+Ngày15/10 đã trình [bản nháp giải thích ngắn](AGENT-EXPLANATION-DRAFT-20261015.md), chưa nhận góp ý/duyệt và chưa sửa trang đó. Ngân sách bổ sung đang xin không được tính là đã duyệt. Lần kiểm sức khỏe công khai sau một lần hết giờ nhận HTTP200/DB/kho tệp tốt; không dùng nó chứng minh gói không ngủ hoặc AI/Google của người dùng hoạt động.
 
 Phạm vi hiện hành: trợ lý công việc nội bộ, năm nhóm việc, ba hành trình A/B/C, đúng 16 gói và 10 ca T01–T10 trong kế hoạch ngày 13/10. Không mở thêm tính năng. Phần trình bày “Cách Agent hoạt động” để cuối và phải trình người dùng góp ý trước khi chốt.
 
@@ -41,9 +43,9 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 | 04 | Đạt hồi quy tại máy | Xác nhận dấu vết nguồn/hành động trong T02/T04/T05 trên ứng viên |
 | 05 | Drive lọc/phân trang 50→100/tìm “Veridra” 3 dòng/bỏ tìm đã xác nhận; bốn tệp có chỉ mục; web công khai chạy đúng | Nội dung tệp riêng/loại tệp chưa kiểm không tự tính đạt; nguồn web còn dư |
 | 06 | Đã cập nhật hợp đồng và chỉ dẫn | Chạy gộp đầu ra N1–N5, chấm đúng/rõ/dùng được; không tối ưu văn phong ngoài tiêu chí |
-| 07 | Nhập tệp/bộ nhớ quản lý đã quan sát; ghi chú v2 xuất thật; đúng một Doc sau duyệt và đọc lại độc lập thành công | Quên/truy xuất hội thoại mới; đổi bản/đích sau duyệt; tên xuất và mục bản nháp còn chưa đúng mong muốn |
-| 08 | Giao diện bắt đầu đạt kiểm cục bộ; còn phần để cuối | Trình bản nháp giải thích ngắn, nhận góp ý; rà nội dung khi chức năng ổn định |
-| 09 | CI #137/PostgreSQL/ảnh a284b7b đạt; web và bàn giao cloud đã kiểm lại, T06 hai lượt thành công | T02/T04/T08 và phần còn lại T07 chưa đủ bằng chứng; không tự tăng ngân sách |
+| 07 | Nhập tệp/bộ nhớ quản lý đã quan sát; ghi chú v2 xuất thật; đúng một Doc sau duyệt/đọc lại. Tên xuất đã sửa tại máy và CI#140 đạt | Bản đặt tên cần lên URL; quên/truy xuất hội thoại mới, đổi bản/đích sau duyệt và mục bản nháp vẫn cần bằng chứng tương ứng |
+| 08 | Giao diện bắt đầu đạt kiểm cục bộ; bản nháp giải thích đã trình, chưa sửa UI | Chờ góp ý/duyệt bản nháp rồi hoàn thiện đúng phần đó |
+| 09 | CI #140/PostgreSQL của ed3fa6a đạt; web/bàn giao/T06 có bằng chứng cloud lịch sử a284b7b | T02/T04/T08 và phần còn lại T07 chưa đủ bằng chứng; không tự tăng ngân sách hoặc dùng CI thay đầu ra thật |
 | 10 | Chưa có số đo giá trị | Năm cặp công việc, gồm công kiểm/sửa; báo riêng quyết định đầu tư |
 | 11 | Thu hồi phiên/cách ly đạt kiểm cục bộ và CI PostgreSQL; nâng cấp cloud thành công | Phiên thật và hai tài khoản; hiện mới một tài khoản hoạt động |
 | 12 | Đích thử riêng đã hoạt động lại, còn trống; chưa khôi phục dữ liệu | Khôi phục DB+tệp bằng kết nối an toàn, đối soát và đo thời gian, không ghi đè nguồn |

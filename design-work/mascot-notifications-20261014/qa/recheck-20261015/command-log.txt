@@ -1,0 +1,18 @@
+2026-10-15 actual execution summary
+npm test: 219 passed, 0 failed, 0 skipped, duration_ms 11011.1701.
+npm run lint: session 88181 completed, exit 0.
+Initial Vite launch on 5175 failed: Error: Port 5175 is already in use. Existing owned QA Vite retained.
+Initial backend launch session 53497 failed binding 8003 with winerror 10048; application shut down.
+netstat confirmed Vite PID 2660 on 5175 and prior owned backend PID 15188 on 8003.
+Stopped prior owned backend through existing exec session 35024 with Ctrl+C.
+Started helper --mascot-check in session 55457, PID 19608, startup complete on 127.0.0.1:8003.
+Chrome DevTools page 3, isolatedContext mascot-recheck-20261015, real local demo login.
+Submitted one delayed deterministic arithmetic task, switched Home, observed running then completed notice.
+Dismissed bubble: badge 1 retained. Emulated 390x844 mobile: reload restored unread notice.
+Open answer returned exact task conversation, result 10.0; badge cleared.
+Context help and six-character picker opened; selected owl and observed saved selection.
+Final sampled console error list empty.
+Original screenshot bytes copied from DevTools image results via node_repl node:fs/promises; SHA-256 computed with node:crypto.
+No new model, embedding, real Google write or Render deployment.
+git diff --check: exit 0. Python json.tool parsed run-manifest.json: exit 0. PowerShell Get-FileHash matched both recorded SHA-256 values.
+Closed owned DevTools page 3 and stopped the owned mascot QA backend session 55457 after verification. Existing Vite retained.

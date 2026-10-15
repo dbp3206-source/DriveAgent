@@ -4,7 +4,7 @@
 
 Giúp người thường xuyên xử lý tài liệu, thư và họp: hiểu tài liệu, nắm tình hình, phân tích phương án, chuẩn bị cuộc họp và hoàn thiện nội dung. Trợ lý cần đề xuất hướng làm và bước tiếp hữu ích khi tham vấn, không chỉ tóm tắt hoặc hỏi gì đáp nấy. Nguồn dùng theo quyền và yêu cầu; không tự thực hiện đề xuất. Bản đầu giới hạn tối đa bốn tài khoản được mời, dữ liệu riêng; chưa phải không gian cộng tác toàn doanh nghiệp.
 
-Định hướng hiện hành ngày 13/10: [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md), [hợp đồng trợ lý](docs/ASSISTANT-CONTRACT.md), [ba bộ giả lập và mười ca nghiệm thu](docs/verification/internal-assistant/README.md), [sổ triển khai](docs/PRODUCTION-EXECUTION-20261013.md). Các thay đổi mới đang được kiểm, chưa triển khai và chưa có chứng nhận sẵn sàng vận hành. Báo cáo bên dưới giữ nguyên phạm vi lịch sử, không tự chuyển thành đạt theo định hướng mới.
+Định hướng hiện hành ngày 13/10: [nền tảng sản phẩm](docs/PRODUCT-FOUNDATION.md), [hợp đồng trợ lý](docs/ASSISTANT-CONTRACT.md), [ba bộ giả lập và mười ca nghiệm thu](docs/verification/internal-assistant/README.md), [sổ triển khai](docs/PRODUCTION-EXECUTION-20261013.md). Cập nhật15/10: linh vật đã có bằng chứng triển khai; bản sửa tên tài liệu `ed3fa6a` đã qua CI/PostgreSQL, còn chờ triển khai và nghiệm thu URL. Đọc [bản ứng viên hiện tại](docs/RELEASE-CANDIDATE-ed3fa6a.md); **chưa đủ điều kiện ký Production**. Báo cáo bên dưới giữ nguyên phạm vi lịch sử, không tự chuyển thành đạt theo định hướng mới.
 
 ## Xem và kiểm chứng nhanh
 

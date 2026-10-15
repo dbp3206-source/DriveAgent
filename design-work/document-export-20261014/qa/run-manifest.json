@@ -9,12 +9,19 @@
   "repository_defined_outputs": ["frontend/src", "backend/app", "frontend/dist/index.html"],
   "delivered_outputs": ["frontend/src/components/DocumentExportTitleDialog.tsx", "frontend/src/documentTitle.mjs", "backend/app/api/documents.py", "design-work/document-export-20261014/qa/qa-report.md"],
   "verification": {"structural": true, "rendered": true, "visual_review": true, "content_fidelity": true, "target_environment": true},
-  "verification_scope": "Real local application with disposable credential-free QA state; not Render or real Google write",
+  "verification_scope": "Real local application with disposable credential-free QA state; same-commit CI and PostgreSQL verified through GitHub API on 2026-10-15; not Render or real Google write",
+  "ci_run": "https://github.com/dbp3206-source/DriveAgent/actions/runs/38694316034",
+  "ci_commit": "ed3fa6a38b093d7aeda517df03c88cbd16880cd7",
+  "ci_conclusion": "success",
+  "postgres_job_id": 116287209476,
+  "verify_job_id": 116287414181,
+  "ci_deploy_step": "skipped",
+  "published_image": "ghcr.io/dbp3206-source/veridra@sha256:7727c538cbcb97700f7d922fddb4aea56e0839d9edaf85754dafda771cacb0bd",
   "test_results": {"backend_related_passed": 34, "frontend_passed": 219, "frontend_related_overlaps_total": 23},
   "model_calls": 0,
   "embedding_calls": 0,
   "real_google_writes": 0,
   "local_preview_state": {"count": 1, "state": "pending", "resource_id": null},
   "quality_score": 84,
-  "known_limitations": ["Pending CI/PostgreSQL candidate verification", "Not deployed to Render", "No extra real Google Doc creation authorized", "OS reduced motion not emulated", "Full production plan incomplete"]
+  "known_limitations": ["Not deployed to Render", "No extra real Google Doc creation authorized", "OS reduced motion not emulated", "Full production plan incomplete"]
 }
