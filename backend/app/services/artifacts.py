@@ -4,11 +4,11 @@ from typing import Literal
 from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
-from sqlalchemy import select, update
+from sqlalchemy import case, or_, select, update
 from sqlalchemy.exc import IntegrityError
 
 from app.auth.permissions import MEMORY_READ, MEMORY_WRITE
-from app.db.models import SavedArtifact
+from app.db.models import SavedArtifact, utc_now
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
 
 
@@ -64,6 +64,12 @@ async def save_artifact(payload: ArtifactWrite, context: ToolContext) -> Artifac
                 kind=payload.kind,
                 is_archived=payload.is_archived,
                 revision=SavedArtifact.revision + 1,
+                content_updated_at=case(
+                    (or_(SavedArtifact.title != payload.title.strip(),
+                         SavedArtifact.content != payload.content,
+                         SavedArtifact.kind != payload.kind), utc_now()),
+                    else_=SavedArtifact.content_updated_at,
+                ),
             )
         )
         if result.rowcount != 1:

@@ -121,6 +121,40 @@ def _auth_version(connection: Connection) -> None:
         )
 
 
+def _content_clocks(connection: Connection) -> None:
+    """Preserve the safest known content date on legacy rows; never delete data.
+
+    Historical updated_at may include archive operations. There is no reliable
+    way to recover the earlier content-only date, so backfill conservatively.
+    Nullable columns permit a rollback to code that does not write these fields.
+    """
+    for table in ("saved_artifacts", "long_term_memories", "company_profiles"):
+        if connection.dialect.name == "sqlite":
+            if connection.exec_driver_sql(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name=?", (table,)
+            ).first() is None:
+                continue
+            qualified = table
+            if "content_updated_at" not in _columns(connection, table):
+                connection.exec_driver_sql(
+                    f"ALTER TABLE {qualified} ADD COLUMN content_updated_at DATETIME"
+                )
+        else:
+            qualified = f"veridra_private.{table}"
+            if connection.exec_driver_sql(
+                f"SELECT to_regclass('{qualified}')"
+            ).scalar_one_or_none() is None:
+                continue
+            connection.exec_driver_sql(
+                f"ALTER TABLE {qualified} ADD COLUMN IF NOT EXISTS "
+                "content_updated_at TIMESTAMP WITH TIME ZONE"
+            )
+        connection.exec_driver_sql(
+            f"UPDATE {qualified} SET content_updated_at = COALESCE(updated_at, created_at) "
+            "WHERE content_updated_at IS NULL"
+        )
+
+
 MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (1, _message_lifecycle),
     (2, _company_profiles),
@@ -129,6 +163,7 @@ MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (5, _scheduled_jobs),
     (6, _chat_tasks),
     (7, _auth_version),
+    (8, _content_clocks),
 )
 
 
@@ -169,7 +204,7 @@ def apply_postgres_migrations(connection: Connection) -> None:
     migrations: tuple[tuple[int, Migration], ...] = (
         (1, lambda _connection: None), (2, _scheduled_jobs), (3, _chat_tasks),
         (4, migrate_pgvector), (5, protect_legacy_framework_tables),
-        (6, _auth_version),
+        (6, _auth_version), (7, _content_clocks),
     )
     for version, migration in migrations:
         if version in applied:

@@ -2,6 +2,8 @@
 
 Ngày 15/10/2026. Thuộc gói 14 hiện hành, không thêm gói hoặc điểm nghiệm thu. **Chưa triển khai, chưa có trên URL, không phải biên nhận đã xóa.** Mục đích: khóa đúng phạm vi trước khi viết cơ chế có thể xóa dữ liệu. Bản đang chạy là 13938d1; các chỉnh sửa tài liệu/kiểm về sau không tự đổi bản chạy.
 
+**Tiến độ mã tại máy:** đã có lõi chọn mốc 30 ngày và bản xác nhận gắn tài khoản/nội dung, hết hạn sau 10 phút, tối đa 200 mục mỗi bản (báo rõ còn mục khác); không thêm mục mới vào bản cũ. Đã tách ngày sửa nội dung cho ghi chú, kết quả đã lưu và hồ sơ công ty, không gia hạn chỉ vì xem/cất/đối chiếu lại. Có nâng cấp lược đồ SQLite 8 / PostgreSQL 7, giữ dữ liệu và cột nullable để tương thích quay lui; dữ liệu cũ lấy ngày cập nhật đã biết theo hướng thận trọng, không bịa lại ngày sửa nội dung trước đó. **Chưa có API/giao diện xác nhận hoặc bộ thực thi xóa các kho**. Không tính lõi và kiểm đơn vị này là nghiệm thu cơ chế xóa; PostgreSQL cần bằng chứng CI riêng. [Hồ sơ kiểm nội bộ](../design-work/production-20261013/qa/retention-foundation-20261015.md).
+
 ## Quyết định và cách hiểu
 
 Chủ sản phẩm chọn đầu vào đa dạng, không chứa bí mật công ty, lưu khoảng 20–30 ngày và phải thông báo/xác nhận trước xóa. Chọn mốc 30 ngày. Không tự xóa khi chưa xác nhận; vì vậy đây là nhắc dọn dữ liệu có duyệt, **không phải giới hạn lưu tối đa 30 ngày tuyệt đối**. Không gọi Gemini để quyết định mục nào được xóa. Không dùng quyết định này để xóa ngay dữ liệu hiện hữu.

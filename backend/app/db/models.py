@@ -10,7 +10,18 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from uuid import uuid4
 
-from sqlalchemy import Boolean, DateTime, Float, ForeignKey, Index, Integer, String, Text
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Float,
+    ForeignKey,
+    Index,
+    Integer,
+    String,
+    Text,
+    event,
+    inspect,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -39,6 +50,9 @@ class SavedArtifact(Base):
     content: Mapped[str] = mapped_column(Text)
     revision: Mapped[int] = mapped_column(Integer, default=1)
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    content_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
@@ -330,6 +344,9 @@ class LongTermMemory(Base):
     confidence: Mapped[float] = mapped_column(Float, default=1.0)
     embedding_json: Mapped[str] = mapped_column(Text, default="[]")
     is_archived: Mapped[bool] = mapped_column(Boolean, default=False)
+    content_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
@@ -357,6 +374,9 @@ class CompanyProfile(Base):
     source_url: Mapped[str] = mapped_column(Text)
     source_kind: Mapped[str] = mapped_column(String(32), default="official")
     last_verified_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    content_updated_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), default=utc_now
+    )
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utc_now, onupdate=utc_now
@@ -396,3 +416,23 @@ class GraphCheckpoint(Base):
     user_id: Mapped[str] = mapped_column(String(36), index=True)
     state_json: Mapped[str] = mapped_column(Text)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+@event.listens_for(SavedArtifact, "before_update")
+@event.listens_for(LongTermMemory, "before_update")
+@event.listens_for(CompanyProfile, "before_update")
+def _track_content_change(_mapper, _connection, target) -> None:
+    """Viewing, archive toggles and verification dates do not extend content life.
+
+    The artifact service also uses a fenced bulk UPDATE and handles its content
+    clock in that statement, since bulk statements do not fire mapper events.
+    """
+    fields = {
+        SavedArtifact: ("title", "content", "kind"),
+        LongTermMemory: ("kind", "content", "tags_json", "confidence", "source_session_id"),
+        CompanyProfile: ("name", "normalized_name", "domain", "industry", "products_json",
+                         "contacts_json", "notes", "source_url", "source_kind"),
+    }
+    state = inspect(target)
+    if any(state.attrs[field].history.has_changes() for field in fields[type(target)]):
+        target.content_updated_at = utc_now()

@@ -300,7 +300,7 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 6
+            )).scalar_one() == 7
             assert db.execute(text(
                 "SELECT column_default FROM information_schema.columns "
                 "WHERE table_schema='veridra_private' AND table_name='users' "
@@ -309,6 +309,69 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             assert db.execute(text(
                 "SELECT has_schema_privilege('public', 'veridra_private', 'USAGE')"
             )).scalar_one() is False
+    finally:
+        engine.dispose()
+
+
+def test_postgres_content_clock_upgrade_preserves_legacy_content():
+    from datetime import UTC, datetime
+
+    from sqlalchemy import insert, text
+
+    from app.db.migrations import _content_clocks
+    from app.db.models import Base, CompanyProfile, LongTermMemory, SavedArtifact, User
+    from app.services.relational_state import prepare_state_schema
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; content clock upgrade not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Content clock upgrade only permits the isolated veridra_ci database")
+    engine = create_engine(url).execution_options(
+        schema_translate_map={None: "veridra_private"}
+    )
+    try:
+        prepare_state_schema(engine)
+        Base.metadata.create_all(engine)
+        with engine.connect() as db:
+            transaction = db.begin()
+            try:
+                owner_id = str(uuid4())
+                changed_at = datetime(2026, 9, 10, 12, tzinfo=UTC)
+                db.execute(insert(User).values(
+                    id=owner_id, email=f"{owner_id}@example.invalid", display_name="Synthetic",
+                ))
+                rows = [
+                    (SavedArtifact, {"creation_key": str(uuid4()), "title": "Synthetic",
+                                     "content": "Synthetic legacy report"}),
+                    (LongTermMemory, {"kind": "fact", "normalized_hash": "synthetic",
+                                      "content": "Synthetic legacy note"}),
+                    (CompanyProfile, {"name": "Synthetic", "normalized_name": "synthetic",
+                                      "domain": f"{owner_id}.invalid",
+                                      "source_url": "https://example.invalid"}),
+                ]
+                expected = {}
+                for model, values in rows:
+                    row_id = str(uuid4())
+                    db.execute(insert(model).values(
+                        id=row_id, user_id=owner_id, updated_at=changed_at, **values,
+                    ))
+                    expected[model.__tablename__] = row_id
+                    # Transactional DDL is limited to the explicitly isolated CI DB.
+                    db.execute(text(f"ALTER TABLE veridra_private.{model.__tablename__} "
+                                    "DROP COLUMN content_updated_at"))
+                _content_clocks(db)
+                _content_clocks(db)
+                for table, row_id in expected.items():
+                    assert db.execute(text(
+                        f"SELECT content_updated_at FROM veridra_private.{table} WHERE id=:id"
+                    ), {"id": row_id}).scalar_one() == changed_at
+                assert db.execute(text(
+                    "SELECT content FROM veridra_private.saved_artifacts WHERE id=:id"
+                ), {"id": expected["saved_artifacts"]}).scalar_one() == "Synthetic legacy report"
+            finally:
+                transaction.rollback()
     finally:
         engine.dispose()
 
