@@ -13,7 +13,7 @@ from app.services.retention_inventory import (
     application_inventory,
     validate_application_catalog,
 )
-from app.services.retention_policy import RetentionPolicy, RetentionPolicyError
+from app.services.retention_policy import RetentionPolicy, RetentionPolicyError, utc
 
 OLD = datetime(2026, 9, 1, 12, tzinfo=UTC)
 NOW = OLD + timedelta(days=40)
@@ -187,3 +187,33 @@ async def test_every_content_table_is_read_without_ui_page_truncation(db):
     assert len({item.key for item in result.candidates}) == len(result.candidates)
     assert all(item.changed_at == OLD for item in result.candidates)
     assert not result.owner_busy and not db.new and not db.dirty and not db.deleted
+
+
+async def test_replaced_source_uses_its_own_publication_not_creation_or_other_owner(db):
+    user, other = await owner(db), await owner(db, "b")
+    source = m.LocalSource(user_id=user.id, name="synthetic.pdf", content="Synthetic original",
+                           content_hash="original", created_at=OLD)
+    db.add(source)
+    await db.flush()
+    job = m.PdfIngestionJob(user_id=user.id, name="synthetic.pdf", content_hash="synthetic",
+                            size_bytes=1, status="completed", source_id=source.id,
+                            created_at=OLD, updated_at=OLD)
+    # A malformed cross-owner reference must neither leak nor extend the source age.
+    foreign = m.PdfIngestionJob(user_id=other.id, name="foreign-synthetic.pdf",
+                                content_hash="foreign", size_bytes=1, status="completed",
+                                source_id=source.id, created_at=NOW, updated_at=NOW)
+    db.add_all([job, foreign])
+    await db.commit()
+    original = await application_inventory(db, user.id)
+    before = next(item for item in original.candidates
+                  if item.record_id == f"local_sources:{source.id}")
+    assert before.changed_at == OLD
+    # Mirror the actual worker's one-transaction publish to an existing source.
+    source.content, source.content_hash, job.updated_at = "Synthetic replacement", "changed", NOW
+    await db.commit()
+    updated = await application_inventory(db, user.id)
+    after = next(item for item in updated.candidates
+                 if item.record_id == f"local_sources:{source.id}")
+    assert utc(source.created_at) == OLD and after.changed_at == NOW
+    assert after.fingerprint != before.fingerprint
+    assert len(updated.candidates) == 2 and not updated.owner_busy

@@ -6,7 +6,7 @@ Ngày 15/10/2026. Thuộc gói 14 hiện hành, không thêm gói hoặc điểm
 
 ## Quyết định và cách hiểu
 
-**Đang nối kiểm kê:** đã thêm đọc riêng theo tài khoản cho đủ 15 bảng nội dung của ORM, không dùng giới hạn trang của giao diện và không đọc bảng tài khoản/khóa. Hội thoại cũ có lượt mới lấy mốc lượt mới; tác vụ đang chạy chặn khả năng chuẩn bị xóa. Các kho còn lại vẫn chưa được coi là đã kiểm kê chỉ vì đọc được DB chính. Mẫu công việc có bảng ngày nội dung đi kèm, giữ nguyên bảng tám cột để tương thích mã cũ; đọc/cất/lưu lại nguyên nội dung không gia hạn. Cả hai cách lưu tại máy đã kiểm, PostgreSQL cho phần nối này cần kết quả CI tiếp theo. Đây vẫn chưa phải API hoặc bộ thực thi xóa.
+**Đang nối kiểm kê:** mã 7ab69ba đã qua [CI #144](https://github.com/dbp3206-source/DriveAgent/actions/runs/38767074632), gồm 16 ca PostgreSQL, máy chủ 1.682 đạt/17 bỏ qua và giao diện 222 đạt. Đọc riêng theo tài khoản cho đủ 15 bảng nội dung ORM, không dùng giới hạn trang UI hoặc đọc bảng tài khoản/khóa. Hội thoại cũ có lượt mới được bảo vệ; tác vụ đang chạy chặn chuẩn bị xóa. Ngày mẫu nằm ở bảng phụ, giữ nguyên bảng tám cột cũ; đọc/cất/lưu nguyên nội dung không gia hạn. Sau đó đã nối kiểm kê ADK và bảo vệ nguồn vừa cập nhật lại, kiểm gộp tại máy 57 đạt; các phần mới cần CI tương ứng. Kho phụ chưa được tính hoàn tất chỉ vì đọc được DB chính. **Vẫn chưa có API/hộp thoại/bộ thực thi xóa**.
 
 Chủ sản phẩm chọn đầu vào đa dạng, không chứa bí mật công ty, lưu khoảng 20–30 ngày và phải thông báo/xác nhận trước xóa. Chọn mốc 30 ngày. Không tự xóa khi chưa xác nhận; vì vậy đây là nhắc dọn dữ liệu có duyệt, **không phải giới hạn lưu tối đa 30 ngày tuyệt đối**. Không gọi Gemini để quyết định mục nào được xóa. Không dùng quyết định này để xóa ngay dữ liệu hiện hữu.
 

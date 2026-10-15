@@ -76,6 +76,15 @@ async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationI
         func.count(m.Message.id),
     ).where(m.Message.user_id == owner_id).group_by(m.Message.session_id))).all()
     children = {row[0]: (row[1], bool(row[2]), row[3]) for row in child_rows}
+    # Re-extraction may replace an existing LocalSource without changing its
+    # created_at. The worker publishes content and job.updated_at in one SQL
+    # transaction; the linked job therefore protects newly published text.
+    publication_rows = (await db.execute(select(
+        m.PdfIngestionJob.source_id, func.max(m.PdfIngestionJob.updated_at),
+    ).where(
+        m.PdfIngestionJob.user_id == owner_id, m.PdfIngestionJob.source_id.is_not(None),
+    ).group_by(m.PdfIngestionJob.source_id))).all()
+    publications = {row[0]: row[1] for row in publication_rows}
     candidates = []
     busy = False
     for model, kind, clock in POLICIES:
@@ -97,6 +106,11 @@ async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationI
                 if newest is not None:
                     stamp = max(stamp, utc(newest))
                 values["child_summary"] = {"newest": newest, "active": active, "count": count}
+            elif model is m.LocalSource:
+                published_at = publications.get(row.id)
+                if published_at is not None:
+                    stamp = max(stamp, utc(published_at))
+                    values["last_publication"] = published_at
             elif model is m.Message:
                 active = row.status not in TERMINAL_MESSAGES
             elif model in {m.ChatTask, m.ScheduledJob, m.PdfIngestionJob}:

@@ -799,3 +799,63 @@ async def test_postgres_application_retention_inventory_keeps_new_chat_content()
             await db.rollback()
     finally:
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_adk_retention_reads_private_and_legacy_public_without_touching_content():
+    from google.adk.events import Event
+    from google.adk.sessions import DatabaseSessionService
+    from google.genai import types
+    from sqlalchemy.ext.asyncio import async_sessionmaker
+
+    from app.db.framework_security import protect_legacy_framework_tables
+    from app.db.framework_sessions import framework_engine_options, protect_framework_engine
+    from app.services.relational_state import prepare_state_schema
+    from app.services.retention_framework import adk_inventory
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; framework retention not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Retention only permits the isolated veridra_ci database")
+    bootstrap = create_engine(url)
+    try:
+        prepare_state_schema(bootstrap)
+    finally:
+        bootstrap.dispose()
+    owner = f"framework-retention-{uuid4()}"
+    namespaces = {}
+    for namespace in ("veridra_private", "public"):
+        options = framework_engine_options(url) if namespace == "veridra_private" else {}
+        service = DatabaseSessionService(db_url=url, **options)
+        if namespace == "veridra_private":
+            protect_framework_engine(service.db_engine)
+        try:
+            session = await service.create_session(
+                app_name="drive_agent", user_id=owner, session_id=str(uuid4()),
+                state={"case": "Synthetic context", "user:language": "Vietnamese"},
+            )
+            await service.append_event(session, Event(
+                author="assistant", content=types.Content(role="model", parts=[
+                    types.Part(text="SYNTHETIC_FRAMEWORK_SENTINEL"),
+                ]),
+            ))
+            if namespace == "public":
+                async with service.db_engine.begin() as db:
+                    await db.run_sync(protect_legacy_framework_tables)
+            async with async_sessionmaker(service.db_engine)() as db:
+                result = await adk_inventory(db, owner, namespace=namespace)
+                assert len(result.candidates) == 3
+                assert "SYNTHETIC_FRAMEWORK_SENTINEL" not in repr(result)
+                assert all(item.owner_id == owner for item in result.candidates)
+                assert (await adk_inventory(db, "other-synthetic-owner",
+                                            namespace=namespace)).candidates == ()
+                namespaces[namespace] = {item.record_id for item in result.candidates}
+            reopened = await service.get_session(
+                app_name="drive_agent", user_id=owner, session_id=session.id,
+            )
+            assert reopened.state["case"] == "Synthetic context" and len(reopened.events) == 1
+        finally:
+            await service.close()
+    assert namespaces["public"].isdisjoint(namespaces["veridra_private"])
