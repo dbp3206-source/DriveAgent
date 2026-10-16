@@ -1,6 +1,5 @@
 """Preview → explicit API approval → one Google write attempt → read-back check."""
 
-import asyncio
 import json
 from typing import Literal
 
@@ -17,6 +16,7 @@ from app.services.document_creator import (
     document_tab,
 )
 from app.services.operations import OperationStore
+from app.services.owner_admission import joined_thread
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import OperationReference, ToolContext, ToolDefinition, ToolError
 from app.tools.google_errors import workspace_http_error
@@ -91,9 +91,9 @@ async def docs_prepare(payload: DocumentPrepare, context: ToolContext):
                 creator.preview_patch(patch)
                 return patch
 
-        patch = await asyncio.to_thread(preview)
+        patch = await joined_thread(preview)
         normalized = payload.model_copy(update={"patch": patch, "edit": None})
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         operation_store(context).prepare,
         context.user.id,
         payload.request_key,
@@ -116,13 +116,13 @@ async def docs_prepare(payload: DocumentPrepare, context: ToolContext):
 
 async def docs_execute(payload: DocumentApproval, context: ToolContext):
     store = operation_store(context)
-    row = await asyncio.to_thread(store.get, context.user.id, payload.operation_id)
+    row = await joined_thread(store.get, context.user.id, payload.operation_id)
     if row["capability"] not in {"docs_create", "docs_edit"}:
         raise ToolError("Không phải thao tác Google Docs.", code="invalid_operation")
     spec = DocumentPrepare.model_validate_json(row["spec"])
     # Refresh/auth failures before claiming have no write side effects.
     credentials = await refresh_and_store_if_needed(context.user, context.db, context.settings)
-    await asyncio.to_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
+    await joined_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
 
     def execute():
         try:
@@ -154,14 +154,14 @@ async def docs_execute(payload: DocumentApproval, context: ToolContext):
             store.uncertain(context.user.id, row["id"], error.code)
             raise error from None
 
-    return await asyncio.to_thread(execute)
+    return await joined_thread(execute)
 
 
 async def docs_reconcile(operation_id: str, context: ToolContext):
     """Read back an uncertain Docs write without sending it again."""
 
     store = operation_store(context)
-    row = await asyncio.to_thread(store.get, context.user.id, operation_id)
+    row = await joined_thread(store.get, context.user.id, operation_id)
     if row["state"] != "uncertain" or row["capability"] not in {"docs_create", "docs_edit"}:
         raise ToolError("Thao tác Docs không thể đối soát.", code="invalid_operation")
     if not row["resource_id"]:
@@ -185,7 +185,7 @@ async def docs_reconcile(operation_id: str, context: ToolContext):
         store.finish_reconciliation(context.user.id, operation_id, result)
         return DocumentOperationResult(data={"operation_id": operation_id, **result})
 
-    return await asyncio.to_thread(reconcile)
+    return await joined_thread(reconcile)
 
 
 async def docs_reconcile_tool(payload: OperationReference, context: ToolContext):

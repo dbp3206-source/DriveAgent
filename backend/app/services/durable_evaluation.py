@@ -84,19 +84,22 @@ class EvaluationQueue:
             ).fetchall()
         return [self.get(owner, row["id"]) for row in rows]
 
-    def claim(self, now: float):
+    def claim(self, now: float, *, blocked_owners=()):
+        blocked_owners = tuple(blocked_owners)
+        excluded = (" AND owner NOT IN (" + ",".join("?" for _ in blocked_owners) + ")"
+                    if blocked_owners else "")
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
             db.execute(
                 "UPDATE jobs SET status='failed' WHERE status='running' "
-                "AND lease_until<? AND attempts>=3",
-                (now,),
+                "AND lease_until<? AND attempts>=3" + excluded,
+                (now, *blocked_owners),
             )
             row = db.execute(
-                "SELECT * FROM jobs WHERE status='queued' OR "
-                "(status='running' AND lease_until<? AND attempts<3) "
-                "ORDER BY created_at LIMIT 1",
-                (now,),
+                "SELECT * FROM jobs WHERE (status='queued' OR "
+                "(status='running' AND lease_until<? AND attempts<3))" + excluded
+                + " ORDER BY created_at LIMIT 1",
+                (now, *blocked_owners),
             ).fetchone()
             if row is None:
                 return None
@@ -133,6 +136,11 @@ class EvaluationQueue:
 
 
 def execute_one(queue: EvaluationQueue, now: float) -> bool:
+    job = queue.claim(now)
+    return execute_claimed(queue, now, job) if job else False
+
+
+def execute_claimed(queue: EvaluationQueue, now: float, job) -> bool:
     from app.services.evaluation import (
         run_adversarial_mutation_regression,
         run_answer_contract_benchmark,
@@ -141,9 +149,6 @@ def execute_one(queue: EvaluationQueue, now: float) -> bool:
     )
 
     started = monotonic()
-    job = queue.claim(now)
-    if not job:
-        return False
     functions = {
         "routing": run_routing_regression,
         "output": run_output_quality_regression,
@@ -175,13 +180,22 @@ def execute_one(queue: EvaluationQueue, now: float) -> bool:
     return True
 
 
-async def worker(root: Path, *, queue=None):
+async def worker(root: Path, *, queue=None, gate=None):
     import asyncio
 
     queue = queue if queue is not None else EvaluationQueue(root)
     while True:
         try:
-            await asyncio.to_thread(execute_one, queue, time())
+            if gate is None:
+                await asyncio.to_thread(execute_one, queue, time())
+            else:
+                from app.services.owner_admission import joined_thread
+
+                blocked = await gate.pending_owners()
+                job = await asyncio.to_thread(queue.claim, time(), blocked_owners=blocked)
+                if job:
+                    async with gate.shared(job["owner"]):
+                        await joined_thread(execute_claimed, queue, time(), job)
         except Exception:
             # A transient SQLite/IO failure must not permanently kill the worker.
             # Keep diagnostics metadata-only: no owner, source data or exception body.

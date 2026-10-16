@@ -12,6 +12,7 @@ from urllib.parse import quote
 import httpx
 
 from app.core.config import Settings
+from app.services.owner_admission import joined_thread
 
 OBJECT_ID = re.compile(r"^[A-Za-z0-9-]{1,64}$")
 
@@ -53,7 +54,9 @@ class PdfObjectStorage:
         os.close(descriptor)
         path = Path(raw_path)
         try:
-            await asyncio.to_thread(path.write_bytes, data)
+            # This temporary path is unlinked by the cancellation handler.
+            # Join first so a late writer cannot recreate it after that unlink.
+            await joined_thread(path.write_bytes, data, wait_on_cancel=True)
         except BaseException:
             path.unlink(missing_ok=True)
             raise
@@ -100,7 +103,7 @@ class LocalPdfObjectStorage(PdfObjectStorage):
     async def put(self, owner: str, job_id: str, data: bytes) -> None:
         path = self._path(owner, job_id)
         await asyncio.to_thread(path.parent.mkdir, parents=True, exist_ok=True)
-        await asyncio.to_thread(path.write_bytes, data)
+        await joined_thread(path.write_bytes, data)
 
     async def get(self, owner: str, job_id: str) -> bytes:
         return await asyncio.to_thread((await self._existing_path(owner, job_id)).read_bytes)
@@ -108,8 +111,8 @@ class LocalPdfObjectStorage(PdfObjectStorage):
     async def delete(self, owner: str, job_id: str) -> None:
         current = self._path(owner, job_id)
         legacy = self._legacy_path(job_id)
-        await asyncio.to_thread(current.unlink, missing_ok=True)
-        await asyncio.to_thread(legacy.unlink, missing_ok=True)
+        await joined_thread(current.unlink, missing_ok=True)
+        await joined_thread(legacy.unlink, missing_ok=True)
 
     async def exists(self, owner: str, job_id: str) -> bool:
         # Validate BOTH paths first, including legacy aliases, even when one

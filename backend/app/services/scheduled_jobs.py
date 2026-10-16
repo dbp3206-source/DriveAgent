@@ -3,6 +3,7 @@
 import asyncio
 import json
 import logging
+from contextlib import AsyncExitStack
 from datetime import UTC, datetime
 from time import time
 from uuid import uuid4
@@ -12,6 +13,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from app.db.models import ScheduledJob, User
 from app.services.morning_briefing import MorningBriefingService
+from app.services.owner_admission import work_owner_available
 from app.services.premeeting_briefing import PreMeetingBriefingService
 from app.services.user_inference import user_runtime_settings
 from app.tools.contracts import ToolError
@@ -21,6 +23,35 @@ KINDS = {"morning", "pre_meeting"}
 
 async def enqueue_for_invited_users(
     db, settings, *, kind: str, dedupe_key: str, registry=None
+) -> dict:
+    gate = getattr(registry, "admission_gate", None)
+    if gate is None:
+        return await _enqueue_for_invited_users(db, settings, kind=kind,
+                                                dedupe_key=dedupe_key, registry=registry)
+    from app.services.owner_admission import AdmissionError
+
+    # Hold admissions through the batch commit, not merely each INSERT. This
+    # endpoint has bearer auth rather than a signed browser session.
+    users = (await db.scalars(select(User).where(User.is_active.is_(True)))).all()
+    owners = {user.id for user in users if user.encrypted_google_credentials
+              and settings.beta_email_allowed(user.email)}
+    deferred = set()
+    async with AsyncExitStack() as stack:
+        for owner in sorted(owners):
+            try:
+                await stack.enter_async_context(gate.shared(owner, db=db))
+            except AdmissionError:
+                deferred.add(owner)
+        result = await _enqueue_for_invited_users(db, settings, kind=kind,
+                                                  dedupe_key=dedupe_key, registry=registry,
+                                                  deferred=deferred)
+    if deferred:
+        result.update(deferred_users=len(deferred), status="deferred_cleanup")
+    return result
+
+
+async def _enqueue_for_invited_users(
+    db, settings, *, kind: str, dedupe_key: str, registry=None, deferred=(),
 ) -> dict:
     if kind not in KINDS:
         raise ValueError("Unsupported scheduled job kind")
@@ -34,6 +65,8 @@ async def enqueue_for_invited_users(
     existing = 0
     failed_users = 0
     for user in eligible:
+        if user.id in deferred:
+            continue
         jobs = [(dedupe_key, {})]
         if kind == "pre_meeting":
             if registry is None:
@@ -84,7 +117,8 @@ async def enqueue_for_invited_users(
 async def _claim(session_factory, *, now: float) -> dict | None:
     async with session_factory() as db:
         dialect = db.bind.dialect.name
-        eligible = or_(
+        available = work_owner_available(ScheduledJob.user_id)
+        eligible = available & or_(
             ScheduledJob.status == "queued",
             and_(
                 ScheduledJob.status == "running",
@@ -98,6 +132,7 @@ async def _claim(session_factory, *, now: float) -> dict | None:
                 ScheduledJob.status == "running",
                 ScheduledJob.lease_until < now,
                 ScheduledJob.attempts >= 3,
+                available,
             )
             .values(status="failed", error_code="attempts_exhausted", lease_until=None)
         )
@@ -166,6 +201,14 @@ async def execute_one(session_factory, settings, registry) -> bool:
     claimed = await _claim(session_factory, now=time())
     if claimed is None:
         return False
+    gate = getattr(registry, "admission_gate", None)
+    if gate is None:
+        return await _execute_claimed(session_factory, settings, registry, claimed)
+    async with gate.shared(claimed["user_id"]):
+        return await _execute_claimed(session_factory, settings, registry, claimed)
+
+
+async def _execute_claimed(session_factory, settings, registry, claimed) -> bool:
     try:
         try:
             payload = json.loads(claimed["payload_json"])

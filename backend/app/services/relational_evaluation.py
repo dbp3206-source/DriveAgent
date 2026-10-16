@@ -116,12 +116,14 @@ class RelationalEvaluationQueue(EvaluationQueue):
             ).order_by(jobs.c.created_at.desc()).limit(10)).scalars().all()
         return [self.get(owner, job_id) for job_id in identifiers]
 
-    def claim(self, now: float):
+    def claim(self, now: float, *, blocked_owners=()):
         with state_transaction(self.engine) as db:
             db.execute(update(jobs).where(
                 jobs.c.status == "running", jobs.c.lease_until < now, jobs.c.attempts >= 3,
+                jobs.c.owner.not_in(tuple(blocked_owners)),
             ).values(status="failed", lease_until=None))
-            eligible = or_(jobs.c.status == "queued", and_(
+            eligible = jobs.c.owner.not_in(tuple(blocked_owners)) & or_(
+                jobs.c.status == "queued", and_(
                 jobs.c.status == "running", jobs.c.lease_until < now, jobs.c.attempts < 3,
             ))
             query = select(jobs).where(eligible).order_by(jobs.c.created_at).limit(1)

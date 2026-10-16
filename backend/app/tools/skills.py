@@ -1,10 +1,10 @@
 """Governed skill CRUD and deterministic expansion through the shared Tool Registry."""
 
-import asyncio
 
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.auth.permissions import SKILL_MANAGE
+from app.services.owner_admission import joined_thread
 from app.services.relational_skills import skill_store
 from app.services.skills import SkillSpec
 from app.tools.contracts import ToolContext, ToolDefinition
@@ -37,7 +37,7 @@ class SkillResult(BaseModel):
 
 
 async def save(payload: SkillSave, context: ToolContext):
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         skill_store(context.settings).save,
         context.user.id,
         payload.skill,
@@ -47,21 +47,21 @@ async def save(payload: SkillSave, context: ToolContext):
 
 
 async def run(payload: SkillRun, context: ToolContext):
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         skill_store(context.settings).run, context.user.id, payload.name, payload.inputs
     )
     return SkillResult(data=row)
 
 
 async def list_skills(payload: SkillList, context: ToolContext):
-    rows = await asyncio.to_thread(
+    rows = await joined_thread(
         skill_store(context.settings).list, context.user.id, payload.include_archived
     )
     return SkillResult(data={"items": rows})
 
 
 async def archive(payload: SkillArchive, context: ToolContext):
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         skill_store(context.settings).archive, context.user.id, payload.skill_id
     )
     return SkillResult(data=row)

@@ -152,6 +152,34 @@ def test_postgres_queue_parallel_enqueue_claim_and_stale_worker():
         engine.dispose()
 
 
+def test_postgres_evaluation_claim_does_not_consume_blocked_owner_attempt():
+    from app.services.relational_evaluation import RelationalEvaluationQueue
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; not proof of cloud readiness")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Evaluation contract only permits the isolated veridra_ci database")
+    engine = create_engine(url)
+    RelationalEvaluationQueue.create_schema(engine)
+    queue = RelationalEvaluationQueue(engine)
+    owner, other = (f"blocked-{uuid4()}" for _ in range(2))
+    try:
+        own = queue.enqueue(owner, 1)
+        second = queue.enqueue(other, 1)
+        selected = queue.claim(2, blocked_owners={owner})
+        assert selected["id"] == second
+        assert queue.get(owner, own)["status"] == "queued"
+        assert queue.get(owner, own)["attempts"] == 0
+        queue.finish(selected["id"], "completed", now=3, attempt=selected["attempts"])
+        selected = queue.claim(4)
+        assert selected["id"] == own
+        queue.finish(selected["id"], "completed", now=5, attempt=selected["attempts"])
+    finally:
+        engine.dispose()
+
+
 def test_postgres_quota_serializes_reservations_across_guards():
     from app.services.relational_circuit import RelationalCircuitStore
     from app.services.relational_circuit import metadata as circuit_metadata
@@ -1117,3 +1145,64 @@ async def test_postgres_retention_payload_vector_and_checkpoint_are_one_transact
             await service.close()
         await engine.dispose()
         bootstrap.dispose()
+
+
+@pytest.mark.asyncio
+async def test_postgres_owner_admission_drains_and_persistent_cleanup_blocks_new_work():
+    from sqlalchemy import update
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from test_cleanup_jobs import STAMP, plan
+
+    from app.db.models import Base, CleanupJob, User
+    from app.services import cleanup_jobs
+    from app.services.owner_admission import AdmissionError, OwnerAdmission
+    from app.services.relational_state import prepare_state_schema
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; owner admission not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Admission only permits the isolated veridra_ci database")
+    bootstrap = create_engine(url).execution_options(
+        schema_translate_map={None: "veridra_private"},
+    )
+    try:
+        prepare_state_schema(bootstrap)
+        Base.metadata.create_all(bootstrap)
+    finally:
+        bootstrap.dispose()
+    engine = create_async_engine(url, execution_options={
+        "schema_translate_map": {None: "veridra_private"},
+    })
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        async with factory() as db:
+            user = User(email=f"admission-{uuid4()}@example.invalid", display_name="Synthetic")
+            other = User(email=f"admission-{uuid4()}@example.invalid", display_name="Synthetic")
+            db.add_all([user, other])
+            await db.commit()
+        gate = OwnerAdmission(factory)
+        async with gate.shared(user.id):
+            with pytest.raises(AdmissionError):
+                async with gate.exclusive(user.id, timeout=0.01):
+                    pass
+            async with gate.exclusive(other.id):
+                pass
+        async with gate.exclusive(user.id):
+            identity = await cleanup_jobs.enqueue(factory, user.id, plan(user.id), now=STAMP)
+        reopened = OwnerAdmission(factory)
+        with pytest.raises(AdmissionError):
+            async with reopened.shared(user.id):
+                pass
+        async with reopened.shared(other.id):
+            pass
+        async with factory() as db:
+            await db.execute(update(CleanupJob).where(CleanupJob.id == identity).values(
+                status="succeeded",
+            ))
+            await db.commit()
+        async with reopened.shared(user.id):
+            pass
+    finally:
+        await engine.dispose()

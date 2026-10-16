@@ -13,6 +13,7 @@ from app.auth.permissions import GMAIL_READ, permissions_for_role
 from app.core.config import get_settings
 from app.core.json_utils import json_object
 from app.services.mail_images import MailImageError, MailImageIndex, fetch_mail_image
+from app.services.owner_admission import joined_thread
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import ToolContext, ToolError
 from app.tools.gmail import (
@@ -215,7 +216,7 @@ async def approve_and_send(
 async def get_operation(operation_id: str, user: CurrentUser):
     """Check a user-owned Gmail send or draft operation."""
     try:
-        row = await asyncio.to_thread(
+        row = await joined_thread(
             operation_store_for(get_settings()).get,
             user.id,
             operation_id,

@@ -153,12 +153,15 @@ def sanitize_run_trace(events: list[dict[str, Any]], run_id: str) -> list[dict[s
 async def expire_run_traces(db: AsyncSession, *, now: datetime | None = None) -> int:
     """Erase only expired assistant trace metadata, preserving chat and audits."""
 
+    from app.services.owner_admission import work_owner_available
+
     current = now or datetime.now(UTC)
     cutoff = (current.astimezone(UTC) - timedelta(days=RETENTION_DAYS)).replace(tzinfo=None)
     result = await db.execute(
         update(Message)
         .where(
             Message.role == "assistant",
+            work_owner_available(Message.user_id),
             Message.created_at < cutoff,
             Message.trace_json != "[]",
         )

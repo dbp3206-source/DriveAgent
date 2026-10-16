@@ -1,6 +1,5 @@
 """User-reviewed Sheets creation through the same durable write ledger as Docs."""
 
-import asyncio
 import json
 import logging
 from typing import Literal
@@ -11,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.auth.google_oauth import refresh_and_store_if_needed
 from app.auth.permissions import DRIVE_WRITE
+from app.services.owner_admission import joined_thread
 from app.services.sheet_creator import (
     SpreadsheetCreator,
     SpreadsheetEditIntent,
@@ -63,9 +63,9 @@ async def sheets_prepare(payload: SpreadsheetPrepare, context: ToolContext):
                 creator.preview_patch(patch)
                 return patch
 
-        patch = await asyncio.to_thread(preview)
+        patch = await joined_thread(preview)
         normalized = payload.model_copy(update={"patch": patch, "edit": None})
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         operation_store(context).prepare,
         context.user.id,
         payload.request_key,
@@ -85,12 +85,12 @@ async def sheets_prepare(payload: SpreadsheetPrepare, context: ToolContext):
 
 async def sheets_execute(payload: DocumentApproval, context: ToolContext):
     store = operation_store(context)
-    row = await asyncio.to_thread(store.get, context.user.id, payload.operation_id)
+    row = await joined_thread(store.get, context.user.id, payload.operation_id)
     if row["capability"] not in {"sheets_create", "sheets_edit"}:
         raise ToolError("Không phải thao tác Google Sheets.", code="invalid_operation")
     spec = SpreadsheetPrepare.model_validate_json(row["spec"])
     credentials = await refresh_and_store_if_needed(context.user, context.db, context.settings)
-    await asyncio.to_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
+    await joined_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
 
     def execute():
         try:
@@ -135,14 +135,14 @@ async def sheets_execute(payload: DocumentApproval, context: ToolContext):
             store.uncertain(context.user.id, row["id"], error.code)
             raise error from None
 
-    return await asyncio.to_thread(execute)
+    return await joined_thread(execute)
 
 
 async def sheets_reconcile(operation_id: str, context: ToolContext):
     """Read back a checkpointed file; never repeat the external write."""
 
     store = operation_store(context)
-    row = await asyncio.to_thread(store.get, context.user.id, operation_id)
+    row = await joined_thread(store.get, context.user.id, operation_id)
     if row["capability"] not in {"sheets_create", "sheets_edit"} or row["state"] != "uncertain":
         raise ToolError(
             "Chỉ đối soát được thao tác Sheets ở trạng thái chưa chắc chắn.",
@@ -177,7 +177,7 @@ async def sheets_reconcile(operation_id: str, context: ToolContext):
         store.finish_reconciliation(context.user.id, operation_id, result)
         return DocumentOperationResult(data={"operation_id": operation_id, **result})
 
-    return await asyncio.to_thread(reconcile)
+    return await joined_thread(reconcile)
 
 
 async def sheets_reconcile_tool(payload: OperationReference, context: ToolContext):

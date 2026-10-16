@@ -18,6 +18,7 @@ from sqlalchemy import and_, or_, select, update
 
 from app.api.schemas import ChatRequest
 from app.db.models import AuditEvent, ChatTask, Message, User
+from app.services.owner_admission import work_owner_available
 from app.tools.contracts import ToolError
 
 logger = logging.getLogger(__name__)
@@ -54,7 +55,8 @@ def public_task(task: ChatTask) -> dict:
 
 async def claim(factory, *, now: float) -> dict | None:
     async with factory() as db:
-        expired = and_(ChatTask.status == "running", ChatTask.lease_until < now)
+        available = work_owner_available(ChatTask.user_id)
+        expired = and_(ChatTask.status == "running", ChatTask.lease_until < now, available)
         # A local memory mutation can have completed before the process died.
         # Do not regenerate potentially different writes from an unfinished
         # model turn. Completed Google actions have a separate approval ledger.
@@ -78,7 +80,9 @@ async def claim(factory, *, now: float) -> dict | None:
             await db.execute(update(Message).where(
                 Message.user_id == row.user_id, Message.request_id == row.id,
                 Message.role == "user").values(status="failed"))
-        eligible = or_(ChatTask.status == "queued", and_(expired, ChatTask.attempts < 3))
+        eligible = available & or_(
+            ChatTask.status == "queued", and_(expired, ChatTask.attempts < 3),
+        )
         query = select(ChatTask).where(eligible).order_by(ChatTask.created_at).limit(1)
         if db.bind.dialect.name == "postgresql":
             query = query.with_for_update(skip_locked=True)
@@ -115,6 +119,14 @@ async def execute_one(factory, app) -> bool:
     claimed = await claim(factory, now=time())
     if claimed is None:
         return False
+    gate = getattr(getattr(app, "state", None), "retention_gate", None)
+    if gate is None:
+        return await _execute_claimed(factory, app, claimed)
+    async with gate.shared(claimed["owner"]):
+        return await _execute_claimed(factory, app, claimed)
+
+
+async def _execute_claimed(factory, app, claimed) -> bool:
     async with factory() as db:
         user = await db.get(User, claimed["owner"])
         if user is None or not user.is_active:

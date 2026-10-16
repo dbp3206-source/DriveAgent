@@ -1,6 +1,5 @@
 """Gmail tools governed by 6-gate registry and 2-phase human-in-the-loop approval."""
 
-import asyncio
 import base64
 import io
 import json
@@ -33,6 +32,7 @@ from app.auth.google_oauth import refresh_and_store_if_needed
 from app.auth.permissions import GMAIL_DRAFT, GMAIL_READ, GMAIL_SEND
 from app.services.inference_gateway import create_inference_client
 from app.services.operations import OperationStore
+from app.services.owner_admission import joined_thread
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import OperationReference, ToolContext, ToolDefinition, ToolError
 
@@ -843,7 +843,7 @@ async def gmail_get_attachment(
             except HttpError as exc:
                 raise handle_gmail_http_error(exc, "đọc tệp đính kèm Gmail") from exc
 
-    return await asyncio.to_thread(execute)
+    return await joined_thread(execute)
 
 
 def _build_send_payload(draft: EmailDraftSpec, credentials) -> tuple[dict[str, str], list[str]]:
@@ -1076,7 +1076,7 @@ async def gmail_list_messages(payload: GmailListInput, context: ToolContext) -> 
             except HttpError as exc:
                 raise handle_gmail_http_error(exc, "tìm kiếm email") from exc
 
-    return await asyncio.to_thread(execute)
+    return await joined_thread(execute)
 
 
 def _sender_display_name_matches(actual: str, expected: str) -> bool:
@@ -1249,7 +1249,7 @@ async def gmail_read_matching_messages(
             except HttpError as exc:
                 raise handle_gmail_http_error(exc, "đọc nhiều email") from exc
 
-    return await asyncio.to_thread(execute)
+    return await joined_thread(execute)
 
 
 async def gmail_read_thread(
@@ -1320,7 +1320,7 @@ async def gmail_read_thread(
             except HttpError as exc:
                 raise handle_gmail_http_error(exc, "đọc email thread") from exc
 
-    return await asyncio.to_thread(execute)
+    return await joined_thread(execute)
 
 
 async def gmail_summarize_thread(
@@ -1362,7 +1362,7 @@ async def gmail_summarize_thread(
             except HttpError as exc:
                 raise handle_gmail_http_error(exc, "đọc email để tóm tắt") from exc
 
-    full_text = await asyncio.to_thread(load_full_thread)
+    full_text = await joined_thread(load_full_thread)
     if not full_text.strip():
         raise ToolError("Email không có nội dung văn bản để tóm tắt.", code="empty_email")
 
@@ -1410,7 +1410,7 @@ async def gmail_summarize_thread(
 async def gmail_prepare_draft(
     payload: EmailPrepareInput, context: ToolContext
 ) -> EmailOperationResult:
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         operation_store(context).prepare,
         context.user.id,
         payload.request_key,
@@ -1431,7 +1431,7 @@ async def gmail_prepare_draft(
 
 async def gmail_send(payload: EmailApprovalInput, context: ToolContext) -> EmailOperationResult:
     store = operation_store(context)
-    row = await asyncio.to_thread(store.get, context.user.id, payload.operation_id)
+    row = await joined_thread(store.get, context.user.id, payload.operation_id)
     if row["capability"] != "email_send":
         raise ToolError("Không phải thao tác gửi Email.", code="invalid_operation")
 
@@ -1439,7 +1439,7 @@ async def gmail_send(payload: EmailApprovalInput, context: ToolContext) -> Email
     if not secrets.compare_digest(row["digest"], payload.approved_digest):
         raise ToolError("Bản xác nhận không khớp nội dung đã xem.", code="digest_mismatch")
     credentials = await refresh_and_store_if_needed(context.user, context.db, context.settings)
-    await asyncio.to_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
+    await joined_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
 
     def execute() -> dict:
         send_attempted = False
@@ -1475,7 +1475,7 @@ async def gmail_send(payload: EmailApprovalInput, context: ToolContext) -> Email
                 code=code,
             ) from None
 
-    result_data = await asyncio.to_thread(execute)
+    result_data = await joined_thread(execute)
     return EmailOperationResult(data={"operation_id": row["id"], **result_data})
 
 
@@ -1484,7 +1484,7 @@ async def gmail_prepare_native_draft(
 ) -> EmailOperationResult:
     """Store an immutable Gmail-draft preview without touching Google."""
 
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         operation_store(context).prepare,
         context.user.id,
         payload.request_key,
@@ -1507,7 +1507,7 @@ async def gmail_create_draft(
 ) -> GmailCreateDraftOutput:
     """Create a native Gmail draft only after approval of its saved digest."""
     store = operation_store(context)
-    row = await asyncio.to_thread(store.get, context.user.id, payload.operation_id)
+    row = await joined_thread(store.get, context.user.id, payload.operation_id)
     if row["capability"] != "gmail_draft_create":
         raise ToolError("Không phải thao tác tạo thư nháp Gmail.", code="invalid_operation")
     if not secrets.compare_digest(row["digest"], payload.approved_digest):
@@ -1515,7 +1515,7 @@ async def gmail_create_draft(
     draft_input = GmailCreateDraftInput.model_validate_json(row["spec"])
     credentials = await refresh_and_store_if_needed(context.user, context.db, context.settings)
 
-    await asyncio.to_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
+    await joined_thread(store.claim, context.user.id, row["id"], payload.approved_digest)
     target_recipient = draft_input.recipient.strip()
     if not target_recipient or target_recipient.casefold() == "me":
         target_recipient = getattr(context.user, "email", "") or "me"
@@ -1583,7 +1583,7 @@ async def gmail_create_draft(
                 code=error_code,
             ) from None
 
-    return await asyncio.to_thread(execute)
+    return await joined_thread(execute)
 
 
 async def gmail_reconcile_draft(
@@ -1592,7 +1592,7 @@ async def gmail_reconcile_draft(
     """Read back an uncertain native draft; never create or send another message."""
 
     store = operation_store(context)
-    row = await asyncio.to_thread(store.get, context.user.id, payload.operation_id)
+    row = await joined_thread(store.get, context.user.id, payload.operation_id)
     if row["state"] != "uncertain" or row["capability"] != "gmail_draft_create":
         raise ToolError("Thao tác Gmail không thể đối soát.", code="invalid_operation")
     if not row["resource_id"]:
@@ -1634,7 +1634,7 @@ async def gmail_reconcile_draft(
         store.finish_reconciliation(context.user.id, payload.operation_id, result)
         return EmailOperationResult(data={"operation_id": payload.operation_id, **result})
 
-    return await asyncio.to_thread(reconcile)
+    return await joined_thread(reconcile)
 
 
 def gmail_tool_definitions() -> list[ToolDefinition]:

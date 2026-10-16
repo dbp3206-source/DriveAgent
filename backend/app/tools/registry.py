@@ -57,6 +57,7 @@ class ToolRegistry:
     def __init__(self) -> None:
         self._tools: dict[str, ToolDefinition] = {}
         self._limiter = SlidingWindowLimiter()
+        self.admission_gate = None
 
     def register(self, definition: ToolDefinition) -> None:
         if definition.name in self._tools:
@@ -99,6 +100,15 @@ class ToolRegistry:
         return False
 
     async def execute(
+        self, name: str, arguments: dict[str, Any], context: ToolContext
+    ) -> BaseModel:
+        gate = getattr(self, "admission_gate", None)
+        if gate is None:
+            return await self._execute(name, arguments, context)
+        async with gate.shared(context.user.id, db=context.db):
+            return await self._execute(name, arguments, context)
+
+    async def _execute(
         self, name: str, arguments: dict[str, Any], context: ToolContext
     ) -> BaseModel:
         definition = self.get(name)

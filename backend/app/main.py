@@ -53,6 +53,7 @@ from app.services.embeddings import EmbeddingService
 from app.services.inference_gateway import RequestPinningGate
 from app.services.local_sources import local_source_tool_definitions
 from app.services.memory import MemoryService, memory_tool_definitions
+from app.services.owner_admission import OwnerAdmission, OwnerAdmissionMiddleware
 from app.services.protocols import build_protocol_apps
 from app.services.rag import RagService, rag_tool_definitions
 from app.services.user_inference import UserInferencePool, runtime_settings
@@ -195,6 +196,9 @@ async def lifespan(app: FastAPI):
     memory_service = MemoryService(embeddings, vector_store)
 
     registry = ToolRegistry()
+    admission = OwnerAdmission(SessionFactory)
+    registry.admission_gate = admission
+    app.state.retention_gate = admission
     for definition in drive_tool_definitions():
         registry.register(definition)
     for definition in document_tool_definitions():
@@ -256,9 +260,9 @@ async def lifespan(app: FastAPI):
     from app.services.durable_evaluation import worker
 
     queue = await asyncio.to_thread(evaluation_queue, settings)
-    evaluation_worker = asyncio.create_task(worker(settings.data_dir, queue=queue))
+    evaluation_worker = asyncio.create_task(worker(settings.data_dir, queue=queue, gate=admission))
     from app.services.pdf_jobs import worker as pdf_worker
-    pdf_task = asyncio.create_task(pdf_worker(SessionFactory, settings))
+    pdf_task = asyncio.create_task(pdf_worker(SessionFactory, settings, gate=admission))
     from app.services.scheduled_jobs import worker as scheduled_worker
 
     scheduler_task = asyncio.create_task(scheduled_worker(SessionFactory, settings, registry))
@@ -289,12 +293,15 @@ async def lifespan(app: FastAPI):
         from app.services.operational_tracing import flush_operational_traces
 
         await asyncio.to_thread(flush_operational_traces)
+        await admission.drain_threads()
         await user_inference.close()
         await orchestrator.close()
         await embeddings.close()
         await vector_store.close()
         await engine.dispose()
         await asyncio.to_thread(close_state_engines)
+        registry.admission_gate = None
+        app.state.retention_gate = None
 
 
 app = FastAPI(
@@ -303,6 +310,7 @@ app = FastAPI(
     description="Trợ lý Veridra với ADK quota-first, RAG, Memory và giao thức MCP/A2A.",
     lifespan=lifespan,
 )
+app.add_middleware(OwnerAdmissionMiddleware)
 app.add_middleware(
     SessionMiddleware,
     secret_key=settings.app_secret,

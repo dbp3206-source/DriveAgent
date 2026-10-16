@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.api.dependencies import CurrentUser, DbSession
 from app.core.config import get_settings
 from app.services.gmail_remote import GmailRemoteService, RemoteActionSigner, reply_draft_body
+from app.services.owner_admission import AdmissionError
 from app.tools.contracts import ToolError
 
 router = APIRouter(prefix="/api/gmail/remote", tags=["gmail_remote"])
@@ -59,6 +60,11 @@ async def execute_remote_action(
             db=db,
             request_id=_get_request_id(request),
         )
+    except AdmissionError as exc:
+        # Admission is checked before consuming the signed one-shot action.
+        # Do not classify arbitrary provider failures as safely retryable.
+        raise HTTPException(status_code=503, detail=str(exc),
+                            headers={"Retry-After": "2", "Cache-Control": "no-store"}) from exc
     except ToolError as exc:
         status_code = 409 if exc.code == "remote_action_replayed" else 400
         raise HTTPException(status_code=status_code, detail=str(exc)) from exc
@@ -196,6 +202,10 @@ async def confirm_remote_action(
             result.get("message", "Thao tác đã hoàn tất."),
             link=result.get("gmail_draft_url", ""),
         )
+    except AdmissionError as exc:
+        response = _result_page("Chưa thể thực hiện", str(exc), 503)
+        response.headers["Retry-After"] = "2"
+        return response
     except ToolError as exc:
         status_code = 409 if exc.code == "remote_action_replayed" else 400
         messages = {

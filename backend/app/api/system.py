@@ -13,6 +13,7 @@ from app.core.config import get_settings
 from app.services.embeddings import EMBEDDING_DIMENSION
 from app.services.object_storage import probe_object_storage
 from app.services.operations import OperationStore  # noqa: F401 - compatibility seam for tests
+from app.services.owner_admission import joined_thread
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import ToolContext, ToolError
 
@@ -94,7 +95,7 @@ async def operation_status(
     """Expose only redacted operation metadata for the signed-in user."""
 
     store = operation_store_for(get_settings())
-    return await asyncio.to_thread(store.list_status, user.id, limit=limit)
+    return await joined_thread(store.list_status, user.id, limit=limit)
 
 
 @router.post("/operations/{operation_id}/acknowledge", status_code=204)
@@ -109,7 +110,7 @@ async def acknowledge_operation(
     if not is_trusted_ui_origin(request, settings):
         raise HTTPException(403, "Chỉ có thể đóng cảnh báo từ giao diện local.")
     store = operation_store_for(settings)
-    await asyncio.to_thread(store.acknowledge_uncertain, user.id, operation_id)
+    await joined_thread(store.acknowledge_uncertain, user.id, operation_id)
 
 
 @router.post("/operations/{operation_id}/reconcile")
@@ -125,7 +126,7 @@ async def reconcile_operation(
     if not is_trusted_ui_origin(request, settings):
         raise HTTPException(403, "Chỉ có thể đối soát từ giao diện local.")
     store = operation_store_for(settings)
-    row = await asyncio.to_thread(store.get, user.id, operation_id)
+    row = await joined_thread(store.get, user.id, operation_id)
     tool_name = {
         "sheets_create": "sheets_reconcile",
         "sheets_edit": "sheets_reconcile",
@@ -154,4 +155,4 @@ async def archive_operation(operation_id: str, request: Request, user: CurrentUs
     if not is_trusted_ui_origin(request, settings):
         raise HTTPException(403, "Chỉ có thể lưu trữ từ giao diện local.")
     store = operation_store_for(settings)
-    await asyncio.to_thread(store.archive, user.id, operation_id)
+    await joined_thread(store.archive, user.id, operation_id)

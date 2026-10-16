@@ -6,11 +6,11 @@ giữ bản sao embedding để dữ liệu có thể phục hồi và test khô
 
 from __future__ import annotations
 
-import asyncio
 from typing import TYPE_CHECKING, Any
 
 from app.core.config import Settings
 from app.services.embeddings import EMBEDDING_DIMENSION
+from app.services.owner_admission import joined_thread
 
 if TYPE_CHECKING:
     from qdrant_client import QdrantClient, models
@@ -37,11 +37,11 @@ class VectorStore:
 
             path = self.settings.resolved_qdrant_path
             path.mkdir(parents=True, exist_ok=True)
-            self.client = await asyncio.to_thread(QdrantClient, path=str(path))
+            self.client = await joined_thread(QdrantClient, path=str(path))
             for collection in (DRIVE_COLLECTION, MEMORY_COLLECTION):
-                exists = await asyncio.to_thread(self.client.collection_exists, collection)
+                exists = await joined_thread(self.client.collection_exists, collection)
                 if not exists:
-                    await asyncio.to_thread(
+                    await joined_thread(
                         self.client.create_collection,
                         collection_name=collection,
                         vectors_config=models.VectorParams(
@@ -62,7 +62,7 @@ class VectorStore:
         from qdrant_client import models
 
         try:
-            await asyncio.to_thread(
+            await joined_thread(
                 self.client.upsert,
                 collection_name=collection,
                 points=[models.PointStruct(id=point_id, vector=vector, payload=payload)],
@@ -79,7 +79,7 @@ class VectorStore:
 
         qfilter = self._filter(filters)
         try:
-            await asyncio.to_thread(
+            await joined_thread(
                 self.client.delete,
                 collection_name=collection,
                 points_selector=models.FilterSelector(filter=qfilter),
@@ -97,7 +97,7 @@ class VectorStore:
         from qdrant_client import models
 
         try:
-            await asyncio.to_thread(
+            await joined_thread(
                 self.client.delete,
                 collection_name=collection,
                 points_selector=models.PointIdsList(points=point_ids),
@@ -117,7 +117,7 @@ class VectorStore:
         if not self.client:
             return []
         try:
-            result = await asyncio.to_thread(
+            result = await joined_thread(
                 self.client.query_points,
                 collection_name=collection,
                 query=vector,
@@ -151,4 +151,4 @@ class VectorStore:
 
     async def close(self) -> None:
         if self.client:
-            await asyncio.to_thread(self.client.close)
+            await joined_thread(self.client.close)

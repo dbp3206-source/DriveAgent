@@ -1,10 +1,10 @@
-import asyncio
 from time import time
 
 from fastapi import APIRouter, HTTPException, Response
 
 from app.api.dependencies import CurrentUser
 from app.core.config import get_settings
+from app.services.owner_admission import joined_thread
 from app.services.relational_evaluation import evaluation_queue
 
 router = APIRouter(prefix="/api/evaluation-jobs", tags=["evaluation"])
@@ -14,7 +14,7 @@ router = APIRouter(prefix="/api/evaluation-jobs", tags=["evaluation"])
 async def enqueue_evaluation(user: CurrentUser, response: Response):
     response.headers["Cache-Control"] = "no-store"
     try:
-        job_id = await asyncio.to_thread(
+        job_id = await joined_thread(
             lambda: evaluation_queue(get_settings()).enqueue(user.id, time())
         )
     except ValueError as exc:
@@ -25,7 +25,7 @@ async def enqueue_evaluation(user: CurrentUser, response: Response):
 @router.get("/{job_id}")
 async def read_evaluation(job_id: str, user: CurrentUser, response: Response):
     response.headers["Cache-Control"] = "no-store"
-    job = await asyncio.to_thread(lambda: evaluation_queue(get_settings()).get(user.id, job_id))
+    job = await joined_thread(lambda: evaluation_queue(get_settings()).get(user.id, job_id))
     if job is None:
         raise HTTPException(status_code=404, detail="Evaluation job not found")
     return job
@@ -35,5 +35,5 @@ async def read_evaluation(job_id: str, user: CurrentUser, response: Response):
 async def recent_evaluations(user: CurrentUser, response: Response):
     response.headers["Cache-Control"] = "no-store"
     return {
-        "items": await asyncio.to_thread(lambda: evaluation_queue(get_settings()).recent(user.id))
+        "items": await joined_thread(lambda: evaluation_queue(get_settings()).recent(user.id))
     }

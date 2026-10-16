@@ -3,7 +3,6 @@
 Tạo bản tin Gmail và link thao tác có xác nhận, token một lần.
 """
 
-import asyncio
 import base64
 import hashlib
 import hmac
@@ -18,6 +17,7 @@ from uuid import uuid4
 
 from app.core.config import Settings
 from app.db.models import User
+from app.services.owner_admission import joined_thread
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import ToolContext, ToolError
 from app.tools.gmail import GmailCreateDraftInput
@@ -258,6 +258,16 @@ class GmailRemoteService:
         db: Any,
         request_id: str,
     ) -> dict[str, Any]:
+        gate = getattr(self.registry, "admission_gate", None)
+        if gate is None:
+            return await self._execute_remote_token(token, db, request_id)
+        signed = RemoteActionSigner.verify_action(token, self.settings.app_secret)
+        async with gate.shared(signed["user_id"], db=db):
+            return await self._execute_remote_token(token, db, request_id)
+
+    async def _execute_remote_token(
+        self, token: str, db: Any, request_id: str,
+    ) -> dict[str, Any]:
         """Thực thi hành động từ xa được ủy quyền bằng chữ ký token."""
         data = RemoteActionSigner.verify_action(token, self.settings.app_secret)
         action = data["action"]
@@ -271,7 +281,7 @@ class GmailRemoteService:
         action = data.get("action")
         if action not in {"create_reply_draft", "export_to_doc"}:
             raise ToolError("Hành động từ xa không được hỗ trợ.", code="unsupported_action")
-        await asyncio.to_thread(
+        await joined_thread(
             remote_action_ledger(self.settings).consume,
             data["nonce"],
             int(data["exp"]),
@@ -301,7 +311,7 @@ class GmailRemoteService:
                 body=body,
                 thread_id=thread_id or None,
             )
-            operation = await asyncio.to_thread(
+            operation = await joined_thread(
                 operation_store_for(self.settings).prepare,
                 user.id,
                 f"remote-{data['nonce']}",

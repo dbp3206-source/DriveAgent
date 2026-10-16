@@ -85,6 +85,7 @@ from app.core.config import APPROVED_GEMINI_MODELS, GEMINI_HTTP_TIMEOUT_MS, Sett
 from app.core.source_pages import explicit_page_numbers
 from app.db.models import Message, User
 from app.db.session import SessionFactory
+from app.services.owner_admission import guarded_agent_run
 from app.services.quota import conservative_tokens, reserve_generation_quota
 from app.services.relational_circuit import circuit_store
 from app.services.relational_quota import quota_guard
@@ -652,6 +653,7 @@ class CompilerOrchestrator:
             await self.client.aio.aclose()
             self.client.close()
 
+    @guarded_agent_run
     async def run(
         self,
         *,

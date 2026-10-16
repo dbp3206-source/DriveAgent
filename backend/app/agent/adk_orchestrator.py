@@ -70,6 +70,7 @@ from app.core.source_pages import explicit_page_numbers
 from app.db.framework_sessions import framework_engine_options, protect_framework_engine
 from app.db.models import LocalSource, Message, User
 from app.db.session import SessionFactory
+from app.services.owner_admission import guarded_agent_run
 from app.services.relational_circuit import circuit_store
 from app.services.relational_skills import skill_store
 from app.tools.contracts import ToolContext, ToolDefinition, ToolError
@@ -234,6 +235,7 @@ class AdkOrchestrator:
             self.client.close()
         await self.compiler.close()
 
+    @guarded_agent_run
     async def run(
         self,
         *,

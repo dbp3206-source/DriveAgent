@@ -13,6 +13,7 @@ from sqlalchemy import and_, or_, select, update
 from app.db.models import LocalSource, PdfIngestionJob
 from app.services.local_sources import hash_content
 from app.services.object_storage import object_storage_for
+from app.services.owner_admission import work_owner_available
 from app.services.pdf_ingestion import PageExtraction
 
 
@@ -35,7 +36,8 @@ def public_job(job: PdfIngestionJob) -> dict:
 
 async def claim(factory, now: float) -> tuple[str, str] | None:
     async with factory() as db:
-        due = or_(PdfIngestionJob.status == "queued", and_(
+        due = work_owner_available(PdfIngestionJob.user_id) & or_(
+            PdfIngestionJob.status == "queued", and_(
             PdfIngestionJob.status == "running", PdfIngestionJob.lease_until < now))
         await db.execute(update(PdfIngestionJob).where(
             due, PdfIngestionJob.attempts >= 3).values(status="failed", error_code="retry_limit"))
@@ -109,10 +111,21 @@ async def _invoke(factory, job_id: str, token: str, path: Path, settings,
         await asyncio.gather(output, return_exceptions=True)
 
 
-async def execute_one(factory, settings, *, invoke=None) -> bool:
+async def execute_one(factory, settings, *, invoke=None, gate=None) -> bool:
     claimed = await claim(factory, time.time())
     if not claimed:
         return False
+    if gate is None:
+        return await _execute_claimed(factory, settings, claimed, invoke=invoke)
+    async with factory() as db:
+        owner = await db.scalar(select(PdfIngestionJob.user_id).where(
+            PdfIngestionJob.id == claimed[0],
+        ))
+    async with gate.shared(owner):
+        return await _execute_claimed(factory, settings, claimed, invoke=invoke)
+
+
+async def _execute_claimed(factory, settings, claimed, *, invoke=None) -> bool:
     job_id, token = claimed
     invoke = invoke or _invoke
     path: Path | None = None
@@ -192,10 +205,10 @@ async def execute_one(factory, settings, *, invoke=None) -> bool:
     return True
 
 
-async def worker(factory, settings):
+async def worker(factory, settings, *, gate=None):
     while True:
         try:
-            await execute_one(factory, settings)
+            await execute_one(factory, settings, gate=gate)
         except Exception:
             logging.getLogger(__name__).warning("PDF queue will retry after storage error")
         await asyncio.sleep(2)

@@ -31,6 +31,7 @@ from app.core.security import redact
 from app.core.source_evidence import page_evidence_excerpt
 from app.db.models import User
 from app.db.session import SessionFactory
+from app.services.owner_admission import guarded_agent_run
 from app.tools.contracts import ToolContext
 from app.tools.registry import ToolRegistry
 
@@ -215,6 +216,7 @@ class AgentOrchestrator:
         if self._checkpointer_context:
             await self._checkpointer_context.__aexit__(None, None, None)
 
+    @guarded_agent_run
     async def run(
         self,
         *,

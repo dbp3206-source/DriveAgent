@@ -1,6 +1,5 @@
 """Write endpoints require same-origin approval plus current RBAC and Google scopes."""
 
-import asyncio
 from typing import Annotated
 
 from fastapi import APIRouter, HTTPException, Path, Request
@@ -8,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Path, Request
 from app.api.dependencies import CurrentUser, DbSession, is_trusted_ui_origin
 from app.core.config import get_settings
 from app.core.json_utils import json_object
+from app.services.owner_admission import joined_thread
 from app.services.relational_operations import operation_store_for
 from app.tools.contracts import ToolContext
 from app.tools.documents import DocumentApproval, DocumentPrepare
@@ -48,7 +48,7 @@ async def prepared_preview(
     user: CurrentUser,
 ):
     """Recover only this owner's locked Doc metadata, without preparing/writing."""
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         operation_store_for(get_settings()).get_by_request_key, user.id, request_key,
     )
     if row is None or row["capability"] != "docs_create":
@@ -63,7 +63,7 @@ async def prepared_preview(
 
 @router.get("/operations/{operation_id}")
 async def operation(operation_id: str, user: CurrentUser):
-    row = await asyncio.to_thread(
+    row = await joined_thread(
         operation_store_for(get_settings()).get,
         user.id,
         operation_id,
