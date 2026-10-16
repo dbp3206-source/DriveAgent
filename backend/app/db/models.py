@@ -21,6 +21,7 @@ from sqlalchemy import (
     Text,
     event,
     inspect,
+    text,
 )
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
@@ -140,6 +141,37 @@ class LocalSource(Base):
     content: Mapped[str] = mapped_column(Text)
     content_hash: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+
+
+class CleanupJob(Base):
+    """An approved cleanup's metadata/checkpoints; never stores source content."""
+
+    __tablename__ = "cleanup_jobs"
+    __table_args__ = (
+        Index("ux_cleanup_owner_approval", "user_id", "approval_id", unique=True),
+        Index("ix_cleanup_claim", "status", "created_at"),
+        Index("ux_cleanup_owner_open", "user_id", unique=True,
+              sqlite_where=text("status IN ('queued','running','purging','needs_attention')"),
+              postgresql_where=text("status IN ('queued','running','purging','needs_attention')")),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_id)
+    user_id: Mapped[str] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    approval_id: Mapped[str] = mapped_column(String(36))
+    plan_hash: Mapped[str] = mapped_column(String(64))
+    plan_json: Mapped[str] = mapped_column(Text)
+    remaining_json: Mapped[str] = mapped_column(Text, default="[]")
+    completed_json: Mapped[str] = mapped_column(Text, default="[]")
+    status: Mapped[str] = mapped_column(String(24), default="queued")
+    attempts: Mapped[int] = mapped_column(Integer, default=0)
+    lease_token: Mapped[str | None] = mapped_column(String(36))
+    lease_until: Mapped[float | None] = mapped_column(Float)
+    critical_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    sql_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    error_code: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utc_now)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, onupdate=utc_now,
+    )
 
 
 class UserRole(StrEnum):

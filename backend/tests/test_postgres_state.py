@@ -300,7 +300,7 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 7
+            )).scalar_one() == 8
             assert db.execute(text(
                 "SELECT column_default FROM information_schema.columns "
                 "WHERE table_schema='veridra_private' AND table_name='users' "
@@ -859,3 +859,79 @@ async def test_adk_retention_reads_private_and_legacy_public_without_touching_co
         finally:
             await service.close()
     assert namespaces["public"].isdisjoint(namespaces["veridra_private"])
+
+
+@pytest.mark.asyncio
+async def test_postgres_cleanup_claims_are_owner_isolated_and_old_worker_is_fenced():
+    from sqlalchemy import select, text
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from test_cleanup_jobs import STAMP, lease_args, plan
+
+    from app.db.models import Base, CleanupJob, User
+    from app.services import cleanup_jobs as jobs
+    from app.services.relational_state import prepare_state_schema
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; cleanup queue not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Cleanup only permits the isolated veridra_ci database")
+    bootstrap = create_engine(url).execution_options(
+        schema_translate_map={None: "veridra_private"},
+    )
+    try:
+        prepare_state_schema(bootstrap)
+        Base.metadata.create_all(bootstrap)
+    finally:
+        bootstrap.dispose()
+    engine = create_async_engine(url, execution_options={
+        "schema_translate_map": {None: "veridra_private"},
+    })
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    try:
+        async with factory() as db:
+            owner, other = (User(email=f"{uuid4()}@example.invalid", display_name="Synthetic")
+                            for _ in range(2))
+            db.add_all([owner, other])
+            await db.commit()
+        scope = plan(owner.id)
+        same = await asyncio.gather(*(jobs.enqueue(factory, owner.id, scope, now=STAMP)
+                                      for _ in range(4)))
+        assert len(set(same)) == 1
+        second_id = await jobs.enqueue(factory, other.id, plan(other.id), now=STAMP)
+        with pytest.raises(jobs.CleanupStateError, match="already_open"):
+            await jobs.enqueue(factory, owner.id, plan(owner.id), now=STAMP)
+        claims = await asyncio.gather(*(jobs.claim(factory, now=STAMP) for _ in range(4)))
+        taken = [item for item in claims if item is not None]
+        assert len(taken) == 2 and {item["id"] for item in taken} == {same[0], second_id}
+        first = next(item for item in taken if item["owner"] == owner.id)
+        async with factory() as db:
+            await jobs.mark_sql_done(db, *lease_args(first), now=STAMP)
+            await jobs.record_purge(db, *lease_args(first), scope.external[0], now=STAMP)
+            await db.commit()
+        reclaimed = await asyncio.gather(*(jobs.claim(factory, now=STAMP + 121)
+                                          for _ in range(4)))
+        new = next(item for item in reclaimed if item and item["owner"] == owner.id)
+        assert new["phase"] == "purging" and new["attempt"] == 2
+        assert new["token"] != first["token"]
+        async with factory() as db:
+            with pytest.raises(jobs.CleanupLeaseLost):
+                await jobs.mark_sql_done(db, *lease_args(first), now=STAMP)
+            await db.rollback()
+            await jobs.record_purge(db, *lease_args(new), scope.external[1], now=STAMP + 121)
+            await jobs.finish(db, *lease_args(new), now=STAMP + 121)
+            await db.commit()
+            row = await db.scalar(select(CleanupJob).where(CleanupJob.id == same[0]))
+            assert row.status == "succeeded"
+            assert await db.scalar(text(
+                "SELECT has_schema_privilege('public', 'veridra_private', 'USAGE')"
+            )) is False
+            assert await db.scalar(text(
+                "SELECT count(*) FROM pg_indexes WHERE schemaname='veridra_private' "
+                "AND tablename='cleanup_jobs' AND indexname='ux_cleanup_owner_open' "
+                "AND indexdef LIKE '%UNIQUE%' AND indexdef LIKE '%WHERE%'"
+            )) == 1
+        assert await jobs.status(factory, other.id, same[0]) is None
+    finally:
+        await engine.dispose()

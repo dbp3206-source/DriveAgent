@@ -31,6 +31,24 @@ Kết quả CI và tại máy có phần chồng lặp, không cộng thành s�
 
 ## Giới hạn và bước kế tiếp đúng phạm vi
 
+### CI #145 đã hoàn tất
+
+[Lần kiểm 38771195658](https://github.com/dbp3206-source/DriveAgent/actions/runs/38771195658), mã **d46916d192797a569b1c56d23de3ffe483b02529**. Đã đọc trạng thái bước và nhật ký GitHub: PostgreSQL `116547140137` **17 đạt/0 bỏ qua**, 4,90 giây; verify `116547457252` máy chủ **1.688 đạt/18 bỏ qua**, 87,49 giây, độ phủ **88,23%**, giao diện **222 đạt/0 lỗi/0 bỏ qua**. Ngoại tuyến, toàn vẹn bộ chuẩn, quét bí mật, dựng/khởi động gói và PDF tiếng Việt thành công. Bước xuất ảnh/Render đều `skipped`. Các thông báo PostgreSQL trùng khóa trong sổ chống phát lại là kết quả các ca cạnh tranh cố ý, không phải lỗi thử bị bỏ qua; tổng kiểm PostgreSQL thành công. CI này không chứng minh hàng đợi hoặc sửa đổi sau mã d46916d đã đạt.
+
+### 16/10 — hàng đợi tiến độ và bảo vệ nội dung con mới
+
+- Thêm `CleanupJob` và nâng cấp cộng thêm SQLite 9/PostgreSQL 8. Sổ chứa bản duyệt cố định, ID/dấu nội dung, các mục đã xử lý/còn lại, quyền xử lý có hạn và trạng thái; không sao chép thân thư/tài liệu/ghi chú. Chỉ có mã nội bộ, chưa có đường API/công cụ mô hình/thao tác xóa thật.
+- Một bản duyệt nhận đúng một lần; chỉ một tác vụ đang mở cho mỗi tài khoản, kể cả hai yêu cầu cạnh tranh. Bản mới quá hạn/tương lai bị chặn; việc nhận lại phản hồi cho bản cũ trả đúng ID, không chạy lại. Mã lỗi dùng danh sách cố định, không ghi nội dung lỗi nhà cung cấp.
+- Mỗi lần ghi tiến độ kiểm lại mã quyền/lần xử lý còn hiệu lực bằng `UPDATE` có điều kiện. Đã tái hiện tình huống SQLite đọc trước rồi bị người xử lý mới nhận lại; người cũ không thể ghi mốc hoàn tất dù dùng thời gian cũ. Khóa đọc đơn thuần không đủ nên không dùng cập nhật chỉ theo ID.
+- Kiểm tiến độ bảo toàn đúng các tham chiếu đã duyệt; không thiếu, thêm, lặp hoặc vừa còn lại vừa hoàn tất. Hỏng dấu nội dung/quyền sở hữu/bản duyệt/JSON thì dừng riêng tác vụ, không chặn mãi tài khoản khác. Chỉ báo thành công sau mốc SQL và hết mục còn lại; đây là hợp đồng tiến độ, **không chứng minh đối tượng vật lý đã được xóa**. Bộ chạy sau này phải xác minh đối tượng không còn trước khi ghi nhận.
+- Mốc SQL đã kiểm commit/rollback cùng thao tác xóa ghi chú **giả lập trong DB tạm**; không liên quan ghi chú của người dùng thật. Mở lại kết nối DB giữ tiến độ, chỉ tiếp tục mục còn lại; hết ba lần thử chuyển sang cần xử lý, thử lại giữ phạm vi và tiến độ. Hủy chỉ được trước tác động không thể hoàn lại; người khác không đọc/thử lại/hủy được.
+- Rà FK thật phát hiện nhận xét/bản nháp có thể mới hơn câu trả lời cha, yêu cầu hàng đợi mới hơn hội thoại. Kiểm kê nay lấy tuổi nội dung liên quan để bảo vệ cha, đồng thời lọc chủ sở hữu ở cả hai phía liên kết. Không sửa câu trả lời AI hoặc gọi lại Gemini để kiểm điểm này.
+- Kiểm hàng đợi/di trú/ORM ban đầu: **36 đạt**, 19,77 giây. Sau bổ sung bảo vệ con, phiên tự hết hiệu lực và kiểm lại đầy đủ các phần lưu giữ: **89 đạt/0 lỗi/0 bỏ qua**, 35,55 giây. Các nhóm chồng lặp, không cộng số hoặc coi là điểm sản phẩm. Ruff toàn backend và diff check đạt. Đã thêm một ca PostgreSQL cạnh tranh/nhận lại/cách ly/chỉ mục riêng, **chưa tính đạt trước CI mới**.
+- XML gộp giữ riêng tại `tmp/retention-cleanup-batch-02a54d89a80f4ec999ad731a5a6972ce/results.xml`, không đưa DB/XML thô lên GitHub. Quét bí mật **732 tệp Git-visible** đạt; không coi phép quét là chứng nhận dữ liệu đã ẩn danh.
+- Không dùng Gemini, tạo chỉ mục hoặc ghi Google; không chạy DDL/DML trên Supabase thật, không đổi gói/bí mật/Render/main. Nhánh vẫn `work/data-retention-20261015`, không khớp điều kiện tự xuất ảnh/triển khai.
+
+Giới hạn hiện hành: chưa có bộ thực thi xuyên kho, điều phối chặn ghi đồng thời, xác minh tệp vật lý, API và hộp thoại xác nhận. Không lấy hàng đợi hoặc kiểm DB tạm thay bằng chứng xóa trên sản phẩm; không xóa tự động chỉ vì đã đủ 30 ngày.
+
 ### CI #144 đã hoàn tất
 
 [Lần kiểm 38767074632](https://github.com/dbp3206-source/DriveAgent/actions/runs/38767074632), mã **7ab69ba07f9fcd101a97305e41387910a694be69**. `postgres-state` (job116532963639): **16 đạt**, 4,91 giây. `verify` (job116533368844): máy chủ **1.682 đạt/17 bỏ qua**, 94,33 giây, độ phủ **88,24%**; giao diện **222 đạt/0 lỗi/0 bỏ qua**. Kiểm ngoại tuyến/toàn vẹn bộ chuẩn, dựng/khởi động gói và PDF tiếng Việt thành công. Xuất ảnh GHCR và triển khai Render đều `skipped`. Bằng chứng mới này đóng kiểm phần nối ngày mẫu/kiểm kê tại mã 7ab69ba, không chứng minh các thay đổi sau đó đã qua CI hoặc đã có bộ xóa.

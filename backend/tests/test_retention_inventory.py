@@ -98,6 +98,54 @@ async def test_new_message_in_old_chat_protects_parent_but_keeps_old_turn_visibl
     assert len(rows) == 3
 
 
+@pytest.mark.parametrize("kind", ["feedback", "proposal", "task"])
+async def test_fresh_dependent_content_protects_older_chat_and_message(db, kind):
+    user = await owner(db)
+    chat = m.ChatSession(user_id=user.id, title="Synthetic", created_at=OLD, updated_at=OLD)
+    db.add(chat)
+    await db.flush()
+    message = m.Message(user_id=user.id, session_id=chat.id, role="assistant",
+                        content="Synthetic old answer", created_at=OLD)
+    db.add(message)
+    await db.flush()
+    related = {
+        "feedback": m.ResponseFeedback(user_id=user.id, message_id=message.id, rating=1,
+                                       comment="Synthetic fresh review",
+                                       created_at=NOW, updated_at=NOW),
+        "proposal": m.CreationProposalRecord(user_id=user.id, message_id=message.id,
+                                              ordinal=0, spec_json="{}", created_at=NOW),
+        "task": m.ChatTask(user_id=user.id, session_id=chat.id, client_key=str(uuid4()),
+                           payload_json="{}", status="completed", created_at=NOW),
+    }[kind]
+    db.add(related)
+    await db.commit()
+    result = await application_inventory(db, user.id)
+    rows = {item.record_id: item for item in result.candidates}
+    assert rows[f"chat_sessions:{chat.id}"].changed_at == NOW
+    assert rows[f"messages:{message.id}"].changed_at == (OLD if kind == "task" else NOW)
+    policy = RetentionPolicy("synthetic-parent-protection-key-not-used-on-cloud")
+    preview = policy.prepare(owner_id=user.id, candidates=list(result.candidates),
+                             inventories=dict.fromkeys(result.policy_checks(), True), now=NOW)
+    assert preview.selected_count == (1 if kind == "task" else 0)
+
+
+async def test_foreign_child_reference_does_not_refresh_another_owners_content(db):
+    user, other = await owner(db), await owner(db, "b")
+    chat = m.ChatSession(user_id=user.id, title="Synthetic", created_at=OLD, updated_at=OLD)
+    db.add(chat)
+    await db.flush()
+    message = m.Message(user_id=user.id, session_id=chat.id, role="assistant",
+                        content="Synthetic old answer", created_at=OLD)
+    db.add(message)
+    await db.flush()
+    db.add(m.ResponseFeedback(user_id=other.id, message_id=message.id, rating=1,
+                              created_at=NOW, updated_at=NOW))
+    await db.commit()
+    result = await application_inventory(db, user.id)
+    assert len(result.candidates) == 2
+    assert all(row.changed_at == OLD for row in result.candidates)
+
+
 @pytest.mark.parametrize("model,values", [
     (m.ChatTask, {"client_key": "synthetic", "payload_json": "{}", "status": "queued"}),
     (m.ScheduledJob, {"kind": "synthetic", "dedupe_key": "synthetic", "status": "running"}),

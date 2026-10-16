@@ -23,6 +23,7 @@ from app.services.retention_policy import (
 # Every ORM table is deliberately classified; new tables must not disappear
 # silently from retention. Identity/keys are not aged work content.
 IDENTITY_TABLES = frozenset({"users", "provider_credentials"})
+MAINTENANCE_TABLES = frozenset({"cleanup_jobs"})  # Opaque IDs/digests, not copied documents.
 POLICIES = (
     (m.ChatSession, RetentionKind.CHAT, "updated_at"),
     (m.Message, RetentionKind.CHAT, "created_at"),
@@ -57,7 +58,8 @@ class ApplicationInventory:
 
 def validate_application_catalog() -> None:
     covered = {model.__tablename__ for model, _kind, _clock in POLICIES}
-    if covered & IDENTITY_TABLES or covered | IDENTITY_TABLES != set(m.Base.metadata.tables):
+    excluded = IDENTITY_TABLES | MAINTENANCE_TABLES
+    if covered & excluded or covered | excluded != set(m.Base.metadata.tables):
         raise RetentionPolicyError("retention_application_catalog_incomplete")
 
 
@@ -76,6 +78,32 @@ async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationI
         func.count(m.Message.id),
     ).where(m.Message.user_id == owner_id).group_by(m.Message.session_id))).all()
     children = {row[0]: (row[1], bool(row[2]), row[3]) for row in child_rows}
+    message_links = {}
+    # Feedback/proposals have CASCADE foreign keys to messages. A fresh child
+    # must protect the old message AND its chat, not disappear with that parent.
+    # Scope both sides of each join; foreign-owned references cannot extend age.
+    for related, clock in ((m.ResponseFeedback, m.ResponseFeedback.updated_at),
+                           (m.CreationProposalRecord, m.CreationProposalRecord.created_at)):
+        linked = (await db.execute(select(
+            m.Message.id, m.Message.session_id, func.max(clock), func.count(related.id),
+        ).join(related, related.message_id == m.Message.id).where(
+            m.Message.user_id == owner_id, related.user_id == owner_id,
+        ).group_by(m.Message.id, m.Message.session_id))).all()
+        for message_id, session_id, newest, count in linked:
+            if not isinstance(newest, datetime):
+                raise RetentionPolicyError("retention_content_age_unknown")
+            message_links.setdefault(message_id, {})[related.__tablename__] = {
+                "newest": newest, "count": count,
+            }
+            current, active, total = children.get(session_id, (None, False, 0))
+            children[session_id] = (max(utc(current), utc(newest)) if current else newest,
+                                    active, total)
+    # A newly queued/completed task can hold a request even before a Message is
+    # published. Its session must not be deleted by an older creation date.
+    task_links = (await db.execute(select(
+        m.ChatTask.session_id, func.max(m.ChatTask.created_at), func.count(m.ChatTask.id),
+    ).where(m.ChatTask.user_id == owner_id).group_by(m.ChatTask.session_id))).all()
+    tasks = {row[0]: {"newest": row[1], "count": row[2]} for row in task_links}
     # Re-extraction may replace an existing LocalSource without changing its
     # created_at. The worker publishes content and job.updated_at in one SQL
     # transaction; the linked job therefore protects newly published text.
@@ -106,6 +134,9 @@ async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationI
                 if newest is not None:
                     stamp = max(stamp, utc(newest))
                 values["child_summary"] = {"newest": newest, "active": active, "count": count}
+                if row.id in tasks:
+                    stamp = max(stamp, utc(tasks[row.id]["newest"]))
+                    values["task_summary"] = tasks[row.id]
             elif model is m.LocalSource:
                 published_at = publications.get(row.id)
                 if published_at is not None:
@@ -113,6 +144,10 @@ async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationI
                     values["last_publication"] = published_at
             elif model is m.Message:
                 active = row.status not in TERMINAL_MESSAGES
+                linked = message_links.get(row.id)
+                if linked:
+                    stamp = max(stamp, *(utc(item["newest"]) for item in linked.values()))
+                    values["linked_content"] = linked
             elif model in {m.ChatTask, m.ScheduledJob, m.PdfIngestionJob}:
                 terminal = (TERMINAL_JOBS | {"needs_attention"} if model is m.PdfIngestionJob
                             else TERMINAL_JOBS)

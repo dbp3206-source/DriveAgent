@@ -108,6 +108,12 @@ def _chat_tasks(connection: Connection) -> None:
     ChatTask.__table__.create(connection, checkfirst=True)
 
 
+def _cleanup_jobs(connection: Connection) -> None:
+    from app.db.models import CleanupJob
+
+    CleanupJob.__table__.create(connection, checkfirst=True)
+
+
 def _auth_version(connection: Connection) -> None:
     if connection.dialect.name == "sqlite":
         if "auth_version" not in _columns(connection, "users"):
@@ -164,6 +170,7 @@ MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (6, _chat_tasks),
     (7, _auth_version),
     (8, _content_clocks),
+    (9, _cleanup_jobs),
 )
 
 
@@ -204,7 +211,7 @@ def apply_postgres_migrations(connection: Connection) -> None:
     migrations: tuple[tuple[int, Migration], ...] = (
         (1, lambda _connection: None), (2, _scheduled_jobs), (3, _chat_tasks),
         (4, migrate_pgvector), (5, protect_legacy_framework_tables),
-        (6, _auth_version), (7, _content_clocks),
+        (6, _auth_version), (7, _content_clocks), (8, _cleanup_jobs),
     )
     for version, migration in migrations:
         if version in applied:
