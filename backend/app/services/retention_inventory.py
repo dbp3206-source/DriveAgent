@@ -149,8 +149,11 @@ async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationI
                     stamp = max(stamp, *(utc(item["newest"]) for item in linked.values()))
                     values["linked_content"] = linked
             elif model in {m.ChatTask, m.ScheduledJob, m.PdfIngestionJob}:
-                terminal = (TERMINAL_JOBS | {"needs_attention"} if model is m.PdfIngestionJob
-                            else TERMINAL_JOBS)
+                terminal = TERMINAL_JOBS
+                if model is m.PdfIngestionJob:
+                    terminal |= {"needs_attention"}
+                elif model is m.ChatTask:
+                    terminal |= {"cancelled"}
                 active = row.status not in terminal
             elif model is m.AuditEvent and row.completed_at is not None:
                 stamp = max(stamp, utc(row.completed_at))

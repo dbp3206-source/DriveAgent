@@ -146,6 +146,20 @@ async def test_foreign_child_reference_does_not_refresh_another_owners_content(d
     assert all(row.changed_at == OLD for row in result.candidates)
 
 
+@pytest.mark.parametrize("status,busy", [("cancelled", False), ("unrecognized", True)])
+async def test_cancelled_chat_task_is_terminal_but_unknown_status_still_blocks(db, status, busy):
+    user = await owner(db)
+    chat = m.ChatSession(user_id=user.id, title="Synthetic", created_at=OLD, updated_at=OLD)
+    db.add(chat)
+    await db.flush()
+    db.add(m.ChatTask(user_id=user.id, session_id=chat.id, client_key=str(uuid4()),
+                     payload_json="{}", status=status, created_at=OLD))
+    await db.commit()
+    result = await application_inventory(db, user.id)
+    task = next(item for item in result.candidates if item.record_id.startswith("chat_tasks:"))
+    assert result.owner_busy is busy and task.active is busy
+
+
 @pytest.mark.parametrize("model,values", [
     (m.ChatTask, {"client_key": "synthetic", "payload_json": "{}", "status": "queued"}),
     (m.ScheduledJob, {"kind": "synthetic", "dedupe_key": "synthetic", "status": "running"}),

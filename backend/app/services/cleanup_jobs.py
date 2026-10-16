@@ -98,8 +98,11 @@ def _progress(row):
             raise ValueError
         if plan.snapshot.owner_id != row.user_id or plan.snapshot.approval_id != row.approval_id:
             raise ValueError
-        pending = [PurgeReference.model_validate(item) for item in json.loads(row.remaining_json)]
-        done = [PurgeReference.model_validate(item) for item in json.loads(row.completed_json)]
+        pending_data, done_data = json.loads(row.remaining_json), json.loads(row.completed_json)
+        if type(pending_data) is not list or type(done_data) is not list:
+            raise ValueError
+        pending = [PurgeReference.model_validate(item) for item in pending_data]
+        done = [PurgeReference.model_validate(item) for item in done_data]
         def key(item):
             return item.kind, item.owner_id, item.object_id
 

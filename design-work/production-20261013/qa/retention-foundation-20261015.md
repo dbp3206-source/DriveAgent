@@ -35,6 +35,12 @@ Kết quả CI và tại máy có phần chồng lặp, không cộng thành s�
 
 [Lần kiểm 38771195658](https://github.com/dbp3206-source/DriveAgent/actions/runs/38771195658), mã **d46916d192797a569b1c56d23de3ffe483b02529**. Đã đọc trạng thái bước và nhật ký GitHub: PostgreSQL `116547140137` **17 đạt/0 bỏ qua**, 4,90 giây; verify `116547457252` máy chủ **1.688 đạt/18 bỏ qua**, 87,49 giây, độ phủ **88,23%**, giao diện **222 đạt/0 lỗi/0 bỏ qua**. Ngoại tuyến, toàn vẹn bộ chuẩn, quét bí mật, dựng/khởi động gói và PDF tiếng Việt thành công. Bước xuất ảnh/Render đều `skipped`. Các thông báo PostgreSQL trùng khóa trong sổ chống phát lại là kết quả các ca cạnh tranh cố ý, không phải lỗi thử bị bỏ qua; tổng kiểm PostgreSQL thành công. CI này không chứng minh hàng đợi hoặc sửa đổi sau mã d46916d đã đạt.
 
+### CI #146 đã hoàn tất
+
+[Lần kiểm 38840537752](https://github.com/dbp3206-source/DriveAgent/actions/runs/38840537752), mã **b58cccdf015f39dec8076e74e70c73629e7a4040**. PostgreSQL `116779355144` **18 đạt/0 bỏ qua**, 3,72 giây, gồm ca hàng đợi cạnh tranh/nhận lại/cách ly và chỉ mục một việc mở mỗi người. Verify `116779551846`: **1.719 đạt/19 bỏ qua**, 172,80 giây, độ phủ **88,35%**; giao diện **222 đạt/0 lỗi/0 bỏ qua**. Ngoại tuyến/toàn vẹn bộ chuẩn/quét bí mật/dựng/khởi động gói/PDF đạt. Xuất ảnh GHCR và Render `skipped`. Không triển khai hoặc áp dụng lược đồ lên dữ liệu thật.
+
+Rà soát cuối phát hiện API chat thật dùng trạng thái `cancelled`, trong khi kiểm kê ban đầu chỉ công nhận completed/failed: một yêu cầu đã hủy sẽ chặn dọn mãi. Đã đối chiếu nguồn, bổ sung riêng trạng thái kết thúc này cho chat; trạng thái không nhận diện vẫn chặn, không nới mọi loại tác vụ. Đồng thời yêu cầu JSON tiến độ thực sự là danh sách, không nhận đối tượng rỗng thay danh sách. Kiểm liên quan cuối **43 đạt/0 lỗi/0 bỏ qua**, 30,63 giây; XML `tmp/retention-final-contract-f3f850577dd84a348929c86246a126f8/results.xml`. Hai bổ sung sau b58cccd chưa được tính qua CI #146; cần CI đúng mã.
+
 ### 16/10 — hàng đợi tiến độ và bảo vệ nội dung con mới
 
 - Thêm `CleanupJob` và nâng cấp cộng thêm SQLite 9/PostgreSQL 8. Sổ chứa bản duyệt cố định, ID/dấu nội dung, các mục đã xử lý/còn lại, quyền xử lý có hạn và trạng thái; không sao chép thân thư/tài liệu/ghi chú. Chỉ có mã nội bộ, chưa có đường API/công cụ mô hình/thao tác xóa thật.

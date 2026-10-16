@@ -313,7 +313,7 @@ async def test_cancel_only_before_effects_and_fail_accepts_only_safe_codes(queue
 
 
 @pytest.mark.parametrize("damage", ["missing", "extra", "overlap", "duplicate", "hash",
-                                    "owner", "approval", "json"])
+                                    "owner", "approval", "json", "object_instead_of_list"])
 async def test_corrupt_progress_never_claims_success_and_does_not_starve_other_owner(queue, damage):
     factory, owner, other, _engine = queue
     scope = plan(owner)
@@ -332,6 +332,7 @@ async def test_corrupt_progress_never_claims_success_and_does_not_starve_other_o
             "owner": {"user_id": other},
             "approval": {"approval_id": "a" * 36},
             "json": {"remaining_json": "not-json"},
+            "object_instead_of_list": {"remaining_json": "{}"},
         }[damage]
         # Owner corruption would hit the one-open-per-owner unique index if the
         # other job were already queued; use a third synthetic identity instead.

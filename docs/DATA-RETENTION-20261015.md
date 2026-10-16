@@ -1,5 +1,7 @@
 # Lưu 30 ngày và xóa sau xác nhận — đối chiếu triển khai
 
+**CI #146:** phần hàng đợi mã b58cccd đã qua [kiểm đầy đủ](https://github.com/dbp3206-source/DriveAgent/actions/runs/38840537752), gồm PostgreSQL thật 18 đạt, máy chủ 1.719 đạt/19 bỏ qua và giao diện 222 đạt; không xuất ảnh GHCR/triển khai Render. Có bổ sung nhỏ sau đó về yêu cầu đã hủy và hình dạng danh sách tiến độ, chưa dùng CI cũ chứng minh mã bổ sung. Giới hạn chưa có bộ thực thi/API/hộp thoại trên URL giữ nguyên.
+
 **Cập nhật 16/10:** CI #145 của mã d46916d đã thành công, gồm 17 ca PostgreSQL; đã xác nhận riêng phần kiểm kê ADK và tuổi nguồn cập nhật lại. Đợt tiếp theo có sổ tiến độ dọn dữ liệu bền vững, chỉ chứa ID/dấu nội dung, chưa chứa bộ thực thi xóa hoặc API. Một bản duyệt chỉ tạo một việc; tác vụ cũ hết quyền không được ghi tiếp; các mục đã xử lý/còn lại không bị mất khi mở lại DB. Có nâng cấp cộng thêm SQLite 9/PostgreSQL 8 trong mã, **chưa áp dụng lên dữ liệu thật**. Phần mới kiểm gộp tại máy 89 đạt, còn chờ CI đúng mã. Nhận xét/bản nháp/yêu cầu mới bảo vệ hội thoại và câu trả lời cha, tránh xóa kéo theo nội dung mới. **Vẫn chưa bật dọn tự động/hộp thoại trên URL**, chưa tính gói 14 đạt.
 
 Ngày 15/10/2026. Thuộc gói 14 hiện hành, không thêm gói hoặc điểm nghiệm thu. **Chưa triển khai, chưa có trên URL, không phải biên nhận đã xóa.** Mục đích: khóa đúng phạm vi trước khi viết cơ chế có thể xóa dữ liệu. Bản đang chạy là 13938d1; các chỉnh sửa tài liệu/kiểm về sau không tự đổi bản chạy.
