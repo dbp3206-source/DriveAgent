@@ -1,4 +1,4 @@
-"""Read-only ADK inventory from a known configured DB and explicit namespace.
+"""ADK inventory/old-row purge from a configured DB and explicit namespace.
 
 The caller must not open/create a missing SQLite DB to prove an empty store.
 LangGraph/checkpoint files are separate and are not covered by this adapter.
@@ -7,12 +7,14 @@ LangGraph/checkpoint files are separate and are not covered by this adapter.
 import hashlib
 import json
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
+from math import isfinite
 
-from sqlalchemy import MetaData, Table, inspect, select
+from sqlalchemy import JSON, MetaData, Table, delete, inspect, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.services.retention_policy import (
+    CONTENT_RETENTION_DAYS,
     RetentionCandidate,
     RetentionKind,
     RetentionPolicyError,
@@ -87,8 +89,24 @@ def _value(value):
     return value
 
 
+def _candidate(owner_id, table, row, scope):
+    identity = [_value(row[column.key]) for column in table.primary_key.columns]
+    identity_hash = hashlib.sha256(json.dumps(
+        identity, sort_keys=True, separators=(",", ":"), default=str,
+    ).encode()).hexdigest()
+    record_id = f"adk:{scope}:{table.name}:{identity_hash}"
+    stamp = _stamp(row["timestamp" if table.name == "events" else "update_time"])
+    return RetentionCandidate(
+        owner_id=owner_id, kind=RetentionKind.FRAMEWORK, record_id=record_id,
+        changed_at=stamp, fingerprint=content_fingerprint(
+            owner_id=owner_id, kind=RetentionKind.FRAMEWORK, record_id=record_id,
+            changed_at=stamp, values={key: _value(value) for key, value in row.items()},
+        ),
+    )
+
+
 async def adk_inventory(db: AsyncSession, owner_id: str,
-                        *, namespace: str | None) -> AdkInventory:
+                        *, namespace: str | None, lock=False) -> AdkInventory:
     if not isinstance(owner_id, str) or not owner_id or len(owner_id) > 200:
         raise RetentionPolicyError("invalid_retention_owner")
     tables = await db.run_sync(_tables, namespace)
@@ -104,23 +122,88 @@ async def adk_inventory(db: AsyncSession, owner_id: str,
     scope = namespace or "local"
     for name in ("sessions", "events", "user_states"):
         table = tables[name]
-        rows = await db.stream(select(table).where(
+        query = select(table).where(
             table.c.user_id == owner_id,
-        ).execution_options(yield_per=64))
+        )
+        if lock and db.bind.dialect.name == "postgresql":
+            query = query.with_for_update()
+        rows = await db.stream(query.execution_options(yield_per=64))
         async for row in rows.mappings():
             if row["app_name"] not in SUPPORTED_APPS:
                 raise RetentionPolicyError("retention_unsupported_framework_app")
-            identity = [_value(row[column.key]) for column in table.primary_key.columns]
-            identity_hash = hashlib.sha256(json.dumps(
-                identity, sort_keys=True, separators=(",", ":"), default=str,
-            ).encode()).hexdigest()
-            record_id = f"adk:{scope}:{name}:{identity_hash}"
-            stamp = _stamp(row["timestamp" if name == "events" else "update_time"])
-            candidates.append(RetentionCandidate(
-                owner_id=owner_id, kind=RetentionKind.FRAMEWORK, record_id=record_id,
-                changed_at=stamp, fingerprint=content_fingerprint(
-                    owner_id=owner_id, kind=RetentionKind.FRAMEWORK, record_id=record_id,
-                    changed_at=stamp, values={key: _value(value) for key, value in row.items()},
-                ),
-            ))
+            if name == "user_states" and _empty_shared_state(row["state"]):
+                continue  # An empty SDK placeholder is not aged work content.
+            candidates.append(_candidate(owner_id, table, row, scope))
     return AdkInventory(scope, tuple(candidates))
+
+
+async def purge_adk(db, owner_id, approved, *, namespace, now):
+    """Exact old rows only; no commit, SDK replay, shared-state deletion or consent.
+
+    Cache resets for newly dated derived context are a distinct coordinator duty;
+    deleting these aged rows is NOT proof that all conversation memory is gone.
+    """
+    if type(now) not in {int, float} or not isfinite(now) or now < 0:
+        raise RetentionPolicyError("invalid_retention_time")
+    approved = tuple(approved)
+    cutoff = datetime.fromtimestamp(now, UTC) - timedelta(days=CONTENT_RETENTION_DAYS)
+    keys = {(item.kind.value, item.record_id) for item in approved}
+    if len(keys) != len(approved) or any(utc(item.changed_at) > cutoff for item in approved):
+        raise RetentionPolicyError("retention_preview_changed")
+    tables = await db.run_sync(_tables, namespace)
+    if db.bind.dialect.name == "sqlite":
+        table = tables["user_states"]
+        await db.execute(update(table).where(table.c.user_id == owner_id).values(
+            state=table.c.state,
+        ))
+    inventory = await adk_inventory(db, owner_id, namespace=namespace, lock=True)
+    current = {item.key: item for item in inventory.candidates}
+    for item in approved:
+        row = current.get((item.kind.value, item.record_id))
+        if (row is None or row.fingerprint != item.fingerprint
+                or utc(row.changed_at) != utc(item.changed_at)):
+            raise RetentionPolicyError("retention_preview_changed")
+    scope = namespace or "local"
+    selected = {name: [] for name in ("events", "sessions", "user_states")}
+    # Reconstruct identities from the still-locked live rows, not an opaque ID
+    # supplied by a browser. No private framework state leaves this method.
+    events = []
+    for name in selected:
+        table = tables[name]
+        rows = await db.stream(select(table).where(table.c.user_id == owner_id))
+        async for row in rows.mappings():
+            key = _candidate(owner_id, table, row, scope).key
+            if name == "events":
+                events.append((row["app_name"], row["session_id"], key))
+            if key in keys:
+                selected[name].append({column.key: row[column.key]
+                                       for column in table.primary_key.columns})
+    parents = {(row["app_name"], row["id"]) for row in selected["sessions"]}
+    if any((app, session) in parents and key not in keys for app, session, key in events):
+        raise RetentionPolicyError("retention_dependency_not_selected")
+    count = 0
+    for name in ("events", "sessions", "user_states"):
+        table = tables[name]
+        for identity in selected[name]:
+            predicates = (
+                table.c.user_id == owner_id,
+                *(table.c[field] == value for field, value in identity.items()),
+            )
+            if name == "user_states" and await db.scalar(select(tables["sessions"].c.id).where(
+                tables["sessions"].c.user_id == owner_id,
+                tables["sessions"].c.app_name == identity["app_name"],
+            ).limit(1)) is not None:
+                # The SDK requires a user-state row even for remaining fresh
+                # sessions. Erase the approved old contents, not that invariant.
+                empty = {} if isinstance(table.c.state.type, JSON) else "{}"
+                result = await db.execute(update(table).where(*predicates).values(
+                    state=empty, update_time=datetime.fromtimestamp(now, UTC).replace(tzinfo=None),
+                ))
+            else:
+                result = await db.execute(delete(table).where(*predicates))
+            if result.rowcount != 1:
+                raise RetentionPolicyError("retention_preview_changed")
+            count += 1
+    if count != len(approved):
+        raise RetentionPolicyError("retention_preview_changed")
+    return count

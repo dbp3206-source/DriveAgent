@@ -61,7 +61,8 @@ async def test_local_pdf_storage_is_owner_scoped_and_keeps_legacy_read_compatibi
     assert not legacy.exists()
 
 
-@pytest.mark.parametrize("operation", ["get", "put", "delete", "processing_path"])
+@pytest.mark.parametrize("operation", ["get", "put", "delete", "exists", "delete_verified",
+                                       "processing_path"])
 async def test_local_storage_rejects_owner_directory_alias(tmp_path, operation):
     storage = LocalPdfObjectStorage(tmp_path / "objects")
     await storage.initialize()
@@ -88,7 +89,8 @@ async def test_local_storage_rejects_owner_directory_alias(tmp_path, operation):
     assert await storage.get("owner-b", "job-one") == b"private owner-b canary"
 
 
-@pytest.mark.parametrize("operation", ["get", "delete", "processing_path"])
+@pytest.mark.parametrize("operation", ["get", "delete", "exists", "delete_verified",
+                                       "processing_path"])
 async def test_local_storage_rejects_legacy_file_alias_without_touching_canary(tmp_path, operation):
     storage = LocalPdfObjectStorage(tmp_path / "objects")
     await storage.initialize()
@@ -101,13 +103,13 @@ async def test_local_storage_rejects_legacy_file_alias_without_touching_canary(t
         pytest.skip("File symlinks unavailable on this host")
     # Delete validates both paths before removing even the owned object.
     await storage.put("owner-a", "job-old", b"owned canary")
-    if operation != "delete":
+    if operation not in {"delete", "delete_verified"}:
         (storage.root / "owner-a" / "job-old.pdf").unlink()
     with pytest.raises(ObjectStorageError, match="invalid_object_identity"):
         await getattr(storage, operation)("owner-a", "job-old")
     assert outside.read_bytes() == b"private outside canary"
     assert alias.is_symlink()
-    if operation == "delete":
+    if operation in {"delete", "delete_verified"}:
         assert await storage.get("owner-a", "job-old") == b"owned canary"
 
 
@@ -153,6 +155,107 @@ async def test_supabase_storage_uses_private_authenticated_routes_and_backend_se
         assert request.headers["apikey"] == "backend-secret"
     assert upload.calls.last.request.headers["x-upsert"] == "false"
     assert "/public/" not in str(download.calls.last.request.url)
+
+
+async def test_local_verified_delete_reads_back_current_and_legacy_without_touching_other_owner(
+    tmp_path,
+):
+    storage = LocalPdfObjectStorage(tmp_path / "objects")
+    await storage.initialize()
+    await storage.put("owner-a", "synthetic-one", b"%PDF synthetic owner A")
+    await storage.put("owner-b", "synthetic-one", b"%PDF synthetic owner B")
+    legacy = storage.root / "synthetic-one.pdf"
+    legacy.write_bytes(b"%PDF synthetic legacy")
+    assert await storage.exists("owner-a", "synthetic-one")
+    await storage.delete_verified("owner-a", "synthetic-one")
+    assert not await storage.exists("owner-a", "synthetic-one")
+    assert not legacy.exists()
+    assert await storage.exists("owner-b", "synthetic-one")
+    assert await storage.get("owner-b", "synthetic-one") == b"%PDF synthetic owner B"
+    await storage.delete_verified("owner-a", "synthetic-one")  # Safe continuation after lost reply.
+
+
+@pytest.mark.parametrize("status,code,expected", [
+    (200, None, True), (206, None, True), (404, "NoSuchKey", False),
+    (404, "NoSuchBucket", None), (404, "InvalidJWT", None), (403, "AccessDenied", None),
+    (500, "InternalError", None), (302, None, None), (404, "not_found", None),
+])
+@respx.mock
+async def test_supabase_existence_is_bounded_private_and_does_not_accept_arbitrary_404(
+    status, code, expected,
+):
+    storage = SupabasePdfObjectStorage(Settings(
+        _env_file=None, storage_backend="supabase", supabase_url="https://project-ref.supabase.co",
+        supabase_service_role_key="synthetic-test-secret",
+    ))
+    respx.get("https://project-ref.supabase.co/storage/v1/bucket/veridra-private").mock(
+        return_value=httpx.Response(200, json={"public": False}),
+    )
+    route = respx.get("https://project-ref.supabase.co/storage/v1/object/authenticated/"
+                      "veridra-private/owner-a/synthetic-one.pdf").mock(return_value=(
+        httpx.Response(status, content=b"PRIVATE_PDF_MUST_NOT_BE_LOGGED") if code is None else
+        httpx.Response(status, json={"code": code, "message": "PRIVATE_ERROR_MUST_NOT_BE_LOGGED"})
+    ))
+    if expected is None:
+        with pytest.raises(ObjectStorageError, match="^object_probe_failed$"):
+            await storage.exists("owner-a", "synthetic-one")
+    else:
+        assert await storage.exists("owner-a", "synthetic-one") is expected
+    assert route.call_count == 1
+    assert route.calls.last.request.headers["range"] == "bytes=0-0"
+    assert route.calls.last.request.headers["cache-control"] == "no-cache"
+    assert route.calls.last.request.headers["authorization"] == "Bearer synthetic-test-secret"
+
+
+@respx.mock
+async def test_delete_success_is_not_claimed_if_object_still_exists():
+    storage = SupabasePdfObjectStorage(Settings(
+        _env_file=None, storage_backend="supabase", supabase_url="https://project-ref.supabase.co",
+        supabase_service_role_key="synthetic-test-secret",
+    ))
+    respx.delete("https://project-ref.supabase.co/storage/v1/object/"
+                 "veridra-private/owner-a/synthetic-one.pdf").mock(return_value=httpx.Response(204))
+    respx.get("https://project-ref.supabase.co/storage/v1/bucket/veridra-private").mock(
+        return_value=httpx.Response(200, json={"public": False}),
+    )
+    respx.get("https://project-ref.supabase.co/storage/v1/object/authenticated/"
+              "veridra-private/owner-a/synthetic-one.pdf").mock(return_value=httpx.Response(206))
+    with pytest.raises(ObjectStorageError, match="^object_delete_unverified$"):
+        await storage.delete_verified("owner-a", "synthetic-one")
+
+
+@pytest.mark.parametrize("http_status", [400, 404])
+@respx.mock
+async def test_supabase_legacy_missing_object_requires_explicit_code_and_resource_status(
+    http_status,
+):
+    storage = SupabasePdfObjectStorage(Settings(
+        _env_file=None, storage_backend="supabase", supabase_url="https://project-ref.supabase.co",
+        supabase_service_role_key="synthetic-test-secret",
+    ))
+    respx.get("https://project-ref.supabase.co/storage/v1/bucket/veridra-private").mock(
+        return_value=httpx.Response(200, json={"public": False}),
+    )
+    respx.get("https://project-ref.supabase.co/storage/v1/object/authenticated/"
+              "veridra-private/owner-a/synthetic-one.pdf").mock(return_value=httpx.Response(
+        http_status, json={"statusCode": "404", "error": "not_found"},
+    ))
+    assert not await storage.exists("owner-a", "synthetic-one")
+
+
+@pytest.mark.parametrize("bucket_status,public", [(404, False), (200, True), (401, False)])
+@respx.mock
+async def test_unavailable_or_public_bucket_cannot_prove_an_object_absent(bucket_status, public):
+    storage = SupabasePdfObjectStorage(Settings(
+        _env_file=None, storage_backend="supabase", supabase_url="https://project-ref.supabase.co",
+        supabase_service_role_key="synthetic-test-secret",
+    ))
+    respx.get("https://project-ref.supabase.co/storage/v1/bucket/veridra-private").mock(
+        return_value=httpx.Response(bucket_status, json={"public": public}),
+    )
+    with pytest.raises(ObjectStorageError, match="^object_probe_failed$"):
+        await storage.exists("owner-a", "synthetic-one")
+    assert len(respx.calls) == 1
 
 
 @respx.mock

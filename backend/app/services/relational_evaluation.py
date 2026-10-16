@@ -2,6 +2,7 @@
 
 import hashlib
 import json
+from time import time
 from uuid import uuid4
 
 from sqlalchemy import (
@@ -13,7 +14,6 @@ from sqlalchemy import (
     Table,
     Text,
     and_,
-    delete,
     func,
     insert,
     or_,
@@ -26,6 +26,13 @@ from sqlalchemy.engine import Engine
 from app.core.config import Settings
 from app.services.durable_evaluation import EvaluationQueue, LeaseLostError
 from app.services.relational_state import state_engine, state_transaction
+from app.services.state_content_clocks import (
+    metadata as clock_metadata,
+)
+from app.services.state_content_clocks import (
+    record_relational,
+    seed_relational,
+)
 
 metadata = MetaData()
 jobs = Table(
@@ -51,6 +58,8 @@ def initialize_evaluation_queue(settings: Settings) -> None:
         RelationalEvaluationQueue.create_schema(
             state_engine(settings.relational_state_url.get_secret_value())
         )
+    else:
+        EvaluationQueue(settings.data_dir).reconcile_content_clocks()
 
 
 class RelationalEvaluationQueue(EvaluationQueue):
@@ -62,6 +71,14 @@ class RelationalEvaluationQueue(EvaluationQueue):
     @staticmethod
     def create_schema(engine: Engine):
         metadata.create_all(engine)
+        clock_metadata.create_all(engine)
+        with state_transaction(engine) as db:
+            seed_relational(db, "evaluation_jobs", jobs, time(), owner_column="owner")
+
+    @staticmethod
+    def _record_content(db, job_id, now):
+        row = db.execute(select(jobs).where(jobs.c.id == job_id)).mappings().one()
+        record_relational(db, "evaluation_jobs", row, now, owner_column="owner")
 
     def enqueue(self, owner: str, now: float) -> str:
         job_id = str(uuid4())
@@ -71,15 +88,13 @@ class RelationalEvaluationQueue(EvaluationQueue):
                 scope = int.from_bytes(hashlib.sha256(owner.encode()).digest()[:8],
                                        "big", signed=True)
                 db.execute(text("SELECT pg_advisory_xact_lock(:scope)"), {"scope": scope})
-            db.execute(delete(jobs).where(
-                jobs.c.status.not_in(["queued", "running"]), jobs.c.created_at < now - 30 * 86400,
-            ))
             count = db.execute(select(func.count()).select_from(jobs).where(
                 jobs.c.owner == owner, jobs.c.status.in_(["queued", "running"]),
             )).scalar_one()
             if count >= 2:
                 raise ValueError("At most two pending evaluation jobs per user")
             db.execute(insert(jobs).values(id=job_id, owner=owner, status="queued", created_at=now))
+            self._record_content(db, job_id, now)
         return job_id
 
     def get(self, owner: str, job_id: str):
@@ -142,3 +157,4 @@ class RelationalEvaluationQueue(EvaluationQueue):
             ).values(**values)).rowcount
             if changed != 1:
                 raise LeaseLostError("Evaluation worker no longer owns the lease")
+            self._record_content(db, job_id, now)

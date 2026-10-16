@@ -935,3 +935,185 @@ async def test_postgres_cleanup_claims_are_owner_isolated_and_old_worker_is_fenc
         assert await jobs.status(factory, other.id, same[0]) is None
     finally:
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_postgres_retention_payload_vector_and_checkpoint_are_one_transaction(monkeypatch):
+    import json
+    from datetime import UTC, datetime, timedelta
+    from types import SimpleNamespace
+
+    from google.adk.sessions import DatabaseSessionService
+    from sqlalchemy import insert, text, update
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from test_retention_framework import age_adk
+    from test_retention_framework import create as create_adk
+
+    from app.db.framework_sessions import framework_engine_options, protect_framework_engine
+    from app.db.models import Base, CleanupJob, LongTermMemory, SavedArtifact, User
+    from app.services import cleanup_jobs, relational_operations, relational_skills
+    from app.services.embeddings import EMBEDDING_DIMENSION
+    from app.services.pgvector import rank_vectors
+    from app.services.relational_evaluation import RelationalEvaluationQueue
+    from app.services.relational_evaluation import jobs as evaluation_table
+    from app.services.relational_operations import RelationalOperationStore
+    from app.services.relational_state import prepare_state_schema
+    from app.services.retention_application import purge_application
+    from app.services.retention_framework import adk_inventory, purge_adk
+    from app.services.retention_inventory import application_inventory
+    from app.services.retention_policy import REQUIRED_INVENTORIES, RetentionPolicy
+    from app.services.retention_state import purge_state, state_inventory
+    from app.services.state_content_clocks import record_relational
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; SQL retention not verified")
+    parsed = make_url(url)
+    if parsed.database != "veridra_ci" or parsed.drivername != "postgresql+psycopg":
+        pytest.fail("Retention only permits the isolated veridra_ci database")
+    old = datetime(2026, 9, 1, 12, tzinfo=UTC)
+    now = old + timedelta(days=45)
+    clock = SimpleNamespace(time=lambda: old.timestamp())
+    monkeypatch.setattr(relational_operations, "time", clock)
+    monkeypatch.setattr(relational_skills, "time", clock)
+    bootstrap = create_engine(url).execution_options(
+        schema_translate_map={None: "veridra_private"},
+    )
+    engine = create_async_engine(url, execution_options={
+        "schema_translate_map": {None: "veridra_private"},
+    })
+    factory = async_sessionmaker(engine, expire_on_commit=False)
+    frameworks = []
+    try:
+        prepare_state_schema(bootstrap)
+        Base.metadata.create_all(bootstrap)
+        RelationalOperationStore.create_schema(bootstrap)
+        RelationalEvaluationQueue.create_schema(bootstrap)
+        RelationalSkillStore.create_schema(bootstrap)
+        vector = [1.0] + [0.0] * (EMBEDDING_DIMENSION - 1)
+        async with factory() as db:
+            owner = User(email=f"{uuid4()}@example.invalid", display_name="Synthetic A")
+            other = User(email=f"{uuid4()}@example.invalid", display_name="Synthetic B")
+            db.add_all([owner, other])
+            await db.flush()
+            old_note = LongTermMemory(user_id=owner.id, kind="fact", content="SYNTHETIC_OLD_BODY",
+                                      normalized_hash="synthetic-old", embedding_json=json.dumps(
+                                          vector), created_at=old, updated_at=old,
+                                      content_updated_at=old)
+            fresh_note = LongTermMemory(user_id=owner.id, kind="fact", content="SYNTHETIC_FRESH",
+                                        normalized_hash="synthetic-fresh",
+                                        embedding_json=json.dumps(vector),
+                                        created_at=now, updated_at=now,
+                                        content_updated_at=now)
+            foreign_note = LongTermMemory(user_id=other.id, kind="fact", content="OTHER_OWNER",
+                                          normalized_hash="synthetic-foreign",
+                                          embedding_json=json.dumps(vector), created_at=old,
+                                          updated_at=old, content_updated_at=old)
+            artifact = SavedArtifact(user_id=owner.id, creation_key=str(uuid4()), title="Synthetic",
+                                      content="SYNTHETIC_OLD_BODY", created_at=old, updated_at=old,
+                                      content_updated_at=old)
+            db.add_all([old_note, fresh_note, foreign_note, artifact])
+            await db.commit()
+        for namespace in ("veridra_private", "public"):
+            options = framework_engine_options(url) if namespace == "veridra_private" else {}
+            service = DatabaseSessionService(db_url=url, **options)
+            if namespace == "veridra_private":
+                protect_framework_engine(service.db_engine)
+            session = await create_adk(service, owner.id)
+            await age_adk(service, owner.id, old, namespace)
+            frameworks.append((namespace, service, session.id))
+        operation_store = RelationalOperationStore(bootstrap)
+        operation = operation_store.prepare(owner.id, "synthetic-retention", "docs_create",
+                                             {"content": "SYNTHETIC_OLD_BODY"})
+        operation_store.claim(owner.id, operation["id"], operation["digest"])
+        operation_store.finish(owner.id, operation["id"], {"content": "SYNTHETIC_OLD_BODY"})
+        RelationalSkillStore(bootstrap).save(owner.id, SkillSpec(
+            name="synthetic_retention", title="Synthetic report", description="SYNTHETIC_OLD_BODY",
+            goal="Summarize notes", procedure=["Check sources"], output_format="Short report",
+        ))
+        # Seed a completed evaluation directly: other queue contract tests have
+        # already exercised claims. This test isolates the SQL commit boundary.
+        with bootstrap.begin() as db:
+            job = {"id": str(uuid4()), "owner": owner.id, "status": "completed",
+                   "checkpoint": '{"routing":{"pass_rate":1}}', "created_at": old.timestamp()}
+            db.execute(insert(evaluation_table).values(**job))
+            record_relational(db, "evaluation_jobs", job, old.timestamp(), owner_column="owner")
+        async with factory() as db:
+            app = await application_inventory(db, owner.id)
+            state = await state_inventory(db, owner.id)
+            candidates = [*app.candidates, *state.candidates]
+            for namespace, _service, _session_id in frameworks:
+                framework = await adk_inventory(db, owner.id, namespace=namespace)
+                candidates.extend(framework.candidates)
+            assert await db.scalar(text(
+                "SELECT embedding_vector IS NOT NULL FROM veridra_private.long_term_memories "
+                "WHERE id=:id"
+            ), {"id": old_note.id}) is True
+        policy = RetentionPolicy("synthetic-postgres-retention-key-not-production")
+        coverage = dict.fromkeys(REQUIRED_INVENTORIES, True)  # SQL contract, not all-store proof.
+        preview = policy.prepare(owner_id=owner.id, candidates=candidates,
+                                 inventories=coverage, now=now)
+        approved = policy.validate(token=preview.token, owner_id=owner.id, current=candidates,
+                                   inventories=coverage, now=now)
+        assert len(approved.items) == 11
+        identity = await cleanup_jobs.enqueue(factory, owner.id, cleanup_jobs.CleanupPlan(
+            snapshot=approved,
+        ), now=now.timestamp())
+        token = str(uuid4())
+        async with factory() as db:
+            await db.execute(update(CleanupJob).where(
+                CleanupJob.id == identity, CleanupJob.user_id == owner.id,
+            ).values(status="running", attempts=1, lease_token=token,
+                     lease_until=now.timestamp() + 120))
+            await db.commit()
+        args = identity, token, 1
+        app_items = [item for item in approved.items if item.record_id.startswith(
+            ("long_term_memories:", "saved_artifacts:"))]
+        state_items = [item for item in approved.items if not item.record_id.startswith("adk:")
+                       and item not in app_items]
+        for commit in (False, True):
+            async with factory() as db:
+                await cleanup_jobs.mark_started(db, *args, now=now.timestamp())
+                result = await purge_application(db, owner.id, app_items, now=now.timestamp())
+                assert result["external"] == ()  # Cloud vectors live in the deleted SQL rows.
+                assert await purge_state(db, owner.id, state_items, now=now.timestamp()) == {
+                    "deleted": 2, "redacted": 1,
+                }
+                for namespace, _service, _session_id in frameworks:
+                    items = [item for item in approved.items
+                             if item.record_id.startswith(f"adk:{namespace}:")]
+                    assert await purge_adk(db, owner.id, items, namespace=namespace,
+                                            now=now.timestamp()) == 3
+                await cleanup_jobs.mark_sql_done(db, *args, now=now.timestamp())
+                if commit:
+                    await cleanup_jobs.finish(db, *args, now=now.timestamp())
+                    await db.commit()
+                else:
+                    await db.rollback()
+            async with factory() as db:
+                assert (await db.get(LongTermMemory, old_note.id) is None) is commit
+                assert (await db.get(SavedArtifact, artifact.id) is None) is commit
+                checkpoint = await db.get(CleanupJob, identity)
+                assert (checkpoint.sql_completed_at is not None) is commit
+                assert await db.get(LongTermMemory, fresh_note.id) is not None
+                assert await db.get(LongTermMemory, foreign_note.id) is not None
+            for _namespace, service, session_id in frameworks:
+                assert (await service.get_session(app_name="drive_agent", user_id=owner.id,
+                                                   session_id=session_id) is None) is commit
+        async with factory() as db:
+            ranked = await rank_vectors(db, table="long_term_memories", owner=owner.id,
+                                        vector=vector, limit=10)
+            assert [identity for identity, _score in ranked] == [fresh_note.id]
+            assert await db.scalar(text(
+                "SELECT has_schema_privilege('public','veridra_private','USAGE')"
+            )) is False
+        assert operation_store.get(owner.id, operation["id"])["spec"] == "{}"
+        assert operation_store.get(owner.id, operation["id"])["digest"] == operation["digest"]
+        with pytest.raises(ToolError) as replay:
+            operation_store.claim(owner.id, operation["id"], operation["digest"])
+        assert replay.value.code == "operation_already_claimed"
+    finally:
+        for _namespace, service, _session_id in frameworks:
+            await service.close()
+        await engine.dispose()
+        bootstrap.dispose()

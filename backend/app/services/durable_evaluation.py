@@ -8,6 +8,8 @@ from pathlib import Path
 from time import monotonic, time
 from uuid import uuid4
 
+from app.services.state_content_clocks import initialize_sqlite, record_sqlite, seed_sqlite
+
 
 class LeaseLostError(ValueError):
     """A replaced or expired worker must not publish progress or completion."""
@@ -22,6 +24,18 @@ class EvaluationQueue:
                 id TEXT PRIMARY KEY, owner TEXT NOT NULL, status TEXT NOT NULL,
                 checkpoint TEXT NOT NULL DEFAULT '{}', attempts INTEGER NOT NULL DEFAULT 0,
                 lease_until REAL, created_at REAL NOT NULL)""")
+            if initialize_sqlite(db):
+                seed_sqlite(db, "evaluation_jobs", time(), owner_column="owner")
+
+    def reconcile_content_clocks(self):
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            seed_sqlite(db, "evaluation_jobs", time(), owner_column="owner")
+
+    @staticmethod
+    def _record_content(db, job_id, now):
+        row = db.execute("SELECT * FROM jobs WHERE id=?", (job_id,)).fetchone()
+        record_sqlite(db, "evaluation_jobs", row, now, owner_column="owner")
 
     @contextmanager
     def connect(self):
@@ -38,10 +52,6 @@ class EvaluationQueue:
         job_id = str(uuid4())
         with self.connect() as db:
             db.execute("BEGIN IMMEDIATE")
-            db.execute(
-                "DELETE FROM jobs WHERE status NOT IN ('queued','running') AND created_at<?",
-                (now - 30 * 86400,),
-            )
             count = db.execute(
                 "SELECT count(*) FROM jobs WHERE owner=? AND status IN ('queued','running')",
                 (owner,),
@@ -52,6 +62,7 @@ class EvaluationQueue:
                 "INSERT INTO jobs(id,owner,status,created_at) VALUES(?,?,?,?)",
                 (job_id, owner, "queued", now),
             )
+            self._record_content(db, job_id, now)
         return job_id
 
     def get(self, owner: str, job_id: str):
@@ -106,6 +117,7 @@ class EvaluationQueue:
             ).rowcount
             if changed != 1:
                 raise LeaseLostError("Evaluation worker no longer owns the lease")
+            self._record_content(db, job_id, now)
 
     def finish(self, job_id: str, status: str, *, attempt: int, now: float):
         if status not in {"completed", "quality_failed", "failed"}:

@@ -29,6 +29,13 @@ from sqlalchemy.engine import Engine
 from app.core.config import Settings
 from app.services.operations import OperationStore
 from app.services.relational_state import state_engine, state_transaction
+from app.services.state_content_clocks import (
+    metadata as clock_metadata,
+)
+from app.services.state_content_clocks import (
+    record_relational,
+    seed_relational,
+)
 from app.tools.contracts import ToolError
 
 metadata = MetaData()
@@ -76,6 +83,8 @@ def initialize_operation_store(settings: Settings) -> None:
         RelationalOperationStore.create_schema(
             state_engine(settings.relational_state_url.get_secret_value())
         )
+    else:
+        OperationStore(settings.data_dir / "operations.db").reconcile_content_clocks()
 
 
 class RelationalOperationStore(OperationStore):
@@ -89,6 +98,16 @@ class RelationalOperationStore(OperationStore):
     @staticmethod
     def create_schema(engine: Engine) -> None:
         metadata.create_all(engine)
+        clock_metadata.create_all(engine)
+        with state_transaction(engine) as db:
+            seed_relational(db, "operations", operations, time.time())
+
+    @staticmethod
+    def _record_content(db, operation_id):
+        row = db.execute(select(operations).where(
+            operations.c.id == operation_id,
+        )).mappings().one()
+        record_relational(db, "operations", row, time.time())
 
     @staticmethod
     def _digest(capability: str, spec: dict) -> tuple[str, str]:
@@ -131,6 +150,7 @@ class RelationalOperationStore(OperationStore):
                 archived=0,
                 updated=stamp,
             ))
+            self._record_content(db, operation_id)
         return self.get(user_id, operation_id)
 
     def get_by_request_key(self, user_id: str, request_key: str) -> dict | None:
@@ -259,6 +279,8 @@ class RelationalOperationStore(OperationStore):
                 operations.c.user_id == user_id,
                 operations.c.state == "running",
             ).values(**values, updated=time.time())).rowcount
+            if changed == 1:
+                self._record_content(db, operation_id)
         if changed != 1:
             raise ToolError(
                 "Thao tác không ở trạng thái đang chạy.", code="operation_state_conflict"
@@ -277,6 +299,8 @@ class RelationalOperationStore(OperationStore):
                 error_code=None,
                 updated=time.time(),
             )).rowcount
+            if changed == 1:
+                self._record_content(db, operation_id)
         if changed != 1:
             raise ToolError(
                 "Thao tác không thể đối soát ở trạng thái hiện tại.",

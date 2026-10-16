@@ -1,8 +1,10 @@
 """Private PDF object storage with local and Supabase implementations."""
 
 import asyncio
+import json
 import os
 import re
+import stat
 from pathlib import Path
 from tempfile import mkstemp
 from urllib.parse import quote
@@ -32,6 +34,18 @@ class PdfObjectStorage:
 
     async def delete(self, owner: str, job_id: str) -> None:
         raise NotImplementedError
+
+    async def exists(self, owner: str, job_id: str) -> bool:
+        raise NotImplementedError
+
+    async def delete_verified(self, owner: str, job_id: str) -> None:
+        """Internal runner only, under its approval/admission fence; no consent here."""
+        try:
+            await self.delete(owner, job_id)
+        except (httpx.HTTPError, OSError):
+            raise ObjectStorageError("object_delete_failed") from None
+        if await self.exists(owner, job_id):
+            raise ObjectStorageError("object_delete_unverified")
 
     async def processing_path(self, owner: str, job_id: str) -> tuple[Path, bool]:
         data = await self.get(owner, job_id)
@@ -96,6 +110,28 @@ class LocalPdfObjectStorage(PdfObjectStorage):
         legacy = self._legacy_path(job_id)
         await asyncio.to_thread(current.unlink, missing_ok=True)
         await asyncio.to_thread(legacy.unlink, missing_ok=True)
+
+    async def exists(self, owner: str, job_id: str) -> bool:
+        # Validate BOTH paths first, including legacy aliases, even when one
+        # already exists. Never follow an alias into another owner's namespace.
+        paths = self._path(owner, job_id), self._legacy_path(job_id)
+
+        def present():
+            found = False
+            for path in paths:
+                try:
+                    metadata = path.stat()
+                except (FileNotFoundError, NotADirectoryError):
+                    continue
+                if not stat.S_ISREG(metadata.st_mode):
+                    raise ObjectStorageError("object_probe_failed")
+                found = True
+            return found
+
+        try:
+            return await asyncio.to_thread(present)
+        except OSError:
+            raise ObjectStorageError("object_probe_failed") from None
 
     async def processing_path(self, owner: str, job_id: str) -> tuple[Path, bool]:
         return await self._existing_path(owner, job_id), False
@@ -194,6 +230,47 @@ class SupabasePdfObjectStorage(PdfObjectStorage):
             )
         if response.status_code not in {200, 204, 404}:
             raise ObjectStorageError("object_delete_failed")
+
+    async def exists(self, owner: str, job_id: str) -> bool:
+        identity = self._object(owner, job_id)
+        try:
+            async with httpx.AsyncClient(timeout=15, follow_redirects=False) as client:
+                # A missing bucket, failed credential or gateway 404 must not be
+                # interpreted as proof that this particular PDF was deleted.
+                bucket = await client.get(
+                    f"{self.base_url}/bucket/{quote(self.bucket, safe='')}",
+                    headers=self._headers(),
+                )
+                if bucket.status_code != 200 or bucket.json().get("public") is not False:
+                    raise ObjectStorageError("object_probe_failed")
+                async with client.stream(
+                    "GET", f"{self.base_url}/object/authenticated/{self.bucket}/{identity}",
+                    headers=self._headers(**{"Range": "bytes=0-0", "Cache-Control": "no-cache"}),
+                ) as response:
+                    if response.status_code in {200, 206}:
+                        return True  # Never read or log the private PDF body.
+                    if response.status_code not in {400, 404}:
+                        raise ObjectStorageError("object_probe_failed")
+                    error_body = bytearray()
+                    async for chunk in response.aiter_bytes(chunk_size=1024):
+                        error_body.extend(chunk)
+                        if len(error_body) > 2048:
+                            raise ObjectStorageError("object_probe_failed")
+                    error = json.loads(error_body)
+                    if not isinstance(error, dict):
+                        raise ObjectStorageError("object_probe_failed")
+                    if response.status_code == 404 and error.get("code") == "NoSuchKey":
+                        return False
+                    # Storage still supports legacy SDK errors. Require both
+                    # the resource-specific code and its explicit 404 status;
+                    # never accept a generic gateway/router 404 or status alone.
+                    legacy_status = error.get("statusCode", error.get("httpStatusCode"))
+                    legacy_code = error.get("error", error.get("code"))
+                    if str(legacy_status) == "404" and legacy_code == "not_found":
+                        return False
+                    raise ObjectStorageError("object_probe_failed")
+        except (httpx.HTTPError, ValueError, TypeError, AttributeError):
+            raise ObjectStorageError("object_probe_failed") from None
 
 
 def object_storage_for(settings: Settings) -> PdfObjectStorage:

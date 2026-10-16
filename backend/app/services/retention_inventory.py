@@ -63,7 +63,8 @@ def validate_application_catalog() -> None:
         raise RetentionPolicyError("retention_application_catalog_incomplete")
 
 
-async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationInventory:
+async def application_inventory(db: AsyncSession, owner_id: str,
+                                *, lock=False) -> ApplicationInventory:
     """Caller supplies the authenticated owner; no commits, deletes or remote calls.
 
     A later runner must re-read this under its write fence. Streaming bounds
@@ -116,9 +117,14 @@ async def application_inventory(db: AsyncSession, owner_id: str) -> ApplicationI
     candidates = []
     busy = False
     for model, kind, clock in POLICIES:
-        rows = await db.stream_scalars(select(model).where(
+        query = select(model).where(
             model.user_id == owner_id,
-        ).execution_options(yield_per=64, populate_existing=True))
+        )
+        if lock and db.bind.dialect.name == "postgresql":
+            query = query.with_for_update()
+        rows = await db.stream_scalars(query.execution_options(
+            yield_per=64, populate_existing=True,
+        ))
         async for row in rows:
             values = {column.key: getattr(row, column.key) for column in model.__table__.columns}
             stamp = getattr(row, clock)

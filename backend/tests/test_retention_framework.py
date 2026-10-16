@@ -1,16 +1,24 @@
 """Real pinned ADK session store, synthetic data, no model/OAuth/network."""
 
+from datetime import UTC, datetime, timedelta
 from uuid import uuid4
 
 import pytest
 from google.adk.events import Event
 from google.adk.sessions import DatabaseSessionService
 from google.genai import types
-from sqlalchemy import text
+from sqlalchemy import text, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
-from app.services.retention_framework import adk_inventory
-from app.services.retention_policy import RetentionPolicyError
+from app.services.retention_framework import _tables, adk_inventory, purge_adk
+from app.services.retention_policy import (
+    REQUIRED_INVENTORIES,
+    RetentionPolicy,
+    RetentionPolicyError,
+)
+
+OLD = datetime(2026, 9, 1, 12, tzinfo=UTC)
+NOW = OLD + timedelta(days=45)
 
 
 @pytest.fixture
@@ -96,3 +104,128 @@ async def test_unknown_owned_app_is_not_silently_skipped(adk):
     async with async_sessionmaker(adk.db_engine)() as db:
         with pytest.raises(RetentionPolicyError, match="unsupported_framework_app"):
             await adk_inventory(db, "synthetic-owner", namespace=None)
+
+
+async def age_adk(service, owner, when, namespace=None):
+    """Age disposable SDK rows only; never points at a user's configured DB."""
+    async with async_sessionmaker(service.db_engine)() as db:
+        tables = await db.run_sync(_tables, namespace)
+        for name in ("sessions", "events", "user_states"):
+            table = tables[name]
+            field = "timestamp" if name == "events" else "update_time"
+            await db.execute(update(table).where(table.c.user_id == owner).values({
+                field: when.replace(tzinfo=None),
+            }))
+        await db.commit()
+
+
+async def approved_adk(service, owner):
+    async with async_sessionmaker(service.db_engine)() as db:
+        rows = (await adk_inventory(db, owner, namespace=None)).candidates
+    policy = RetentionPolicy("synthetic-adk-retention-key-not-production")
+    coverage = dict.fromkeys(REQUIRED_INVENTORIES, True)
+    preview = policy.prepare(owner_id=owner, candidates=list(rows), inventories=coverage, now=NOW)
+    return policy.validate(token=preview.token, owner_id=owner, current=list(rows),
+                           inventories=coverage, now=NOW).items
+
+
+async def test_adk_purge_rolls_back_then_removes_only_owned_rows_and_never_shared_metadata(adk):
+    own = await create(adk, "synthetic-owner-a")
+    other = await create(adk, "synthetic-owner-b")
+    await age_adk(adk, "synthetic-owner-a", OLD)
+    approved = await approved_adk(adk, "synthetic-owner-a")
+    assert len(approved) == 3
+    for commit in (False, True):
+        async with async_sessionmaker(adk.db_engine)() as db:
+            assert await purge_adk(db, "synthetic-owner-a", approved, namespace=None,
+                                    now=NOW.timestamp()) == 3
+            if commit:
+                await db.commit()
+            else:
+                await db.rollback()
+        result = await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                       session_id=own.id)
+        assert (result is None) is commit
+        preserved = await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-b",
+                                          session_id=other.id)
+        assert preserved.state["case"] == "SYNTHETIC_PRIVATE_CONTEXT"
+        assert len(preserved.events) == 1
+    async with async_sessionmaker(adk.db_engine)() as db:
+        assert (await adk_inventory(db, "synthetic-owner-a", namespace=None)).candidates == ()
+        assert await db.scalar(text("SELECT count(*) FROM app_states")) == 1
+        assert await db.scalar(text("SELECT count(*) FROM adk_internal_metadata")) >= 1
+
+
+async def test_adk_partial_parent_wrong_owner_and_changed_session_cannot_purge(adk):
+    own = await create(adk, "synthetic-owner-a")
+    await age_adk(adk, "synthetic-owner-a", OLD)
+    approved = await approved_adk(adk, "synthetic-owner-a")
+    parent = [item for item in approved if ":sessions:" in item.record_id]
+    async with async_sessionmaker(adk.db_engine)() as db:
+        with pytest.raises(RetentionPolicyError, match="dependency_not_selected"):
+            await purge_adk(db, "synthetic-owner-a", parent, namespace=None, now=NOW.timestamp())
+        await db.rollback()
+        with pytest.raises(RetentionPolicyError, match="preview_changed"):
+            await purge_adk(db, "synthetic-owner-b", approved, namespace=None, now=NOW.timestamp())
+        await db.rollback()
+    # Aging a fixture invalidates the SDK's exact storage marker. Reload it as
+    # production does; do not relax the real stale-session protection.
+    own = await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                 session_id=own.id)
+    await adk.append_event(own, Event(author="assistant", content=types.Content(
+        role="model", parts=[types.Part(text="FRESH_SYNTHETIC_EVENT")],
+    )))
+    async with async_sessionmaker(adk.db_engine)() as db:
+        with pytest.raises(RetentionPolicyError, match="preview_changed"):
+            await purge_adk(db, "synthetic-owner-a", approved, namespace=None, now=NOW.timestamp())
+        await db.rollback()
+    assert len((await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                      session_id=own.id)).events) == 2
+
+
+async def test_adk_shared_state_change_stops_purge_without_erasing_own_sessions(adk):
+    own = await create(adk, "synthetic-owner-a")
+    await age_adk(adk, "synthetic-owner-a", OLD)
+    approved = await approved_adk(adk, "synthetic-owner-a")
+    await create(adk, "synthetic-owner-a", shared=True)
+    async with async_sessionmaker(adk.db_engine)() as db:
+        with pytest.raises(RetentionPolicyError, match="unattributed_framework_state"):
+            await purge_adk(db, "synthetic-owner-a", approved, namespace=None, now=NOW.timestamp())
+        await db.rollback()
+    assert await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                  session_id=own.id) is not None
+
+
+async def test_purging_old_user_state_does_not_break_newer_session(adk):
+    old = await create(adk, "synthetic-owner-a")
+    await age_adk(adk, "synthetic-owner-a", OLD)
+    fresh = await adk.create_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                      session_id=str(uuid4()),
+                                      state={"case": "FRESH_SESSION_CANARY"})
+    async with async_sessionmaker(adk.db_engine)() as db:
+        tables = await db.run_sync(_tables, None)
+        await db.execute(update(tables["user_states"]).where(
+            tables["user_states"].c.user_id == "synthetic-owner-a",
+        ).values(update_time=OLD.replace(tzinfo=None)))
+        await db.commit()
+    approved = await approved_adk(adk, "synthetic-owner-a")
+    assert len(approved) == 3
+    async with async_sessionmaker(adk.db_engine)() as db:
+        assert await purge_adk(db, "synthetic-owner-a", approved, namespace=None,
+                                now=NOW.timestamp()) == 3
+        await db.commit()
+    assert await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                  session_id=old.id) is None
+    fresh = await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                   session_id=fresh.id)
+    assert fresh.state == {"case": "FRESH_SESSION_CANARY"}
+    await adk.append_event(fresh, Event(author="assistant", content=types.Content(
+        role="model", parts=[types.Part(text="NEW_EVENT_AFTER_OLD_STATE_PURGE")],
+    )))
+    result = await adk.get_session(app_name="drive_agent", user_id="synthetic-owner-a",
+                                    session_id=fresh.id)
+    assert len(result.events) == 1
+    async with async_sessionmaker(adk.db_engine)() as db:
+        candidates = (await adk_inventory(db, "synthetic-owner-a", namespace=None)).candidates
+        assert len(candidates) == 2 and all(":user_states:" not in item.record_id
+                                          for item in candidates)

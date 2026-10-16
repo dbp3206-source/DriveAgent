@@ -12,6 +12,7 @@ import time
 from pathlib import Path
 from uuid import uuid4
 
+from app.services.state_content_clocks import initialize_sqlite, record_sqlite, seed_sqlite
 from app.tools.contracts import ToolError
 
 
@@ -38,6 +39,18 @@ class OperationStore:
                 "CREATE INDEX IF NOT EXISTS ix_operations_user_state_created "
                 "ON operations(user_id, archived, state, created DESC)"
             )
+            if initialize_sqlite(db):
+                seed_sqlite(db, "operations", time.time())
+
+    def reconcile_content_clocks(self):
+        with self.connect() as db:
+            db.execute("BEGIN IMMEDIATE")
+            seed_sqlite(db, "operations", time.time())
+
+    @staticmethod
+    def _record_content(db, operation_id):
+        row = db.execute("SELECT * FROM operations WHERE id=?", (operation_id,)).fetchone()
+        record_sqlite(db, "operations", row, time.time())
 
     def connect(self):
         db = sqlite3.connect(self.path, timeout=10)
@@ -74,6 +87,7 @@ class OperationStore:
                     time.time(),
                 ),
             )
+            self._record_content(db, operation_id)
         return self.get(user_id, operation_id)
 
     def get_by_request_key(self, user_id: str, request_key: str) -> dict | None:
@@ -198,6 +212,7 @@ class OperationStore:
                     "Thao tác không thể đối soát ở trạng thái hiện tại.",
                     code="operation_state_conflict",
                 )
+            self._record_content(db, operation_id)
 
     def archive(self, user_id: str, operation_id: str) -> None:
         """Hide only terminal/abandoned work; active writes remain visible."""
@@ -253,3 +268,4 @@ class OperationStore:
                 raise ToolError(
                     "Thao tác không ở trạng thái đang chạy.", code="operation_state_conflict"
                 )
+            self._record_content(db, operation_id)
