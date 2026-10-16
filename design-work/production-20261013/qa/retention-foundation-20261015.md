@@ -41,6 +41,12 @@ Kết quả CI và tại máy có phần chồng lặp, không cộng thành s�
 
 Rà soát cuối phát hiện API chat thật dùng trạng thái `cancelled`, trong khi kiểm kê ban đầu chỉ công nhận completed/failed: một yêu cầu đã hủy sẽ chặn dọn mãi. Đã đối chiếu nguồn, bổ sung riêng trạng thái kết thúc này cho chat; trạng thái không nhận diện vẫn chặn, không nới mọi loại tác vụ. Đồng thời yêu cầu JSON tiến độ thực sự là danh sách, không nhận đối tượng rỗng thay danh sách. Kiểm liên quan cuối **43 đạt/0 lỗi/0 bỏ qua**, 30,63 giây; XML `tmp/retention-final-contract-f3f850577dd84a348929c86246a126f8/results.xml`. Hai bổ sung sau b58cccd chưa được tính qua CI #146; cần CI đúng mã.
 
+### CI #147 — phần mã hàng đợi/kiểm kê hiện hành đã đạt
+
+[Lần kiểm 38841271707](https://github.com/dbp3206-source/DriveAgent/actions/runs/38841271707), mã **4be8c276351fb59297d2c8b51d3a1d8e7ea86f44**. Đã đọc trạng thái bước và nhật ký: PostgreSQL `116781682962` **18 đạt/0 bỏ qua**, 5,07 giây; verify `116781847341` máy chủ **1.722 đạt/19 bỏ qua**, 110,28 giây, độ phủ **88,36%**, giao diện **222 đạt/0 lỗi/0 bỏ qua**. Tệp hàng đợi có 28 ca, kiểm kê ORM 15 ca, đều chạy trong tổng máy chủ; không cộng lặp với tổng hoặc các nhóm tại máy. Quét bí mật 732 tệp, ngoại tuyến/toàn vẹn bộ chuẩn/dựng/khởi động gói/PDF tiếng Việt đạt. Xuất ảnh GHCR và Render `skipped`.
+
+Kết quả này đóng kiểm phần đã viết đúng mã, gồm hai bổ sung sau b58cccd. Không tuyên bố đã có bộ chạy xóa xuyên kho, API/hộp thoại hay đã xóa trên URL. Không đọc/xóa tài liệu thật, thay khóa, tăng ngân sách AI, đổi dịch vụ hoặc gộp main trong đợt này. Phần đang chạy giữ mã13938d1/ảnh0169c264…377c1712 theo lần xác nhận Live gần nhất; không coi CI nhánh công việc là triển khai.
+
 ### 16/10 — hàng đợi tiến độ và bảo vệ nội dung con mới
 
 - Thêm `CleanupJob` và nâng cấp cộng thêm SQLite 9/PostgreSQL 8. Sổ chứa bản duyệt cố định, ID/dấu nội dung, các mục đã xử lý/còn lại, quyền xử lý có hạn và trạng thái; không sao chép thân thư/tài liệu/ghi chú. Chỉ có mã nội bộ, chưa có đường API/công cụ mô hình/thao tác xóa thật.
