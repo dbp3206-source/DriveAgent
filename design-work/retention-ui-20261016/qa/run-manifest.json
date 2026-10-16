@@ -27,7 +27,8 @@
     "offline evaluation: python scripts/evaluate_release_offline.py --output tmp/release-evaluation-local.json (200/200)",
     "dataset validation: python scripts/validate_internal_assistant_dataset.py (10 cases, 4 synthetic files)",
     "git diff --check",
-    "PowerShell Test-Path frontend/public/retention-harness.html and frontend/dist/retention-harness.html"
+    "PowerShell Test-Path frontend/public/retention-harness.html and frontend/dist/retention-harness.html",
+    "GitHub Actions run 38925155479 on commit 3dad6f5b1101a95a7ecd390e5a4e6ba30686697a: postgres-state and verify succeeded; image publish and Render deploy skipped on work branch"
   ],
   "repository_defined_outputs": [
     "frontend React/TypeScript application",
@@ -55,11 +56,11 @@
   "quality_score": 86,
   "known_limitations": [
     "Score covers this retention feature slice only, not the whole product.",
-    "Backend local suite: 1,915 passed/28 skipped at 88.31% coverage plus 11/11 config tests in a separate no-live-DB process; PostgreSQL and external object-storage integration checks still require CI services.",
+    "Backend local suite: 1,915 passed/28 skipped at 88.31% coverage plus 11/11 config tests in a separate no-live-DB process; PostgreSQL CI job passed; five optional external object-storage integration checks remain skipped.",
     "Frontend 222 unit tests, lint, isolated production build, and Playwright browser smoke passed; the browser used mocked APIs only.",
     "Offline evaluation 200/200, internal dataset integrity 10 cases/4 fixtures, and secret scan 768 Git-visible files passed; none substitutes for live model-quality or cloud acceptance.",
     "Cloud Render and Supabase were not read or modified; no production data, model calls, Gmail, Drive or Calendar were used.",
-    "The working tree is uncommitted and undeployed; full CI, main branch and live URL verification remain required.",
+    "Commit 3dad6f5 is pushed to work/data-retention-20261015 and passed full CI run 38925155479. It is not on main or Render; publish/deploy steps were skipped for the work branch, so main release and live URL verification remain required.",
     "Restore rehearsal and four-user cloud UAT (T09) are waived and remain unverified.",
     "Shared encrypted backups and provider-held/downloaded copies are not removed by this per-user cleanup path."
   ]

@@ -2,7 +2,7 @@
 
 ## Kết luận
 
-Phần nhắc người dùng xem và duyệt dọn dữ liệu đã được nối vào giao diện hiện có, các đường máy chủ cho xem trước/trạng thái/duyệt/tiếp tục đã được kiểm trên dữ liệu giả lập cô lập. **Chưa đạt trạng thái phát hành**: thay đổi còn ở nhánh làm việc, chưa chạy CI đúng mã, chưa lên GitHub `main` hoặc Render. Báo cáo này chỉ xác nhận phần đã kiểm tại máy, không phải chứng nhận toàn sản phẩm.
+Phần nhắc người dùng xem và duyệt dọn dữ liệu đã được nối vào giao diện hiện có. Các đường máy chủ cho xem trước/trạng thái/duyệt/tiếp tục đã được kiểm trên dữ liệu giả lập cô lập. Commit `3dad6f5b1101a95a7ecd390e5a4e6ba30686697a` đã qua CI đầy đủ [#38925155479](https://github.com/dbp3206-source/DriveAgent/actions/runs/38925155479), gồm PostgreSQL riêng, backend, frontend, dựng/kiểm ảnh chạy và xuất PDF tiếng Việt. **Chưa phải phát hành**: commit hiện vẫn ở nhánh làm việc; các bước xuất bản ảnh và triển khai bị bỏ qua trên nhánh này; chưa lên `main` hoặc Render. Báo cáo này chỉ xác nhận lát cắt lưu giữ dữ liệu, không phải chứng nhận toàn sản phẩm.
 
 ## Phạm vi và dữ liệu
 
@@ -23,7 +23,7 @@ Khi người dùng duyệt dọn, cảnh báo hiện rõ rằng ngữ cảnh là
 
 | Hạng mục | Kết quả | Giới hạn |
 |---|---|---|
-| Backend suite tại máy | **1.915 đạt, 28 bỏ qua, 0 lỗi** trong 488,04 giây; độ phủ **88,31%** | 1.943 ca chạy trong môi trường dữ liệu tạm cô lập; 23 ca PostgreSQL và 5 ca kho tệp ngoài bị bỏ qua. 11 ca `test_config.py` chạy riêng, đạt 11/11 để không cho địa chỉ DB tạm làm sai cấu hình cố định trong bài kiểm. Tổng: 1.926 đạt/28 bỏ qua trên 1.954 ca. CI đúng commit vẫn bắt buộc. |
+| Backend suite tại máy | **1.915 đạt, 28 bỏ qua, 0 lỗi** trong 488,04 giây; độ phủ **88,31%** | 1.943 ca chạy trong môi trường dữ liệu tạm cô lập; 23 ca PostgreSQL và 5 ca kho tệp ngoài bị bỏ qua. 11 ca `test_config.py` riêng đạt 11/11. Tổng: 1.926 đạt/28 bỏ qua trên 1.954 ca. CI đúng commit đã đạt; PostgreSQL được kiểm riêng trong CI. |
 | Backend lint, scripts lint, dependencies | Ruff backend/scripts đạt; `pip check` không phát hiện phụ thuộc lỗi | Chỉ mã trong nhánh làm việc |
 | Quét bí mật phát hành | Đạt trên 768 tệp Git-visible | Không in giá trị bí mật; không thay thế rà soát dữ liệu cá nhân |
 | Đánh giá ngoại tuyến | **200/200**: điều hướng 12, bộ đánh giá 12, hợp đồng câu trả lời 16, chống sửa lệch 160 | Không gọi mô hình; không chứng minh chất lượng Gemini khi chạy thật |
@@ -34,7 +34,7 @@ Khi người dùng duyệt dọn, cảnh báo hiện rõ rằng ngữ cảnh là
 | Hành vi an toàn trên giao diện | Checkbox mặc định bỏ chọn; nút xác nhận bị khóa; không gửi yêu cầu xác nhận; bàn phím giữ tiêu điểm trong hộp thoại; không có lỗi trang hoặc yêu cầu ra ngoài máy cục bộ | Không nhấn nút xóa và không thử trên dữ liệu thật |
 | Tràn bố cục | Không tràn chiều ngang hay tràn nội dung hộp thoại ở 390 và 320 px | Kiểm theo các kích thước đại diện, không thay cho kiểm thiết bị thật |
 | Dấu vết phát hành thử | Tệp HTML harness không có trong `frontend/public` hoặc `frontend/dist` | Harness chỉ dùng ở `frontend/src/retention-notice-harness.tsx` và script kiểm cục bộ |
-| Kho mã | `git diff --check` đạt | Chưa commit, đẩy, chạy CI, phát hành ảnh hoặc triển khai |
+| Kho mã và CI | `git diff --check` đạt; CI `38925155479` trên đúng commit `3dad6f5` đạt cả hai job `postgres-state` và `verify` | CI trên nhánh làm việc đã qua. Xuất bản ảnh và triển khai bị bỏ qua theo điều kiện nhánh; chưa xác minh URL Render |
 
 Hai lượt fail-fast trước đó không xác nhận lỗi sản phẩm: một lượt dùng nhầm driver SQLite cho kho quan hệ; lượt kế đặt toàn suite vào một thư mục trạng thái chung, khiến các ca mô phỏng cùng dùng một bộ đếm hạn mức. Lượt cuối bỏ cấu hình quan hệ/trạng thái chung và cô lập DB theo từng ca; toàn bộ suite đạt như bảng trên. Không sửa mã sản phẩm để che lỗi môi trường này.
 
@@ -60,11 +60,11 @@ Hai lượt fail-fast trước đó không xác nhận lỗi sản phẩm: một
 
 ## Điều còn chặn tuyên bố production-ready
 
-1. Chạy CI đầy đủ trên đúng commit, đặc biệt PostgreSQL riêng, dựng Docker/chạy ảnh, xuất PDF tiếng Việt và triển khai tự động theo điều kiện nhánh.
-2. Rà soát bản diff đầy đủ, sau đó mới commit/đẩy theo nhánh đã thống nhất. Hiện HEAD là `f71af08efbe5823326d69ac18f9a86efd8e228b2`, nhánh `work/data-retention-20261015`; các thay đổi trong báo cáo còn chưa commit.
-3. Triển khai có kiểm soát và kiểm lại đúng phiên bản trên URL. Render hiện vẫn chạy bản cũ; không được coi kiểm thử cục bộ là kiểm thử cloud.
-4. PostgreSQL tại máy đã bỏ qua 23 ca và cần CI chuyên dụng để xác nhận; kiểm thử khôi phục cơ sở dữ liệu/tệp và thử bốn tài khoản thật (T09) được miễn theo quyết định trước đó, **không tính là đạt**.
-5. Có shared backup đã mã hóa thì kiểm kê hiện dừng an toàn thay vì tuyên bố đã xóa bản sao đó. Bản sao nhà cung cấp/tải về bên ngoài không nằm trong phạm vi Veridra.
+1. CI đầy đủ trên commit `3dad6f5` đã đạt: PostgreSQL riêng, kiểm thử backend, Docker/chạy ảnh và xuất PDF tiếng Việt đều thành công. Các bước xuất bản ảnh/triển khai chưa chạy vì đây là nhánh làm việc.
+2. Mã đã commit và đẩy lên `work/data-retention-20261015`; `main` hiện vẫn ở `a026db6`. Việc đưa lên `main` sẽ chạy lại luồng CI/phát hành theo cấu hình kho mã.
+3. Chưa xác minh tính năng trên URL Render; không coi kiểm thử cục bộ hay CI là kiểm thử cloud.
+4. Kiểm thử khôi phục cơ sở dữ liệu/tệp và thử bốn tài khoản thật (T09) được miễn theo quyết định trước đó, **không tính là đạt**. Năm kiểm tích hợp kho tệp ngoài cũng chưa chạy tại máy.
+5. Nếu có bản sao lưu dùng chung đã mã hóa, kiểm kê hiện dừng an toàn thay vì tuyên bố đã xóa bản sao đó. Bản sao nhà cung cấp/tải về bên ngoài không nằm trong phạm vi Veridra.
 
 ## Công cụ và tài sản
 

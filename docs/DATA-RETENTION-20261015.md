@@ -74,7 +74,13 @@ Hai lần đọc URL Markdown bằng công cụ web trả `400 Unsupported conte
 - Backend: 1.915 đạt, 28 bỏ qua, 0 lỗi, độ phủ 88,31%; 11 bài cấu hình riêng cũng đạt. Trong 28 ca bỏ qua có 23 ca PostgreSQL và 5 ca kho tệp ngoài, cần dịch vụ CI tương ứng.
 - Giao diện: 222 bài đạt, lint và bản dựng cô lập đạt; ảnh trình duyệt ở sáng/tối và các kích thước chính đã được rà lại. Không gửi yêu cầu xóa trong kiểm thử.
 - Quét bí mật, kiểm bộ dữ liệu giả lập và đánh giá ngoại tuyến đều đạt; đánh giá 200/200 không gọi mô hình.
-- Đây là kiểm tra tại máy, chưa phải CI của mã phát hành và chưa xác nhận URL. Mã vẫn chưa commit/đẩy; Render chưa nhận tính năng mới. T09 và diễn tập khôi phục vẫn được miễn, không tính đạt.
+- Đây là ghi nhận tại thời điểm kiểm tra tại máy, chưa phải kết quả cuối. Cập nhật CI mới nhất ở cuối tài liệu.
+
+## Cập nhật 16/10/2026 — kết quả CI đã có
+
+- CI GitHub Actions [#38925155479](https://github.com/dbp3206-source/DriveAgent/actions/runs/38925155479) chạy trên commit `3dad6f5b1101a95a7ecd390e5a4e6ba30686697a` và đạt. Cả hai job `postgres-state` và `verify` thành công; gồm backend, frontend, dựng/kiểm ảnh chạy và xuất PDF tiếng Việt.
+- Commit đã được đẩy lên `work/data-retention-20261015`, nhưng chưa lên `main` hoặc Render. Các bước xuất bản ảnh và triển khai tự động bị bỏ qua do đây không phải nhánh phát hành; URL chưa được kiểm.
+- Kết quả này thay thế nhận định trước đó rằng CI còn chờ. T09 và diễn tập khôi phục vẫn được miễn, không tính đạt; chưa có dữ liệu thật nào bị đọc hoặc xóa.
 # Cập nhật 16/10/2026 — phần thực thi đã có tại máy, chưa phát hành
 
 - Đã nối giao diện nhắc/xem trước/xác nhận và API có xác thực, kiểm nguồn, sổ tiến độ, tiếp tục sau gián đoạn; chưa gọi Google/Gemini. Kiểm thử dùng dữ liệu tổng hợp cô lập.

@@ -103,4 +103,10 @@ Không quay về ảnh trước thu hồi phiên rồi tuyên bố vẫn có b�
 - Đã tìm và sửa nguyên nhân tuổi ngữ cảnh LangGraph bị che bởi thời điểm sửa tệp SQLite dùng chung: hiện đọc UUIDv6 của checkpoint/bản ghi ghi thuộc đúng chủ sở hữu; mã không rõ định dạng làm kiểm kê dừng an toàn, không đoán tuổi.
 - Backend tại máy: Ruff đạt; nhóm kiểm thử chọn lọc **205 đạt/23 bỏ qua/0 lỗi**. Giao diện: **222 unit test đạt**, lint/build đạt; kiểm Playwright cục bộ với dữ liệu giả ở sáng/tối và 320/390/1280/1440 px, không gửi xác nhận hoặc gọi ngoài.
 - Bằng chứng: [báo cáo kiểm tra lưu giữ](../design-work/retention-ui-20261016/qa/qa-report.md), [ảnh giao diện](../design-work/retention-ui-20261016/qa/screenshots/retention-dark-desktop.png). Không gọi Gemini/Google, không chạm dữ liệu thật.
-- **Chưa nghiệm thu phát hành:** mã trên nhánh `work/data-retention-20261015`, HEAD `f71af08efbe5823326d69ac18f9a86efd8e228b2`; thay đổi chưa commit/đẩy, chưa chạy CI đúng mã, chưa lên `main`/Render. 23 ca liên quan PostgreSQL bị bỏ qua tại máy. T09 vẫn được miễn, không tính đạt.
+- Ghi nhận này phản ánh trạng thái trước commit; xem cập nhật CI mới nhất bên dưới.
+
+## Cập nhật 16/10 — CI của commit ứng viên đã đạt
+
+- GitHub Actions [#38925155479](https://github.com/dbp3206-source/DriveAgent/actions/runs/38925155479), commit `3dad6f5b1101a95a7ecd390e5a4e6ba30686697a`: **thành công**. Job PostgreSQL riêng và job xác minh tổng thể đều đạt, gồm kiểm backend/frontend, dựng và chạy ảnh, xuất PDF tiếng Việt.
+- Mã đã commit và đẩy lên nhánh `work/data-retention-20261015`; `main` và Render chưa nhận bản này. Xuất bản ảnh/triển khai không chạy trên nhánh công việc. Cần đưa ứng viên lên luồng `main`, chờ cổng phát hành, rồi xác minh đúng phiên bản trên URL trước khi gọi là đã phát hành.
+- T09/kiểm khôi phục DB-tệp vẫn được miễn, không tính đạt; năm kiểm tích hợp kho tệp ngoài bị bỏ qua; chưa có dữ liệu thật nào bị đọc hoặc xóa. Vì vậy CI đạt không đồng nghĩa toàn sản phẩm đã production-ready.
