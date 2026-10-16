@@ -90,3 +90,17 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 4. Làm phần giải thích cuối, trình người dùng; sau duyệt mới đóng main/phát hành và biên bản. Giá trị đầu tư ở gói 10/15 báo riêng.
 
 Không quay về ảnh trước thu hồi phiên rồi tuyên bố vẫn có bảo đảm thu hồi. Không dùng một quản trị viên chứng minh bốn người dùng riêng. Không biến giả lập hoặc kiểm mô phỏng thành thành tích sử dụng thật.
+
+## Cập nhật 16/10 — kiểm cục bộ hoàn tất, CI/cloud còn chặn
+
+- Backend theo môi trường cô lập: **1.915 đạt, 28 bỏ qua, 0 lỗi; độ phủ 88,31%**. 11 bài cấu hình chạy riêng đạt 11/11. Trong 28 bài bỏ qua có 23 bài cần PostgreSQL và 5 bài cần kho tệp ngoài.
+- Frontend: 222 bài, lint và bản dựng cô lập đều đạt. Quét bí mật đạt trên 768 tệp; bộ dữ liệu giả lập 10 ca/4 tệp hợp lệ; đánh giá ngoại tuyến 200/200.
+- Hai lượt lỗi trước đó do cấu hình kiểm thử: driver SQLite không hợp lệ và thư mục trạng thái chung khiến hạn mức của các ca mô phỏng va chạm. Đã chạy lại với dữ liệu cô lập đúng cách; không sửa mã sản phẩm để che lỗi kiểm thử.
+- **Chưa production-ready:** còn phải rà diff, commit/đẩy nhánh, chạy CI chính thức (PostgreSQL, Docker và xuất PDF), rồi triển khai và xác nhận đúng mã trên URL. T09/khôi phục vẫn được miễn, không tính đạt. Chưa đọc hoặc xóa dữ liệu thật; chưa gọi Gemini/Google.
+# Cập nhật 16/10/2026 — nối hộp thoại lưu giữ dữ liệu, kiểm thử tại máy
+
+- Đã nối giao diện Fluent hiện có với API xem trước/trạng thái/duyệt/tiếp tục; người dùng phải chủ động đánh dấu xác nhận, dữ liệu Google gốc không bị xóa. Có tiến độ và xử lý thử lại/hủy theo trạng thái.
+- Đã tìm và sửa nguyên nhân tuổi ngữ cảnh LangGraph bị che bởi thời điểm sửa tệp SQLite dùng chung: hiện đọc UUIDv6 của checkpoint/bản ghi ghi thuộc đúng chủ sở hữu; mã không rõ định dạng làm kiểm kê dừng an toàn, không đoán tuổi.
+- Backend tại máy: Ruff đạt; nhóm kiểm thử chọn lọc **205 đạt/23 bỏ qua/0 lỗi**. Giao diện: **222 unit test đạt**, lint/build đạt; kiểm Playwright cục bộ với dữ liệu giả ở sáng/tối và 320/390/1280/1440 px, không gửi xác nhận hoặc gọi ngoài.
+- Bằng chứng: [báo cáo kiểm tra lưu giữ](../design-work/retention-ui-20261016/qa/qa-report.md), [ảnh giao diện](../design-work/retention-ui-20261016/qa/screenshots/retention-dark-desktop.png). Không gọi Gemini/Google, không chạm dữ liệu thật.
+- **Chưa nghiệm thu phát hành:** mã trên nhánh `work/data-retention-20261015`, HEAD `f71af08efbe5823326d69ac18f9a86efd8e228b2`; thay đổi chưa commit/đẩy, chưa chạy CI đúng mã, chưa lên `main`/Render. 23 ca liên quan PostgreSQL bị bỏ qua tại máy. T09 vẫn được miễn, không tính đạt.

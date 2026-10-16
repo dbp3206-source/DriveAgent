@@ -67,6 +67,7 @@ const SettingsPage = lazyWithChunkRecovery(() => import('./pages/SettingsPage').
 const HomePage = lazyWithChunkRecovery(() => import('./pages/HomePage').then((module) => ({ default: module.HomePage })))
 const HarnessPage = lazyWithChunkRecovery(() => import('./pages/HarnessPage').then((module) => ({ default: module.HarnessPage })))
 const SkillsPage = lazyWithChunkRecovery(() => import('./pages/SkillsPage').then((module) => ({ default: module.SkillsPage })))
+const RetentionNotice = lazyWithChunkRecovery(() => import('./components/RetentionNotice').then((module) => ({ default: module.RetentionNotice })))
 
 function preferredDarkMode() {
   const saved = localStorage.getItem('drive-agent-theme')
@@ -91,7 +92,26 @@ export default function App() {
   const [chatOpened, setChatOpened] = useState(page === 'chat')
   const [error, setError] = useState('')
   const [isChatBusy, setIsChatBusy] = useState(false)
-  const {activity: chatActivity, update: updateChatActivity, acknowledge: acknowledgeChat} = useChatActivity(status?.user?.id, page)
+  const [retentionEpoch, setRetentionEpoch] = useState(0)
+  const {activity: chatActivity, update: updateChatActivity, acknowledge: acknowledgeChat,
+    reset: resetChatActivity} = useChatActivity(status?.user?.id, page)
+
+  useEffect(() => {
+    const ownerId = status?.user?.id
+    if (!ownerId) return
+    const invalidate = (event: Event) => {
+      const detail = (event as CustomEvent<{ownerId?: string}>).detail
+      if (detail?.ownerId !== ownerId) return
+      try {
+        sessionStorage.removeItem('drive_agent_session_id')
+        sessionStorage.removeItem(CHAT_OPEN_KEY)
+      } catch { /* Optional storage */ }
+      resetChatActivity()
+      setRetentionEpoch((current) => current + 1)
+    }
+    window.addEventListener('veridra:retention-completed', invalidate)
+    return () => window.removeEventListener('veridra:retention-completed', invalidate)
+  }, [status?.user?.id, resetChatActivity])
 
   const setPage = (next: PageKey) => {
     if (next === 'chat') setChatOpened(true)
@@ -236,17 +256,18 @@ export default function App() {
           aria-hidden={page !== 'chat'}
         >
           <Suspense fallback={<Spinner label="Đang mở cuộc trò chuyện" />}>
-            <ChatPage key={status.user.id} ownerId={status.user.id} onBusyChange={setIsChatBusy} onTaskChange={updateChatActivity} isActive={page === 'chat'} />
+            <ChatPage key={`${status.user.id}:${retentionEpoch}`} ownerId={status.user.id} onBusyChange={setIsChatBusy} onTaskChange={updateChatActivity} isActive={page === 'chat'} />
           </Suspense>
         </div>}
 
         {page !== 'chat' && pageContent[page] && (
-          <ScreenBoundary key={page}>
+          <ScreenBoundary key={`${page}:${['home', 'local', 'artifacts', 'memory', 'harness', 'audit', 'skills'].includes(page) ? retentionEpoch : 0}`}>
             <Suspense fallback={<Spinner label="Đang mở khu vực" />}>
               {pageContent[page]}
             </Suspense>
           </ScreenBoundary>
         )}
+        <Suspense fallback={null}><RetentionNotice ownerId={status.user.id} /></Suspense>
       </AppShell>
     )
   }

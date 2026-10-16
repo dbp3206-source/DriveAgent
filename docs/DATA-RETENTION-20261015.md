@@ -68,3 +68,16 @@ Không tạo điểm chất lượng bằng số tiêu chí vừa liệt kê; ch
 Hai lần đọc URL Markdown bằng công cụ web trả `400 Unsupported content-type: text/markdown`; đã chuyển sang trang HTML chính thức và đọc được. Đây là lỗi đọc tài liệu, không phải lỗi sản phẩm hoặc Storage. Truy vấn cấu trúc cloud hoàn tất thành công; không kiểm xóa trên dữ liệu thật.
 
 [Điều khoản Gemini](https://ai.google.dev/gemini-api/terms), đối chiếu 15/10: với dịch vụ không trả phí, không gửi dữ liệu cá nhân/nhạy cảm/bí mật; mã hóa lúc truyền/lưu không làm mất điều kiện này. Không khẳng định đã ẩn danh toàn bộ chỉ vì tìm/che được email hoặc số điện thoại. Lựa chọn xử lý dữ liệu thật phải phù hợp điều kiện nhà cung cấp, không đổi thành chỉ dữ liệu giả lập rồi gọi sản phẩm Production đầy đủ.
+
+# Cập nhật 16/10/2026 — nghiệm thử đầy đủ tại máy
+
+- Backend: 1.915 đạt, 28 bỏ qua, 0 lỗi, độ phủ 88,31%; 11 bài cấu hình riêng cũng đạt. Trong 28 ca bỏ qua có 23 ca PostgreSQL và 5 ca kho tệp ngoài, cần dịch vụ CI tương ứng.
+- Giao diện: 222 bài đạt, lint và bản dựng cô lập đạt; ảnh trình duyệt ở sáng/tối và các kích thước chính đã được rà lại. Không gửi yêu cầu xóa trong kiểm thử.
+- Quét bí mật, kiểm bộ dữ liệu giả lập và đánh giá ngoại tuyến đều đạt; đánh giá 200/200 không gọi mô hình.
+- Đây là kiểm tra tại máy, chưa phải CI của mã phát hành và chưa xác nhận URL. Mã vẫn chưa commit/đẩy; Render chưa nhận tính năng mới. T09 và diễn tập khôi phục vẫn được miễn, không tính đạt.
+# Cập nhật 16/10/2026 — phần thực thi đã có tại máy, chưa phát hành
+
+- Đã nối giao diện nhắc/xem trước/xác nhận và API có xác thực, kiểm nguồn, sổ tiến độ, tiếp tục sau gián đoạn; chưa gọi Google/Gemini. Kiểm thử dùng dữ liệu tổng hợp cô lập.
+- Đã sửa cách tính tuổi ngữ cảnh LangGraph: không dùng mốc sửa của SQLite/WAL dùng chung; dùng mốc UUIDv6 riêng trong checkpoint và dòng ghi, lọc đúng người sở hữu, định dạng lạ thì dừng an toàn. Hộp thoại thông báo rằng dọn dữ liệu có thể đặt lại ngữ cảnh trợ lý; lịch sử chat chuẩn vẫn được giữ.
+- Ruff đạt; backend chọn lọc **205 đạt/23 bỏ qua**; frontend **222 unit test đạt**, lint/build/Playwright cục bộ đạt. Chi tiết và ảnh tại [QA 16/10](../design-work/retention-ui-20261016/qa/qa-report.md).
+- **Chưa production-ready và chưa có trên URL:** thay đổi còn chưa commit trên `work/data-retention-20261015`; cần CI đúng mã (gồm PostgreSQL), rà diff, đẩy theo nhánh phát hành, triển khai và xác minh URL. T09 khôi phục và bốn tài khoản vẫn được miễn, không ghi là đạt. Dữ liệu thật chưa bị đọc hoặc xóa.

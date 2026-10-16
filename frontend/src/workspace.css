@@ -1118,6 +1118,65 @@ button:focus-visible, a:focus-visible, summary:focus-visible {
   border-radius: 16px;
 }
 
+.retention-dialog {
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 32px));
+  max-width: 560px;
+  min-width: 0;
+}
+.retention-dialog__content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  min-width: 0;
+  line-height: 1.55;
+}
+.retention-dialog__content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+.retention-dialog .fui-MessageBar,
+.retention-dialog .fui-MessageBarBody {
+  min-width: 0;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.retention-dialog .fui-Checkbox {
+  min-width: 0;
+  max-width: 100%;
+}
+.retention-dialog__content > p,
+.retention-dialog__content .fui-MessageBar,
+.retention-dialog__content .fui-Checkbox {
+  margin: 0;
+}
+.retention-counts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 12px 14px;
+  list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-muted);
+}
+.retention-counts li,
+.retention-job-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.retention-counts strong { font-variant-numeric: tabular-nums; }
+.retention-job-status { justify-content: flex-start; flex-wrap: wrap; }
+.retention-settings { scroll-margin-top: 88px; }
+@media (max-width: 600px) {
+  .retention-dialog { width: calc(100vw - 24px); }
+  .retention-dialog .fui-DialogActions { flex-wrap: wrap; }
+  .retention-dialog .fui-DialogActions > * { flex: 1 1 auto; }
+}
+
 /* Global scrollbars */
 * {
   scrollbar-width: thin;

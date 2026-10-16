@@ -1,3 +1,4 @@
+import asyncio
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
@@ -141,6 +142,8 @@ def test_application_registers_expected_runtime_surfaces():
     assert "/api/health" in paths
     assert "/api/auth/google" in paths
     assert "/api/chat" in paths
+    assert "/api/retention/preview" in paths
+    assert "/api/retention/confirm" in paths
     mount_paths = {getattr(route, "path", None) for route in main.app.routes}
     assert "/api/mcp" in mount_paths
     assert "/api/a2a" in mount_paths
@@ -173,7 +176,17 @@ def test_request_fixture_has_state_namespace():
 @pytest.mark.asyncio
 @pytest.mark.parametrize("retention_error", [None, PermissionError("private archive")])
 @pytest.mark.parametrize("storage_error", [None, RuntimeError("storage_bucket_unavailable")])
-async def test_lifespan_initializes_and_closes_runtime_services(retention_error, storage_error):
+async def test_lifespan_initializes_and_closes_runtime_services(
+    retention_error, storage_error, monkeypatch,
+):
+    async def idle_worker(*_args, **_kwargs):
+        await asyncio.Future()
+
+    monkeypatch.setattr("app.services.durable_evaluation.worker", idle_worker)
+    monkeypatch.setattr("app.services.pdf_jobs.worker", idle_worker)
+    monkeypatch.setattr("app.services.scheduled_jobs.worker", idle_worker)
+    monkeypatch.setattr("app.services.chat_tasks.worker", idle_worker)
+
     class AsyncContext:
         def __init__(self, value=None):
             self.value = value
@@ -231,6 +244,8 @@ async def test_lifespan_initializes_and_closes_runtime_services(retention_error,
             assert fake_app.state.vector_store is vector_store
             assert fake_app.state.embeddings is embeddings
             assert fake_app.state.orchestrator is orchestrator
+            assert fake_app.state.retention_coordinator is not None
+            assert fake_app.state.retention_gate is not None
             assert protocol_bridge.registry is fake_app.state.registry
             assert fake_app.state.encrypted_backup_retention_healthy is (retention_error is None)
             assert fake_app.state.object_storage_healthy is (storage_error is None)
@@ -241,3 +256,4 @@ async def test_lifespan_initializes_and_closes_runtime_services(retention_error,
     embeddings.close.assert_awaited_once()
     vector_store.close.assert_awaited_once()
     engine.dispose.assert_awaited_once()
+    assert fake_app.state.retention_coordinator is None

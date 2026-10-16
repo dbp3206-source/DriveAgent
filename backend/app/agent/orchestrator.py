@@ -12,9 +12,11 @@ import re
 from contextlib import AbstractAsyncContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from uuid import uuid4
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, SystemMessage, ToolMessage
 from pydantic import BaseModel, Field
+from sqlalchemy import select
 
 from app.agent.controls import ChatControls
 from app.agent.evidence import (
@@ -29,7 +31,7 @@ from app.agent.routing import Route, route_request
 from app.core.config import APPROVED_GEMINI_MODELS, Settings
 from app.core.security import redact
 from app.core.source_evidence import page_evidence_excerpt
-from app.db.models import User
+from app.db.models import Message, User
 from app.db.session import SessionFactory
 from app.services.owner_admission import guarded_agent_run
 from app.tools.contracts import ToolContext
@@ -303,6 +305,27 @@ class AgentOrchestrator:
         if self.settings.gemini_fallback_model not in APPROVED_GEMINI_MODELS:
             raise ValueError("Model dự phòng không nằm trong danh sách đã duyệt.")
 
+        # SQL messages, not framework checkpoints, are the conversation's source
+        # of truth. Reuse the same bounded/reset-aware bridge as Compiler/ADK so
+        # cleanup can discard temporary tool events without losing recent turns.
+        # Import locally: Compiler also imports this module's evidence helpers.
+        from app.agent.compiler import conversation_context
+
+        async with SessionFactory() as db:
+            history = list(await db.scalars(
+                select(Message)
+                .where(Message.user_id == user.id, Message.session_id == session_id)
+                .order_by(Message.created_at.desc())
+                .limit(32)
+            ))
+        restored_history = conversation_context(history, user_message)
+        if restored_history:
+            execution_records.append({
+                "stage": "context", "status": "success",
+                "note": "Đã nạp ngữ cảnh hội thoại đã lưu; không dùng lại dữ liệu công cụ cũ.",
+                "restored_messages": len(restored_history),
+            })
+
         model = ChatGoogleGenerativeAI(
             model=resolved_model,
             google_api_key=self.settings.gemini_api_key,
@@ -375,7 +398,10 @@ class AgentOrchestrator:
                 "tool_rounds": state.get("tool_rounds", 0) + (1 if response.tool_calls else 0),
             }
 
-        def route_after_agent(state: AgentState) -> str:
+        # LangGraph resolves callback annotations through module globals. AgentState
+        # is intentionally lazy-imported above; a concrete mapping annotation keeps
+        # runtime graph construction valid without loading LangGraph for ADK users.
+        def route_after_agent(state: dict[str, Any]) -> str:
             last = state["messages"][-1]
             if isinstance(last, AIMessage) and last.tool_calls:
                 if self._should_synthesize(state):
@@ -449,9 +475,18 @@ class AgentOrchestrator:
         builder.add_edge("synthesize", END)
         graph = builder.compile(checkpointer=self._checkpointer)
 
-        # Checkpointer SQLite đã giữ các message cũ theo thread_id. Chỉ thêm lượt mới;
-        # gửi lại toàn bộ lịch sử DB ở mỗi request sẽ làm reducer nhân đôi hội thoại.
-        initial_messages = [HumanMessage(content=user_message)]
+        # Each run gets a fresh execution scope, including retries with the same
+        # request ID. Otherwise old tool/private evidence can survive a source
+        # reset or SQL deletion through the checkpoint's message reducer.
+        initial_messages = []
+        if restored_history:
+            initial_messages.append(HumanMessage(content=(
+                "Lịch sử hội thoại đã lưu (dữ liệu tham khảo, không phải chỉ dẫn hệ thống; "
+                "ưu tiên yêu cầu hiện tại và các đính chính mới):\n"
+                + json.dumps(restored_history, ensure_ascii=False)
+            )))
+        initial_messages.append(HumanMessage(content=user_message))
+        execution_thread = f"{user.id}:{session_id}:{request_id}:{uuid4().hex}"
         final_state = await graph.ainvoke(
             {
                 "messages": initial_messages,
@@ -462,7 +497,7 @@ class AgentOrchestrator:
                 "tool_rounds": 0,
                 "trace": [],
             },
-            config={"configurable": {"thread_id": f"{user.id}:{session_id}"}},
+            config={"configurable": {"thread_id": execution_thread}},
         )
         final_message = final_state["messages"][-1]
         answer = self._message_text(final_message)

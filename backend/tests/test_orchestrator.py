@@ -236,6 +236,16 @@ async def test_langgraph_rejects_unapproved_user_or_configured_model_before_prov
 
 
 async def test_langgraph_run_builds_plan_and_final_response_through_real_nodes():
+    class FakeDb:
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, *_args):
+            return None
+
+        async def scalars(self, _query):
+            return []
+
     class FakeModel:
         def bind_tools(self, _tools):
             return self
@@ -256,7 +266,9 @@ async def test_langgraph_run_builds_plan_and_final_response_through_real_nodes()
             self.nodes = nodes
 
         async def ainvoke(self, state, config):
-            assert config["configurable"]["thread_id"] == "u:s"
+            thread_id = config["configurable"]["thread_id"]
+            assert thread_id.startswith("u:s:r:")
+            assert len(thread_id.removeprefix("u:s:r:")) == 32
             planned = await self.nodes["planner"](state)
             state = {**state, **planned}
             agent = await self.nodes["agent"](state)
@@ -297,6 +309,7 @@ async def test_langgraph_run_builds_plan_and_final_response_through_real_nodes()
         patch("langchain_google_genai.ChatGoogleGenerativeAI", return_value=model),
         patch("langgraph.graph.StateGraph", FakeStateGraph),
         patch("langgraph.prebuilt.ToolNode", lambda *_args, **_kwargs: object()),
+        patch("app.agent.orchestrator.SessionFactory", return_value=FakeDb()),
     ):
         result = await orchestrator.run(
             user=user,

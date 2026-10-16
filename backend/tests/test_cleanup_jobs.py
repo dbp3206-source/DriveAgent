@@ -94,7 +94,7 @@ async def test_idempotent_enqueue_is_owner_bound_and_contains_only_scope_metadat
         assert row.sql_completed_at is None
     public = await jobs.status(factory, owner, identity)
     assert set(public) == {"id", "status", "attempts", "selected_count", "remaining_count",
-                           "completed_count", "sql_completed", "error_code"}
+                           "completed_count", "sql_completed", "error_code", "can_cancel"}
     assert public["selected_count"] == 1 and public["remaining_count"] == 2
     assert public["status"] == "queued" and public["attempts"] == 0
 
@@ -196,7 +196,7 @@ async def test_exact_progress_survives_reopen_and_only_remaining_references_resu
     await engine.dispose()
     second = await jobs.claim(factory, now=STAMP + 121)
     assert second["phase"] == "purging" and second["attempt"] == 2
-    assert json.loads(second["remaining_json"]) == [scope.external[1].model_dump()]
+    assert json.loads(second["remaining_json"]) == [scope.external[1].model_dump(mode="json")]
     async with factory() as db:
         with pytest.raises(jobs.CleanupStateError, match="reference_not_pending"):
             await jobs.record_purge(db, *lease_args(second), scope.external[0], now=STAMP + 121)
@@ -232,6 +232,52 @@ async def test_expired_worker_cannot_checkpoint_or_finish_after_reclaim(queue):
             with pytest.raises(jobs.CleanupLeaseLost):
                 await action()
             await db.rollback()
+
+
+async def test_progress_cannot_substitute_a_reference_fingerprint_or_copy_proof(queue):
+    factory, owner, _other, _engine = queue
+    original = plan(owner)
+    reference = original.external[0].model_copy(update={
+        "fingerprint": "a" * 64, "copy_fingerprints": ("b" * 64,),
+    })
+    scope = original.model_copy(update={"external": (reference,)})
+    identity = await jobs.enqueue(factory, owner, scope, now=STAMP)
+    for field, replacement in (("fingerprint", "c" * 64),
+                               ("copy_fingerprints", ["d" * 64])):
+        changed = reference.model_dump(mode="json")
+        changed[field] = replacement
+        async with factory() as db:
+            await db.execute(update(CleanupJob).where(CleanupJob.id == identity).values(
+                remaining_json=json.dumps([changed]), status="queued",
+            ))
+            await db.commit()
+        with pytest.raises(jobs.CleanupStateError, match="checkpoint_invalid"):
+            await jobs.status(factory, owner, identity)
+
+
+async def test_auxiliary_receipt_is_required_before_sql_and_cannot_ack_a_pdf_early(queue):
+    factory, owner, _other, _engine = queue
+    original = plan(owner)
+    ref = jobs.PurgeReference(kind="state", owner_id=owner, object_id="skills",
+                              fingerprint="a" * 64)
+    scope = original.model_copy(update={"external": (ref, original.external[0])})
+    identity = await jobs.enqueue(factory, owner, scope, now=STAMP)
+    lease = await jobs.claim(factory, now=STAMP)
+    async with factory() as db:
+        with pytest.raises(jobs.CleanupStateError, match="critical_steps_pending"):
+            await jobs.mark_sql_done(db, *lease_args(lease), now=STAMP)
+        with pytest.raises(jobs.CleanupStateError, match="critical_state_conflict"):
+            await jobs.record_critical_step(db, *lease_args(lease), ref, now=STAMP)
+        await db.rollback()
+        await jobs.mark_started(db, *lease_args(lease), now=STAMP)
+        with pytest.raises(jobs.CleanupStateError, match="critical_state_conflict"):
+            await jobs.record_critical_step(db, *lease_args(lease), original.external[0], now=STAMP)
+        await jobs.record_critical_step(db, *lease_args(lease), ref, now=STAMP)
+        await jobs.mark_sql_done(db, *lease_args(lease), now=STAMP)
+        await db.commit()
+    status = await jobs.status(factory, owner, identity)
+    assert status["sql_completed"] and status["remaining_count"] == 1
+    assert status["completed_count"] == 1
 
 
 async def test_actual_update_is_fenced_if_claim_changes_after_sqlite_read(queue, monkeypatch):
@@ -289,7 +335,7 @@ async def test_retry_limit_manual_retry_and_cancel_do_not_expand_or_reset_scope(
     resumed = await jobs.claim(factory, now=STAMP + 364)
     assert resumed["phase"] == "purging" and resumed["attempt"] == 1
     assert resumed["plan_json"] == first["plan_json"]
-    assert json.loads(resumed["remaining_json"]) == [scope.external[1].model_dump()]
+    assert json.loads(resumed["remaining_json"]) == [scope.external[1].model_dump(mode="json")]
 
 
 async def test_cancel_only_before_effects_and_fail_accepts_only_safe_codes(queue):

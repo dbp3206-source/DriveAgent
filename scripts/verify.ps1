@@ -4,13 +4,8 @@ Set-Location $repoRoot
 
 & ".\backend\.venv\Scripts\python.exe" -m ruff check backend
 if ($LASTEXITCODE -ne 0) { throw "Backend lint failed." }
-Push-Location backend
-try {
-    & ".\.venv\Scripts\python.exe" -m ruff check ..\scripts
-    if ($LASTEXITCODE -ne 0) { throw "Script lint failed." }
-} finally {
-    Pop-Location
-}
+& ".\backend\.venv\Scripts\python.exe" -m ruff check --config backend\pyproject.toml scripts
+if ($LASTEXITCODE -ne 0) { throw "Script lint failed." }
 & ".\backend\.venv\Scripts\python.exe" -m pip check
 if ($LASTEXITCODE -ne 0) { throw "Backend dependency check failed." }
 # Keep the evaluation contract in the same local verification path as code and

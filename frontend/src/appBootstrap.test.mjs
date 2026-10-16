@@ -36,6 +36,7 @@ function harness() {
       if (failChunk) throw new Error('chunk offline')
       return chat
     }
+    if (path === './components/RetentionNotice') return {RetentionNotice: () => null}
     if (path === './api') return { api(path) {
       calls.push(path)
       return path === '/api/auth/status' ? auth : Promise.resolve(null)

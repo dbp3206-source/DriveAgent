@@ -124,6 +124,21 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
 
   useEffect(() => { void loadOperations() }, [])
 
+  useEffect(() => {
+    const refreshAfterCleanup = (event: Event) => {
+      const ownerId = (event as CustomEvent<{ ownerId?: string }>).detail?.ownerId
+      if (ownerId !== status.user?.id) return
+      void api<typeof operations>('/api/operations/status').then((result) => {
+        setOperations(result)
+        setOperationError('')
+      }).catch((error) => {
+        setOperationError(error instanceof Error ? error.message : 'Không đọc được trạng thái thao tác.')
+      })
+    }
+    window.addEventListener('veridra:retention-completed', refreshAfterCleanup)
+    return () => window.removeEventListener('veridra:retention-completed', refreshAfterCleanup)
+  }, [status.user?.id])
+
   async function loadCredentials() {
     setCredentialLoading(true)
     try {
@@ -260,6 +275,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
     <div className="page-heading"><div><h2>Cài đặt Veridra</h2><p>Quản lý theo từng nhóm: hệ thống, AI, kết nối Google, trải nghiệm và bảo mật.</p></div></div>
     <nav className="settings-index" aria-label="Nhóm cài đặt">
       <button type="button" onClick={() => scrollToSetting('settings-system')}>Hệ thống</button>
+      <button type="button" onClick={() => scrollToSetting('settings-retention')}>Dữ liệu đã lưu</button>
       <button type="button" onClick={() => scrollToSetting('settings-ai')}>AI & hạn mức</button>
       <button type="button" onClick={() => scrollToSetting('settings-google')}>Google Workspace</button>
       <button type="button" onClick={() => scrollToSetting('settings-experience')}>Trải nghiệm</button>
@@ -293,6 +309,15 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
                 : 'Đã cấu hình đăng nhập Google; tài khoản chưa cấp đủ quyền đọc Drive.'}
         />
       </div>
+    </section>
+
+    <section id="settings-retention" className="settings-group retention-settings" aria-labelledby="settings-retention-title">
+      <header className="settings-group__heading">
+        <div><span>Dữ liệu đã lưu</span><h3 id="settings-retention-title">Thời hạn lưu giữ</h3></div>
+        <p>Dữ liệu Veridra đến hạn sau 30 ngày. Trước khi dọn, Veridra hiển thị phạm vi và chờ bạn xác nhận.</p>
+      </header>
+      <MessageBar intent="info"><MessageBarBody>Việc dọn chỉ áp dụng cho dữ liệu Veridra đã lưu và ngữ cảnh làm việc của trợ lý. Bản gốc trong Gmail, Drive, Lịch và Docs của Google không bị xóa.</MessageBarBody></MessageBar>
+      <Button appearance="secondary" onClick={() => window.dispatchEvent(new Event('veridra:retention-open'))}>Kiểm tra dữ liệu cần dọn</Button>
     </section>
 
     <section className="operation-ledger settings-group" aria-labelledby="operation-ledger-title">

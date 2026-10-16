@@ -112,6 +112,14 @@ class SnapshotItem(BaseModel):
     fingerprint: str = Field(pattern=r"^[a-f0-9]{64}$")
 
 
+class StoreBinding(BaseModel):
+    """Pin derived-store contents without putting private payloads in a token."""
+    model_config = ConfigDict(extra="forbid", frozen=True)
+    name: str = Field(pattern=r"^[a-z][a-z0-9_-]{0,63}$")
+    fingerprint: str = Field(pattern=r"^[a-f0-9]{64}$")
+    count: int = Field(ge=0, le=1_000_000)
+
+
 class ApprovalSnapshot(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
     version: int = 1
@@ -120,6 +128,7 @@ class ApprovalSnapshot(BaseModel):
     issued_at: datetime
     cutoff: datetime
     items: tuple[SnapshotItem, ...] = Field(min_length=1, max_length=MAX_APPROVAL_ITEMS)
+    bindings: tuple[StoreBinding, ...] = Field(default=(), max_length=16)
 
 
 @dataclass(frozen=True)
@@ -166,7 +175,8 @@ class RetentionPolicy:
         return owned
 
     def prepare(self, *, owner_id: str, candidates: list[RetentionCandidate],
-                inventories: dict[str, bool], now: datetime) -> RetentionPreview:
+                inventories: dict[str, bool], now: datetime,
+                bindings: tuple[StoreBinding, ...] = ()) -> RetentionPreview:
         """Read-only selection; neither viewing nor signing is deletion consent."""
         self._complete_inventory(inventories)
         stamp = utc(now)
@@ -185,6 +195,7 @@ class RetentionPolicy:
                     kind=item.kind, record_id=item.record_id, changed_at=utc(item.changed_at),
                     fingerprint=item.fingerprint,
                 ) for item in chosen),
+                bindings=bindings,
             )
             token = self.serializer.dumps(snapshot.model_dump(mode="json"))
             expires_at = stamp + timedelta(seconds=APPROVAL_SECONDS)
@@ -197,7 +208,8 @@ class RetentionPolicy:
         )
 
     def validate(self, *, token: str, owner_id: str, current: list[RetentionCandidate],
-                 inventories: dict[str, bool], now: datetime) -> ApprovalSnapshot:
+                 inventories: dict[str, bool], now: datetime,
+                 bindings: tuple[StoreBinding, ...] = ()) -> ApprovalSnapshot:
         """Revalidate under the runner's fence, before its first deletion.
 
         This authenticates a preview, not a user's click. The API still must
@@ -213,6 +225,9 @@ class RetentionPolicy:
             raise RetentionPolicyError("invalid_retention_approval") from None
         if snapshot.version != 1 or snapshot.owner_id != owner_id:
             raise RetentionPolicyError("invalid_retention_approval")
+        if (snapshot.bindings != bindings
+                or len({item.name for item in bindings}) != len(bindings)):
+            raise RetentionPolicyError("retention_preview_changed")
         stamp, issued_at = utc(now), utc(snapshot.issued_at)
         if stamp < issued_at or stamp >= issued_at + timedelta(seconds=APPROVAL_SECONDS):
             raise RetentionPolicyError("retention_approval_expired")

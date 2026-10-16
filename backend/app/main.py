@@ -38,6 +38,7 @@ from app.api import (
     provider_credentials,
     rag,
     release,
+    retention,
     scheduler,
     sheets,
     skills,
@@ -56,6 +57,8 @@ from app.services.memory import MemoryService, memory_tool_definitions
 from app.services.owner_admission import OwnerAdmission, OwnerAdmissionMiddleware
 from app.services.protocols import build_protocol_apps
 from app.services.rag import RagService, rag_tool_definitions
+from app.services.retention_coordinator import RetentionCoordinator
+from app.services.retention_runtime import RetentionRuntime
 from app.services.user_inference import UserInferencePool, runtime_settings
 from app.services.vector_recovery import reconcile_document_vectors
 from app.services.vector_store import VectorStore
@@ -199,6 +202,16 @@ async def lifespan(app: FastAPI):
     admission = OwnerAdmission(SessionFactory)
     registry.admission_gate = admission
     app.state.retention_gate = admission
+    from app.services.object_storage import object_storage_for
+
+    retention_runtime = RetentionRuntime(
+        settings, object_storage_for(settings), vector_store,
+    )
+    retention_coordinator = RetentionCoordinator(
+        SessionFactory, admission, retention_runtime, settings.app_secret,
+    )
+    app.state.retention_runtime = retention_runtime
+    app.state.retention_coordinator = retention_coordinator
     for definition in drive_tool_definitions():
         registry.register(definition)
     for definition in document_tool_definitions():
@@ -257,6 +270,7 @@ async def lifespan(app: FastAPI):
     app.state.runtime_started_at = datetime.now(UTC).isoformat()
     protocol_bridge.registry = registry
     retention_task = asyncio.create_task(_periodic_agentops_retention(app))
+    content_retention_task = asyncio.create_task(retention_coordinator.worker())
     from app.services.durable_evaluation import worker
 
     queue = await asyncio.to_thread(evaluation_queue, settings)
@@ -273,6 +287,9 @@ async def lifespan(app: FastAPI):
         async with mcp_lifespan_app.router.lifespan_context(mcp_lifespan_app):
             yield
     finally:
+        content_retention_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await content_retention_task
         for task in chat_workers:
             task.cancel()
         for task in chat_workers:
@@ -294,6 +311,7 @@ async def lifespan(app: FastAPI):
 
         await asyncio.to_thread(flush_operational_traces)
         await admission.drain_threads()
+        await retention_runtime.close()
         await user_inference.close()
         await orchestrator.close()
         await embeddings.close()
@@ -302,6 +320,8 @@ async def lifespan(app: FastAPI):
         await asyncio.to_thread(close_state_engines)
         registry.admission_gate = None
         app.state.retention_gate = None
+        app.state.retention_coordinator = None
+        app.state.retention_runtime = None
 
 
 app = FastAPI(
@@ -478,6 +498,7 @@ for api_router in (
     release.router,
     evaluation_jobs.router,
     scheduler.router,
+    retention.router,
 ):
     app.include_router(api_router)
 

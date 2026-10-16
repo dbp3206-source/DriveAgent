@@ -1,0 +1,66 @@
+{
+  "target_output": "Lát cắt giao diện và máy chủ nhắc/xác nhận dọn dữ liệu 30 ngày; chưa phải bản phát hành sản phẩm",
+  "source_files": [
+    "backend/app/services/retention_policy.py",
+    "backend/app/services/retention_context.py",
+    "backend/app/services/retention_runtime.py",
+    "backend/app/services/retention_coordinator.py",
+    "backend/app/api/retention.py",
+    "frontend/src/components/RetentionNotice.tsx",
+    "frontend/src/pages/SettingsPage.tsx",
+    "frontend/src/workspace.css"
+  ],
+  "primary_skill": "none; followed the existing Fluent UI 9 design system",
+  "specialist_skills": [],
+  "mcp_tools_used": [],
+  "commands_run": [
+    "frontend: npm test (222 passed)",
+    "frontend: npm run lint",
+    "frontend: npm run build -- --outDir .verify-dist (isolated output, verified then removed)",
+    "frontend: node scripts/retention-ui-smoke.mjs (local Vite app, Playwright, cached Chromium; API mocked)",
+    "backend: python -m ruff check backend",
+    "scripts: python -m ruff check --config backend/pyproject.toml scripts",
+    "backend: python -m pip check",
+    "backend: python -m pytest backend/tests --ignore=backend/tests/test_config.py --basetemp <isolated tmp path> --cov=app --cov-report=term-missing --cov-fail-under=85 -x (1915 passed, 28 skipped, 88.31% coverage)",
+    "backend config: python -m pytest backend/tests/test_config.py -q --basetemp <isolated tmp path> (11 passed)",
+    "security: python scripts/scan_release_secrets.py (768 Git-visible files)",
+    "offline evaluation: python scripts/evaluate_release_offline.py --output tmp/release-evaluation-local.json (200/200)",
+    "dataset validation: python scripts/validate_internal_assistant_dataset.py (10 cases, 4 synthetic files)",
+    "git diff --check",
+    "PowerShell Test-Path frontend/public/retention-harness.html and frontend/dist/retention-harness.html"
+  ],
+  "repository_defined_outputs": [
+    "frontend React/TypeScript application",
+    "design-work/retention-ui-20261016/qa/qa-report.md",
+    "design-work/retention-ui-20261016/qa/screenshots/retention-dark-desktop.png",
+    "design-work/retention-ui-20261016/qa/screenshots/retention-dark-mobile.png",
+    "design-work/retention-ui-20261016/qa/screenshots/retention-light-desktop.png"
+  ],
+  "delivered_outputs": [
+    "frontend/src/components/RetentionNotice.tsx",
+    "backend/app/api/retention.py",
+    "backend/app/services/retention_context.py",
+    "backend/app/services/retention_coordinator.py",
+    "backend/app/services/retention_runtime.py",
+    "design-work/retention-ui-20261016/qa/qa-report.md",
+    "design-work/retention-ui-20261016/qa/run-manifest.json"
+  ],
+  "verification": {
+    "structural": true,
+    "rendered": true,
+    "visual_review": true,
+    "content_fidelity": true,
+    "target_environment": false
+  },
+  "quality_score": 86,
+  "known_limitations": [
+    "Score covers this retention feature slice only, not the whole product.",
+    "Backend local suite: 1,915 passed/28 skipped at 88.31% coverage plus 11/11 config tests in a separate no-live-DB process; PostgreSQL and external object-storage integration checks still require CI services.",
+    "Frontend 222 unit tests, lint, isolated production build, and Playwright browser smoke passed; the browser used mocked APIs only.",
+    "Offline evaluation 200/200, internal dataset integrity 10 cases/4 fixtures, and secret scan 768 Git-visible files passed; none substitutes for live model-quality or cloud acceptance.",
+    "Cloud Render and Supabase were not read or modified; no production data, model calls, Gmail, Drive or Calendar were used.",
+    "The working tree is uncommitted and undeployed; full CI, main branch and live URL verification remain required.",
+    "Restore rehearsal and four-user cloud UAT (T09) are waived and remain unverified.",
+    "Shared encrypted backups and provider-held/downloaded copies are not removed by this per-user cleanup path."
+  ]
+}

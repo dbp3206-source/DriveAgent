@@ -44,12 +44,20 @@ class CleanupLeaseLost(CleanupStateError):
 
 class PurgeReference(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
-    kind: Literal["pdf", "drive_chunks", "agent_memories"]
+    kind: Literal["pdf", "drive_chunks", "agent_memories", "state", "adk_context",
+                  "langgraph_context"]
     owner_id: str = Field(min_length=1, max_length=64, pattern=r"^[A-Za-z0-9-]+$")
     object_id: str = Field(min_length=1, max_length=200)
+    fingerprint: str | None = Field(default=None, pattern=r"^[a-f0-9]{64}$")
+    copy_fingerprints: tuple[str, ...] = Field(default=(), max_length=2)
 
     @model_validator(mode="after")
     def pdf_identity(self):
+        if (self.copy_fingerprints and (self.kind != "pdf" or self.fingerprint is None)
+                or len(set(self.copy_fingerprints)) != len(self.copy_fingerprints)
+                or any(len(value) != 64 or any(c not in "0123456789abcdef" for c in value)
+                       for value in self.copy_fingerprints)):
+            raise ValueError("invalid_cleanup_pdf_copies")
         if self.kind == "pdf" and (len(self.object_id) > 64 or any(
             not (char.isascii() and (char.isalnum() or char == "-")) for char in self.object_id
         )):
@@ -78,6 +86,8 @@ class CleanupPlan(BaseModel):
             raise ValueError("duplicate_cleanup_scope")
         if any(item.owner_id != self.snapshot.owner_id for item in self.external):
             raise ValueError("cleanup_owner_mismatch")
+        if len({item.name for item in self.snapshot.bindings}) != len(self.snapshot.bindings):
+            raise ValueError("duplicate_cleanup_binding")
         return self
 
 
@@ -108,8 +118,10 @@ def _progress(row):
 
         expected, waiting, completed = set(map(key, plan.external)), set(map(key, pending)), set(
             map(key, done))
+        approved_refs = {key(item): item for item in plan.external}
         if (len(waiting) != len(pending) or len(completed) != len(done)
-                or waiting & completed or waiting | completed != expected):
+                or waiting & completed or waiting | completed != expected
+                or any(item != approved_refs.get(key(item)) for item in (*pending, *done))):
             raise ValueError
     except (ValueError, TypeError, KeyError):
         raise CleanupStateError("cleanup_checkpoint_invalid") from None
@@ -253,7 +265,9 @@ async def mark_started(db, job_id: str, token: str, attempt: int, *, now: float)
 async def mark_sql_done(db, job_id: str, token: str, attempt: int, *, now: float) -> None:
     """Caller commits this in the SAME transaction as the critical SQL purge."""
     row = await leased_row(db, job_id, token, attempt, now=now)
-    _progress(row)
+    _plan, remaining, _done = _progress(row)
+    if any(item.kind in {"state", "adk_context", "langgraph_context"} for item in remaining):
+        raise CleanupStateError("cleanup_critical_steps_pending")
     await _checkpoint(db, job_id, token, attempt, now=now, values={
         "sql_completed_at": row.sql_completed_at or datetime.fromtimestamp(now, UTC),
         "critical_started_at": row.critical_started_at or datetime.fromtimestamp(now, UTC),
@@ -261,11 +275,44 @@ async def mark_sql_done(db, job_id: str, token: str, attempt: int, *, now: float
     })
 
 
+async def renew(db, job_id: str, token: str, attempt: int, *, now: float) -> None:
+    await leased_row(db, job_id, token, attempt, now=now)
+    await _checkpoint(db, job_id, token, attempt, now=now,
+                      values={"lease_until": now + LEASE_SECONDS})
+
+
+async def record_critical_step(db, job_id: str, token: str, attempt: int, ref: PurgeReference,
+                               *, now: float) -> None:
+    """After the store commit/readback, BEFORE final application SQL checkpoint.
+
+    Only exact pre-approved auxiliary SQL/cache steps, never file/vector receipts.
+    A crash between that store commit and this receipt is resumed idempotently.
+    """
+    row = await leased_row(db, job_id, token, attempt, now=now)
+    if (ref.kind not in {"state", "adk_context", "langgraph_context"}
+            or ref.owner_id != row.user_id or row.critical_started_at is None
+            or row.sql_completed_at is not None):
+        raise CleanupStateError("cleanup_critical_state_conflict")
+    _plan, remaining, completed = _progress(row)
+    if ref not in remaining:
+        raise CleanupStateError("cleanup_reference_not_pending")
+    await _checkpoint(db, job_id, token, attempt, now=now,
+                      expected_remaining=row.remaining_json, expected_completed=row.completed_json,
+                      values={
+                          "remaining_json": json.dumps([item.model_dump() for item in remaining
+                                                        if item != ref]),
+                          "completed_json": json.dumps([item.model_dump() for item in
+                                                        (*completed, ref)]),
+                          "lease_until": now + LEASE_SECONDS,
+                      })
+
+
 async def record_purge(db, job_id: str, token: str, attempt: int, ref: PurgeReference,
                        *, now: float) -> None:
     """The runner must verify absence first; this method does not delete a file."""
     row = await leased_row(db, job_id, token, attempt, now=now)
-    if row.sql_completed_at is None or ref.owner_id != row.user_id:
+    if (row.sql_completed_at is None or ref.owner_id != row.user_id
+            or ref.kind not in {"pdf", "drive_chunks", "agent_memories"}):
         raise CleanupStateError("cleanup_purge_state_conflict")
     _plan, remaining, completed = _progress(row)
     if ref not in remaining:
@@ -336,4 +383,7 @@ async def status(factory, owner_id: str, job_id: str) -> dict | None:
                 "selected_count": len(plan.snapshot.items),
                 "remaining_count": len(remaining), "completed_count": len(completed),
                 "sql_completed": row.sql_completed_at is not None,
-                "error_code": row.error_code}
+                "error_code": row.error_code,
+                "can_cancel": (row.status in {"queued", "needs_attention"}
+                               and row.critical_started_at is None
+                               and row.sql_completed_at is None)}

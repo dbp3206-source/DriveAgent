@@ -18,6 +18,11 @@ export function useChatActivity(ownerId: string | undefined, page: string) {
   }, [ownerId])
   const acknowledge = useCallback(() => setStored(current =>
     current && current.ownerId === ownerId && current.unread ? {...current, unread: false} : current), [ownerId])
+  const reset = useCallback(() => {
+    setStored(null)
+    if (!ownerId) return
+    try { sessionStorage.removeItem(`veridra-chat-activity:${ownerId}`) } catch { /* Optional */ }
+  }, [ownerId])
   useEffect(() => {
     const acknowledgeVisible = () => {
       if (page !== 'chat' || document.visibilityState !== 'visible') return
@@ -30,5 +35,5 @@ export function useChatActivity(ownerId: string | undefined, page: string) {
     document.addEventListener('visibilitychange', acknowledgeVisible)
     return () => document.removeEventListener('visibilitychange', acknowledgeVisible)
   }, [page, ownerId])
-  return {activity, update, acknowledge}
+  return {activity, update, acknowledge, reset}
 }

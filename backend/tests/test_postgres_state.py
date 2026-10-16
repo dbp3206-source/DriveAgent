@@ -1206,3 +1206,13 @@ async def test_postgres_owner_admission_drains_and_persistent_cleanup_blocks_new
             pass
     finally:
         await engine.dispose()
+
+
+@pytest.mark.asyncio
+async def test_postgres_retention_context_private_schema_not_public_shadow():
+    from test_retention_context_postgres import postgres_context_private_namespace_contract
+
+    url = os.environ.get("VERIDRA_TEST_POSTGRES_URL")
+    if not url:
+        pytest.skip("No isolated PostgreSQL test service; context namespace not verified")
+    await postgres_context_private_namespace_contract(url)
