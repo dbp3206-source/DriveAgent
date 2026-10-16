@@ -2,6 +2,16 @@
 
 Ngày 16/10/2026. Thuộc gói 14 đã chốt, không thêm gói nghiệm thu. **Chưa triển khai lên URL, chưa xóa dữ liệu thật, chưa đóng toàn bộ cơ chế lưu giữ hoặc Production.** Mã phát triển tiếp trên `work/data-retention-20261015`, sau CI #147; không dùng CI cũ làm bằng chứng cho mã mới.
 
+## CI #148 đã hoàn tất
+
+[Lần kiểm 38846606316](https://github.com/dbp3206-source/DriveAgent/actions/runs/38846606316), đúng mã **620c2d7d3f5e20d007338eb90c63568eefcab226**. Đã đọc trạng thái các bước và nhật ký qua kết nối GitHub:
+
+- PostgreSQL riêng `veridra_ci`, job `116798460125`: **19 đạt/0 bỏ qua**, 6,52 giây. Ca mới xóa nội dung ứng dụng/state/ADK private và public cũ, vector SQL và mốc hàng đợi trong cùng một giao dịch; rollback giữ đủ, commit bỏ đúng dữ liệu cũ, còn ghi chú mới/tài khoản khác và chống phát lại Google.
+- Verify `116798710529`: máy chủ **1.769 đạt/20 bỏ qua**, 74,08 giây; độ phủ **88,44%**. Giao diện **222 đạt/0 lỗi/0 bỏ qua**. SQL ứng dụng 9, ADK 9 và state 14 ca xuất hiện trong tổng máy chủ. Kho tệp **41 ca đều chạy đạt trên Linux**, bao phủ năm ca file-link bị bỏ qua tại Windows; không cộng các nhóm con vào tổng hoặc đổi số bỏ qua của tổng.
+- Quét bí mật 738 tệp, kiểm ngoại tuyến/toàn vẹn bộ chuẩn, dựng giao diện, dựng/khởi động gói và PDF tiếng Việt đều thành công. **Publish the verified image** và **Deploy the exact verified image to Render** đều `skipped`. Không xuất ảnh GHCR/triển khai hoặc áp dụng schema lên Supabase thật.
+
+CI này đóng kiểm các bộ xóa và hồi quy đã viết đúng mã; **không đóng bộ điều phối/API/hộp thoại, kiểm tệp Supabase thật, Qdrant/LangGraph hoặc toàn bộ gói 14**. Bản đang chạy giữ mã13938d1/ảnh0169c264…377c1712 theo lần Live gần nhất. Những dòng “cần CI” phía dưới là tiến độ lúc chạy tại máy trước CI #148, không phải trạng thái mới nhất.
+
 ## Phần đã thực hiện
 
 - `retention_application.py`: xóa chính xác các bản ghi được duyệt ở 15 bảng nội dung, đúng chủ sở hữu và dấu nội dung/ngày; giữ User, ProviderCredential, hàng đợi dọn, hạn mức và quyền. Kiểm quan hệ trước tác động đầu tiên: không để xóa dây chuyền sang nội dung con chưa được duyệt, nội dung mới hoặc một tham chiếu sai tài khoản. Trả tham chiếu PDF/vector cần xử lý tiếp trước khi bỏ hàng SQL, không gọi Google hoặc mô hình.
@@ -22,7 +32,7 @@ Các bộ xóa mới **chưa đăng ký thành API/công cụ mô hình hoặc w
 | ADK sau sửa mẫu kiểm | 9 đạt, 0 lỗi, 9,06 giây | SDK thật, xóa/rollback/quan hệ thiếu/khác người/thay nội dung/trạng thái chung và tiếp tục hội thoại mới |
 | Kiểm gộp cuối | **171 đạt, 5 bỏ qua, 0 lỗi**, 66,44 giây | Bao gồm các nhóm trên, bộ xác nhận/hàng đợi/tuổi/Skills/kho tệp và hồi quy hành động ngoài/bản lưu; không cộng lặp số ca |
 
-Năm bỏ qua là ca liên kết tệp không khả dụng trên Windows, không tính đạt; CI Linux phải chạy chúng. XML gộp: `tmp/retention-purge-regression-f2206c499531431a8d0485022ab9040c/results.xml`. DB/XML thô giữ trong vùng bị Git bỏ qua, không đưa dữ liệu chạy lên GitHub. Ruff toàn backend và `git diff --check` đạt; quét bí mật 737 tệp Git-visible đạt trước khi thêm hồ sơ này.
+Năm bỏ qua là ca liên kết tệp không khả dụng trên Windows, không tính đạt; sau đó đã chạy đạt trên CI Linux #148. XML gộp: `tmp/retention-purge-regression-f2206c499531431a8d0485022ab9040c/results.xml`. DB/XML thô giữ trong vùng bị Git bỏ qua, không đưa dữ liệu chạy lên GitHub. Ruff toàn backend và `git diff --check` đạt; quét bí mật 737 tệp Git-visible đạt trước khi thêm hồ sơ này, 738 tệp đạt sau khi thêm và trong CI.
 
 Đã thêm ca PostgreSQL riêng: SQL nội dung, state, ADK private/public cũ, vector sinh từ SQL và mốc hàng đợi trong **cùng một giao dịch**; kiểm rollback rồi commit, tìm vector chỉ còn ghi chú mới, không mở lại sổ ghi Google. **Chưa tính ca này đạt trước CI đúng mã.** Kiểm tại máy dùng SQLite không được đổi tên thành kiểm PostgreSQL/Supabase.
 
