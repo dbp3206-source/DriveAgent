@@ -439,4 +439,3 @@ async def test_sheets_prepare_requires_trusted_ui_and_passes_typed_spec_to_regis
         assert registry.calls[-1][1]["spreadsheet"]["tabs"][0]["rows"] == [
             ["Sách", 50000]
         ]
-

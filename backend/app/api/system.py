@@ -173,4 +173,3 @@ async def archive_operation(operation_id: str, request: Request, user: CurrentUs
         raise HTTPException(403, "Chỉ có thể lưu trữ từ giao diện local.")
     store = operation_store_for(settings)
     await joined_thread(store.archive, user.id, operation_id)
-

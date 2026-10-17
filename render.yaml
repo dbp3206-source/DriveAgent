@@ -60,4 +60,3 @@ services:
         sync: false
       - key: DRIVE_AGENT_SCHEDULER_BEARER_TOKEN
         sync: false
-
