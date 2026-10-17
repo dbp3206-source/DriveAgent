@@ -362,7 +362,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
     <section id="settings-retention" className="settings-group retention-settings" aria-labelledby="settings-retention-title">
       <header className="settings-group__heading">
         <div><span>Dữ liệu đã lưu</span><h3 id="settings-retention-title">Thời hạn lưu giữ</h3></div>
-        <p>Dữ liệu Veridra đến hạn sau 30 ngày. Trước khi dọn, Veridra hiển thị phạm vi và chờ bạn xác nhận.</p>
+        <p>Veridra cảnh báo trước hạn và sẽ tự dọn dữ liệu đã lưu khi đủ 30 ngày, sau khi lịch tự động được bật. Bạn có thể dọn sớm sau khi xem phạm vi và xác nhận.</p>
       </header>
       <MessageBar intent="info"><MessageBarBody>Việc dọn chỉ áp dụng cho dữ liệu Veridra đã lưu và ngữ cảnh làm việc của trợ lý. Bản gốc trong Gmail, Drive, Lịch và Docs của Google không bị xóa.</MessageBarBody></MessageBar>
       <Button appearance="secondary" onClick={() => window.dispatchEvent(new Event('veridra:retention-open'))}>Kiểm tra dữ liệu cần dọn</Button>

@@ -1,8 +1,8 @@
 """Durable cleanup progress and fenced leases, with no deletion/provider calls.
 
-The API must establish explicit user confirmation, origin, complete inventory
-and snapshot freshness before enqueue. This queue cannot establish those facts.
-The critical checkpoint must commit with the content-removal transaction.
+Callers must establish either explicit UI approval or the trusted expiry policy,
+plus complete inventory and snapshot freshness, before enqueue. This queue cannot
+establish those facts. The critical checkpoint commits with content removal.
 """
 
 import hashlib
@@ -128,8 +128,9 @@ def _progress(row):
     return plan, pending, done
 
 
-async def enqueue(factory, owner_id: str, plan: CleanupPlan, *, now: float) -> str:
-    """Metadata only; confirmation must be established by the API, not an LLM."""
+async def enqueue(factory, owner_id: str, plan: CleanupPlan, *, now: float,
+                  automatic: bool = False) -> str:
+    """Metadata only; caller must be a trusted UI approval or internal policy runner."""
     _check_time(now)
     if plan.snapshot.owner_id != owner_id:
         raise CleanupStateError("cleanup_owner_mismatch")
@@ -154,6 +155,7 @@ async def enqueue(factory, owner_id: str, plan: CleanupPlan, *, now: float) -> s
             id=job_id,
             user_id=owner_id, approval_id=plan.snapshot.approval_id, plan_hash=digest,
             plan_json=body,
+            automatic=automatic,
             remaining_json=json.dumps([item.model_dump() for item in plan.external]),
             created_at=datetime.fromtimestamp(now, UTC),
         )
@@ -359,10 +361,23 @@ async def retry(factory, owner_id: str, job_id: str) -> None:
         await db.commit()
 
 
+async def retry_automatic(factory, owner_id: str, job_id: str, *, before: datetime) -> bool:
+    """Requeue only an automatic job after its bounded retry backoff elapsed."""
+    async with factory() as db:
+        result = await db.execute(update(CleanupJob).where(
+            CleanupJob.id == job_id, CleanupJob.user_id == owner_id,
+            CleanupJob.automatic.is_(True), CleanupJob.status == "needs_attention",
+            CleanupJob.updated_at <= before,
+        ).values(status="queued", attempts=0, error_code=None))
+        await db.commit()
+        return result.rowcount == 1
+
+
 async def cancel(factory, owner_id: str, job_id: str) -> None:
     async with factory() as db:
         result = await db.execute(update(CleanupJob).where(
             CleanupJob.id == job_id, CleanupJob.user_id == owner_id,
+            CleanupJob.automatic.is_(False),
             CleanupJob.status.in_(("queued", "needs_attention")),
             CleanupJob.critical_started_at.is_(None), CleanupJob.sql_completed_at.is_(None),
         ).values(status="cancelled", lease_token=None, lease_until=None))
@@ -380,10 +395,11 @@ async def status(factory, owner_id: str, job_id: str) -> dict | None:
             return None
         plan, remaining, completed = _progress(row)
         return {"id": row.id, "status": row.status, "attempts": row.attempts,
+                "automatic": row.automatic,
                 "selected_count": len(plan.snapshot.items),
                 "remaining_count": len(remaining), "completed_count": len(completed),
                 "sql_completed": row.sql_completed_at is not None,
                 "error_code": row.error_code,
-                "can_cancel": (row.status in {"queued", "needs_attention"}
+                "can_cancel": (not row.automatic and row.status in {"queued", "needs_attention"}
                                and row.critical_started_at is None
                                and row.sql_completed_at is None)}

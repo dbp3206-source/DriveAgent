@@ -1,7 +1,8 @@
-"""Confirmed, owner-fenced, resumable cleanup across actual runtime stores.
+"""Owner-fenced, resumable cleanup across actual runtime stores.
 
-No model or Google calls. The HTTP layer must authenticate and require trusted
-origin + explicit confirmation. Only internal worker methods execute a purge.
+No model or Google calls. Manual requests require authenticated UI confirmation;
+the internal scheduler may enqueue only items that have reached the expiry policy.
+Both paths use the same strict inventory and snapshot checks; only the worker purges.
 """
 
 import asyncio
@@ -12,7 +13,7 @@ from time import time
 
 from sqlalchemy import select
 
-from app.db.models import CleanupJob
+from app.db.models import CleanupJob, User
 from app.services import cleanup_jobs as jobs
 from app.services.cleanup_jobs import CleanupPlan, PurgeReference
 from app.services.owner_admission import AdmissionError
@@ -43,6 +44,8 @@ CONTEXT_INVENTORY = {"graph": graph_context_inventory, "adk": adk_context_invent
                      "langgraph": langgraph_context_inventory}
 CONTEXT_RESET = {"graph": reset_graph_context, "adk": reset_adk_context,
                  "langgraph": reset_langgraph_context}
+AUTO_RETRY_SECONDS = 60 * 60
+NOTICE_DAYS = 3
 
 
 def _application(items):
@@ -82,18 +85,28 @@ class RetentionCoordinator:
                                               bindings=inventory.bindings)
                 due = [item for item in inventory.candidates
                        if utc(item.changed_at) <= now - timedelta(days=CONTENT_RETENTION_DAYS)]
+                warning_cutoff = now - timedelta(days=CONTENT_RETENTION_DAYS - NOTICE_DAYS)
+                upcoming = [item for item in inventory.candidates
+                            if now - timedelta(days=CONTENT_RETENTION_DAYS)
+                            < utc(item.changed_at) <= warning_cutoff]
+                next_due_at = min(
+                    (utc(item.changed_at) + timedelta(days=CONTENT_RETENTION_DAYS)
+                     for item in upcoming), default=None,
+                )
                 preview = replace(preview, due_count=len(due),
                                   active_due_count=sum(item.active for item in due),
                                   has_more=len(due) > len(chosen))
                 result = asdict(preview)
                 result.update(retention_days=CONTENT_RETENTION_DAYS,
+                              upcoming_count=len(upcoming),
+                              next_due_at=next_due_at.isoformat() if next_due_at else None,
                               reset_context_count=sum(item.row_count for item in
                                                       inventory.contexts.values()),
                               exclusions=["google_originals", "provider_backups", "user_downloads"])
                 return result
 
-    async def confirm(self, owner, token):
-        """HTTP establishes a human click; this revalidates the entire frozen scope."""
+    async def confirm(self, owner, token, *, automatic=False):
+        """Revalidate a frozen scope from an explicit click or internal policy runner."""
         async with self.gate.exclusive(owner):
             async with self.factory() as db:
                 inventory = await self.runtime.inventory(db, owner, lock=True)
@@ -143,7 +156,60 @@ class RetentionCoordinator:
                 await db.rollback()
             plan = CleanupPlan(snapshot=snapshot, external=tuple(sorted(
                 refs.values(), key=lambda ref: (ref.kind, ref.object_id))))
-            return await jobs.enqueue(self.factory, owner, plan, now=self.clock())
+            return await jobs.enqueue(self.factory, owner, plan, now=self.clock(),
+                                      automatic=automatic)
+
+    async def enqueue_due_retention(self):
+        """Queue due owner-scoped work only; the existing worker performs verified deletion."""
+        async with self.factory() as db:
+            # Account suspension must not exempt retained content from its expiry date.
+            owners = list(await db.scalars(select(User.id)))
+        result = {"checked": len(owners), "enqueued": 0, "retried": 0,
+                  "skipped": 0, "failed": 0}
+        now = self.clock()
+        retry_before = datetime.fromtimestamp(now - AUTO_RETRY_SECONDS, UTC)
+
+        for owner in owners:
+            try:
+                async with self.factory() as db:
+                    open_job = await db.scalar(select(CleanupJob).where(
+                        CleanupJob.user_id == owner, CleanupJob.status.in_(jobs.OPEN),
+                    ).order_by(CleanupJob.created_at.desc()).limit(1))
+                if open_job is not None:
+                    if open_job.automatic and open_job.status == "needs_attention":
+                        async with self.gate.exclusive(owner):
+                            retried = await jobs.retry_automatic(
+                                self.factory, owner, open_job.id, before=retry_before,
+                            )
+                        result["retried" if retried else "skipped"] += 1
+                    else:
+                        result["skipped"] += 1
+                    continue
+
+                preview = await self.preview(owner)
+                if preview["selected_count"] == 0 or not preview["token"]:
+                    result["skipped"] += 1
+                    continue
+                await self.confirm(owner, preview["token"], automatic=True)
+                result["enqueued"] += 1
+            except (AdmissionError, RetentionPolicyError, jobs.CleanupStateError) as error:
+                if getattr(error, "code", "") in {
+                    "retention_owner_busy", "cleanup_already_open", "cleanup_approval_conflict",
+                } or isinstance(error, AdmissionError):
+                    result["skipped"] += 1
+                else:
+                    result["failed"] += 1
+                    logging.getLogger(__name__).warning(
+                        "Scheduled retention could not verify one owner; code=%s",
+                        getattr(error, "code", "retention_schedule_failed"),
+                    )
+            except Exception:
+                result["failed"] += 1
+                logging.getLogger(__name__).warning(
+                    "Scheduled retention could not verify one owner; "
+                    "code=retention_schedule_failed",
+                )
+        return result
 
     async def _lease(self, claimed, function, *args):
         async with self.factory() as db:

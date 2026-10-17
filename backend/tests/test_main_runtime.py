@@ -144,6 +144,7 @@ def test_application_registers_expected_runtime_surfaces():
     assert "/api/chat" in paths
     assert "/api/retention/preview" in paths
     assert "/api/retention/confirm" in paths
+    assert "/api/internal/scheduler/retention" in paths
     mount_paths = {getattr(route, "path", None) for route in main.app.routes}
     assert "/api/mcp" in mount_paths
     assert "/api/a2a" in mount_paths

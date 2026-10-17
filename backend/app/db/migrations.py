@@ -186,6 +186,23 @@ def _scheduled_preferences(connection: Connection) -> None:
     )
 
 
+def _automatic_cleanup_jobs(connection: Connection) -> None:
+    """Mark policy-driven expiry jobs without changing existing manual jobs."""
+    if connection.dialect.name == "sqlite":
+        tables = {str(row[0]) for row in connection.exec_driver_sql(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        )}
+        if "cleanup_jobs" in tables and "automatic" not in _columns(connection, "cleanup_jobs"):
+            connection.exec_driver_sql(
+                "ALTER TABLE cleanup_jobs ADD COLUMN automatic BOOLEAN NOT NULL DEFAULT 0"
+            )
+        return
+    connection.exec_driver_sql(
+        "ALTER TABLE veridra_private.cleanup_jobs ADD COLUMN IF NOT EXISTS "
+        "automatic BOOLEAN NOT NULL DEFAULT FALSE"
+    )
+
+
 MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (1, _message_lifecycle),
     (2, _company_profiles),
@@ -197,6 +214,7 @@ MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (8, _content_clocks),
     (9, _cleanup_jobs),
     (10, _scheduled_preferences),
+    (11, _automatic_cleanup_jobs),
 )
 
 
@@ -238,7 +256,7 @@ def apply_postgres_migrations(connection: Connection) -> None:
         (1, lambda _connection: None), (2, _scheduled_jobs), (3, _chat_tasks),
         (4, migrate_pgvector), (5, protect_legacy_framework_tables),
         (6, _auth_version), (7, _content_clocks), (8, _cleanup_jobs),
-        (9, _scheduled_preferences),
+        (9, _scheduled_preferences), (10, _automatic_cleanup_jobs),
     )
     for version, migration in migrations:
         if version in applied:

@@ -127,6 +127,64 @@ async def test_preview_is_readonly_and_confirmed_run_removes_old_content_and_der
         pass
 
 
+async def test_scheduled_retention_enqueues_due_work_without_deleting_inline(runtime):
+    data = runtime
+    async with data.factory() as db:
+        inactive_owner = await db.get(User, data.other)
+        inactive_owner.is_active = False
+        await db.commit()
+
+    result = await data.coordinator.enqueue_due_retention()
+    assert result == {"checked": 2, "enqueued": 2, "retried": 0, "skipped": 0, "failed": 0}
+    async with data.factory() as db:
+        owner_job = await db.scalar(select(CleanupJob).where(CleanupJob.user_id == data.owner))
+        other_job = await db.scalar(select(CleanupJob).where(CleanupJob.user_id == data.other))
+        assert owner_job is not None and other_job is not None
+        assert owner_job.automatic and other_job.automatic
+        assert owner_job.status == other_job.status == "queued"
+        assert await db.get(LongTermMemory, data.old) is not None
+
+    repeated = await data.coordinator.enqueue_due_retention()
+    assert repeated == {"checked": 2, "enqueued": 0, "retried": 0, "skipped": 2, "failed": 0}
+
+
+async def test_automatic_cleanup_is_retried_after_backoff_but_stays_non_cancellable(runtime):
+    data = runtime
+    await data.coordinator.enqueue_due_retention()
+    async with data.factory() as db:
+        job = await db.scalar(select(CleanupJob).where(CleanupJob.user_id == data.owner))
+        job.status = "needs_attention"
+        job.attempts = 3
+        job.error_code = "storage_unavailable"
+        job.updated_at = NOW - timedelta(hours=2)
+        identity = job.id
+        await db.commit()
+
+    result = await data.coordinator.enqueue_due_retention()
+    assert result["retried"] == 1
+    status = await cleanup_jobs.status(data.factory, data.owner, identity)
+    assert status["status"] == "queued" and status["automatic"]
+    assert status["can_cancel"] is False
+    with pytest.raises(cleanup_jobs.CleanupStateError, match="cancel_state_conflict"):
+        await cleanup_jobs.cancel(data.factory, data.owner, identity)
+
+
+async def test_preview_warns_three_days_before_expiry(runtime):
+    data = runtime
+    reminder = LongTermMemory(
+        user_id=data.owner, kind="fact", content="SYNTHETIC_UPCOMING",
+        normalized_hash="f" * 64, embedding_json="[]", created_at=NOW - timedelta(days=28),
+        updated_at=NOW - timedelta(days=28), content_updated_at=NOW - timedelta(days=28),
+    )
+    async with data.factory() as db:
+        db.add(reminder)
+        await db.commit()
+
+    preview = await data.coordinator.preview(data.owner)
+    assert preview["upcoming_count"] == 1
+    assert preview["next_due_at"] == (NOW + timedelta(days=2)).isoformat()
+
+
 async def test_changed_context_after_preview_or_other_owner_cannot_confirm(runtime):
     preview = await runtime.coordinator.preview(runtime.owner)
     with pytest.raises(RetentionPolicyError, match="invalid_retention_approval"):

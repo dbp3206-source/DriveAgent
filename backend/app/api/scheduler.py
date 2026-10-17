@@ -48,3 +48,18 @@ async def enqueue_schedule(
         registry=request.app.state.registry,
     )
     return {"status": "accepted", "request_id": request.state.request_id, **result}
+
+
+@router.post("/retention", status_code=202)
+async def enqueue_due_retention(
+    request: Request,
+    authorization: str | None = Header(default=None),
+):
+    """Queue due owner-scoped retention work; never deletes in the HTTP request."""
+    _authorize(authorization)
+    coordinator = getattr(request.app.state, "retention_coordinator", None)
+    if coordinator is None:
+        raise HTTPException(status_code=503, detail="Retention worker is unavailable")
+    result = await coordinator.enqueue_due_retention()
+    return {"status": "accepted", "request_id": getattr(request.state, "request_id", None),
+            **result}
