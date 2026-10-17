@@ -71,6 +71,23 @@ async def health(request: Request, db: DbSession):
     )
 
 
+@router.get("/ready", include_in_schema=False)
+async def readiness(db: DbSession):
+    """Return an HTTP failure only when the database blocks core requests.
+
+    Keep the richer diagnostics endpoint separate: optional storage/vector
+    degradation should remain visible to operators without making Render restart
+    an otherwise responsive instance. Render requires a non-2xx response to
+    remove an instance from traffic, so this route reports database failure as
+    HTTP 503 and bounds the probe below Render's five-second timeout.
+    """
+    try:
+        await asyncio.wait_for(db.execute(text("SELECT 1")), timeout=3)
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail="Database unavailable") from exc
+    return {"status": "ready"}
+
+
 @router.get("/tools")
 async def tool_catalog(request: Request, _user: CurrentUser):
     return [

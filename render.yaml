@@ -10,7 +10,7 @@ services:
       creds:
         fromRegistryCreds:
           name: veridra-ghcr
-    healthCheckPath: /api/health
+    healthCheckPath: /api/ready
     envVars:
       - key: DRIVE_AGENT_ENVIRONMENT
         value: production

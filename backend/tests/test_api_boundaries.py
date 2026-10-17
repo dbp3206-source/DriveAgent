@@ -349,6 +349,46 @@ async def test_health_reports_vector_fallback_as_degraded(monkeypatch):
         assert response.json()["vector_store"] == "sqlite-fallback"
 
 
+async def test_ready_endpoint_returns_503_when_database_is_unavailable():
+    app = FastAPI()
+    app.include_router(system_router)
+
+    class Database:
+        async def execute(self, _statement):
+            raise RuntimeError("database unavailable")
+
+    async def session():
+        yield Database()
+
+    app.dependency_overrides[get_db] = session
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get("/api/ready")
+    assert response.status_code == 503
+    assert response.json() == {"detail": "Database unavailable"}
+
+
+async def test_ready_endpoint_returns_200_when_database_is_available():
+    app = FastAPI()
+    app.include_router(system_router)
+
+    class Database:
+        async def execute(self, _statement):
+            return None
+
+    async def session():
+        yield Database()
+
+    app.dependency_overrides[get_db] = session
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        response = await client.get("/api/ready")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ready"}
+
+
 async def test_sheets_prepare_requires_trusted_ui_and_passes_typed_spec_to_registry():
     app = FastAPI()
     app.include_router(sheets_router)
