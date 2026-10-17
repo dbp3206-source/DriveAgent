@@ -16,3 +16,11 @@
    First assertion run exposed a test-measurement bug (the fixture did not include top/bottom coordinates); fixed the measurement, not product code.
    node frontend/scripts/qa-settings-retention-layout.mjs
    Result: passed in 1280x900 and 390x844, light and dark. No horizontal overflow; retention card is full-width and below the system card in all four cases.
+
+4. Release and live verification:
+   GitHub Actions CI #154, commit d76f2e663a8421a0360935401a36b395b41a45bb
+   Result: success, total duration 6m13s; PostgreSQL and verify jobs completed successfully. Workflow built and published the verified image. Its Render hook step was skipped because RENDER_DEPLOY_HOOK was not configured, so no deploy was falsely inferred from CI.
+   Image: ghcr.io/dbp3206-source/veridra@sha256:8b2c74ed27062a2e88888db3d8fdc16972e26633760b88bbe0f5d68b28a26978
+   Render dashboard source updated to that exact digest; deploy dep-db9kcvrncjis739ls3ng reached Live.
+   GET /api/health after deploy: status=ok, database=true, object_storage=true, runtime_started_at=2026-10-17T09:59:05.389075+00:00.
+   Authenticated settings page visually inspected after reload; the retention card spans the available content width and is below the system card. No account data was modified; no Gemini request or Google content access was performed.
