@@ -144,7 +144,7 @@ class LocalSource(Base):
 
 
 class CleanupJob(Base):
-    """An approved cleanup's metadata/checkpoints; never stores source content."""
+    """A cleanup's metadata/checkpoints; never stores source content."""
 
     __tablename__ = "cleanup_jobs"
     __table_args__ = (
@@ -162,6 +162,9 @@ class CleanupJob(Base):
     remaining_json: Mapped[str] = mapped_column(Text, default="[]")
     completed_json: Mapped[str] = mapped_column(Text, default="[]")
     status: Mapped[str] = mapped_column(String(24), default="queued")
+    automatic: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false"), nullable=False,
+    )
     attempts: Mapped[int] = mapped_column(Integer, default=0)
     lease_token: Mapped[str | None] = mapped_column(String(36))
     lease_until: Mapped[float | None] = mapped_column(Float)

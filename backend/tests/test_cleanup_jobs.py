@@ -93,8 +93,10 @@ async def test_idempotent_enqueue_is_owner_bound_and_contains_only_scope_metadat
         assert row.completed_json == "[]" and row.critical_started_at is None
         assert row.sql_completed_at is None
     public = await jobs.status(factory, owner, identity)
-    assert set(public) == {"id", "status", "attempts", "selected_count", "remaining_count",
-                           "completed_count", "sql_completed", "error_code", "can_cancel"}
+    assert set(public) == {"id", "status", "automatic", "attempts", "selected_count",
+                           "remaining_count", "completed_count", "sql_completed", "error_code",
+                           "can_cancel"}
+    assert public["automatic"] is False
     assert public["selected_count"] == 1 and public["remaining_count"] == 2
     assert public["status"] == "queued" and public["attempts"] == 0
 

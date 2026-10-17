@@ -387,7 +387,7 @@ async def public_unsafe_request_middleware(request: Request, call_next):  # type
     path = request.url.path
     exempt = (
         path in {"/api/gmail/remote/action", "/api/gmail/remote/webhook"}
-        or path == "/api/internal/scheduler/enqueue"
+        or path in {"/api/internal/scheduler/enqueue", "/api/internal/scheduler/retention"}
         or path in {"/api/mcp", "/api/a2a"}
         or path.startswith(("/api/mcp/", "/api/a2a/"))
     )

@@ -103,6 +103,38 @@ def test_scheduler_uses_bearer_not_browser_session_origin(monkeypatch):
         main.app.dependency_overrides.pop(get_db, None)
 
 
+def test_retention_scheduler_requires_bearer_and_only_enqueues(monkeypatch):
+    settings = _production_settings()
+    settings.scheduler_bearer_token = SecretStr("r" * 40)
+    monkeypatch.setattr(main, "settings", settings)
+    monkeypatch.setattr(scheduler, "get_settings", lambda: settings)
+    calls = []
+
+    class Coordinator:
+        async def enqueue_due_retention(self):
+            calls.append("enqueue")
+            return {"checked": 1, "enqueued": 1, "retried": 0, "skipped": 0, "failed": 0}
+
+    had_previous = hasattr(main.app.state, "retention_coordinator")
+    previous = getattr(main.app.state, "retention_coordinator", None)
+    main.app.state.retention_coordinator = Coordinator()
+    try:
+        client = TestClient(main.app)
+        endpoint = "/api/internal/scheduler/retention"
+        assert client.post(endpoint).status_code == 401
+        assert client.post(endpoint, headers={"Authorization": "Bearer wrong"}).status_code == 401
+        # This system-to-system endpoint does not require a browser Origin header.
+        response = client.post(endpoint, headers={"Authorization": f"Bearer {'r' * 40}"})
+        assert response.status_code == 202
+        assert response.json()["enqueued"] == 1
+        assert calls == ["enqueue"]
+    finally:
+        if had_previous:
+            main.app.state.retention_coordinator = previous
+        else:
+            main.app.state._state.pop("retention_coordinator", None)
+
+
 @pytest.mark.asyncio
 async def test_global_security_headers_preserve_stricter_route_headers():
     async def route_response(_request):

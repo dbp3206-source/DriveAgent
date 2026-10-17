@@ -212,9 +212,10 @@ class RetentionPolicy:
                  bindings: tuple[StoreBinding, ...] = ()) -> ApprovalSnapshot:
         """Revalidate under the runner's fence, before its first deletion.
 
-        This authenticates a preview, not a user's click. The API still must
-        require explicit confirmation and a trusted browser origin. Execution
-        must claim approval_id in its durable ledger to prevent replay.
+        This authenticates a preview, not a user's click. Manual API calls must
+        still require explicit confirmation and a trusted browser origin; the
+        internal scheduler may use it only for records due under the expiry policy.
+        Execution must claim approval_id in its durable ledger to prevent replay.
         """
         self._complete_inventory(inventories)
         if not isinstance(token, str) or len(token) > 100_000:

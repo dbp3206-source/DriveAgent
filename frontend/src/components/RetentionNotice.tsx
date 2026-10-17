@@ -21,6 +21,8 @@ type CleanupPreview = {
   selected_count: number
   due_count: number
   active_due_count: number
+  upcoming_count: number
+  next_due_at: string | null
   has_more: boolean
   counts: Record<string, number>
   expires_at: string | null
@@ -32,6 +34,7 @@ type CleanupPreview = {
 type CleanupJob = {
   id: string
   status: 'queued' | 'running' | 'purging' | 'needs_attention' | 'succeeded' | 'cancelled'
+  automatic: boolean
   attempts: number
   selected_count: number
   remaining_count: number
@@ -122,7 +125,7 @@ export function RetentionNotice({ ownerId }: { ownerId: string }) {
       setPreview(result)
       setConfirmed(false)
       try { localStorage.setItem(checkKey(ownerId), todayKey()) } catch { /* Optional */ }
-      if (showNoData || result.due_count > 0) setOpen(true)
+      if (showNoData || result.due_count > 0 || result.upcoming_count > 0) setOpen(true)
     } catch (caught) {
       if (showNoData) {
         setPreview(null)
@@ -196,7 +199,7 @@ export function RetentionNotice({ ownerId }: { ownerId: string }) {
       await refreshStatus()
       if (!jobRef.current || jobRef.current.id !== result.id) {
         // The worker may not have committed its first status read yet.
-        const pending = { id: result.id, status: 'queued', attempts: 0, selected_count: preview.selected_count,
+        const pending = { id: result.id, status: 'queued', automatic: false, attempts: 0, selected_count: preview.selected_count,
           completed_count: 0, remaining_count: preview.selected_count, sql_completed: false,
           error_code: null, can_cancel: true } as CleanupJob
         updateJob(pending)
@@ -251,7 +254,7 @@ export function RetentionNotice({ ownerId }: { ownerId: string }) {
   return <Dialog open={open} onOpenChange={(_, data) => { if (!busy) setOpen(data.open) }}>
       <DialogSurface className="retention-dialog">
       <DialogBody>
-        <DialogTitle>{activeJob ? 'Trạng thái dọn dữ liệu' : job?.status === 'succeeded' ? 'Đã dọn dữ liệu Veridra' : 'Dữ liệu Veridra đã quá 30 ngày'}</DialogTitle>
+        <DialogTitle>{activeJob ? 'Trạng thái dọn dữ liệu' : job?.status === 'succeeded' ? (job.automatic ? 'Đã tự dọn dữ liệu Veridra' : 'Đã dọn dữ liệu Veridra') : preview?.upcoming_count ? 'Sắp đến hạn lưu dữ liệu' : 'Dữ liệu Veridra đã đủ 30 ngày'}</DialogTitle>
         <DialogContent className="retention-dialog__content">
           {busy && !preview && !job && <Spinner label="Đang kiểm tra dữ liệu đã lưu…" />}
           {error && <MessageBar intent="error"><MessageBarBody>{error}</MessageBarBody></MessageBar>}
@@ -259,32 +262,35 @@ export function RetentionNotice({ ownerId }: { ownerId: string }) {
             <div className="retention-job-status"><Badge appearance="tint" color={activeJob.status === 'needs_attention' ? 'warning' : 'informative'}>{statusLabel(activeJob.status)}</Badge>
               <span>Đã xử lý {activeJob.completed_count}/{activeJob.selected_count} mục · còn {activeJob.remaining_count}</span></div>
             {activeJob.status === 'needs_attention'
-              ? <MessageBar intent="warning"><MessageBarBody>{errorLabel(activeJob.error_code)} Thử lại sẽ tiếp tục đúng danh sách đã duyệt.</MessageBarBody></MessageBar>
+              ? <MessageBar intent="warning"><MessageBarBody>{errorLabel(activeJob.error_code)} {activeJob.automatic ? 'Hệ thống sẽ tự thử lại; bạn cũng có thể yêu cầu tiếp tục ngay.' : 'Thử lại sẽ tiếp tục đúng danh sách đã duyệt.'}</MessageBarBody></MessageBar>
               : <p role="status">Veridra đang xử lý. Bạn có thể tiếp tục dùng các phần khác của sản phẩm.</p>}
             {activeJob.can_cancel && <Button appearance="subtle" disabled={busy} onClick={() => void cancelCleanup()}>Hủy lần dọn</Button>}
             {activeJob.status === 'needs_attention' && <Button appearance="primary" disabled={busy} onClick={() => void retryCleanup()}>Tiếp tục lần dọn đã duyệt</Button>}
           </>}
-          {!activeJob && job?.status === 'succeeded' && <MessageBar intent="success"><MessageBarBody>Đã xác nhận dọn {job.selected_count} mục Veridra. Các bản gốc trong Google vẫn được giữ nguyên.</MessageBarBody></MessageBar>}
+          {!activeJob && job?.status === 'succeeded' && <MessageBar intent="success"><MessageBarBody>{job.automatic ? 'Tự động dọn xong' : 'Đã dọn'} {job.selected_count} mục Veridra. Các bản gốc trong Google vẫn được giữ nguyên.</MessageBarBody></MessageBar>}
           {!activeJob && job?.status === 'cancelled' && <p>Lần dọn đã được hủy trước khi bắt đầu.</p>}
           {!activeJob && !job && preview && <>
+            {preview.upcoming_count > 0 && <MessageBar intent="info"><MessageBarBody>
+              Có {preview.upcoming_count} mục sắp đủ 30 ngày lưu{preview.next_due_at ? `; đợt đầu dự kiến từ ${formatDate(preview.next_due_at)}` : ''}. Theo chính sách, hệ thống sẽ tự dọn sau khi lịch tự động được bật; bạn không cần mở lại để xác nhận.
+            </MessageBarBody></MessageBar>}
             {preview.selected_count > 0 ? <>
-              <p>Tính đến {formatDate(preview.cutoff)}, có <strong>{preview.due_count}</strong> mục đã quá 30 ngày. Đợt này sẽ dọn <strong>{preview.selected_count}</strong> mục đã kiểm tra.</p>
+              <p>Có <strong>{preview.due_count}</strong> mục đã đủ thời gian lưu 30 ngày. Đợt này có thể dọn <strong>{preview.selected_count}</strong> mục đã kiểm tra.</p>
               {counts.length > 0 && <ul className="retention-counts">{counts.map(([kind, count]) => <li key={kind}><span>{categoryLabels[kind] ?? kind}</span><strong>{count}</strong></li>)}</ul>}
               {preview.reset_context_count > 0 && <MessageBar intent="warning"><MessageBarBody>Thao tác này cũng đặt lại {preview.reset_context_count} mục ngữ cảnh làm việc của trợ lý. Lịch sử hội thoại còn hạn vẫn được giữ.</MessageBarBody></MessageBar>}
-              {preview.has_more && <p>Còn mục đến hạn sẽ được chia thành đợt sau để bạn xem trước riêng.</p>}
-              {preview.active_due_count > 0 && <p>{preview.active_due_count} mục đang được dùng sẽ được giữ lại.</p>}
-              <MessageBar intent="info"><MessageBarBody>Chỉ dọn dữ liệu Veridra đã lưu. Bản gốc Gmail, Drive, Lịch và Docs trong Google không bị xóa. Nếu chưa đồng ý, chọn “Để sau”.</MessageBarBody></MessageBar>
+              {preview.has_more && <p>Các mục còn lại sẽ được dọn theo từng đợt tự động.</p>}
+              {preview.active_due_count > 0 && <p>{preview.active_due_count} mục đang được dùng sẽ được hoãn để tránh làm gián đoạn tác vụ; hệ thống sẽ kiểm tra lại.</p>}
+              <MessageBar intent="info"><MessageBarBody>Chỉ dọn dữ liệu do Veridra lưu. Bản gốc Gmail, Drive, Lịch, Docs, bản tải về và bản sao ngoài Veridra không bị xóa. Theo chính sách, hệ thống sẽ tự dọn khi đủ hạn sau khi lịch tự động được bật.</MessageBarBody></MessageBar>
               <Checkbox checked={confirmed} onChange={(_, data) => setConfirmed(data.checked === true)}
-                label="Tôi đã đọc phạm vi trên và đồng ý xóa những dữ liệu Veridra đã liệt kê." />
-            </> : <p>{preview.due_count > 0
-              ? `Hiện chưa có mục nào có thể dọn. Có ${preview.active_due_count} mục đang được dùng nên được giữ lại.`
-              : 'Hiện chưa có dữ liệu quá 30 ngày cần dọn.'}</p>}
+                label="Tôi xác nhận dọn ngay danh sách đã kiểm tra." />
+            </> : preview.due_count > 0
+              ? <p>Hiện chưa có mục nào có thể dọn. Có {preview.active_due_count} mục đang được dùng; hệ thống sẽ kiểm tra lại và xử lý sau khi tác vụ kết thúc.</p>
+              : preview.upcoming_count === 0 && <p>Hiện chưa có dữ liệu đủ 30 ngày cần dọn.</p>}
           </>}
           {manual && !preview && !job && !busy && !error && <p>Chưa có lần dọn nào cần xử lý.</p>}
         </DialogContent>
         <DialogActions>
           {activeJob ? <Button appearance="secondary" disabled={busy} onClick={() => setOpen(false)}>Ẩn thông báo</Button> : <Button appearance="secondary" disabled={busy} onClick={() => setOpen(false)}>{preview?.selected_count ? 'Để sau' : 'Đóng'}</Button>}
-          {!activeJob && preview?.selected_count ? <Button appearance="primary" disabled={!confirmed || busy || !preview.token} onClick={() => void confirmCleanup()}>{busy ? 'Đang gửi…' : 'Xác nhận dọn dữ liệu'}</Button> : null}
+          {!activeJob && preview?.selected_count ? <Button appearance="primary" disabled={!confirmed || busy || !preview.token} onClick={() => void confirmCleanup()}>{busy ? 'Đang gửi…' : 'Dọn ngay'}</Button> : null}
           {manual && error && !busy ? <Button appearance="primary" onClick={() => void checkNow(true)}>Thử lại kiểm tra</Button> : null}
         </DialogActions>
       </DialogBody>
