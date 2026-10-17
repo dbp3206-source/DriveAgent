@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Thông tin quyền riêng tư và dữ liệu · Veridra</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #172033; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; line-height: 1.65; }
+    main { width: min(100% - 32px, 850px); margin: 36px auto; padding: clamp(22px, 5vw, 46px); background: #fff; border: 1px solid #d9e1ec; border-radius: 18px; box-shadow: 0 16px 48px #14213d12; }
+    .eyebrow { color: #087f8c; font-size: .78rem; font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 8px 0 4px; font-size: clamp(1.8rem, 5vw, 2.5rem); line-height: 1.15; }
+    h2 { margin: 30px 0 8px; font-size: 1.2rem; }
+    p, li { max-width: 72ch; }
+    a { color: #075ea8; text-underline-offset: 3px; }
+    .updated { margin-top: 0; color: #5c6779; font-size: .92rem; }
+    .notice { padding: 14px 16px; background: #fff7e8; border: 1px solid #edcf8c; border-radius: 12px; }
+    .notice strong { color: #754500; }
+    footer { margin-top: 34px; padding-top: 16px; color: #5c6779; border-top: 1px solid #e2e8f0; font-size: .9rem; }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
+  </style>
+</head>
+<body>
+  <main>
+    <p class="eyebrow">Veridra · Bản thử nghiệm kín</p>
+    <h1>Thông tin quyền riêng tư và dữ liệu</h1>
+    <p class="updated">Cập nhật ngày 16/10/2026</p>
+
+    <div class="notice">
+      <strong>Điều cần biết trước khi dùng:</strong> câu hỏi và phần tài liệu liên quan có thể được gửi tới Google Gemini để tạo câu trả lời. Veridra không kiểm tra được khóa Gemini của bạn có gắn với gói đã thanh toán hay không. Nếu khóa dùng hạn mức miễn phí, Google có thể dùng nội dung gửi lên và câu trả lời để cải thiện dịch vụ; người đánh giá có thể xem nội dung đó. Không gửi dữ liệu cá nhân, nhạy cảm hoặc bí mật bằng khóa dùng hạn mức miễn phí.
+    </div>
+
+    <h2>Dữ liệu nào được xử lý?</h2>
+    <p>Veridra xử lý thông tin tài khoản và quyền Google bạn cấp; câu hỏi, câu trả lời, trích dẫn nguồn, nội dung bạn lưu trong hội thoại/bộ nhớ/kết quả; cùng tệp bạn tải lên. Khi bạn yêu cầu, ứng dụng có thể đọc phần liên quan từ Gmail, Drive hoặc lịch để trả lời. Nội dung tệp và câu hỏi được lưu trên máy chủ Veridra, không chỉ trên thiết bị của bạn.</p>
+
+    <h2>Dữ liệu được gửi tới đâu?</h2>
+    <ul>
+      <li><strong>Google Gemini:</strong> nhận câu hỏi và phần nội dung cần thiết để tạo câu trả lời. Việc Google sử dụng dữ liệu phụ thuộc vào điều khoản của khóa/dự án Google Cloud. Veridra không tự xác minh trạng thái thanh toán và không tự động loại bỏ mọi thông tin nhận diện.</li>
+      <li><strong>Tavily:</strong> khi bạn yêu cầu tìm trên web, nhận truy vấn tìm kiếm đã được tạo cho mục đích tra cứu. Không đưa nội dung riêng hoặc bí mật vào yêu cầu tìm kiếm công khai.</li>
+      <li><strong>Google:</strong> nguồn Gmail, Drive và lịch được đọc theo quyền bạn cấp. Veridra không sửa hay xóa bản gốc Google nếu bạn chưa duyệt một thao tác riêng.</li>
+      <li><strong>Hạ tầng Veridra:</strong> bản chạy hiện dùng Render cho ứng dụng và Supabase cho cơ sở dữ liệu/kho tệp riêng. Khóa truy cập được lưu ở dạng mã hóa; điều này không có nghĩa nội dung được ẩn danh hay chạy hoàn toàn trên thiết bị của bạn.</li>
+    </ul>
+
+    <h2>Lưu và xóa dữ liệu</h2>
+    <p>Khi dữ liệu Veridra đủ 30 ngày, ứng dụng đưa phần đến hạn ra để bạn xem. Veridra chỉ dọn sau khi bạn xác nhận; nếu chọn để sau hoặc không xác nhận, dữ liệu có thể được giữ lâu hơn 30 ngày. Cơ chế này áp dụng cho bản Veridra quản lý và không xóa thư, lịch hay tệp gốc trong Google. Bản đã tải về, bản sao ngoài Veridra hoặc dữ liệu do nhà cung cấp khác giữ không được đảm bảo xóa bởi thao tác này.</p>
+
+    <h2>Quyền và cách liên hệ</h2>
+    <p>Chỉ kết nối tài khoản và đưa vào những tài liệu bạn có quyền sử dụng. Bạn có thể ngắt quyền Google trong tài khoản Google của mình. Để hỏi về dữ liệu hoặc yêu cầu hỗ trợ/xóa, liên hệ quản trị viên tại <a href="mailto:dbp3206@gmail.com">dbp3206@gmail.com</a>. Không gửi mật khẩu hoặc khóa API qua email.</p>
+
+    <h2>Thông tin về Gemini</h2>
+    <p>Hãy đọc <a href="https://ai.google.dev/gemini-api/terms" target="_blank" rel="noreferrer">điều khoản Gemini API</a> và <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noreferrer">chính sách dữ liệu Google API</a>. Điều kiện có thể thay đổi; hướng dẫn này không thay thế điều khoản của Google.</p>
+
+    <footer>
+      Trang này mô tả cách Veridra đang hoạt động trong giai đoạn thử nghiệm kín; chưa phải chứng nhận tuân thủ pháp luật. Trước khi phát hành rộng hoặc xử lý dữ liệu doanh nghiệp thật, chủ sản phẩm cần xác nhận thông tin đơn vị vận hành và rà soát pháp lý phù hợp.
+    </footer>
+  </main>
+</body>
+</html>

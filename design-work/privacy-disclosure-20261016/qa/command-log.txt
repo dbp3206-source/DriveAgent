@@ -1,0 +1,10 @@
+2026-10-16 | frontend | npm run test:unit | exit 0 | 224 passed, 0 failed, 0 skipped
+2026-10-16 | frontend | npm run lint | exit 0 | no diagnostics
+2026-10-16 | frontend | npm run build | exit 0 | TypeScript and Vite production build completed
+2026-10-16 | frontend | node scripts/privacy-ui-smoke.mjs | exit 0 | Chrome/Playwright; synthetic API fixtures; browserErrors=[]
+2026-10-16 | frontend | Playwright Chromium screenshot --full-page --viewport-size 1440,1200 http://127.0.0.1:4173/privacy.html | exit 0
+2026-10-16 | frontend | Playwright Chromium screenshot --full-page --viewport-size 390,844 http://127.0.0.1:4173/privacy.html | exit 0
+2026-10-16 | workspace | Invoke-WebRequest http://127.0.0.1:4173/privacy.html | HTTP 200; expected title found
+2026-10-16 | workspace | git diff --check | clean
+
+The first browser-smoke run exited 1 because its assertion expected “không gửi” while the actual UI says “đừng gửi”; updated the assertion to the UI copy and reran successfully. No product behavior changed to satisfy the test.

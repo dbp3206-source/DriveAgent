@@ -1,5 +1,7 @@
 # Kiểm tra giao diện và lưu dữ liệu theo hạn — 16/10/2026
 
+> **Cập nhật phát hành 16/10/2026:** phần lưu giữ trong báo cáo này đã được đưa lên `main` (`94b1b08`) và Render chạy ảnh `sha256:01addba390c70f93b60c3fdbec1a3199f20f52bbdd191523ba1abf10c44d2138`. CI `38927524245` trên `main` đạt; health endpoint trên URL trả về trạng thái tốt cho ứng dụng, cơ sở dữ liệu và kho tệp. Các dòng bên dưới ghi “chưa phát hành/chưa xác minh URL” là ảnh chụp trước khi phát hành, không phải trạng thái hiện tại. Tài liệu này chỉ nghiệm thu phần lưu giữ, không nghiệm thu toàn bộ sản phẩm. **Chưa có dữ liệu thật nào bị xóa.**
+
 ## Kết luận
 
 Phần nhắc người dùng xem và duyệt dọn dữ liệu đã được nối vào giao diện hiện có. Các đường máy chủ cho xem trước/trạng thái/duyệt/tiếp tục đã được kiểm trên dữ liệu giả lập cô lập. Commit `3dad6f5b1101a95a7ecd390e5a4e6ba30686697a` đã qua CI đầy đủ [#38925155479](https://github.com/dbp3206-source/DriveAgent/actions/runs/38925155479), gồm PostgreSQL riêng, backend, frontend, dựng/kiểm ảnh chạy và xuất PDF tiếng Việt. **Chưa phải phát hành**: commit hiện vẫn ở nhánh làm việc; các bước xuất bản ảnh và triển khai bị bỏ qua trên nhánh này; chưa lên `main` hoặc Render. Báo cáo này chỉ xác nhận lát cắt lưu giữ dữ liệu, không phải chứng nhận toàn sản phẩm.

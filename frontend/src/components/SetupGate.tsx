@@ -43,6 +43,12 @@ export function SetupGate({ status }: { status: AuthStatus }) {
           Google cho phép đọc Drive và Gmail. Veridra kiểm tra quyền ở mỗi thao tác;
           tạo tệp hoặc nháp cần bước xem trước và xác nhận của bạn.
         </p>
+        <MessageBar intent="warning" className="data-use-notice">
+          <MessageBarBody>
+            Khi trò chuyện, câu hỏi và phần tài liệu cần thiết được gửi tới Google Gemini. Nếu khóa dùng hạn mức miễn phí, Google có thể dùng nội dung để cải thiện dịch vụ và người đánh giá có thể xem; đừng gửi thông tin cá nhân, nhạy cảm hoặc bí mật. Veridra không kiểm tra được khóa có bật thanh toán hay không.{' '}
+            <a href="/privacy.html">Xem cách dữ liệu được dùng</a>.
+          </MessageBarBody>
+        </MessageBar>
       </section>
 
       <section className="setup-checklist" aria-label="Trạng thái thiết lập">

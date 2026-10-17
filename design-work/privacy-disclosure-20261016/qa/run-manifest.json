@@ -1,0 +1,53 @@
+{
+  "target_output": "Trang thông tin dữ liệu công khai /privacy.html và các cảnh báo trong Setup, Chat, Local Sources",
+  "source_files": [
+    "docs/DATA-USE.md",
+    "docs/DATA-RETENTION-20261015.md",
+    "frontend/src/components/SetupGate.tsx",
+    "frontend/src/pages/ChatPage.tsx",
+    "frontend/src/pages/LocalSourcesPage.tsx",
+    "https://ai.google.dev/gemini-api/terms",
+    "https://developers.google.com/terms/api-services-user-data-policy"
+  ],
+  "primary_skill": "Existing Fluent UI and Veridra design system; no design skill invoked",
+  "specialist_skills": [],
+  "mcp_tools_used": [],
+  "commands_run": [
+    "npm run test:unit (frontend): 224 passed, 0 failed",
+    "npm run lint (frontend): exit 0",
+    "npm run build (frontend): exit 0",
+    "node scripts/privacy-ui-smoke.mjs (frontend): passed, no browser errors",
+    "Playwright Chromium screenshot: privacy.html at 1440x1200 and 390x844",
+    "Invoke-WebRequest http://127.0.0.1:4173/privacy.html: HTTP 200 and expected title",
+    "git diff --check: clean"
+  ],
+  "repository_defined_outputs": [
+    "frontend/public/privacy.html",
+    "frontend/src/components/SetupGate.tsx",
+    "frontend/src/pages/ChatPage.tsx",
+    "frontend/src/pages/LocalSourcesPage.tsx",
+    "design-work/privacy-disclosure-20261016/qa/"
+  ],
+  "delivered_outputs": [
+    "frontend/public/privacy.html",
+    "frontend/scripts/privacy-ui-smoke.mjs",
+    "frontend/src/privacyDisclosure.test.mjs",
+    "design-work/privacy-disclosure-20261016/qa/qa-report.md",
+    "design-work/privacy-disclosure-20261016/qa/screenshots/"
+  ],
+  "verification": {
+    "structural": true,
+    "rendered": true,
+    "visual_review": true,
+    "content_fidelity": true,
+    "target_environment": false
+  },
+  "quality_score": 87,
+  "known_limitations": [
+    "Not yet pushed to main or deployed to Render; public URL not verified for this change.",
+    "Privacy/legal review and operator identity confirmation remain required before broad release or personal data use.",
+    "30-day retention cleanup requires user confirmation; deferral means data may remain longer.",
+    "Google Gemini key billing status is not verified by Veridra; free-tier handling and reviewer access are described with links to Google terms.",
+    "No real Google, Gemini, Tavily, Gmail, Drive, Calendar or user data was accessed in this verification."
+  ]
+}

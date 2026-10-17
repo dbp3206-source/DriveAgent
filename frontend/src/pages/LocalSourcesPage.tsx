@@ -325,7 +325,9 @@ export function LocalSourcesPage() {
           <ul className="local-library__privacy">
             <li><strong>Lưu:</strong> riêng theo tài khoản; bản chạy công khai lưu trên máy chủ.</li>
             <li><strong>Khi hỏi:</strong> đoạn liên quan được gửi tới Gemini; đây không phải AI offline.</li>
+            <li><strong>Với khóa miễn phí:</strong> Google có thể dùng nội dung để cải thiện dịch vụ; đừng tải lên dữ liệu cá nhân, nhạy cảm hoặc bí mật.</li>
           </ul>
+          <a href="/privacy.html" target="_blank" rel="noreferrer">Xem đầy đủ cách Veridra dùng và lưu dữ liệu</a>
 
           {!file ? (
             <div

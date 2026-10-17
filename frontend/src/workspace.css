@@ -2987,6 +2987,31 @@ button:active {
   -webkit-backdrop-filter: none !important;
   isolation: auto;
 }
+.app-shell--chat .chat-data-use-notice {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 8px 12px 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.app-shell--chat .chat-data-use-notice > svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--accent);
+}
+.app-shell--chat .chat-data-use-notice p { margin: 0; }
+.app-shell--chat .chat-data-use-notice a,
+.app-data-privacy-link a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; }
+.app-data-privacy-link { margin: 24px 0 8px; text-align: right; font-size: 12px; }
+@media (min-width: 701px) {
+  /* Reserve the expanded companion's lower-right space so it never hides the disclosure. */
+  .app-shell--chat:has(.mascot-companion:not(.mascot-companion--minimized)) .chat-data-use-notice {
+    max-width: calc(100% - 300px);
+  }
+}
 .app-shell--chat .composer-container::before {
   display: none;
 }

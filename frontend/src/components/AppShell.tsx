@@ -314,7 +314,10 @@ export function AppShell({
             </Tooltip>
           </div>
         </header>
-        <main id="main-content" tabIndex={-1} className="page-content">{children}</main>
+        <main id="main-content" tabIndex={-1} className="page-content">
+          {children}
+          <footer className="app-data-privacy-link"><a href="/privacy.html" target="_blank" rel="noreferrer">Thông tin quyền riêng tư và dữ liệu</a></footer>
+        </main>
         <MascotAssistant
           activity={chatActivity}
           currentPage={page}

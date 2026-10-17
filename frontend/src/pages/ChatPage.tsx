@@ -31,6 +31,7 @@ import {
   Mail16Regular,
   Mail20Regular,
   Search20Regular,
+  ShieldCheckmark20Regular,
   Send24Regular,
   Sparkle16Regular,
   Table16Regular,
@@ -1720,6 +1721,13 @@ export function ChatPage({ ownerId, onBusyChange, onTaskChange, isActive = true 
         ) : null}
 
         <form className="composer-container" onSubmit={(e) => void submit(e)}>
+          <div className="chat-data-use-notice" role="note">
+            <ShieldCheckmark20Regular aria-hidden="true" />
+            <p>
+              Khi gửi, câu hỏi và phần nguồn cần thiết được chuyển tới Google Gemini. Nếu khóa dùng hạn mức miễn phí, Google có thể dùng nội dung để cải thiện dịch vụ và người đánh giá có thể xem; đừng gửi thông tin cá nhân, nhạy cảm hoặc bí mật.{' '}
+              <a href="/privacy.html" target="_blank" rel="noreferrer">Xem thông tin dữ liệu</a>
+            </p>
+          </div>
           {slashMenuOpen ? (
             <div id="slash-command-menu" className="slash-menu" role="listbox" aria-label="Khả năng nhanh của Veridra">
               <header>

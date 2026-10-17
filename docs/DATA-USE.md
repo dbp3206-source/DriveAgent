@@ -1,5 +1,9 @@
 # Điều kiện dữ liệu trước vận hành thật
 
+> **Trạng thái hiện hành — 16/10/2026.** Dùng phần này làm thông tin chuẩn; các mốc “chưa phát hành/chưa có trên URL” phía dưới là ảnh chụp lịch sử trước khi thay đổi được đưa lên `main` và Render. Bản chạy hiện tại có nhắc dọn dữ liệu sau 30 ngày, nhưng chỉ xóa sau khi người dùng xem phạm vi và xác nhận; nếu để sau, dữ liệu còn lâu hơn. Không xóa bản gốc Google. Thay đổi thông báo quyền riêng tư đang được làm riêng và chưa được coi là đã phát hành cho đến khi có CI, triển khai và kiểm URL.
+
+**Thông tin này là mô tả kỹ thuật cho beta kín, không phải chứng nhận tuân thủ pháp luật.** Khóa Gemini hiện tại không được Veridra kiểm tra trạng thái thanh toán. Nếu khóa dùng hạn mức miễn phí, điều khoản Google cho phép dùng nội dung và câu trả lời để cải thiện dịch vụ, có thể có người đánh giá; không gửi dữ liệu cá nhân, nhạy cảm hoặc bí mật qua hạn mức đó. Mã hóa lưu trữ không đồng nghĩa dữ liệu đã ẩn danh.
+
 Ngày đối chiếu: 13/10/2026. Thuộc gói 14 của kế hoạch hiện hành, không thêm phạm vi. Đây là hồ sơ chuẩn bị để chủ sản phẩm xác nhận, **chưa phải chính sách quyền riêng tư đã được duyệt hoặc chứng nhận tuân thủ**.
 
 ## Quyết định hiện tại
