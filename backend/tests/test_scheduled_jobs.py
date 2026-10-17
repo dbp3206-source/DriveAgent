@@ -48,6 +48,7 @@ async def test_schedule_enqueue_is_owner_bounded_idempotent_and_leased(scheduled
                     email="ready@example.com",
                     display_name="Ready",
                     encrypted_google_credentials="ciphertext",
+                    scheduled_morning_enabled=True,
                 ),
                 User(email="no-oauth@example.com", display_name="No OAuth"),
             ]
@@ -81,6 +82,7 @@ async def test_premeeting_preview_combines_calendar_mail_and_cited_web(scheduled
             email="owner@example.com",
             display_name="Owner",
             encrypted_google_credentials="ciphertext",
+            scheduled_pre_meeting_enabled=True,
         )
         db.add(user)
         await db.commit()
@@ -199,6 +201,7 @@ async def test_event_version_queue_dedupe_and_stale_execution_readback(
             email="owner@example.com",
             display_name="Owner",
             encrypted_google_credentials="ciphertext",
+            scheduled_pre_meeting_enabled=True,
         )
         db.add(user)
         await db.commit()
@@ -265,7 +268,11 @@ async def test_no_due_event_creates_no_conversation_or_source_work(scheduled_sto
 
     registry = Registry()
     async with factory() as db:
-        user = User(email="owner@example.com", display_name="Owner")
+        user = User(
+            email="owner@example.com",
+            display_name="Owner",
+            scheduled_pre_meeting_enabled=True,
+        )
         db.add(user)
         await db.commit()
         result = await PreMeetingBriefingService(Settings(_env_file=None), registry).generate(
@@ -308,6 +315,7 @@ async def test_same_event_queue_remains_owner_scoped_and_payload_survives_reclai
                     email=f"owner-{i}@example.com",
                     display_name=f"Owner {i}",
                     encrypted_google_credentials="ciphertext",
+                    scheduled_pre_meeting_enabled=True,
                 )
                 for i in range(2)
             ]
@@ -350,7 +358,11 @@ async def test_legacy_hour_slot_job_without_event_fails_before_source_calls(
             pytest.fail("Legacy job must not read sources or call a model")
 
     async with factory() as db:
-        user = User(email="owner@example.com", display_name="Owner")
+        user = User(
+            email="owner@example.com",
+            display_name="Owner",
+            scheduled_pre_meeting_enabled=True,
+        )
         db.add(user)
         await db.flush()
         db.add(ScheduledJob(user_id=user.id, kind="pre_meeting", dedupe_key="old-hour"))
@@ -395,11 +407,13 @@ async def test_calendar_failure_is_isolated_and_summary_has_no_owner_or_secret(
             email="failed@example.com",
             display_name="Failed",
             encrypted_google_credentials="ciphertext",
+            scheduled_pre_meeting_enabled=True,
         )
         ready = User(
             email="ready@example.com",
             display_name="Ready",
             encrypted_google_credentials="ciphertext",
+            scheduled_pre_meeting_enabled=True,
         )
         db.add_all([failed, ready])
         await db.commit()
@@ -441,7 +455,11 @@ async def test_corrupt_payload_fails_durably_without_replay_or_stranding_next_jo
         "app.services.scheduled_jobs.MorningBriefingService.generate_brief", morning
     )
     async with factory() as db:
-        user = User(email="owner@example.com", display_name="Owner")
+        user = User(
+            email="owner@example.com",
+            display_name="Owner",
+            scheduled_morning_enabled=True,
+        )
         db.add(user)
         await db.flush()
         bad = ScheduledJob(

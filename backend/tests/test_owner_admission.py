@@ -447,6 +447,9 @@ async def test_scheduler_defers_busy_owner_without_calendar_reads_or_consuming_s
     await queued(admission)
     settings = SimpleNamespace(beta_email_allowed=lambda _email: True)
     async with factory() as db:
+        (await db.get(User, owner)).scheduled_morning_enabled = True
+        (await db.get(User, other)).scheduled_morning_enabled = True
+        await db.commit()
         result = await enqueue_for_invited_users(db, settings, kind="morning",
                                                  dedupe_key="synthetic",
                                                  registry=SimpleNamespace(admission_gate=gate))

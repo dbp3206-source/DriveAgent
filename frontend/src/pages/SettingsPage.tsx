@@ -1,5 +1,11 @@
 import { Badge, Button, Field, Input, MessageBar, MessageBarBody, Spinner, Switch } from '@fluentui/react-components'
-import { ArrowExit24Regular, CheckmarkCircle24Regular, DismissCircle24Regular } from '@fluentui/react-icons'
+import {
+  ArrowExit24Regular,
+  CalendarLtr24Regular,
+  CheckmarkCircle24Regular,
+  DismissCircle24Regular,
+  WeatherSunny24Regular,
+} from '@fluentui/react-icons'
 import { useEffect, useState } from 'react'
 import { api } from '../api'
 import { hasDriveReadScope, hasGmailReadScope } from '../integrationStatus.mjs'
@@ -62,6 +68,11 @@ type GeminiCredential = {
   retry_after_seconds: number
 }
 
+type SchedulePreferences = {
+  morning_enabled: boolean
+  pre_meeting_enabled: boolean
+}
+
 export function SettingsPage({ status, health }: { status: AuthStatus; health: Health | null }) {
   const scopes = status.user?.scopes
   const driveReadReady = hasDriveReadScope(scopes)
@@ -97,6 +108,10 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
   const [mascotEnabled, setMascotEnabled] = useState(() => {
     return localStorage.getItem('driveagent_mascot_enabled') !== 'false'
   })
+  const [schedulePreferences, setSchedulePreferences] = useState<SchedulePreferences | null>(null)
+  const [scheduleBusy, setScheduleBusy] = useState(false)
+  const [scheduleError, setScheduleError] = useState('')
+  const [scheduleMessage, setScheduleMessage] = useState('')
   const [credentials, setCredentials] = useState<GeminiCredential[]>([])
   const [credentialLoading, setCredentialLoading] = useState(true)
   const [credentialBusy, setCredentialBusy] = useState('')
@@ -123,6 +138,38 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
   }
 
   useEffect(() => { void loadOperations() }, [])
+
+  async function loadSchedulePreferences() {
+    setScheduleError('')
+    try {
+      setSchedulePreferences(await api<SchedulePreferences>('/api/settings/schedules'))
+    } catch (error) {
+      setScheduleError(error instanceof Error ? error.message : 'Không đọc được cài đặt lịch tự động.')
+    }
+  }
+
+  useEffect(() => { void loadSchedulePreferences() }, [])
+
+  async function updateSchedulePreference(kind: keyof SchedulePreferences, enabled: boolean) {
+    if (!schedulePreferences) return
+    const next = { ...schedulePreferences, [kind]: enabled }
+    setScheduleBusy(true)
+    setScheduleError('')
+    setScheduleMessage('')
+    try {
+      setSchedulePreferences(await api<SchedulePreferences>('/api/settings/schedules', {
+        method: 'PUT',
+        body: JSON.stringify(next),
+      }))
+      setScheduleMessage(enabled
+        ? 'Đã bật bản tin này. Khi lịch tự động được cấu hình, Veridra sẽ chỉ xử lý tài khoản của bạn.'
+        : 'Đã tắt bản tin; các việc đang chờ đã được hủy. Việc đã bắt đầu có thể hoàn tất.')
+    } catch (error) {
+      setScheduleError(error instanceof Error ? error.message : 'Không lưu được cài đặt lịch tự động.')
+    } finally {
+      setScheduleBusy(false)
+    }
+  }
 
   useEffect(() => {
     const refreshAfterCleanup = (event: Event) => {
@@ -276,6 +323,7 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
     <nav className="settings-index" aria-label="Nhóm cài đặt">
       <button type="button" onClick={() => scrollToSetting('settings-system')}>Hệ thống</button>
       <button type="button" onClick={() => scrollToSetting('settings-retention')}>Dữ liệu đã lưu</button>
+      <button type="button" onClick={() => scrollToSetting('settings-schedules')}>Bản tin tự động</button>
       <button type="button" onClick={() => scrollToSetting('settings-ai')}>AI & hạn mức</button>
       <button type="button" onClick={() => scrollToSetting('settings-google')}>Google Workspace</button>
       <button type="button" onClick={() => scrollToSetting('settings-experience')}>Trải nghiệm</button>
@@ -318,6 +366,37 @@ export function SettingsPage({ status, health }: { status: AuthStatus; health: H
       </header>
       <MessageBar intent="info"><MessageBarBody>Việc dọn chỉ áp dụng cho dữ liệu Veridra đã lưu và ngữ cảnh làm việc của trợ lý. Bản gốc trong Gmail, Drive, Lịch và Docs của Google không bị xóa.</MessageBarBody></MessageBar>
       <Button appearance="secondary" onClick={() => window.dispatchEvent(new Event('veridra:retention-open'))}>Kiểm tra dữ liệu cần dọn</Button>
+    </section>
+
+    <section id="settings-schedules" className="settings-group" aria-labelledby="settings-schedules-title">
+      <header className="settings-group__heading">
+        <div><span>Quyền tự động</span><h3 id="settings-schedules-title">Bản tin theo lịch</h3></div>
+        <p>Mặc định tắt. Mỗi người tự chọn loại bản tin muốn nhận; Veridra không đọc nguồn nền nếu chưa bật lựa chọn tương ứng.</p>
+      </header>
+      <MessageBar intent="info"><MessageBarBody>
+        Khi bật, bạn cho phép Veridra đọc các nguồn được nêu dưới đây và gửi phần cần thiết tới mô hình AI đang cấu hình để lập bản tin. Veridra không gửi thư hay sửa dữ liệu gốc. Tắt sẽ hủy việc còn chờ; việc đã bắt đầu có thể hoàn tất.
+      </MessageBarBody></MessageBar>
+      {scheduleError && <MessageBar intent="error"><MessageBarBody>{scheduleError}<Button appearance="subtle" onClick={() => void loadSchedulePreferences()}>Thử lại</Button></MessageBarBody></MessageBar>}
+      {scheduleMessage && <MessageBar intent="success"><MessageBarBody>{scheduleMessage}</MessageBarBody></MessageBar>}
+      {!schedulePreferences && !scheduleError ? <Spinner label="Đang đọc lựa chọn bản tin…" /> : null}
+      {schedulePreferences && <div className="status-board">
+        <div className="status-line">
+          <span className="status-icon status-icon--ok"><WeatherSunny24Regular /></span>
+          <div><strong>Bản tin đầu ngày</strong><p>Khi chạy, đọc tối đa 5 thư chưa đọc trong 24 giờ và xem tên, thời điểm sửa của tối đa 5 tệp Drive gần đây.</p></div>
+          <Switch checked={schedulePreferences.morning_enabled} disabled={scheduleBusy}
+            onChange={(_, data) => void updateSchedulePreference('morning_enabled', data.checked)}
+            label={schedulePreferences.morning_enabled ? 'Đang bật' : 'Đã tắt'}
+            aria-label="Bật bản tin đầu ngày" />
+        </div>
+        <div className="status-line">
+          <span className="status-icon status-icon--ok"><CalendarLtr24Regular /></span>
+          <div><strong>Chuẩn bị trước cuộc hẹn</strong><p>Khi chạy, kiểm tra lịch trong 24 giờ và tạo bản tin trong khoảng thời gian đã cài; đọc tối đa 3 thư liên quan mỗi cuộc hẹn, kèm thông tin web công khai.</p></div>
+          <Switch checked={schedulePreferences.pre_meeting_enabled} disabled={scheduleBusy}
+            onChange={(_, data) => void updateSchedulePreference('pre_meeting_enabled', data.checked)}
+            label={schedulePreferences.pre_meeting_enabled ? 'Đang bật' : 'Đã tắt'}
+            aria-label="Bật chuẩn bị trước cuộc hẹn" />
+        </div>
+      </div>}
     </section>
 
     <section className="operation-ledger settings-group" aria-labelledby="operation-ledger-title">

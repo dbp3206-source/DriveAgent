@@ -328,7 +328,7 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 8
+            )).scalar_one() == 9
             assert db.execute(text(
                 "SELECT column_default FROM information_schema.columns "
                 "WHERE table_schema='veridra_private' AND table_name='users' "
@@ -639,6 +639,7 @@ async def test_postgres_scheduler_claim_is_atomic_and_persistent():
                     email=owner,
                     display_name="Scheduled",
                     encrypted_google_credentials="synthetic-ciphertext",
+                    scheduled_morning_enabled=True,
                 )
             )
             await db.commit()

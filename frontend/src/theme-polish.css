@@ -303,6 +303,7 @@
 .settings-page > .operation-ledger,
 .settings-page > .gemini-credentials,
 .settings-page > .oauth-scope-ledger,
+.settings-page > #settings-schedules,
 .settings-page > .settings-security {
   grid-column: 1 / -1;
 }

@@ -21,6 +21,14 @@ from app.tools.contracts import ToolError
 KINDS = {"morning", "pre_meeting"}
 
 
+def _schedule_enabled(user: User, kind: str) -> bool:
+    field = {
+        "morning": "scheduled_morning_enabled",
+        "pre_meeting": "scheduled_pre_meeting_enabled",
+    }.get(kind)
+    return bool(field and getattr(user, field, False))
+
+
 async def enqueue_for_invited_users(
     db, settings, *, kind: str, dedupe_key: str, registry=None
 ) -> dict:
@@ -33,7 +41,8 @@ async def enqueue_for_invited_users(
     # Hold admissions through the batch commit, not merely each INSERT. This
     # endpoint has bearer auth rather than a signed browser session.
     users = (await db.scalars(select(User).where(User.is_active.is_(True)))).all()
-    owners = {user.id for user in users if user.encrypted_google_credentials
+    owners = {user.id for user in users if _schedule_enabled(user, kind)
+              and user.encrypted_google_credentials
               and settings.beta_email_allowed(user.email)}
     deferred = set()
     async with AsyncExitStack() as stack:
@@ -59,7 +68,9 @@ async def _enqueue_for_invited_users(
     eligible = [
         user
         for user in users
-        if user.encrypted_google_credentials and settings.beta_email_allowed(user.email)
+        if _schedule_enabled(user, kind)
+        and user.encrypted_google_credentials
+        and settings.beta_email_allowed(user.email)
     ][:4]
     created = 0
     existing = 0
@@ -223,22 +234,38 @@ async def _execute_claimed(session_factory, settings, registry, claimed) -> bool
             user = await db.get(User, claimed["user_id"])
             if user is None or not user.is_active or not settings.beta_email_allowed(user.email):
                 raise ValueError("scheduled_user_unavailable")
-            runtime = await user_runtime_settings(db, user.id, settings)
-            request_id = f"scheduled-{claimed['id']}"
-            if claimed["kind"] == "morning":
-                result = await MorningBriefingService(runtime, registry).generate_brief(
-                    user, db, request_id=request_id
-                )
+            if not _schedule_enabled(user, claimed["kind"]):
+                schedule_disabled = True
             else:
-                expected_event = payload.get("event")
-                if not isinstance(expected_event, dict) or set(expected_event) != {"id", "version"}:
-                    raise ToolError(
-                        "Tác vụ trước hẹn thiếu phiên bản sự kiện; cần tạo lại từ lịch hiện tại.",
-                        code="scheduled_event_identity_missing",
+                schedule_disabled = False
+                runtime = await user_runtime_settings(db, user.id, settings)
+                request_id = f"scheduled-{claimed['id']}"
+                if claimed["kind"] == "morning":
+                    result = await MorningBriefingService(runtime, registry).generate_brief(
+                        user, db, request_id=request_id
                     )
-                result = await PreMeetingBriefingService(runtime, registry).generate(
-                    user, db, request_id=request_id, expected_event=expected_event
-                )
+                else:
+                    expected_event = payload.get("event")
+                    if (
+                        not isinstance(expected_event, dict)
+                        or set(expected_event) != {"id", "version"}
+                    ):
+                        raise ToolError(
+                            "Tác vụ trước hẹn thiếu phiên bản sự kiện; cần tạo lại "
+                            "từ lịch hiện tại.",
+                            code="scheduled_event_identity_missing",
+                        )
+                    result = await PreMeetingBriefingService(runtime, registry).generate(
+                        user, db, request_id=request_id, expected_event=expected_event
+                    )
+        if schedule_disabled:
+            await _finish(
+                session_factory,
+                claimed,
+                result={"status": "skipped", "reason": "schedule_disabled"},
+                error=None,
+            )
+            return True
         await _finish(session_factory, claimed, result=result, error=None)
     except Exception as exc:
         code = getattr(exc, "code", None) or type(exc).__name__

@@ -39,6 +39,7 @@ from app.api import (
     rag,
     release,
     retention,
+    schedule_preferences,
     scheduler,
     sheets,
     skills,
@@ -498,6 +499,7 @@ for api_router in (
     release.router,
     evaluation_jobs.router,
     scheduler.router,
+    schedule_preferences.router,
     retention.router,
 ):
     app.include_router(api_router)
