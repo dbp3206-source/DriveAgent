@@ -328,7 +328,7 @@ def test_postgres_app_schema_and_migration_ledger_are_private():
             )).scalar_one() == "veridra_private.users"
             assert db.execute(text(
                 "SELECT max(version) FROM veridra_private.schema_migrations"
-            )).scalar_one() == 9
+            )).scalar_one() == 10
             assert db.execute(text(
                 "SELECT column_default FROM information_schema.columns "
                 "WHERE table_schema='veridra_private' AND table_name='users' "
