@@ -22,7 +22,17 @@ test('data processing notice is visible before chat use and Google authorization
   assert.match(chatPage, /chat-data-use-notice/)
   assert.match(chatPage, /href="\/privacy\.html"/)
   assert.match(setupGate, /href="\/privacy\.html"/)
-  assert.match(localSourcesPage, /khóa miễn phí/)
+  assert.match(localSourcesPage, /hạn mức miễn phí/)
+  assert.match(localSourcesPage, /ngay lúc nạp/)
+  assert.match(localSourcesPage, /nội dung có thể được gửi sang Google ngay lúc nạp/)
   assert.match(localSourcesPage, /href="\/privacy\.html"/)
   assert.match(setupGate, /trước khi|Khi trò chuyện/)
+})
+
+test('Drive explains Gemini transfer before a user indexes a file', async () => {
+  const drivePage = await readFile(new URL('./pages/DrivePage.tsx', import.meta.url), 'utf8')
+  assert.match(drivePage, /Khi bấm “Lập chỉ mục”, nội dung tệp được gửi tới Google Gemini/)
+  assert.match(drivePage, /người đánh giá có thể xem/)
+  assert.match(drivePage, /đừng dùng dữ liệu cá nhân, nhạy cảm hoặc bí mật/i)
+  assert.match(drivePage, /href="\/privacy\.html"/)
 })
