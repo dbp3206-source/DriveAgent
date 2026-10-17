@@ -11,7 +11,10 @@
   ],
   "primary_skill": "Existing Fluent UI and Veridra design system; no design skill invoked",
   "specialist_skills": [],
-  "mcp_tools_used": [],
+  "mcp_tools_used": [
+    "Render MCP: inspect service image and deployment status",
+    "In-app browser connector: inspect live /privacy.html and authenticated /#/chat UI"
+  ],
   "commands_run": [
     "npm run test:unit (frontend): 224 passed, 0 failed",
     "npm run lint (frontend): exit 0",
@@ -19,7 +22,12 @@
     "node scripts/privacy-ui-smoke.mjs (frontend): passed, no browser errors",
     "Playwright Chromium screenshot: privacy.html at 1440x1200 and 390x844",
     "Invoke-WebRequest http://127.0.0.1:4173/privacy.html: HTTP 200 and expected title",
-    "git diff --check: clean"
+    "git diff --check: clean",
+    "GitHub Actions run #152: success on main commit 7680e9a3f1a353eded86503be566efd34d1a0909; frontend unit 224/224; image published",
+    "Render deployment dep-db9jpjnbtjjs73c03cn0: Live on exact CI image sha256:5ad85c68c13c9110bafa20f67ba470a76f6c868f1213315c0c33cc6dbe196988",
+    "Live /api/health: status ok; database/object_storage/google_oauth_configured true; gemini_configured false; connectivity not probed",
+    "In-app browser: inspected live /privacy.html and /#/chat; no chat submitted or private source content opened",
+    "Local Playwright attempt to capture the public Live page: blocked by environment net::ERR_NETWORK_ACCESS_DENIED; no Live screenshot file was produced"
   ],
   "repository_defined_outputs": [
     "frontend/public/privacy.html",
@@ -33,21 +41,23 @@
     "frontend/scripts/privacy-ui-smoke.mjs",
     "frontend/src/privacyDisclosure.test.mjs",
     "design-work/privacy-disclosure-20261016/qa/qa-report.md",
-    "design-work/privacy-disclosure-20261016/qa/screenshots/"
+    "design-work/privacy-disclosure-20261016/qa/screenshots/ (local preview screenshots; the Live screenshot was displayed in-session but not stored)"
   ],
   "verification": {
     "structural": true,
     "rendered": true,
     "visual_review": true,
     "content_fidelity": true,
-    "target_environment": false
+    "target_environment": true
   },
-  "quality_score": 87,
+  "quality_score": 91,
   "known_limitations": [
-    "Not yet pushed to main or deployed to Render; public URL not verified for this change.",
     "Privacy/legal review and operator identity confirmation remain required before broad release or personal data use.",
     "30-day retention cleanup requires user confirmation; deferral means data may remain longer.",
     "Google Gemini key billing status is not verified by Veridra; free-tier handling and reviewer access are described with links to Google terms.",
+    "Render free tier may cold-start with 50 seconds or more of delay.",
+    "Health reports gemini_configured=false and Gemini/Google Workspace connectivity was not probed; no model request was made.",
+    "Live UI was inspected in the in-app browser, but the direct Live screenshot could not be saved to the repository because local Chrome network access was denied.",
     "No real Google, Gemini, Tavily, Gmail, Drive, Calendar or user data was accessed in this verification."
   ]
 }

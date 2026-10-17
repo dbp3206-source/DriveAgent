@@ -1,8 +1,8 @@
-# Kiểm tra thông báo dữ liệu Veridra — 16/10/2026
+# Kiểm tra thông báo dữ liệu Veridra — cập nhật 17/10/2026
 
 ## Kết quả
 
-**Mã và giao diện cục bộ: đạt. Phát hành ra URL: chưa làm trong lượt kiểm này.** Đây là nghiệm thu riêng cho thông báo dữ liệu, không phải xác nhận toàn bộ Veridra đã sẵn sàng sản xuất. Không dùng Gemini, không đọc Gmail/Drive thật và không gửi nội dung thật tới dịch vụ ngoài.
+**Lát cắt thông báo dữ liệu đã qua CI, lên `main`, triển khai Live và được kiểm tra trên URL.** Đây chỉ là nghiệm thu riêng cho nội dung/quyền riêng tư, không phải xác nhận toàn bộ Veridra đã sẵn sàng sản xuất. Không dùng Gemini, không đọc Gmail/Drive thật và không gửi nội dung thật tới dịch vụ ngoài.
 
 Phần bổ sung đưa thông tin đến đúng lúc: trước khi cấp quyền Google, trong khung trò chuyện và tại trang tài liệu đã nhập. Trang `/privacy.html` giải thích dữ liệu được xử lý ở đâu, nguy cơ của hạn mức Gemini miễn phí, mốc 30 ngày có xác nhận, giới hạn xóa và kênh liên hệ. Liên kết mở được cả từ chân trang trong ứng dụng.
 
@@ -25,7 +25,10 @@ Phần bổ sung đưa thông tin đến đúng lúc: trước khi cấp quyền
 | Trang công khai trên bản dựng | **Đạt cục bộ** | HTTP `200`, tiêu đề đúng; chụp toàn trang ở 1440×1200 và 390×844. |
 | Kiểm mã định dạng | **Đạt** | `git diff --check`, không phát hiện lỗi khoảng trắng. |
 | Dịch vụ thật / dữ liệu thật | **Không gọi** | Không đăng nhập Google, không gọi Gemini/Tavily, không đọc Gmail/Drive/lịch, không xóa/ghi dữ liệu thật. |
-| CI / main / Render | **Chưa xác minh** | Bản sửa chưa được đẩy lên `main` hoặc triển khai; URL công khai vẫn cần xác nhận sau phát hành. |
+| CI trên `main` | **Đạt** | [CI #152](https://github.com/dbp3206-source/DriveAgent/actions/runs/39019930723), commit `7680e9a3f1a353eded86503be566efd34d1a0909`; PostgreSQL, backend, frontend (224 kiểm thử), lint, build, kiểm tra ảnh đều đạt. Bước tự triển khai bị bỏ qua vì không có deploy hook. |
+| Render | **Đạt** | Dịch vụ `srv-dav5v560tbcc73dpjlc0`, triển khai `dep-db9jpjnbtjjs73c03cn0`, trạng thái `Live`, hoàn tất `2026-10-17 09:18:12 UTC` (16:18:12 giờ Bangkok); đang dùng đúng ảnh `ghcr.io/dbp3206-source/veridra@sha256:5ad85c68c13c9110bafa20f67ba470a76f6c868f1213315c0c33cc6dbe196988`. |
+| URL Live trên trình duyệt bên | **Đạt trong phạm vi giao diện** | `/privacy.html` hiển thị đúng cảnh báo và các mục dữ liệu; `/#/chat` hiển thị cảnh báo trước khi gửi và liên kết chân trang. Không gửi chat. Ảnh trực tiếp được hiển thị trong phiên; chưa lưu thành tệp QA. |
+| Tình trạng dịch vụ | **Đạt một phần** | `/api/health`: `status=ok`, cơ sở dữ liệu/kho tệp/Google OAuth đã cấu hình. `gemini_configured=false`, kết nối Gemini và Google Workspace chưa được dò; không thử gọi mô hình. |
 
 ## Kiểm tra hiển thị
 
@@ -35,14 +38,14 @@ Phần bổ sung đưa thông tin đến đúng lúc: trước khi cấp quyền
 - `screenshots/local-sources-data-notice-desktop.png`: nhắc hạn mức miễn phí tại nơi tải tài liệu lên.
 - `screenshots/privacy-desktop.png`, `screenshots/privacy-mobile.png`: trang thông tin công khai ở hai cỡ màn hình.
 
-Ảnh là ảnh chụp từ Chrome chạy bản dựng cục bộ với dữ liệu giả lập; không phải ảnh bằng chứng của URL Render.
+Các ảnh trong thư mục là ảnh chụp Chrome từ bản dựng cục bộ với dữ liệu giả lập. Trang Live cũng được mở và xem trực tiếp trong trình duyệt bên; ảnh đó đã hiện trong phiên làm việc nhưng chưa lưu vào thư mục QA. Lần thử chụp URL bằng Chrome cục bộ bị chặn mạng (`net::ERR_NETWORK_ACCESS_DENIED`), vì vậy không đánh dấu ảnh Live là tệp lưu trữ.
 
 ## Phát hiện và xử lý
 
 1. Cảnh báo ban đầu bị mascot phủ một phần ở màn hình rộng. Đã dành vùng ngang cho cảnh báo khi mascot mở và thêm khẳng định hình học vào bài kiểm trình duyệt.
 2. Lần chạy đầu của smoke test thất bại do kiểm thử đòi đúng cụm “không gửi”, còn giao diện dùng cách nói tự nhiên “đừng gửi”. Đã sửa biểu thức kiểm để xác nhận đúng nội dung thực tế; chạy lại đạt. Không thay đổi hành vi sản phẩm vì sai khác này.
 
-## Điểm chất lượng phần thông báo: 87/100
+## Điểm chất lượng phần thông báo: 91/100
 
 | Tiêu chí | Điểm | Lý do |
 |---|---:|---|
@@ -51,14 +54,12 @@ Phần bổ sung đưa thông tin đến đúng lúc: trước khi cấp quyền
 | Bố cục thông tin | 14/15 | Trang chi tiết chia theo dữ liệu, nơi nhận, lưu/xóa, quyền và liên hệ. |
 | Chữ và khả năng đọc | 13/15 | Tiếng Việt ngắn ở điểm thao tác; trang giải thích dài nhưng chia mục và xem được trên điện thoại. |
 | Bố cục/nhận diện | 13/15 | Theo Fluent UI hiện có, có cảnh báo nổi bật, không dựng lại giao diện. |
-| Hoàn thiện kỹ thuật | 10/15 | Unit, lint, build và Chrome cục bộ đạt; chưa có CI, xác minh URL Render hoặc rà soát pháp lý. |
-| **Tổng** | **87/100** | Đạt ngưỡng nội bộ 80 cho lát cắt này; chưa phải cổng phát hành. |
+| Hoàn thiện kỹ thuật | 14/15 | Unit, lint, build, CI #152 và URL Render đạt; thiếu rà soát pháp lý và phép kiểm tích hợp Gemini. |
+| **Tổng** | **91/100** | Đạt ngưỡng nội bộ 80 cho lát cắt thông báo này; không phải điểm của toàn sản phẩm hay cổng phát hành. |
 
-## Còn lại trước khi coi phần này đã phát hành
+## Còn lại trước khi dùng dữ liệu thật hoặc mở beta rộng
 
-1. Đưa thay đổi lên `main` và chờ CI đúng commit.
-2. Triển khai ảnh mới lên Render, xác nhận `/privacy.html` mở công khai và kiểm lại liên kết/cảnh báo trên URL thật.
-3. Chủ sản phẩm rà soát tên đơn vị vận hành, kênh yêu cầu xóa và nội dung pháp lý trước khi nhận dữ liệu cá nhân hoặc mở beta rộng. Hiện trang ghi quản trị viên/email đã cung cấp; chưa có đơn vị pháp lý được xác nhận.
+1. Chủ sản phẩm xác nhận tên đơn vị vận hành và rà soát pháp lý trước khi nhận dữ liệu cá nhân hoặc mở beta rộng. Trang hiện ghi quản trị viên/email đã cung cấp; chưa có đơn vị pháp lý được xác nhận.
 
 ## Giới hạn quan trọng
 
@@ -66,3 +67,4 @@ Phần bổ sung đưa thông tin đến đúng lúc: trước khi cấp quyền
 - Tác vụ dọn Veridra không xóa bản gốc trên Google, bản người dùng tải về hoặc bản sao của nhà cung cấp khác.
 - Không tuyên bố nội dung được ẩn danh. Không gửi thông tin cá nhân, nhạy cảm hoặc bí mật qua khóa Gemini dùng hạn mức miễn phí.
 - Bài kiểm này chỉ chứng minh nội dung và bố cục của màn hình liên quan; không nghiệm thu quyền truy cập, độ bền dữ liệu, chất lượng câu trả lời, an ninh toàn hệ thống hay trạng thái production-ready của sản phẩm.
+- Render dùng gói miễn phí; cold start có thể chậm từ khoảng 50 giây. Trạng thái Live không chứng minh thời gian phản hồi ổn định.

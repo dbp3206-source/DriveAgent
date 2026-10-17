@@ -1,6 +1,6 @@
 # Điều kiện dữ liệu trước vận hành thật
 
-> **Trạng thái hiện hành — 16/10/2026.** Dùng phần này làm thông tin chuẩn; các mốc “chưa phát hành/chưa có trên URL” phía dưới là ảnh chụp lịch sử trước khi thay đổi được đưa lên `main` và Render. Bản chạy hiện tại có nhắc dọn dữ liệu sau 30 ngày, nhưng chỉ xóa sau khi người dùng xem phạm vi và xác nhận; nếu để sau, dữ liệu còn lâu hơn. Không xóa bản gốc Google. Thay đổi thông báo quyền riêng tư đang được làm riêng và chưa được coi là đã phát hành cho đến khi có CI, triển khai và kiểm URL.
+> **Trạng thái hiện hành — 17/10/2026.** Thông báo dữ liệu công khai `/privacy.html` và cảnh báo trong Setup/Chat/Local Sources đã có trên `main` tại `7680e9a` và Render đang chạy đúng ảnh CI `sha256:5ad85c68c13c9110bafa20f67ba470a76f6c868f1213315c0c33cc6dbe196988` (triển khai `dep-db9jpjnbtjjs73c03cn0`). Trang và cảnh báo Chat đã được mở, kiểm trực tiếp trên URL. Đây là thông báo cho beta kín, **không** phải chứng nhận tuân thủ. Dọn dữ liệu Veridra sau 30 ngày vẫn cần người dùng xem và xác nhận; trì hoãn nghĩa là lưu lâu hơn, và không xóa bản gốc Google.
 
 **Thông tin này là mô tả kỹ thuật cho beta kín, không phải chứng nhận tuân thủ pháp luật.** Khóa Gemini hiện tại không được Veridra kiểm tra trạng thái thanh toán. Nếu khóa dùng hạn mức miễn phí, điều khoản Google cho phép dùng nội dung và câu trả lời để cải thiện dịch vụ, có thể có người đánh giá; không gửi dữ liệu cá nhân, nhạy cảm hoặc bí mật qua hạn mức đó. Mã hóa lưu trữ không đồng nghĩa dữ liệu đã ẩn danh.
 
