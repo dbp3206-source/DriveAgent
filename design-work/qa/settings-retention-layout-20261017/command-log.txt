@@ -1,0 +1,18 @@
+1. Initial retention-only backend test run:
+   backend/.venv/Scripts/python.exe -m pytest backend/tests/test_retention_api.py backend/tests/test_retention_application.py backend/tests/test_retention_clocks.py backend/tests/test_retention_context_postgres.py backend/tests/test_retention_context.py backend/tests/test_retention_coordinator.py backend/tests/test_retention_framework.py backend/tests/test_retention_inventory.py backend/tests/test_retention_objects.py backend/tests/test_retention_policy.py backend/tests/test_retention_runtime.py backend/tests/test_retention_selection.py backend/tests/test_retention_state.py backend/tests/test_retention_vectors.py backend/tests/test_backup_retention.py backend/tests/test_skill_retention.py -q
+   Result: 221 passed, 1 skipped in 135.60s.
+
+2. Frontend validation:
+   npm run test:unit
+   Result: 224 passed, 0 failed.
+   npm run lint
+   Result: passed, no output from ESLint.
+   npm run build
+   Result: passed; Vite production build completed.
+
+3. Browser regression:
+   First launch used Playwright's bundled Chromium and failed because that browser binary was not installed. No dependency was installed.
+   Updated the test to use the repository-standard installed Chrome channel.
+   First assertion run exposed a test-measurement bug (the fixture did not include top/bottom coordinates); fixed the measurement, not product code.
+   node frontend/scripts/qa-settings-retention-layout.mjs
+   Result: passed in 1280x900 and 390x844, light and dark. No horizontal overflow; retention card is full-width and below the system card in all four cases.

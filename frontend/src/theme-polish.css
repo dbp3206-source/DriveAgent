@@ -311,6 +311,10 @@
   grid-column: 1 / span 8;
 }
 
+.settings-page > #settings-retention {
+  grid-column: 1 / -1;
+}
+
 .settings-page > #settings-experience {
   grid-column: 9 / -1;
 }

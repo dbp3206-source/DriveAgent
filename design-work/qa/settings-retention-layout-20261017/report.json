@@ -1,0 +1,179 @@
+{
+  "purpose": "Verify the retention settings section spans the settings grid without horizontal overflow.",
+  "source": [
+    "src/legacy-surface-recovery.css",
+    "src/styles.css",
+    "src/workspace.css",
+    "src/mascot-restore.css",
+    "src/theme-polish.css",
+    "src/release-canvas.css"
+  ],
+  "data": "Synthetic UI copy only; no API, account, or user content was loaded.",
+  "passed": true,
+  "results": [
+    {
+      "name": "desktop-light",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "theme": "light",
+      "viewportWidth": 1280,
+      "documentWidth": 1280,
+      "settings": {
+        "left": 272.953125,
+        "right": 1239.046875,
+        "top": 116.953125,
+        "bottom": 1313.21875,
+        "width": 966.09375
+      },
+      "system": {
+        "left": 272.953125,
+        "right": 911.015625,
+        "top": 279.34375,
+        "bottom": 410.34375,
+        "width": 638.0625
+      },
+      "retention": {
+        "left": 272.953125,
+        "right": 1239.046875,
+        "top": 428.34375,
+        "bottom": 583.34375,
+        "width": 966.09375
+      },
+      "retentionHeading": {
+        "left": 293.953125,
+        "right": 1218.046875,
+        "top": 449.34375,
+        "bottom": 490.34375,
+        "width": 924.09375
+      },
+      "fullWidth": true,
+      "belowSystem": true,
+      "noOverflow": true
+    },
+    {
+      "name": "mobile-light",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "light",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "settings": {
+        "left": 12,
+        "right": 378,
+        "top": 88,
+        "bottom": 1224.046875,
+        "width": 366
+      },
+      "system": {
+        "left": 12,
+        "right": 378,
+        "top": 229.75,
+        "bottom": 380.890625,
+        "width": 366
+      },
+      "retention": {
+        "left": 12,
+        "right": 378,
+        "top": 394.890625,
+        "bottom": 608.171875,
+        "width": 366
+      },
+      "retentionHeading": {
+        "left": 29,
+        "right": 361,
+        "top": 411.890625,
+        "bottom": 501.171875,
+        "width": 332
+      },
+      "fullWidth": true,
+      "belowSystem": true,
+      "noOverflow": true
+    },
+    {
+      "name": "desktop-dark",
+      "viewport": {
+        "width": 1280,
+        "height": 900
+      },
+      "theme": "dark",
+      "viewportWidth": 1280,
+      "documentWidth": 1280,
+      "settings": {
+        "left": 272.953125,
+        "right": 1239.046875,
+        "top": 110.953125,
+        "bottom": 1307.21875,
+        "width": 966.09375
+      },
+      "system": {
+        "left": 272.953125,
+        "right": 911.015625,
+        "top": 273.34375,
+        "bottom": 404.34375,
+        "width": 638.0625
+      },
+      "retention": {
+        "left": 272.953125,
+        "right": 1239.046875,
+        "top": 422.34375,
+        "bottom": 577.34375,
+        "width": 966.09375
+      },
+      "retentionHeading": {
+        "left": 293.953125,
+        "right": 1218.046875,
+        "top": 443.34375,
+        "bottom": 484.34375,
+        "width": 924.09375
+      },
+      "fullWidth": true,
+      "belowSystem": true,
+      "noOverflow": true
+    },
+    {
+      "name": "mobile-dark",
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "theme": "dark",
+      "viewportWidth": 390,
+      "documentWidth": 390,
+      "settings": {
+        "left": 12,
+        "right": 378,
+        "top": 88,
+        "bottom": 1224.046875,
+        "width": 366
+      },
+      "system": {
+        "left": 12,
+        "right": 378,
+        "top": 229.75,
+        "bottom": 380.890625,
+        "width": 366
+      },
+      "retention": {
+        "left": 12,
+        "right": 378,
+        "top": 394.890625,
+        "bottom": 608.171875,
+        "width": 366
+      },
+      "retentionHeading": {
+        "left": 29,
+        "right": 361,
+        "top": 411.890625,
+        "bottom": 501.171875,
+        "width": 332
+      },
+      "fullWidth": true,
+      "belowSystem": true,
+      "noOverflow": true
+    }
+  ]
+}

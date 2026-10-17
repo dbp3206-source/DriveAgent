@@ -4,7 +4,7 @@
 
 **Thông tin này là mô tả kỹ thuật cho beta kín, không phải chứng nhận tuân thủ pháp luật.** Khóa Gemini hiện tại không được Veridra kiểm tra trạng thái thanh toán. Nếu khóa dùng hạn mức miễn phí, điều khoản Google cho phép dùng nội dung và câu trả lời để cải thiện dịch vụ, có thể có người đánh giá; không gửi dữ liệu cá nhân, nhạy cảm hoặc bí mật qua hạn mức đó. Mã hóa lưu trữ không đồng nghĩa dữ liệu đã ẩn danh.
 
-Ngày đối chiếu: 13/10/2026. Thuộc gói 14 của kế hoạch hiện hành, không thêm phạm vi. Đây là hồ sơ chuẩn bị để chủ sản phẩm xác nhận, **chưa phải chính sách quyền riêng tư đã được duyệt hoặc chứng nhận tuân thủ**.
+Ngày chốt yêu cầu: 13/10/2026; trạng thái triển khai được đối chiếu lại ngày 17/10/2026. Thuộc gói 14 của kế hoạch hiện hành, không thêm phạm vi. Đây là mô tả kỹ thuật cho bản thử nghiệm kín, **không phải chính sách đã được rà soát pháp lý hoặc chứng nhận tuân thủ**.
 
 ## Quyết định hiện tại
 
@@ -14,9 +14,9 @@ Chủ sở hữu sau đó xác nhận đầu vào dự kiến gồm **ghi chú t
 
 Khi hỏi rõ về thông tin cá nhân, chủ sở hữu trả lời “mọi dữ liệu cơ bản được đảm bảo nên không cần quá lo” và cho phép áp dụng kỹ thuật/nghiệp vụ bảo mật nếu cần. Ghi nhận trách nhiệm/chủ trương bảo vệ dữ liệu này, không yêu cầu gửi mẫu riêng để chứng minh. **Không diễn giải thành dữ liệu đã ẩn danh, chấp thuận bật thanh toán, quyền gửi mọi nội dung riêng hoặc chứng nhận bảo mật.** Thiết kế phải mặc định đầu vào có thể chứa thông tin cá nhân; mã hóa khóa và cách ly tài khoản không thay thế điều kiện của bên xử lý. Đối chiếu điều khoản Gemini ngày 15/10 vẫn yêu cầu không gửi thông tin cá nhân, nhạy cảm hoặc bí mật qua dịch vụ không trả phí. Không dùng một biểu thức tìm email/số điện thoại để tuyên bố đã ẩn danh đầy đủ.
 
-Yêu cầu lưu giữ mới: **khoảng 20–30 ngày, thông báo bằng hộp thoại trước khi xóa và yêu cầu người dùng xác nhận**. Mốc triển khai chọn 30 ngày để nằm trong khoảng đã yêu cầu; đây là yêu cầu cần thực hiện/kiểm chứng, **chưa phải tính năng đã có trên URL**. Ưu tiên yêu cầu xác nhận: chưa xác nhận thì không xóa, vì vậy không được quảng bá là mọi dữ liệu chắc chắn biến mất sau tối đa 30 ngày. Chỉ xử lý bản nội dung được Veridra lưu; không xóa thư, lịch, tài liệu gốc hoặc Google Doc trong tài khoản Google. Không diễn giải quyết định này thành cho phép xóa ngay dữ liệu hiện có hoặc xóa tất cả tài khoản.
+Yêu cầu lưu giữ mới: **khoảng 20–30 ngày, thông báo bằng hộp thoại trước khi xóa và yêu cầu người dùng xác nhận**. Mốc triển khai là 30 ngày. Luồng xem trước/xác nhận đã có trên `main` và Render; bản đang chạy hiển thị phạm vi đến hạn và không xóa trước khi người dùng xác nhận. Nếu người dùng chọn “Để sau” hoặc chưa xác nhận, dữ liệu có thể được giữ lâu hơn 30 ngày; do đó đây **không phải giới hạn lưu tối đa 30 ngày**. Cơ chế chỉ xử lý dữ liệu Veridra quản lý, không xóa thư, lịch, tài liệu gốc hoặc Google Doc trong tài khoản Google. Không diễn giải quyết định này thành cho phép xóa ngay dữ liệu hiện có hoặc xóa tất cả tài khoản. Xem [kiểm thử lưu giữ](../design-work/retention-ui-20261016/qa/qa-report.md) và [kiểm hồi quy bố cục 17/10](../design-work/qa/settings-retention-layout-20261017/qa-report.md).
 
-Đã đối chiếu mã và cấu trúc bảng cloud bằng truy vấn chỉ đọc: nội dung còn có ở hàng đợi, chỉ mục, bộ máy hội thoại hiện tại/cũ và sổ hành động. [Phạm vi triển khai/kiểm xóa](DATA-RETENTION-20261015.md). Chưa sửa mã chạy, tạo cơ chế xóa hoặc thay dữ liệu trên máy chủ trong lần đối chiếu này.
+Đã đối chiếu mã và cấu trúc bảng cloud bằng truy vấn chỉ đọc: nội dung còn có ở hàng đợi, chỉ mục, bộ máy hội thoại hiện tại/cũ và sổ hành động. [Phạm vi triển khai/kiểm xóa](DATA-RETENTION-20261015.md). Bộ kiểm cục bộ ngày 17/10 dùng DB, kho tệp và nội dung giả lập trong thư mục tạm: **221 đạt, 1 bỏ qua**; không đọc hoặc xóa dữ liệu thật, không gọi Gemini/Google. CI và ảnh Render của bản hiện hành đã xác nhận tính năng được triển khai. Bằng chứng này không thay thế kiểm khôi phục DB/tệp, mục đã được chủ sở hữu cho bỏ qua và vẫn ghi **chưa kiểm chứng**.
 
 Cùng ngày, chủ sở hữu yêu cầu bỏ T09 khỏi đợt nghiệm thu hiện tại. Ghi chưa kiểm chứng phần hai tài khoản/phiên cloud, không tính đạt; giữ mã và bộ kiểm bảo vệ. Không dùng việc miễn kiểm T09 để miễn các điều kiện dữ liệu hoặc cho phép truy cập chéo.
 
@@ -55,12 +55,12 @@ Không đăng thư, lịch, hồ sơ nội bộ, bí mật hoặc ảnh chứa c
 - Đăng xuất thu hồi phiên Veridra của tài khoản; không xóa dữ liệu và không thu hồi quyền Google. Ngắt quyền Google thực hiện qua phần kết nối của tài khoản Google; cần xác nhận lại trên ứng dụng khi nghiệm thu.
 - Có đường xóa hội thoại, mục bộ nhớ và khóa riêng theo chủ sở hữu. Cất bộ nhớ/mẫu không phải xóa vĩnh viễn. Xóa một ghi chú không xóa điều đã nằm trong hội thoại/tệp cũ hoặc bản sao bên ngoài.
 - Chưa có bằng chứng một thao tác tự xóa toàn bộ tài khoản, mọi tệp, mọi bản sao và dữ liệu tại nhà cung cấp. Không quảng bá khả năng này trước khi kiểm và công bố quy trình đúng.
-- Chủ sở hữu đã chọn khoảng 20–30 ngày và xác nhận trước xóa; mục tiêu triển khai là nhắc/xử lý dữ liệu đủ 30 ngày theo cơ chế có xác nhận nêu trên. Chưa có cơ chế nhắc/xóa theo tuổi cho toàn bộ nội dung người dùng trong bản đang chạy. Cần chốt và kiểm phạm vi từng loại, bản sao và dữ liệu dẫn xuất trước khi công bố đã áp dụng; hướng dẫn giữ bản sao 30 ngày không tự chứng minh điều đó.
+- Chủ sở hữu đã chọn khoảng 20–30 ngày và xác nhận trước xóa; bản đang chạy nhắc người dùng xem dữ liệu Veridra đến hạn ở mốc 30 ngày, rồi chỉ dọn sau khi xác nhận. Bộ điều phối khóa phạm vi theo chủ sở hữu và chỉ công bố hoàn tất sau khi các bước xóa/đọc lại thành công; lỗi kho ngoài cần được xử lý tiếp, không được coi là đã dọn hết. Bản gốc Google, bản tải về và bản sao ngoài Veridra không thuộc cam kết này. Kiểm khôi phục vẫn chưa được thực hiện.
 
 ## Điều kiện đóng gói 14
 
 1. Chủ sở hữu xác nhận dữ liệu được dùng, bên có quyền cho phép, điều kiện Gemini/Google phù hợp và phạm vi người dùng. Không có quyết định này thì chưa mở xử lý dữ liệu doanh nghiệp thật.
-2. Chốt tên/người vận hành, kênh riêng nhận yêu cầu dữ liệu, thời hạn lưu và cách xóa/ngắt kết nối thực làm được; không đặt thông tin cá nhân trong issue công khai.
+2. Đã chốt quản trị viên vận hành, email hỗ trợ/yêu cầu xóa `dbp3206@gmail.com`, nhóm đầu vào và thời hạn nhắc dọn 30 ngày có xác nhận. Trước khi dùng rộng cần xác minh đơn vị chịu trách nhiệm, người trực email, cách xử lý/yêu cầu xóa tài khoản và các bản sao ngoài Veridra; không đặt thông tin cá nhân trong issue công khai.
 3. Công bố nội dung dễ hiểu tại URL truy cập được trước cấp quyền; cấu hình đúng trong OAuth nếu áp dụng. Không chỉ có tài liệu trong repo mà tuyên bố người dùng đã được thông báo.
 4. Kiểm đúng cơ chế với cùng bản phát hành; ghi điều chưa hỗ trợ. Chủ sở hữu/người có thẩm quyền duyệt phần điều kiện dữ liệu, không lấy kiểm đơn vị hoặc AI tự chấm làm chứng nhận.
 

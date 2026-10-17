@@ -1,5 +1,12 @@
 # Theo dõi triển khai — 13/10/2026
 
+## Trạng thái đối chiếu mới nhất — 17/10/2026
+
+- Bản lưu giữ 30 ngày có xác nhận đã lên `main`, qua CI và đang chạy trên Render; thông báo ở URL nói rõ việc “Để sau” có thể khiến dữ liệu được giữ lâu hơn 30 ngày. Bộ lưu giữ giả lập chạy lại tại máy: **221 đạt, 1 bỏ qua**; chưa kiểm khôi phục DB/tệp theo quyết định của chủ sở hữu.
+- Rà trang Cài đặt trên URL tìm thấy lỗi bố cục thật: thẻ lưu giữ tự rơi vào bốn cột còn trống, làm nội dung tràn. Đã sửa cục bộ một quy tắc CSS; frontend **224 bài**, lint, build và 4 ca bố cục Chrome sáng/tối 1280/390 đều đạt. Bản sửa này **chưa qua CI, chưa lên main và chưa triển khai**; chưa tính lỗi đã sửa trên URL. Hồ sơ: [QA bố cục 17/10](../design-work/qa/settings-retention-layout-20261017/qa-report.md).
+- Sức khỏe URL hiện đạt về ứng dụng/DB/kho tệp; endpoint công khai báo Gemini chưa cấu hình ở cấp máy chủ, còn Cài đặt của tài khoản hiển thị đã cấu hình khóa riêng nhưng chưa kiểm kết nối trong lần này. Không phát sinh yêu cầu Gemini mới. Không gọi dữ liệu Gmail/Drive thật.
+- **Toàn sản phẩm chưa nghiệm thu Production.** Các gói chức năng/đầu ra thật, độ trễ sau ngủ, dữ liệu/điều kiện nhà cung cấp và người chịu trách nhiệm pháp lý vẫn cần đối chiếu theo sổ hiện hành. Gói T09 và khôi phục tiếp tục được ghi *chưa kiểm chứng* theo quyết định đã chốt; không tính đạt.
+
 ## Cập nhật 16/10 — tiến độ lưu giữ, chưa triển khai
 
 - Đã nối lớp tiếp nhận chung cho HTTP, trợ lý, công cụ và các tác vụ nền; luồng ghi bị hủy vẫn ngăn dọn tới khi dừng thực sự. Đang kiểm gộp, tại máy 342 đạt/5 bỏ qua trước bổ sung tệp tạm; CI đúng mã còn chờ. Không dùng thêm Gemini hoặc thay URL. Bộ điều phối liên kho/API/hộp thoại vẫn còn, gói 14 chưa đóng. [Hồ sơ kiểm soát ghi](../design-work/production-20261013/qa/retention-admission-20261016.md).
@@ -78,7 +85,7 @@ Các bộ kiểm có phần chồng lặp; không cộng mẫu số thành “t�
 | 11 | Thu hồi phiên/cách ly đạt kiểm cục bộ và CI PostgreSQL; nâng cấp cloud thành công; T09 được chủ sở hữu loại khỏi đợt ngày 15/10 | Không còn chặn đợt này bằng yêu cầu hai tài khoản/phiên cloud; chưa kiểm chứng, không tính đạt hoặc hứa đã kiểm bốn người |
 | 12 | Chưa khôi phục dữ liệu; chủ sở hữu yêu cầu bỏ qua ngày15/10 | Loại khỏi đợt theo quyết định chủ sở hữu; không tính đạt, công bố giới hạn chưa kiểm khôi phục khi bàn giao |
 | 13 | Home đang chạy20/20lượt dưới3giây trong điều kiện đã ghi;16/16kiểm vận hành tại máy. Sau duyệt15/10 đã quay lui Render thật vềac46a7a rồi trở lại7727c538, cả haiLive; dữ liệu Bộ nhớ đọc lại và kiểm sức khỏe tốt | Đã đóng riêng diễn tập đổi phiên bản; sau ngủ/gián đoạn cloud và khôi phụcDB/tệp không được suy thành đạt. Không tự nâng gói |
-| 14 | Đã chốt quản trị viên vận hành, email hỗ trợ/xóa dbp3206@gmail.com; chưa đóng toàn bộ điều kiện dữ liệu | Chốt loại tài liệu, điều kiện nhà cung cấp, thời hạn lưu/xóa và thông báo người dùng; không gửi dữ liệu nhạy cảm khi chưa phù hợp |
+| 14 | Đã chốt quản trị viên vận hành, email hỗ trợ/xóa `dbp3206@gmail.com`, loại đầu vào và nhắc dọn 30 ngày sau khi người dùng xác nhận; thông báo đã lên URL, bộ dọn đã qua CI/Render | Trước khi dùng rộng còn phải xác minh đơn vị chịu trách nhiệm, email có người trực, điều kiện Gemini/nhà cung cấp và cách xử lý yêu cầu xóa toàn tài khoản/bản sao ngoài Veridra. Không gửi dữ liệu nhạy cảm qua hạn mức Gemini miễn phí |
 | 15 | Chưa có bằng chứng dùng lặp lại | Ba người/10 ngày theo kế hoạch; kết luận đúng hạn, tách khỏi nghiệm thu kỹ thuật |
 | 16 | Hồ sơ đang cập nhật, chưa phát hành | Bản giải thích được duyệt, main/CI/digest/URL khớp, vận hành và biên bản ký duyệt |
 
