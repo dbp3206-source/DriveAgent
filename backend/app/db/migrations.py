@@ -161,6 +161,31 @@ def _content_clocks(connection: Connection) -> None:
         )
 
 
+def _scheduled_preferences(connection: Connection) -> None:
+    """Keep recurring source access disabled unless each user opts in."""
+    if connection.dialect.name == "sqlite":
+        columns = _columns(connection, "users")
+        if "scheduled_morning_enabled" not in columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE users ADD COLUMN scheduled_morning_enabled "
+                "BOOLEAN NOT NULL DEFAULT 0"
+            )
+        if "scheduled_pre_meeting_enabled" not in columns:
+            connection.exec_driver_sql(
+                "ALTER TABLE users ADD COLUMN scheduled_pre_meeting_enabled "
+                "BOOLEAN NOT NULL DEFAULT 0"
+            )
+        return
+    connection.exec_driver_sql(
+        "ALTER TABLE veridra_private.users ADD COLUMN IF NOT EXISTS "
+        "scheduled_morning_enabled BOOLEAN NOT NULL DEFAULT FALSE"
+    )
+    connection.exec_driver_sql(
+        "ALTER TABLE veridra_private.users ADD COLUMN IF NOT EXISTS "
+        "scheduled_pre_meeting_enabled BOOLEAN NOT NULL DEFAULT FALSE"
+    )
+
+
 MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (1, _message_lifecycle),
     (2, _company_profiles),
@@ -171,6 +196,7 @@ MIGRATIONS: tuple[tuple[int, Migration], ...] = (
     (7, _auth_version),
     (8, _content_clocks),
     (9, _cleanup_jobs),
+    (10, _scheduled_preferences),
 )
 
 
@@ -212,6 +238,7 @@ def apply_postgres_migrations(connection: Connection) -> None:
         (1, lambda _connection: None), (2, _scheduled_jobs), (3, _chat_tasks),
         (4, migrate_pgvector), (5, protect_legacy_framework_tables),
         (6, _auth_version), (7, _content_clocks), (8, _cleanup_jobs),
+        (9, _scheduled_preferences),
     )
     for version, migration in migrations:
         if version in applied:

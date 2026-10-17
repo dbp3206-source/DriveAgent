@@ -31,10 +31,21 @@ def test_message_lifecycle_migration_upgrades_existing_database_once(tmp_path):
         scheduled_columns = {
             row[1] for row in connection.exec_driver_sql("PRAGMA table_info(scheduled_jobs)")
         }
+        user_schedule_columns = {
+            row[1] for row in connection.exec_driver_sql("PRAGMA table_info(users)")
+        }
+        schedule_defaults = connection.exec_driver_sql(
+            "SELECT scheduled_morning_enabled, scheduled_pre_meeting_enabled "
+            "FROM users WHERE id='legacy-user'"
+        ).one()
 
     assert {"status", "request_id"}.issubset(columns)
     assert tuple(row) == ("Nội dung cũ", "completed", None)
     assert {"user_id", "domain", "source_url", "last_verified_at"}.issubset(company_columns)
     assert {"user_id", "kind", "dedupe_key", "lease_token"}.issubset(scheduled_columns)
-    assert versions == [(index,) for index in range(1, 10)]
+    assert {"scheduled_morning_enabled", "scheduled_pre_meeting_enabled"}.issubset(
+        user_schedule_columns
+    )
+    assert tuple(schedule_defaults) == (0, 0)
+    assert versions == [(index,) for index in range(1, 11)]
     engine.dispose()

@@ -639,6 +639,7 @@ async def test_postgres_scheduler_claim_is_atomic_and_persistent():
                     email=owner,
                     display_name="Scheduled",
                     encrypted_google_credentials="synthetic-ciphertext",
+                    scheduled_morning_enabled=True,
                 )
             )
             await db.commit()
