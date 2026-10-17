@@ -226,6 +226,12 @@ export function DrivePage() {
         </Button>
         <span className="drive-sort-note">Gần đây trước</span>
       </div>
+      <MessageBar intent="warning">
+        <MessageBarBody>
+          Khi bấm “Lập chỉ mục”, nội dung tệp được gửi tới Google Gemini để chuẩn bị tìm kiếm; khi trò chuyện, câu hỏi và đoạn liên quan cũng được gửi. Nếu khóa dùng hạn mức miễn phí, Google có thể dùng dữ liệu để cải thiện dịch vụ và người đánh giá có thể xem. Đừng dùng dữ liệu cá nhân, nhạy cảm hoặc bí mật; Veridra không kiểm tra được khóa có bật thanh toán hay không.{' '}
+          <a href="/privacy.html" target="_blank" rel="noreferrer">Xem cách dùng dữ liệu</a>
+        </MessageBarBody>
+      </MessageBar>
       {notice ? (
         <MessageBar intent="success"><MessageBarBody>{notice}</MessageBarBody></MessageBar>
       ) : null}

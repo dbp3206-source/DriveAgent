@@ -253,11 +253,11 @@ export function LocalSourcesPage() {
         <div>
           <div className="local-vault-kicker">
             <span className="kicker-pulse-dot" />
-            <span>🔒 RIÊNG THEO TÀI KHOẢN · NỘI DUNG GỬI GEMINI KHI HỎI</span>
+            <span>🔒 RIÊNG THEO TÀI KHOẢN · NỘI DUNG CÓ THỂ ĐƯỢC GỬI TỚI GEMINI</span>
           </div>
           <h2>Kho tài liệu riêng</h2>
           <p className="local-vault-subtitle">
-            Tệp được tải từ thiết bị của bạn và lưu riêng theo tài khoản tại nơi Veridra chạy. Khi dùng URL công khai, tệp được lưu trên máy chủ, không chỉ trên thiết bị của bạn. Khi hỏi, nội dung liên quan và câu hỏi được gửi tới Google Gemini.
+            Tệp được tải từ thiết bị của bạn và lưu riêng theo tài khoản tại nơi Veridra chạy. Khi dùng URL công khai, tệp được lưu trên máy chủ, không chỉ trên thiết bị của bạn. Nếu Gemini đã được cấu hình, nội dung có thể được gửi sang Google ngay lúc nạp để chuẩn bị tìm kiếm; khi hỏi, câu hỏi và đoạn liên quan cũng được gửi.
           </p>
         </div>
 
@@ -324,8 +324,8 @@ export function LocalSourcesPage() {
           <h3 id="local-import-title">Nạp tài liệu mới</h3>
           <ul className="local-library__privacy">
             <li><strong>Lưu:</strong> riêng theo tài khoản; bản chạy công khai lưu trên máy chủ.</li>
-            <li><strong>Khi hỏi:</strong> đoạn liên quan được gửi tới Gemini; đây không phải AI offline.</li>
-            <li><strong>Với khóa miễn phí:</strong> Google có thể dùng nội dung để cải thiện dịch vụ; đừng tải lên dữ liệu cá nhân, nhạy cảm hoặc bí mật.</li>
+            <li><strong>Khi nạp và hỏi:</strong> Gemini có thể nhận nội dung để chuẩn bị tìm kiếm, rồi nhận câu hỏi cùng đoạn liên quan khi trò chuyện; đây không phải AI chạy riêng trên máy.</li>
+            <li><strong>Nếu khóa dùng hạn mức miễn phí:</strong> Google có thể dùng dữ liệu để cải thiện dịch vụ và người đánh giá có thể xem. Đừng tải lên dữ liệu cá nhân, nhạy cảm hoặc bí mật. Veridra không kiểm tra được khóa có bật thanh toán hay không.</li>
           </ul>
           <a href="/privacy.html" target="_blank" rel="noreferrer">Xem đầy đủ cách Veridra dùng và lưu dữ liệu</a>
 
