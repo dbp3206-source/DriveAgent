@@ -10,7 +10,7 @@ def test_async_database_keeps_private_schema_and_network_deadline():
     options = database_engine_options("postgresql+psycopg://test.invalid/qa")
     assert options["connect_args"]["connect_timeout"] == 10
     assert options["pool_timeout"] == 10
-    assert options["pool_size"] == 2 and options["max_overflow"] == 0
+    assert options["pool_size"] == 4 and options["max_overflow"] == 0
     assert options["execution_options"] == {"schema_translate_map": {None: "veridra_private"}}
     assert database_engine_options("sqlite+aiosqlite:///qa.db") == {"future": True}
 
@@ -30,6 +30,7 @@ def test_postgres_connection_has_network_deadline(monkeypatch, url):
         options = create.call_args.kwargs
         assert options["connect_args"]["connect_timeout"] == 10
         assert options["pool_timeout"] == 10
+        # This is the separate synchronous state pool; it remains unchanged.
         assert options["pool_size"] == 2 and options["max_overflow"] == 0
         engine.execution_options.assert_called_once_with(
             schema_translate_map={None: "veridra_private"}
