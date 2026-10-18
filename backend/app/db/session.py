@@ -13,7 +13,9 @@ from app.db.models import Base
 def database_engine_options(url: str) -> dict:
     options: dict = {"future": True}
     if url.startswith("postgresql+psycopg"):
-        options.update(pool_size=2, max_overflow=0, pool_timeout=10, pool_pre_ping=True)
+        # Leave headroom for HTTP requests and background queues sharing this engine.
+        # Keep a hard cap; the previous two-connection pool was exhausted in production.
+        options.update(pool_size=4, max_overflow=0, pool_timeout=10, pool_pre_ping=True)
         options["connect_args"] = {"connect_timeout": 10}
         options["execution_options"] = {"schema_translate_map": {None: "veridra_private"}}
     return options
